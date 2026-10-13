@@ -2524,7 +2524,10 @@
    "order": 19,
    "settings": [
     "media_player",
-    "microphone"
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -6603,7 +6606,10 @@
    "order": 19,
    "settings": [
     "media_player",
-    "microphone"
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -7770,7 +7776,10 @@
    "order": 19,
    "settings": [
     "media_player",
-    "microphone"
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"

@@ -191,7 +191,10 @@
       "hours_minutes": "{h} h {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "microphone_gain": "Gain du microphone",
+      "automatic_gain": "Gain automatique",
+      "echo_cancellation": "Annulation d'écho"
     },
     "tile": {
       "tap_to_open": "Ouvrir",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Réveil au mouvement",
           "hint": "L’écran sort de veille quand quelqu’un le prend, le déplace ou le heurte. Il sent l’écran lui-même, pas quelqu’un qui passe."
+        },
+        "microphone_gain": {
+          "label": "Gain du microphone",
+          "hint": "Gain analogique du microphone. Commence à 30 dB ; le gain de la référence de lecture reste fixe."
+        },
+        "automatic_gain": {
+          "label": "Gain automatique",
+          "hint": "Laisse le codec du microphone ajuster le niveau d'enregistrement. Indépendant de l'annulation d'écho."
+        },
+        "echo_cancellation": {
+          "label": "Annulation d'écho",
+          "hint": "Réduit le son du haut-parleur de l'écran dans le signal du microphone. Désactivée, l'annulation est contournée ; le microphone et le duplex intégral restent actifs. Nécessite le chemin audio AEC."
         }
       }
     },

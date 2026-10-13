@@ -191,7 +191,10 @@
       "hours_minutes": "{h} h {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "microphone_gain": "Microphone gain",
+      "automatic_gain": "Automatic gain",
+      "echo_cancellation": "Echo cancellation"
     },
     "tile": {
       "tap_to_open": "Tap to open",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Wake when moved",
           "hint": "The screen wakes from standby when someone picks it up, moves it or knocks on it. It feels the screen itself, not someone walking past."
+        },
+        "microphone_gain": {
+          "label": "Microphone gain",
+          "hint": "Analogue microphone gain. Starts at 30 dB; the playback-reference gain stays fixed."
+        },
+        "automatic_gain": {
+          "label": "Automatic gain",
+          "hint": "Let the microphone codec adjust the recording level. Independent of echo cancellation."
+        },
+        "echo_cancellation": {
+          "label": "Echo cancellation",
+          "hint": "Reduce the screen speaker in microphone input. Off bypasses cancellation; it does not disable the microphone or full-duplex audio. Requires the AEC transport."
         }
       }
     },

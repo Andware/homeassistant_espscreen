@@ -191,7 +191,10 @@
       "hours_minutes": "{h} u {m}",
       "wifi": "Wifi",
       "tessera": "Tessera",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "microphone_gain": "Microfoongain",
+      "automatic_gain": "Automatische gain",
+      "echo_cancellation": "Echo-onderdrukking"
     },
     "tile": {
       "tap_to_open": "Tik om te openen",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Wakker bij bewegen",
           "hint": "Het scherm wordt wakker uit stand-by als iemand het oppakt, verplaatst of erop tikt. Het voelt het scherm zelf, niet iemand die langsloopt."
+        },
+        "microphone_gain": {
+          "label": "Microfoongain",
+          "hint": "Analoge microfoonversterking. Begint op 30 dB; de versterking van de afspeelreferentie blijft vast."
+        },
+        "automatic_gain": {
+          "label": "Automatische gain",
+          "hint": "Laat de microfooncodec het opnameniveau bijregelen. Staat los van echo-onderdrukking."
+        },
+        "echo_cancellation": {
+          "label": "Echo-onderdrukking",
+          "hint": "Verminder de eigen speaker in het microfoonsignaal. Uit omzeilt de verwerking; microfoon en full-duplex blijven werken. Vereist het AEC-audiopad."
         }
       }
     },

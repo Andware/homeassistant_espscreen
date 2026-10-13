@@ -191,7 +191,10 @@
       "hours_minutes": "{h} ó {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
-      "plugins": "Bővítmények"
+      "plugins": "Bővítmények",
+      "microphone_gain": "Mikrofonerősítés",
+      "automatic_gain": "Automatikus erősítés",
+      "echo_cancellation": "Visszhangszűrés"
     },
     "tile": {
       "tap_to_open": "Megnyitás",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Ébresztés mozgatásra",
           "hint": "A kijelző felébred készenlétből, ha valaki felveszi, elmozdítja vagy megkocogtatja. Magát a kijelzőt érzékeli, nem az arra járókat."
+        },
+        "microphone_gain": {
+          "label": "Mikrofonerősítés",
+          "hint": "Analóg mikrofonerősítés. Kezdetben 30 dB; a lejátszási referencia erősítése állandó marad."
+        },
+        "automatic_gain": {
+          "label": "Automatikus erősítés",
+          "hint": "A mikrofon kodekje automatikusan állítja a felvétel szintjét. Független a visszhangszűréstől."
+        },
+        "echo_cancellation": {
+          "label": "Visszhangszűrés",
+          "hint": "Csökkenti a saját hangszóró hangját a mikrofon jelében. Kikapcsolva megkerüli a szűrést; a mikrofon és a teljes duplex hang továbbra is működik. AEC hangút szükséges."
         }
       }
     },

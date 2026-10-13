@@ -191,7 +191,10 @@
       "hours_minutes": "{h} godz. {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
-      "plugins": "Wtyczki"
+      "plugins": "Wtyczki",
+      "microphone_gain": "Wzmocnienie mikrofonu",
+      "automatic_gain": "Automatyczne wzmocnienie",
+      "echo_cancellation": "Usuwanie echa"
     },
     "tile": {
       "tap_to_open": "Otwórz",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Wybudź przy ruchu",
           "hint": "Ekran wybudza się ze stanu czuwania, gdy ktoś go podniesie, przesunie lub w niego stuknie. Czuje sam ekran, nie kogoś, kto przechodzi obok."
+        },
+        "microphone_gain": {
+          "label": "Wzmocnienie mikrofonu",
+          "hint": "Analogowe wzmocnienie mikrofonu. Początkowo 30 dB; wzmocnienie sygnału odniesienia odtwarzania pozostaje stałe."
+        },
+        "automatic_gain": {
+          "label": "Automatyczne wzmocnienie",
+          "hint": "Pozwala kodekowi mikrofonu regulować poziom nagrania. Niezależne od usuwania echa."
+        },
+        "echo_cancellation": {
+          "label": "Usuwanie echa",
+          "hint": "Ogranicza dźwięk własnego głośnika w sygnale mikrofonu. Wyłączenie omija usuwanie echa; mikrofon i pełny dupleks nadal działają. Wymaga toru audio AEC."
         }
       }
     },

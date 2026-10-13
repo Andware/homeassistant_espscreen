@@ -1,3 +1,10 @@
+## Unreleased
+
+- **Waveshare P4 board audio and relays.** The relay-equipped 86 panel exposes its two outputs as Home Assistant
+  switches, both off at boot. Extras adds microphone gain, automatic codec gain and live echo-cancellation on/off.
+  Its AEC transport reuses the existing speaker, microphone and media-player interfaces; other boards keep their
+  audio drivers. This is board support only: no assistant, AI provider or Ethernet support is added.
+
 ## 0.4.88 (firmware 0.56.0)
 
 - **A screen that runs well no longer shows an old failed update.** An update that failed (for instance because another
