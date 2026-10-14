@@ -1,5 +1,8 @@
 ## Unreleased
 
+- **Tab5: the battery icon shows charging while it charges (#234).** The Tab5 showed its battery as charging while it
+  ran from the pack, and as on battery while it charged: its battery monitor reads the charging current with the other
+  sign. The screen needs this firmware.
 - **A plugin tile keeps its entity of any domain (#254).** A plugin tile bound to an entity of a domain Tessera draws
   no tile for, such as a `plant.*` of Plant Monitor, now gets its entity id in `context.entity` too, so the plugin can
   ask Home Assistant about that entity. Before, it got the state and attributes but an empty entity id. A plugin's

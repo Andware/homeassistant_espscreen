@@ -37,7 +37,8 @@ voltage curve from 6.0 V (empty) to 8.4 V (full); voltage changes under load or 
 
 The battery shows in the top bar from firmware 0.41.0, with Home Assistant's icon for its level and while it charges
 (**Add → Battery** in the editor). **Battery Charging** is on while more than 50 mA flows into the pack, from the same
-INA226, and **Battery Current** shows that current. docs/BATTERY.md has the details.
+INA226, and **Battery Current** shows that current as the INA226 reads it, negative while the pack charges.
+docs/BATTERY.md has the details.
 
 The ESP32-C6 that does the Wi-Fi and the battery charger get their power from the second I/O expander (address 0x44),
 which starts with every output off. The firmware switches on its Wi-Fi power (P0), quick charge (P5) and charge enable
