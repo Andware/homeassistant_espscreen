@@ -1,3 +1,12 @@
+## Unreleased
+
+The firmware preview opens Settings by holding its title bar, using the firmware's own menu and fonts.
+Board Extras update live through Home Assistant; changes reach the selected panel only with Taps control
+devices enabled. No panel reflash is needed for this preview fix.
+
+- **Extras and plugin settings update while open.** Changes made on the panel or in Home Assistant are pushed to the
+  editor, including test-action status, without reopening the page or polling for settings.
+
 ## 0.4.87 (firmware 0.55.0)
 
 - **Plugins for everyone.** The Plugins page is now in every Tessera app, not only the dev app: add a tile, a top bar

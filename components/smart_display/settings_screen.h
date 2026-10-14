@@ -432,7 +432,7 @@ inline constexpr Row about_rows[] = {
   action(screen_text::txt::settings_calibrate_touch, "\U000F01A3", [] { if (calibrate_touch) calibrate_touch(); },
          screen_text::txt::settings_tap_again_to_calibrate, [] { return calibrate_touch != nullptr; }),
   action(screen_text::txt::settings_restart, "\U000F0709", [] { if (restart_device) restart_device(); },
-         screen_text::txt::settings_tap_again_to_restart),
+         screen_text::txt::settings_tap_again_to_restart, [] { return restart_device != nullptr; }),
 };
 
 // The plugins' pages (docs/PLUGINS.md): built once at the start from what each plugin adds (plugin_host.cpp), after the

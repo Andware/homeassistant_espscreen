@@ -3330,9 +3330,9 @@
       "remove": "L’anteprima e il suo layout salvato in questo browser.",
       "save": "Salva anteprima",
       "saved": "Salvato in questo browser",
-      "hint": "Il firmware stesso dello schermo, disegnato dal layout che stai modificando. Tocca, tieni premuto e scorri come sullo schermo. Non viene salvato nulla.",
+      "hint": "Il firmware stesso dello schermo, disegnato dal layout che stai modificando. Tocca, tieni premuto e scorri come sullo schermo. Le modifiche al layout non vengono salvate.",
       "control": "I tocchi controllano i dispositivi",
-      "control_hint": "Attivo: un tocco su un riquadro esegue la sua azione in Home Assistant, come sullo schermo. Disattivo: l’anteprima mostra solo cosa fa un tocco.",
+      "control_hint": "Se attivo, i tocchi possono controllare i dispositivi Home Assistant e modificare le impostazioni di questo pannello. Se disattivo, le impostazioni hardware sono di sola lettura e le altre modifiche rimangono nell’anteprima.",
       "skipped": "Lo schermo di anteprima {names} non è stato caricato ed è stato escluso.",
       "not_kept": "Questo browser non ha potuto salvare lo schermo di anteprima: la sua memoria è piena o bloccata."
     },

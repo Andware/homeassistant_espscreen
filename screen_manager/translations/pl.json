@@ -3330,9 +3330,9 @@
       "remove": "Podgląd i jego układ zapisany w tej przeglądarce.",
       "save": "Zapisz podgląd",
       "saved": "Zapisano w tej przeglądarce",
-      "hint": "Własny firmware ekranu, narysowany z układu, który edytujesz. Dotykaj, przytrzymuj i przesuwaj jak na ekranie. Nic nie jest zapisywane.",
+      "hint": "Własny firmware ekranu, narysowany z układu, który edytujesz. Dotykaj, przytrzymuj i przesuwaj jak na ekranie. Zmiany układu nie są zapisywane.",
       "control": "Dotknięcia sterują urządzeniami",
-      "control_hint": "Włączone: dotknięcie kafelka wykonuje jego akcję w Home Assistant, jak na ekranie. Wyłączone: podgląd pokazuje tylko, co robi dotknięcie.",
+      "control_hint": "Po włączeniu dotknięcia mogą sterować urządzeniami Home Assistant i zmieniać ustawienia tego panelu. Po wyłączeniu ustawienia sprzętu są tylko do odczytu, a pozostałe zmiany pozostają w podglądzie.",
       "skipped": "Nie udało się wczytać ekranu podglądu {names}; został pominięty.",
       "not_kept": "Ta przeglądarka nie mogła zapisać ekranu podglądu: jej pamięć jest pełna lub zablokowana."
     },
