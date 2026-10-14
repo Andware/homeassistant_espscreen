@@ -3185,9 +3185,9 @@
       "remove": "Het voorbeeld en de opgeslagen indeling in deze browser.",
       "save": "Voorbeeld opslaan",
       "saved": "Opgeslagen in deze browser",
-      "hint": "De eigen firmware van het scherm, getekend uit de indeling die je bewerkt. Tik, houd vast en veeg zoals op het scherm. Er wordt niets opgeslagen.",
+      "hint": "De eigen firmware van het scherm, getekend uit de indeling die je bewerkt. Tik, houd vast en veeg zoals op het scherm. Wijzigingen aan de indeling worden niet opgeslagen.",
       "control": "Tikken bedienen apparaten",
-      "control_hint": "Aan: een tik op een tegel voert zijn actie uit in Home Assistant, net als op het scherm. Uit: het voorbeeld laat alleen zien wat een tik doet.",
+      "control_hint": "Als dit aan staat, kunnen tikken Home Assistant-apparaten bedienen en de instellingen van dit paneel wijzigen. Als dit uit staat, zijn hardware-instellingen alleen-lezen en blijven andere wijzigingen in de preview.",
       "skipped": "Voorbeeldscherm {names} kon niet worden geladen en is overgeslagen.",
       "not_kept": "Deze browser kon het voorbeeldscherm niet bewaren: de opslag is vol of geblokkeerd."
     },

@@ -4,6 +4,8 @@
   switches, both off at boot. Extras adds microphone gain, automatic codec gain and live echo-cancellation on/off.
   Its AEC transport reuses the existing speaker, microphone and media-player interfaces; other boards keep their
   audio drivers. This is board support only: no assistant, AI provider or Ethernet support is added.
+- **Extras and plugin settings update while open.** Changes made on the panel or in Home Assistant are pushed to the
+  editor, including test-action status, without reopening the page or polling for settings.
 
 ## 0.4.88 (firmware 0.56.0)
 

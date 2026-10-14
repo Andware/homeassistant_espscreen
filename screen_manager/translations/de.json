@@ -3546,9 +3546,9 @@
       "remove": "Die Vorschau und ihr gespeichertes Layout in diesem Browser.",
       "save": "Vorschau speichern",
       "saved": "In diesem Browser gespeichert",
-      "hint": "Die Firmware des Bildschirms selbst, gezeichnet aus dem Layout, das du bearbeitest. Tippe, halte und wische wie auf dem Bildschirm. Es wird nichts gespeichert.",
+      "hint": "Die Firmware des Bildschirms selbst, gezeichnet aus dem Layout, das du bearbeitest. Tippe, halte und wische wie auf dem Bildschirm. Änderungen am Layout werden nicht gespeichert.",
       "control": "Tippen steuert Geräte",
-      "control_hint": "Ein: Ein Tippen auf eine Kachel führt ihre Aktion in Home Assistant aus, wie auf dem Bildschirm. Aus: Die Vorschau zeigt nur, was ein Tippen bewirkt.",
+      "control_hint": "Wenn aktiviert, können Berührungen Home-Assistant-Geräte steuern und die Einstellungen dieses Panels ändern. Sonst sind Hardware-Einstellungen schreibgeschützt und andere Änderungen bleiben in der Vorschau.",
       "skipped": "Vorschau-Bildschirm {names} ließ sich nicht laden und wurde ausgelassen.",
       "not_kept": "Dieser Browser konnte den Vorschau-Bildschirm nicht speichern: Sein Speicher ist voll oder gesperrt."
     },

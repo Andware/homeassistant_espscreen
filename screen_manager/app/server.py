@@ -4798,6 +4798,11 @@ def create_app(manager, development=False):
         async def plugins_settings(request):
             return web.json_response(manager.plugins.settings_for(request.match_info['inbox'], REQUEST_LANGUAGE.get()))
 
+        async def plugins_settings_events(request):
+            language = REQUEST_LANGUAGE.get()
+            return await entity_settings.stream(manager, request,
+                lambda: manager.plugins.settings_for(request.match_info['inbox'], language))
+
         async def plugins_setting(request):
             data = await request.json()
             if not isinstance(data, dict):
@@ -4805,10 +4810,16 @@ def create_app(manager, development=False):
             result = await manager.plugins.set_setting(request.match_info['inbox'], data.get('entity'), data.get('value'))
             return web.json_response(result)
         app.router.add_get('/api/screens/{inbox}/plugins/settings', plugins_settings)
+        app.router.add_get('/api/screens/{inbox}/plugins/settings/events', plugins_settings_events)
         app.router.add_post('/api/screens/{inbox}/plugins/settings', plugins_setting)
     # A board's extras under Screen settings (docs/SETTINGS.md, "A board's own settings"): for every screen, plugins or not.
     async def extras(request):
         return web.json_response(entity_settings.extras_for(manager, request.match_info['inbox'], REQUEST_LANGUAGE.get()))
+
+    async def extras_events(request):
+        language = REQUEST_LANGUAGE.get()
+        return await entity_settings.stream(manager, request,
+            lambda: entity_settings.extras_for(manager, request.match_info['inbox'], language))
 
     async def extra(request):
         data = await request.json()
@@ -4838,6 +4849,7 @@ def create_app(manager, development=False):
         return web.json_response({'cal': card, 'places': [place for place, _ in places.most_common(24)], 'bookable': sorted(bookable)})
     app.router.add_post('/api/calendar/preview', calendar_preview)
     app.router.add_get('/api/screens/{inbox}/extras', extras)
+    app.router.add_get('/api/screens/{inbox}/extras/events', extras_events)
     app.router.add_post('/api/screens/{inbox}/extras', extra)
     app.router.add_get('/', index)
     app.router.add_get('/api/inventory', inventory)

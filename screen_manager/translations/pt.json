@@ -3546,9 +3546,9 @@
       "remove": "A pré-visualização e a sua disposição guardada neste navegador.",
       "save": "Guardar pré-visualização",
       "saved": "Guardado neste navegador",
-      "hint": "O próprio firmware do ecrã, desenhado a partir do layout que está a editar. Toque, mantenha premido e deslize como no ecrã. Nada é guardado.",
+      "hint": "O próprio firmware do ecrã, desenhado a partir do layout que está a editar. Toque, mantenha premido e deslize como no ecrã. As alterações ao layout não são guardadas.",
       "control": "Os toques controlam dispositivos",
-      "control_hint": "Ligado: um toque num mosaico executa a sua ação no Home Assistant, como no ecrã. Desligado: a pré-visualização mostra apenas o que um toque faz.",
+      "control_hint": "Quando ativado, os toques podem controlar dispositivos do Home Assistant e alterar as definições deste painel. Quando desativado, as definições de hardware são só de leitura e as restantes alterações ficam na pré-visualização.",
       "skipped": "Não foi possível carregar o ecrã de pré-visualização {names}; foi deixado de fora.",
       "not_kept": "Este navegador não conseguiu guardar o ecrã de pré-visualização: o armazenamento está cheio ou bloqueado."
     },

@@ -3546,9 +3546,9 @@
       "remove": "Az előnézet és a böngészőben mentett elrendezése.",
       "save": "Előnézet mentése",
       "saved": "Mentve ebben a böngészőben",
-      "hint": "A kijelző saját firmware-e, a szerkesztett elrendezésből rajzolva. Koppints, tartsd lenyomva és húzd, mint a kijelzőn. Semmi nem mentődik.",
+      "hint": "A kijelző saját firmware-e, a szerkesztett elrendezésből rajzolva. Koppints, tartsd lenyomva és húzd, mint a kijelzőn. Az elrendezés módosításai nem mentődnek.",
       "control": "A koppintások vezérlik az eszközöket",
-      "control_hint": "Bekapcsolva: egy csempére koppintás végrehajtja a műveletét a Home Assistantben, mint a kijelzőn. Kikapcsolva: az előnézet csak megmutatja, mit tenne a koppintás.",
+      "control_hint": "Bekapcsolva az érintések vezérelhetik a Home Assistant eszközeit és módosíthatják a panel beállításait. Kikapcsolva a hardverbeállítások csak olvashatók, az egyéb módosítások pedig az előnézetben maradnak.",
       "skipped": "A(z) {names} előnézeti kijelző nem tölthető be, kimaradt.",
       "not_kept": "Ez a böngésző nem tudta tárolni az előnézeti kijelzőt: a tárhelye megtelt vagy le van tiltva."
     },

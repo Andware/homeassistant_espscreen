@@ -3546,9 +3546,9 @@
       "remove": "L’aperçu et sa disposition enregistrée dans ce navigateur.",
       "save": "Enregistrer l’aperçu",
       "saved": "Enregistré dans ce navigateur",
-      "hint": "Le firmware de l’écran lui-même, dessiné à partir de la disposition que vous modifiez. Appuyez, maintenez et balayez comme sur l’écran. Rien n’est enregistré.",
+      "hint": "Le firmware de l’écran lui-même, dessiné à partir de la disposition que vous modifiez. Appuyez, maintenez et balayez comme sur l’écran. Les modifications de la disposition ne sont pas enregistrées.",
       "control": "Les appuis commandent les appareils",
-      "control_hint": "Activé : un appui sur une tuile exécute son action dans Home Assistant, comme sur l’écran. Désactivé : l’aperçu montre seulement ce que fait un appui.",
+      "control_hint": "Si cette option est activée, les appuis peuvent contrôler les appareils Home Assistant et modifier les réglages de ce panneau. Sinon, les réglages matériels sont en lecture seule et les autres modifications restent dans l’aperçu.",
       "skipped": "L’écran d’aperçu {names} n’a pas pu être chargé et a été ignoré.",
       "not_kept": "Ce navigateur n’a pas pu enregistrer l’écran d’aperçu : son stockage est plein ou bloqué."
     },

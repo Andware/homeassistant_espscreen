@@ -3546,9 +3546,9 @@
       "remove": "La vista previa y su diseño guardado en este navegador.",
       "save": "Guardar vista previa",
       "saved": "Guardado en este navegador",
-      "hint": "El propio firmware de la pantalla, dibujado a partir del diseño que estás editando. Toca, mantén pulsado y desliza como en la pantalla. No se guarda nada.",
+      "hint": "El propio firmware de la pantalla, dibujado a partir del diseño que estás editando. Toca, mantén pulsado y desliza como en la pantalla. Los cambios del diseño no se guardan.",
       "control": "Los toques controlan dispositivos",
-      "control_hint": "Activado: un toque en un mosaico ejecuta su acción en Home Assistant, como en la pantalla. Desactivado: la vista previa solo muestra lo que hace un toque.",
+      "control_hint": "Al activarlo, los toques pueden controlar dispositivos de Home Assistant y cambiar los ajustes de este panel. Si está desactivado, los ajustes del hardware son de solo lectura y los demás cambios se quedan en la vista previa.",
       "skipped": "No se pudo cargar la pantalla de vista previa {names} y se ha omitido.",
       "not_kept": "Este navegador no pudo guardar la pantalla de vista previa: su almacenamiento está lleno o bloqueado."
     },
