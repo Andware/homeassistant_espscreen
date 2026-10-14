@@ -172,8 +172,10 @@ blueprint. Tiles live in the add-on's data; Wi-Fi, API and OTA stay in the scree
    and allows its actions (`screen_manager/app/ha_pairing.py`, docs/EASY_SETUP.md chapter 3); a screen built elsewhere
    is added by hand. Read real entity ids and attributes; don't make up entities, and don't run real device actions
    without the owner's permission.
-4. Per board, docs/<BOARD>.md has the hardware notes. Display support never configures relays or other peripherals
-   on the board.
+4. Per board, docs/<BOARD>.md has the hardware notes. Hardware that every unit of a board model has (the relays of the
+   Waveshare P4 86 panel, its codecs, a motion sensor) belongs in that board's file, as entities and Extras of that
+   board. Hardware a board only sometimes has (a Guition sold with or without relays, a module someone adds) is a
+   plugin made for that board (docs/PLUGINS.md), never the board file.
 
 - No automatic firmware upload to an arbitrary connected port: with several boards, first find the intended port.
 - Builds with the same `DEVICE_NAME` share `.esphome/build/<name>`: never compile or upload them at the same time.
