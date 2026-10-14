@@ -911,7 +911,8 @@ inline const std::string &media_entity(const Tile &t){return t.extra().media_tar
 // Returns whether Home Assistant will answer it.
 inline bool action(const std::string &service, const std::string &entity, const std::string &key="", const std::string &value="", bool watch=true,
                    const std::string &key2="", const std::string &value2="", bool busy=true) {
-  if (!fresh() || !valid_entity(entity)) return false;
+  // Of any domain: a tile's entity was checked when it came, and a plugin may act on one Tessera draws no tile for.
+  if (!fresh() || !entity_id(entity)) return false;
   esphome::api::HomeassistantActionRequest request;
   request.service = esphome::StringRef(service);
   request.data.init(1 + !key.empty() + !key2.empty());

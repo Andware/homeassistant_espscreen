@@ -228,7 +228,7 @@ std::string fill(const char *text, const char *name, const std::string &value) {
 }
 
 bool action(const char *service, const std::string &entity, const char *key, const std::string &value) {
-  if (!service || !rt::valid_entity(entity) || entity.rfind("plugin:", 0) == 0) return false;
+  if (!service || !rt::entity_id(entity) || entity.rfind("screen.", 0) == 0) return false;
   return rt::action(service, entity, key ? key : "", value);
 }
 

@@ -2,7 +2,8 @@
 
 - **A plugin tile keeps its entity of any domain (#254).** A plugin tile bound to an entity of a domain Tessera draws
   no tile for, such as a `plant.*` of Plant Monitor, now gets its entity id in `context.entity` too, so the plugin can
-  ask Home Assistant about that entity. Before, it got the state and attributes but an empty entity id.
+  ask Home Assistant about that entity. Before, it got the state and attributes but an empty entity id. A plugin's
+  `tessera::action` works on such an entity too, as a `todo.add_item` on a to-do list.
 - **Waveshare P4 board audio and relays.** The relay-equipped 86 panel exposes its two outputs as Home Assistant
   switches, both off at boot. Extras adds microphone gain, automatic codec gain and live echo-cancellation on/off.
   Its AEC transport reuses the existing speaker, microphone and media-player interfaces; other boards keep their
