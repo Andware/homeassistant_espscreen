@@ -1,5 +1,9 @@
 ## Unreleased
 
+- **A screen whose Override YAML was deleted builds again.** ESPHome Device Builder lists a screen's Override YAML
+  (`<name>.local.yaml`) as a device of its own, and deleting that entry there left the screen's YAML including a file
+  that was gone, so every update stopped with "file not found". The app now writes the missing file again, empty, when
+  it starts and before every build. Overrides that were in it are not brought back.
 - **Photos as a screensaver.** The screensaver has a new step, Photos: the photos of a folder of Home Assistant's
   media, one after the other over the whole glass. Pick an album, a person or a tag of Immich, a folder under
   Home Assistant's media, or Synology Photos; choose how long each stands, shuffled or in order, and whether a photo
