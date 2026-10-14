@@ -191,7 +191,10 @@
       "hours_minutes": "{h} h {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "microphone_gain": "Ganho do microfone",
+      "automatic_gain": "Ganho automático",
+      "echo_cancellation": "Cancelamento eco"
     },
     "tile": {
       "tap_to_open": "Toque para abrir",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Acordar ao mover",
           "hint": "O ecrã sai do modo de espera quando alguém o pega, move ou bate nele. Sente o próprio ecrã, não alguém que passa."
+        },
+        "microphone_gain": {
+          "label": "Ganho do microfone",
+          "hint": "Ganho analógico do microfone. Começa em 30 dB; o ganho da referência de reprodução permanece fixo."
+        },
+        "automatic_gain": {
+          "label": "Ganho automático",
+          "hint": "Permite que o codec do microfone ajuste o nível de gravação. Independente do cancelamento de eco."
+        },
+        "echo_cancellation": {
+          "label": "Cancelamento eco",
+          "hint": "Reduz o som do próprio altifalante no sinal do microfone. Desativado, ignora o cancelamento; o microfone e o duplex completo continuam ativos. Requer o caminho de áudio AEC."
         }
       }
     },

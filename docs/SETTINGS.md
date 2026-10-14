@@ -238,7 +238,7 @@ What the boards have today:
 | Board | Extras | Where it comes from |
 |---|---|---|
 | reTerminal D1001 | Volume, Microphone, Wake when moved | `features/audio.yaml`, and the board file for its motion sensor |
-| Waveshare ESP32-P4 86 panel | Volume, Microphone | `features/audio.yaml` |
+| Waveshare ESP32-P4 86 panel | Volume, Microphone, Microphone gain, Automatic gain, Echo cancellation (AEC transport) | `hardware/wavesharep4-audio/` and the shared audio player |
 | M5Stack Tab5 | Volume, Microphone | `features/audio.yaml` |
 | CrowPanel Advanced 10.1 | Volume, Microphone | `features/audio.yaml` |
 

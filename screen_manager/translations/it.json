@@ -191,7 +191,10 @@
       "hours_minutes": "{h} h {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
-      "plugins": "Plugin"
+      "plugins": "Plugin",
+      "microphone_gain": "Guadagno microfono",
+      "automatic_gain": "Guadagno automatico",
+      "echo_cancellation": "Cancellazione eco"
     },
     "tile": {
       "tap_to_open": "Tocca per aprire",
@@ -1102,6 +1105,18 @@
         "wake_when_moved": {
           "label": "Riattiva se mosso",
           "hint": "Lo schermo esce dallo standby quando qualcuno lo prende, lo sposta o lo urta. Sente lo schermo stesso, non chi passa."
+        },
+        "microphone_gain": {
+          "label": "Guadagno microfono",
+          "hint": "Guadagno analogico del microfono. Parte da 30 dB; il guadagno del riferimento di riproduzione resta fisso."
+        },
+        "automatic_gain": {
+          "label": "Guadagno automatico",
+          "hint": "Consente al codec del microfono di regolare il livello di registrazione. Indipendente dalla cancellazione dell'eco."
+        },
+        "echo_cancellation": {
+          "label": "Cancellazione eco",
+          "hint": "Riduce il suono dell'altoparlante dello schermo nel segnale del microfono. Se disattivata, la cancellazione viene bypassata; microfono e full duplex restano attivi. Richiede il percorso audio AEC."
         }
       }
     },
