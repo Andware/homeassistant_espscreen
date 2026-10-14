@@ -38,6 +38,8 @@ static void test_domains_and_sizes() {
   Model m;
   assert(valid_entity("screen.clock") && !valid_entity("screen.other"));
   assert(valid_entity("sun.sun") && valid_entity("timer.kitchen") && valid_entity("person.max"));
+  // A plugin tile's entity may be of a domain without a tile of its own (plant.*, issue #254).
+  assert(entity_id("plant.ficus") && !valid_entity("plant.ficus") && !entity_id("plugin:a.b") && !entity_id("plant."));
   seed(m, {"screen.clock", "weather.home", "light.a", "sensor.b", "person.max", "timer.egg", "sun.sun"}, 2);
   assert(m.tiles[0].available() && !m.tiles[1].available());  // built-in cards need no HA state
   // A scene or button that never ran is unknown in Home Assistant and can still be pressed; other unknown states can't act.

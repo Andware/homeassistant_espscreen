@@ -772,8 +772,9 @@ std::string receive(const std::string &payload) {
     if (tile.is_plugin()) {
       if (initial && root["o"]["plugin"].is<JsonObject>()) serializeJson(root["o"]["plugin"], next.plugin_options);
       if (initial) {
+        // Of any domain the plugin's manifest names, also one Tessera draws no tile for (plant.*): the app checked it.
         const std::string bound = string(root["o"]["pe"], 120);
-        if (valid_entity(bound) && bound.rfind("plugin:", 0) != 0 && bound.rfind("screen.", 0) != 0) next.plugin_entity = bound;
+        if (entity_id(bound) && bound.rfind("screen.", 0) != 0) next.plugin_entity = bound;
       }
       if (extra.is<JsonObject>()) serializeJson(extra, next.plugin_state);
     }

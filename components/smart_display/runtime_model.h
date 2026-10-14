@@ -176,15 +176,21 @@ inline bool plugin_key(const std::string &entity) {
   }
   return true;
 }
-inline bool valid_entity(const std::string &entity) {
+// An entity id as Home Assistant writes it (domain.object_id: lowercase letters, digits, underscores), of any domain.
+inline bool entity_id(const std::string &entity) {
   if (entity.size() > 120) return false;
-  if (entity.rfind("plugin:", 0) == 0) return plugin_key(entity);
   auto dot = entity.find('.');
   if (dot == std::string::npos || dot == 0 || dot + 1 == entity.size()) return false;
   for (size_t i = 0; i < entity.size(); ++i)
     if (i != dot && !(entity[i] >= 'a' && entity[i] <= 'z') &&
         !(entity[i] >= '0' && entity[i] <= '9') && entity[i] != '_') return false;
-  std::string domain = entity.substr(0, dot);
+  return true;
+}
+inline bool valid_entity(const std::string &entity) {
+  if (entity.size() > 120) return false;
+  if (entity.rfind("plugin:", 0) == 0) return plugin_key(entity);
+  if (!entity_id(entity)) return false;
+  std::string domain = entity.substr(0, entity.find('.'));
   // screen.* are built-in cards without a Home Assistant entity behind them; screen.page_<n> (firmware 0.2.62+)
   // only goes to page n. Several pages may each carry the same one (firmware 0.2.65+, Model::set_layout).
   if (domain == "screen") {
