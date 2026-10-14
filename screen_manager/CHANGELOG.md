@@ -25,6 +25,11 @@
 - **A plugin added with a link stays on the screen after an update (#260).** Updating a plugin added with a link to a
   newer release built the screen without it, and its tiles showed "plugin missing" until it was removed and added
   again. The screen's build now takes the new release.
+- **Tab5 optional echo cancellation.** The ST7121 profile can select
+  `TAB5_AUDIO_TRANSPORT: "aec"` to use the existing ES7210/AEC stack with the Tab5's electrical
+  playback reference. It adds an Echo cancellation switch under Extras and in Home Assistant.
+  Native I2S remains the default; no assistant or AI provider is included.
+
 - **Waveshare P4 board audio and relays.** The relay-equipped 86 panel exposes its two outputs as Home Assistant
   switches, both off at boot. Extras adds microphone gain, automatic codec gain and live echo-cancellation on/off.
   Its AEC transport reuses the existing speaker, microphone and media-player interfaces; other boards keep their

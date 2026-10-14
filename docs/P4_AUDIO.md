@@ -29,7 +29,8 @@ is selected and the DSP initialized; it is not a measurement of echo suppression
 The P4 board selects `P4_AUDIO_TRANSPORT: "aec"` in this branch. To omit the audio stack/AEC
 libraries entirely, select `P4_AUDIO_TRANSPORT: "i2s"` in Override YAML and rebuild. This keeps
 the original half-duplex I2S transport, gain and ALC. No AEC entity is present in that build.
-Other boards continue to use ESPHome's own codecs and transport. The extended codec is named
+Other boards retain their default codecs and transport; the Tab5 can opt into the same
+AEC transport with its own wiring ([Tab5 notes](TAB5.md#optional-echo-cancellation)). The extended codec is named
 `es7210_extended` so importing it for this P4 cannot silently replace another board's driver.
 
 ## Processing and reference

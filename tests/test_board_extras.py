@@ -26,7 +26,7 @@ class TheBoards(unittest.TestCase):
         self.assertEqual(listed['reterminald1001'], ['media_player', 'microphone', 'wake_when_moved'])
         labels = SCREEN_TEXT['addon']['labels']['extras']
         for board, keys in listed.items():
-            text = profiles.resolved(f'packages/{board}.yaml')
+            text = '\n'.join(path.read_text() for path in profiles.chain(profiles.BOARDS[board], all_variants=True))
             for key in keys:
                 with self.subTest(board=board, key=key):
                     names = {entity_settings.object_id(n) for n in re.findall(r'(?m)^[ \t]+name:[ \t]*"?([^"\n]+)"?', text)}
