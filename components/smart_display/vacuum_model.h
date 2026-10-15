@@ -18,7 +18,7 @@
 
 namespace vacuum_model {
 
-constexpr size_t MAX_ROOMS = 24, MAX_FLOORS = 6, MAX_ROUTINES = 8;
+constexpr size_t MAX_ROOMS = 24, MAX_FLOORS = 6, MAX_ROUTINES = 24;
 
 struct Room {
   std::string area, name;

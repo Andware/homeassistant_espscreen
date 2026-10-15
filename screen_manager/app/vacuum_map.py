@@ -141,7 +141,13 @@ class Drawing:
         return self.robot[0] <= x <= self.robot[2] and self.robot[1] <= y <= self.robot[3]
 
     def styled(self, dark):
-        """The map in the screen's look, at its full size (RGBA)."""
+        """The map in the screen's look, at its full size (RGBA): made once per look, whatever sizes are asked of it."""
+        cache = self.__dict__.setdefault('_styled', {})
+        if bool(dark) not in cache:
+            cache[bool(dark)] = self._styled_once(dark)
+        return cache[bool(dark)]
+
+    def _styled_once(self, dark):
         from PIL import Image, ImageFilter
         if not self.flat:
             return self.full

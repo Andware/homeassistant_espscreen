@@ -859,6 +859,28 @@ class CameraFeed:
             cached = watch.frames[key] = (digest, image)
         return f'"{digest[:16]}-s{box[0]}x{box[1]}"', cached[1]
 
+    def vacuum_map_warm(self, entity, mark):
+        """Fetch and read a vacuum's map ahead, in both looks, when its card's tile goes out with a new mark: the card
+        that opens then only waits for its own size. Once per mark; a fetch on its way is not started twice."""
+        held = self.vacuum_maps.get(entity)
+        if held is not None and held['mark'] == mark:
+            return
+        pending = self.__dict__.setdefault('_vacuum_warming', {})
+        task = pending.get(entity)
+        if task is not None and not task.done():
+            return
+
+        async def warm():
+            import vacuum_map
+            if await self.vacuum_map(entity, mark, (16, 16), 0, False) is None:
+                return
+            drawing = self.vacuum_maps[entity]['drawing']
+            await asyncio.get_running_loop().run_in_executor(None, drawing.styled, True)
+        try:
+            pending[entity] = asyncio.ensure_future(warm())
+        except RuntimeError:
+            pass
+
     async def vacuum_map(self, entity, mark, box, background, dark):
         """(etag, BMP) of a vacuum's map at `box` on `background`, in the light or dark look (vacuum_map.render), or None
         when it cannot be fetched or read. Fetched once per mark, read once, made once per size and look."""

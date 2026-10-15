@@ -2743,6 +2743,9 @@ class Manager:
                                          lambda icon: tile_icons.GLYPHS.get(icon[4:]) if icon.startswith('mdi:') else None)
                 if card:
                     extra={**(extra or {}),'vc':card}
+                    # The map read ahead, so the card that opens only waits for its own size (vacuum_map_warm).
+                    if isinstance(card.get('map'),dict):
+                        self.camera.vacuum_map_warm(card['map']['e'],card['map']['m'])
         if tile['entity'].startswith('calendar.'):
             extra = {**(extra or {}), 'cal': await self.calendar_extras(tile)}
         message=state_message(index,tile,states,extra,

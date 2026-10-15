@@ -46,6 +46,9 @@ struct MapAsk {
 inline MapAsk map_ask;
 inline std::string map_shown;         // the key of the picture on the card now; it stays until the next one is here
 inline lv_obj_t *map_picture = nullptr;
+// The firmware's one spinner in the map's place until the map is here; it goes too when the app has none to give.
+inline lv_obj_t *map_spinner = nullptr;
+inline std::string map_missing;       // the key the app had no picture for
 // The card's keys with their commands, for the renders (tools/render/host.py, render_vacuum) and a diagnosis.
 struct Hit { int cmd; lv_obj_t *obj; };
 inline std::vector<Hit> hits;
@@ -230,6 +233,7 @@ inline void map_paint(lv_obj_t *o, const Tile &, const CardPart &) {
   else if (src && map_shown != key) { if (!map_shown.empty()) picture_retire(map_shown); map_shown = key; }
   if (src && lv_image_get_src(o) != src) { lv_image_set_src(o, src); lv_obj_invalidate(o); }
   set_hidden(o, !src);
+  if (map_spinner) set_hidden(map_spinner, src || map_missing == key);
 #else
   (void) o;
 #endif
@@ -273,6 +277,9 @@ inline void hero(const Tile &t, int x, int y, int w, int h, const Metrics &m, bo
   const Data *d = data_of(t);
   map_ask = MapAsk{t.entity, d->map_entity, d->map_mark, mw, mh, theme::hex(theme::CARD), theme::dark};
 #if LV_USE_IMAGE
+  const int size = ui::px(m.large ? 40 : 28);
+  map_spinner = spinner_create(card, size, ui::px(m.large ? 4 : 3));
+  if (map_spinner) lv_obj_set_pos(map_spinner, mx + (mw - size) / 2, my + (mh - size) / 2);
   map_picture = lv_image_create(card);
   lv_obj_remove_flag(map_picture, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_set_pos(map_picture, mx, my);
@@ -458,19 +465,40 @@ inline void chips(const Tile &t, const Data &d, int x, int y, int w, const Metri
     card_bind(o, t, chip_paint, "", static_cast<intptr_t>(i));
   }
 }
-// The routines as rows: a play disc and the name; a tap runs one.
-inline int routines_h(const Data &d, const Metrics &m) { return static_cast<int>(d.routines.size()) * (m.row_h + ui::px(8)) - ui::px(8); }
-inline void routines(const Data &d, int x, int y, int w, const Metrics &m) {
-  for (size_t i = 0; i < d.routines.size(); ++i) {
-    auto *k = key_obj(x, y, w, m.row_h, CMD_ROUTINE + static_cast<int>(i), theme::hex(theme::CARD), m.radius);
+// The routines as rows: a play disc and the name; a tap runs one. `first` and `count` draw a part of them (a page of
+// the routines view), in `cols` columns.
+inline int routines_h(int count, const Metrics &m, int cols = 1) {
+  const int rows = (count + cols - 1) / std::max(1, cols);
+  return rows * (m.row_h + ui::px(8)) - ui::px(8);
+}
+inline int routines_h(const Data &d, const Metrics &m) { return routines_h(static_cast<int>(d.routines.size()), m); }
+inline void routines(const Data &d, int x, int y, int w, const Metrics &m, size_t first = 0, size_t count = SIZE_MAX, int cols = 1) {
+  const size_t end = std::min(d.routines.size(), count == SIZE_MAX ? d.routines.size() : first + count);
+  const int g = ui::px(8), cw = (w - (cols - 1) * m.gap) / std::max(1, cols);
+  for (size_t i = first; i < end; ++i) {
+    const int slot = static_cast<int>(i - first), rx = x + (slot % cols) * (cw + m.gap), ry = y + (slot / cols) * (m.row_h + g);
+    auto *k = key_obj(rx, ry, cw, m.row_h, CMD_ROUTINE + static_cast<int>(i), theme::hex(theme::CARD), m.radius);
     lv_obj_set_style_border_width(k, 1, 0); lv_obj_set_style_border_color(k, theme::color(theme::LINE), 0);
     lv_obj_set_style_bg_color(k, theme::color(theme::CARD_PRESSED), LV_STATE_PRESSED);
     const int disc = ui::px(m.large ? 36 : 28), e = ui::px(12);
     auto *circle = detail_shape(k, e, (m.row_h - disc) / 2, disc, disc, theme::tint(theme::ha::TEAL, 36), disc / 2);
     glyph_centred(circle, ICON_PLAY, 0, 0, disc, disc, m.small_icons, theme::foreground(theme::ha::TEAL));
-    detail_text(k, d.routines[i].name, e + disc + ui::px(12), (m.row_h - line_of(m.text)) / 2, w - 2 * e - disc - ui::px(12), m.text, LV_TEXT_ALIGN_LEFT, theme::INK);
-    y += m.row_h + ui::px(8);
+    detail_text(k, d.routines[i].name, e + disc + ui::px(12), (m.row_h - line_of(m.text)) / 2, cw - 2 * e - disc - ui::px(12), m.text, LV_TEXT_ALIGN_LEFT, theme::INK);
   }
+}
+// The media library's pager: a round key either side, a dot per page between them.
+inline void pager_key(int x, int y, int k, bool forward, bool off, const Metrics &m) {
+  auto *key = key_obj(x, y, k, k, forward ? CMD_PAGE_ON : CMD_PAGE_BACK, theme::hex(theme::TRACK), k / 2);
+  lv_obj_set_style_bg_color(key, theme::color(theme::KEY_PRESSED), LV_STATE_PRESSED);
+  glyph_centred(key, forward ? ICON_CHEVRON : ICON_BACK, 0, 0, k, k, m.icons, theme::hex(theme::INK));
+  if (off) lv_obj_add_state(key, LV_STATE_DISABLED);
+}
+inline void pager(int x, int y, int w, int k, int page_now, int pages, const Metrics &m) {
+  const int dot = ui::px(8), dg = ui::px(10), dw = pages * dot + (pages - 1) * dg;
+  pager_key(x, y, k, false, page_now == 0, m);
+  pager_key(x + w - k, y, k, true, page_now >= pages - 1, m);
+  for (int i = 0; i < pages; ++i)
+    detail_shape(detail_root, x + w / 2 - dw / 2 + i * (dot + dg), y + (k - dot) / 2, dot, dot, i == page_now ? theme::INK : theme::TICK, dot / 2);
 }
 inline int heading_h(const Metrics &m) { return line_of(m.small) + ui::px(8); }
 inline void heading(int x, int y, int w, const std::string &words, const Metrics &m) {
@@ -744,20 +772,10 @@ inline void rooms_view(const Tile &t, const Metrics &m, int x, int y, int w, int
   cy += gh;
   int bw = std::min(std::max(gw, ui::px(300)), std::min(w, ui::control_max_width()));
   int bx = x + (w - bw) / 2;
-  auto pager_key = [&](int kx, int ky, int k, bool forward) {
-    auto *key = key_obj(kx, ky, k, k, forward ? CMD_PAGE_ON : CMD_PAGE_BACK, theme::hex(theme::TRACK), k / 2);
-    lv_obj_set_style_bg_color(key, theme::color(theme::KEY_PRESSED), LV_STATE_PRESSED);
-    glyph_centred(key, forward ? ICON_CHEVRON : ICON_BACK, 0, 0, k, k, m.icons, theme::hex(theme::INK));
-    if (forward ? page >= pages - 1 : page == 0) lv_obj_add_state(key, LV_STATE_DISABLED);
-  };
   if (gr.paged && !tight) {
     cy += g;
-    const int k = pager_h, dot = ui::px(8), dg = ui::px(10), dw = pages * dot + (pages - 1) * dg;
-    pager_key(x0, cy, k, false);
-    pager_key(x0 + gw - k, cy, k, true);
-    for (int i = 0; i < pages; ++i)
-      detail_shape(detail_root, x + w / 2 - dw / 2 + i * (dot + dg), cy + (k - dot) / 2, dot, dot, i == page ? theme::INK : theme::TICK, dot / 2);
-    cy += k;
+    pager(x0, cy, gw, pager_h, page, pages, m);
+    cy += pager_h;
   }
   cy += ui::px(10);
   if (!tight) {
@@ -765,21 +783,40 @@ inline void rooms_view(const Tile &t, const Metrics &m, int x, int y, int w, int
     cy += hint;
   }
   if (gr.paged && tight) {
-    pager_key(bx, cy, m.action_h, false);
-    pager_key(bx + bw - m.action_h, cy, m.action_h, true);
+    pager_key(bx, cy, m.action_h, false, page == 0, m);
+    pager_key(bx + bw - m.action_h, cy, m.action_h, true, page >= pages - 1, m);
     bx += m.action_h + g; bw -= 2 * (m.action_h + g);
   }
   auto *start = vacuum_command(ICON_PLAY, tr(txt::vacuum_clean), bx, cy, bw, m.action_h, CMD_CLEAN_ROOMS, true, m.text, m.icons, m.large ? m.radius : m.action_h / 2);
   card_bind(start, t, rooms_start_paint);
   hits.push_back({CMD_CLEAN_ROOMS, start});
 }
+// The routines view: every routine of the robot as a row, in two columns where the glass is wide enough for two rows
+// side by side, and in pages, with the pager, when they don't all fit.
 inline void routines_view(const Tile &t, const Metrics &m, int x, int y, int w, int h) {
   const Data *d = data_of(t);
   if (!d) return;
-  const int cw = std::min(w, ui::control_max_width()), total = routines_h(*d, m) + ui::px(12) + line_of(m.small);
-  const int cy = y + std::max(0, (h - total) / 2), cx = x + (w - cw) / 2;
-  routines(*d, cx, cy, cw, m);
-  detail_text(detail_root, tr(txt::vacuum_routines_note), cx, cy + routines_h(*d, m) + ui::px(12), cw, m.small, LV_TEXT_ALIGN_CENTER, theme::SUBTLE);
+  const int n = static_cast<int>(d->routines.size());
+  int widest = 0;
+  for (const auto &r : d->routines) widest = std::max(widest, text_width(r.name, m.text));
+  const int row_need = 2 * ui::px(12) + ui::px(m.large ? 36 : 28) + ui::px(12) + widest + ui::px(8);
+  const int cw = std::min(w, ui::control_max_width() * 4 / 3);
+  const int cols = n > 4 && cw >= 2 * std::max(row_need, ui::mm(55)) + m.gap ? 2 : 1;
+  const int gw = cols == 2 ? cw : std::min(w, ui::control_max_width());
+  const int note = ui::px(12) + line_of(m.small), pager_h = std::max(ui::touch_min(), ui::px(m.large ? 44 : 34));
+  int rows = std::max(1, (h - note + ui::px(8)) / (m.row_h + ui::px(8)));
+  bool paged = rows * cols < n;
+  if (paged) rows = std::max(1, (h - note - pager_h - m.gap + ui::px(8)) / (m.row_h + ui::px(8)));
+  const int per = rows * cols, pages = vacuum_model::pages(n, per);
+  page = std::clamp(page, 0, pages - 1);
+  const int shown = std::min(per, n - page * per), list_h = routines_h(paged ? per : shown, m, cols);
+  const int total = list_h + (paged ? m.gap + pager_h : 0) + note;
+  int cy = y + std::max(0, (h - total) / 2);
+  const int cx = x + (w - gw) / 2;
+  routines(*d, cx, cy, gw, m, static_cast<size_t>(page * per), static_cast<size_t>(per), cols);
+  cy += list_h;
+  if (paged) { cy += m.gap; pager(cx, cy, gw, pager_h, page, pages, m); cy += pager_h; }
+  detail_text(detail_root, tr(txt::vacuum_routines_note), cx, cy + ui::px(12), gw, m.small, LV_TEXT_ALIGN_CENTER, theme::SUBTLE);
 }
 inline void how_view(const Tile &t, const Metrics &m, int x, int y, int w, int h) {
   const int cw = std::min(w, ui::control_max_width());
@@ -940,8 +977,11 @@ void picture_want() {
   want.drawn = true;
   const MapAsk ask = map_ask;
   want.ask = [ask] { map_request(ask); };
-  want.done = [](picture_loader::Outcome o) {
-    if (shows(o) && detail_shown() && detail_index < model.count && !card_repaint(model.tiles[detail_index])) refresh_detail(detail_index);
+  const std::string key = want.key;
+  want.done = [key](picture_loader::Outcome o) {
+    if (o == picture_loader::Outcome::NONE) map_missing = key;
+    if ((shows(o) || o == picture_loader::Outcome::NONE) && detail_shown() && detail_index < model.count &&
+        !card_repaint(model.tiles[detail_index])) refresh_detail(detail_index);
   };
   loader.want(owners::CARD, std::move(want));
 }
@@ -960,12 +1000,12 @@ void forget_pictures() {
   map_shown.clear();
 }
 // The card's objects are deleted (another card is built): nothing here points at them any more.
-void card_cleared() { map_picture = nullptr; map_ask = MapAsk{}; hits.clear(); }
+void card_cleared() { map_picture = map_spinner = nullptr; map_ask = MapAsk{}; hits.clear(); }
 // The card closed: the views and the picks go, the map's picture may go once nothing draws it.
 void closed() {
   if (!map_shown.empty()) picture_retire(map_shown);
   map_shown.clear();
-  map_picture = nullptr;
+  map_picture = map_spinner = nullptr;
   map_ask = MapAsk{};
   hits.clear();
   view = MAIN;

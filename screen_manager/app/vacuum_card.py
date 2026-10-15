@@ -28,7 +28,7 @@ from light_effects import entity_name, strip_device_name
 FEATURE = 'vacuum_card'
 MAX_ROOMS = 24
 MAX_FLOORS = 6
-MAX_ROUTINES = 8
+MAX_ROUTINES = 24
 AREA_ID = re.compile(r'[A-Za-z0-9_-]{1,40}')
 # An error sensor says "nothing wrong" in one of these.
 NO_ERROR = frozenset(('', 'none', 'no_error', 'ok', 'normal', 'unknown', 'unavailable', '0'))

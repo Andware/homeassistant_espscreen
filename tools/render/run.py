@@ -1709,7 +1709,10 @@ class Run:
             if card['back']:
                 await self.tap(*card['back'][:2])
                 await asyncio.sleep(0.8)
+        only = os.environ.get('VACUUM_ONLY')  # one scene by its name's end, for a quick look at one change
         async def show(name, state, x, then=None, dark=False):
+            if only and not name.endswith(only):
+                return
             await push(state, x)
             await self.call('render_page', page=0)
             await self.page_done(0)
@@ -1771,6 +1774,17 @@ class Run:
             if await tap_cmd(840):
                 await self.render('vacuum-rooms-unmapped')
                 await back()
+        many_routines = [[f'button.robot_routine_{n}', name] for n, name in enumerate(
+            ['Kitchen after dinner', 'Hall quick', 'Deep clean', 'Bedrooms', 'Living room twice', 'Mop only', 'Vacuum only',
+             'Around the table', 'Under the bed', 'Bathroom', 'Weekly', 'Before guests', 'Pet hair', 'Night run', 'Edges',
+             'Carpet boost', 'Spot clean', 'Hallway mop', 'Office', 'Everything'])]
+        async def routines_round():
+            if await tap_cmd(841):
+                await self.render('vacuum-routines-20')
+                await tap_cmd(850)
+                await self.render('vacuum-routines-20-page2')
+                await back()
+        await show('vacuum-card-routines20', *scene('docked', vc={'map': card_map, 'rooms': four, 'rt': many_routines}), then=routines_round)
         await show('vacuum-card-unmapped', *scene('docked', vc={'map': card_map, 'unmapped': 1}), then=unmapped_round)
         await show('vacuum-card-nomap', *scene('docked', vc={'rooms': four, 'rt': routines}))
         await show('vacuum-card-switchbot', *scene('cleaning', features=1 | 16 | 4096 | 8192, battery=72, charging=False, extra=False))
