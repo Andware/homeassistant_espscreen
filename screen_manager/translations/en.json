@@ -2454,6 +2454,8 @@
         "players": "Players, the first at the top",
         "players_hint": "The first one that plays shows, with its cover.",
         "player_add": "Add a player",
+        "player_search": "Search players",
+        "player_none": "No player matches",
         "remove_player": "Remove {name}",
         "keys_hint": "Play, pause and the volume work on the screensaver. A tap anywhere else wakes the screen.",
         "choose_camera": "Choose a camera",

@@ -1,5 +1,9 @@
 ## Unreleased
 
+- **Editor: a long list of media players scrolls and has a search.** Adding a player to the screensaver opened a menu
+  that ran off the window in a home with many players, and the ones below could not be reached. It now opens a search
+  field with a list that scrolls, and typing narrows it by name or area. Every other menu of the editor scrolls when it
+  is taller than the window, too.
 - **Tab5: the battery icon shows charging while it charges (#234).** The Tab5 showed its battery as charging while it
   ran from the pack, and as on battery while it charged: its battery monitor reads the charging current with the other
   sign. The screen needs this firmware.

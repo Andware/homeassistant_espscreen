@@ -1083,7 +1083,14 @@ td code { white-space: nowrap; }
 /* ---- Menus, lists and popovers (Reka UI, app 0.3.19) ---- */
 .ui-popover { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--pop-shadow); padding: 5px; z-index: 80; color: var(--ink); font-size: 13px; animation: pop-in 0.12s ease-out; }
 @keyframes pop-in { from { opacity: 0; transform: translateY(-3px) scale(0.98); } to { opacity: 1; transform: none; } }
-.ui-menu { min-width: 220px; max-width: min(340px, calc(100vw - 16px)); }
+.ui-menu { min-width: 220px; max-width: min(340px, calc(100vw - 16px)); max-height: min(420px, var(--reka-dropdown-menu-content-available-height, 70vh)); overflow-y: auto; overscroll-behavior: contain; }
+/* A pick from a list that can run long (UiPicker): a search field, the list under it scrolls in the window. */
+.ui-picker { max-width: calc(100vw - 16px); padding: 0; display: grid; overflow: hidden; }
+.ui-picker-search { display: flex; align-items: center; gap: 8px; margin: 5px 5px 0; padding: 7px 10px; border-radius: 7px; background: var(--seg); color: var(--muted); }
+.ui-picker-search .ui-icon { font-size: 17px; }
+.ui-picker-search input { flex: 1; min-width: 0; border: 0; padding: 0; background: none; outline: none; box-shadow: none; font-size: 13px; color: var(--ink); }
+.ui-picker-list { max-height: min(320px, calc(var(--reka-popover-content-available-height, 60vh) - 52px)); overflow-y: auto; overscroll-behavior: contain; padding: 5px; }
+.ui-picker-empty { padding: 10px 9px; color: var(--muted); font-size: 12.5px; }
 .ui-menu-item { display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 6px; cursor: default; outline: none; user-select: none; color: var(--ink); line-height: 1.3; }
 .ui-menu-item[data-highlighted] { background: var(--seg); }
 .ui-menu-item[data-disabled] { opacity: 0.45; }

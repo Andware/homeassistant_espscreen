@@ -98,6 +98,9 @@ Most of these are guarded by a test; the test names the doc to read when it fail
   scrolling stays out unless it is tested on real glass. Keep the touch filter and the event guard before actions;
   calibration works on filtered raw values, and the affine correction is applied once, never in both the driver and
   the UI. The default standby is at least 600 seconds.
+- **The editor's controls are Reka UI** (docs/PAGES.md): menus, selects, pickers and popups come from the wrappers in
+  `web/src/components/ui/`, a list of the user's own entities is a searchable, scrolling `UiPicker`, and a part Reka
+  has is never built by hand.
 - **The editor** is `web/src`; `screen_manager/app/static` is its build output: run `cd web && npm test && npm run
   build` and commit both. Keep every URL the page asks for relative (`api/...`) so it works behind ingress.
 - Production ingress needs no long-lived token or public port.

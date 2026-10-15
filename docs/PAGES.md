@@ -36,7 +36,12 @@ words alone don't say it. Help icons work with keyboard focus, pointer hover and
 help closes it. Errors, compatibility notices and unsaved-change status remain visible.
 
 Menus, lists to pick from and switches use Reka UI (app 0.3.19), wrapped in `web/src/components/ui/` so every
-panel uses the same few building blocks. The inspector groups a tile's settings in five cards (Text, Look,
+panel uses the same few building blocks. Build a new control from Reka's rich parts, never from a hand-made list or
+popup: `UiMenu` for a few fixed actions, `UiSelect` for one value from a short fixed list, and `UiPicker` (a Reka
+Popover with a Combobox) for anything picked from the user's own Home Assistant, such as entities, players or areas.
+Such a list can run to dozens of items, so it needs a search field and a list that scrolls inside the window. When
+Reka has a part for what you need (Combobox, Popover, Tooltip, Dialog, Tabs, Slider, ...), wrap it in
+`web/src/components/ui/` first and use that wrapper. The inspector groups a tile's settings in five cards (Text, Look,
 Size and place, Controls, Icon and color) and a page's in three (Title, Navigation, Top bar). The icons of the
 editor's own controls are Material Design Icons, listed in `web/src/model/ui-icons.json`.
 

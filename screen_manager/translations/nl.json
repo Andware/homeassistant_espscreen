@@ -2454,6 +2454,8 @@
         "players": "Spelers, de eerste bovenaan",
         "players_hint": "De eerste die speelt, verschijnt met zijn hoes.",
         "player_add": "Speler toevoegen",
+        "player_search": "Zoek een speler",
+        "player_none": "Geen speler gevonden",
         "remove_player": "{name} weghalen",
         "keys_hint": "Afspelen, pauze en het volume werken op de screensaver. Een tik ergens anders maakt het scherm wakker.",
         "choose_camera": "Kies een camera",

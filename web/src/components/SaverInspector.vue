@@ -12,8 +12,7 @@ import Icon from "./ui/Icon.vue";
 import InspectorHead from "./ui/InspectorHead.vue";
 import Section from "./ui/Section.vue";
 import SwitchRow from "./ui/SwitchRow.vue";
-import UiMenu from "./ui/UiMenu.vue";
-import UiMenuItem from "./ui/UiMenuItem.vue";
+import UiPicker from "./ui/UiPicker.vue";
 import UiSelect from "./ui/UiSelect.vue";
 import { useEntitiesStore } from "../stores/entities";
 import { useTopbarStore } from "../stores/topbar";
@@ -36,6 +35,7 @@ const crumbs = computed(() => [
 ]);
 const shown = computed(() => playerSort.live.value || screensaver.players);
 const free = computed(() => screensaver.entitiesOf("media", screensaver.players));
+const freeItems = computed(() => free.value.map((e) => ({ id: e.id, name: e.name, hint: e.area })));
 const playerSort = useSortableRows<string>({ rows: "#saver-players > .item", items: () => screensaver.players, commit: screensaver.setPlayers, skip: "button", grip: ".grip",
   enabled: () => screensaver.saverReady && screensaver.players.length > 1 });
 watch(() => screensaver.weatherSource, (id) => id && entities.loadLibraryStates([id], doc.stillSelected()), { immediate: true });
@@ -62,12 +62,11 @@ watch(() => screensaver.weatherSource, (id) => id && entities.loadLibraryStates(
             <button type="button" class="x" :aria-label="T('remove_player', { name: entities.entityName(id) })" @click="screensaver.removePlayer(id)"><Icon name="close" /></button>
           </div>
         </div>
-        <UiMenu v-if="screensaver.players.length < MAX_PLAYERS" align="start" width="260px">
+        <UiPicker v-if="screensaver.players.length < MAX_PLAYERS" :items="freeItems" :placeholder="T('player_search')" :empty="T('player_none')" @pick="screensaver.addPlayer">
           <template #trigger>
             <button type="button" class="ghost-btn" id="saver-add-player"><Icon name="plus" />{{ T("player_add") }}</button>
           </template>
-          <UiMenuItem v-for="e in free" :key="e.id" :hint="e.area" @select="screensaver.addPlayer(e.id)">{{ e.name }}</UiMenuItem>
-        </UiMenu>
+        </UiPicker>
         <small class="help">{{ T("players_hint") }}</small>
       </Section>
       <p class="hint saver-foot-hint">{{ T("keys_hint") }}</p>
