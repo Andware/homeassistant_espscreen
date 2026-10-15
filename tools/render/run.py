@@ -857,7 +857,8 @@ class Run:
         await self.send({'v': 2, 'op': 'plugin', 'p': 'host_probe', 'm': {'re': body['re'], 'ok': True, 'result': {
             'prices': days[1]['prices'], 'start': 1791410400}}})
         await self.until(lambda l: probe(l, f'message re={body["re"]} ok=1 prices=96'), 10, 'a mapped answer of 96 prices', start)
-        # A tap on the plugin tile: through the touch guard to on_tap and on_touch; the plugin opens its card.
+        # A tap on the plugin tile: on_press as the finger lands (plugin API 0.11), then through the touch guard to on_tap
+        # and on_touch; the plugin opens its card.
         start = len(self.lines)
         tile = (await self.navigation_state())['tile']
         await self.tap(*tile)
@@ -868,6 +869,7 @@ class Run:
         tx, ty = (int(v) for v in re.search(r'at=(-?\d+),(-?\d+)', tapped).groups())
         if not (0 <= tx < tw and 0 <= ty < th):
             self.failures.append(f'the tap point {tx},{ty} is not within the tile\'s {tw}x{th}: {tapped}')
+        await self.until(lambda l: probe(l, 'press'), 10, 'on_press', start)
         await self.until(lambda l: probe(l, 'touch'), 10, 'on_touch', start)
         await self.until(lambda l: probe(l, 'card open') and 'tile=0' in l, 10, 'the card opened', start)
         await self.until(lambda l: probe(l, 'card tick'), 10, 'the card ticked', start)
