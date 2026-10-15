@@ -559,7 +559,7 @@ struct Widgets {
   const lv_point_precise_t *fill_points{}; unsigned fill_count=0; int fill_x=0, fill_y=0, fill_base=0; lv_color_t fill_color{}; lv_opa_t fill_opa=0;
   // Direct controls on a wide card: a panel at the right with pill keys, a -/+ pill,
   // a slider or a toggle. Objects are rebuilt only when the control set changes.
-  lv_obj_t *panel{}; std::string panel_mode; bool panel_dirty=false, panel_full=false, panel_tall=false; int panel_w=0; uint16_t panel_layout_w=0,panel_layout_h=0;
+  lv_obj_t *panel{}; std::string panel_mode; bool panel_dirty=false, panel_full=false, panel_tall=false, panel_pair=false; int panel_w=0; uint16_t panel_layout_w=0,panel_layout_h=0;
   std::array<lv_obj_t *,3> keys{}, key_icons{}; std::array<int,3> key_commands{}; std::array<std::string,3> key_args; std::array<int,3> key_checked{};
   // A thermostat's mode bar as its panel ("Mode", firmware 0.19.0): its segments, on the panel's track (pill).
   std::array<lv_obj_t *,climate_tile::SEGMENTS> segments{};
@@ -7342,11 +7342,28 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
   const int key_w=std::min(m.key_w,std::max(ui::touch_min(),(keys_room-2*m.gap)/3));
   // A player's volume shares that room with its mute key; every other slider takes it whole.
   const int track=(w.full||taller)?(mode=="volume"?m.slider_w:m.pill_w):(mode=="volume"?std::max(ui::touch_min(),fill-m.gap-m.key_h):fill);
+  // A player's volume over its playback keys (volume_playback) on a taller card: one panel, the slider a row above.
+  const bool pair=taller&&mode=="playback"&&tile_controls::media_volume_selected(t);
+  const int pair_w=pair?std::max(3*key_w+2*m.gap,m.pill_w):0;
+  auto make_slider=[&](int width,int h){
+    auto *slider=lv_slider_create(w.panel);w.control_slider=slider;
+    lv_obj_remove_flag(slider,LV_OBJ_FLAG_GESTURE_BUBBLE);lv_obj_remove_flag(slider,LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(slider,width,h);
+    lv_obj_set_style_pad_all(slider,0,LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_MAIN);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_INDICATOR);
+    // The handle is a short white bar inside the fill, like Home Assistant's slider.
+    lv_obj_set_style_radius(slider,2,LV_PART_KNOB);lv_obj_add_style(slider,theme::style(theme::Paint::knob),LV_PART_KNOB);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
+    slider_handle(slider,width,h);
+    lv_obj_set_style_border_width(slider,0,LV_PART_KNOB);lv_obj_set_style_shadow_width(slider,0,LV_PART_KNOB);
+    lv_obj_set_ext_click_area(slider,m.ext+2);
+    lv_obj_add_event_cb(slider,slider_event,LV_EVENT_ALL,(void*)(uintptr_t)w.index);
+  };
   if(!w.panel){w.panel=panel_obj(w.tile,false);}
-  if(w.panel_mode!=mode || w.panel_full!=w.full || w.panel_tall!=taller){
-    end_panel(w);w.panel_mode=mode;w.panel_full=w.full;w.panel_tall=taller;w.panel_dirty=true;
+  if(w.panel_mode!=mode || w.panel_full!=w.full || w.panel_tall!=taller || w.panel_pair!=pair){
+    end_panel(w);w.panel_mode=mode;w.panel_full=w.full;w.panel_tall=taller;w.panel_pair=pair;w.panel_dirty=true;
     if(tile_controls::is_key_row(mode)){
       for(unsigned n=0;n<3;++n){panel_key(w,n,w.panel,m,key_w,m.key_h,false);panel_icon(w,n,icon_font);}
+      if(pair)make_slider(pair_w,m.slider_h);
     }else if(mode=="mode"){
       // Drawn per render (draw_mode_bar): the track and a segment per mode, as many as its width holds.
     }else if(mode=="setpoint"||mode=="stepper"){
@@ -7373,18 +7390,7 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
       lv_obj_set_pos(w.pill_value,m.pill_key,(m.key_h+2-lv_font_get_line_height(text_font))/2);
       w.key_commands[0]=tile_controls::STEP_DOWN;w.key_commands[1]=tile_controls::STEP_UP;
     }else if(tile_controls::is_slider(mode)){
-      int h=m.slider_h;
-      auto *slider=lv_slider_create(w.panel);w.control_slider=slider;
-      lv_obj_remove_flag(slider,LV_OBJ_FLAG_GESTURE_BUBBLE);lv_obj_remove_flag(slider,LV_OBJ_FLAG_SCROLLABLE);
-      lv_obj_set_size(slider,track,h);
-      lv_obj_set_style_pad_all(slider,0,LV_PART_MAIN);
-      lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_MAIN);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_INDICATOR);
-      // The handle is a short white bar inside the fill, like Home Assistant's slider.
-      lv_obj_set_style_radius(slider,2,LV_PART_KNOB);lv_obj_add_style(slider,theme::style(theme::Paint::knob),LV_PART_KNOB);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
-      slider_handle(slider,track,h);
-      lv_obj_set_style_border_width(slider,0,LV_PART_KNOB);lv_obj_set_style_shadow_width(slider,0,LV_PART_KNOB);
-      lv_obj_set_ext_click_area(slider,m.ext+2);
-      lv_obj_add_event_cb(slider,slider_event,LV_EVENT_ALL,(void*)(uintptr_t)w.index);
+      make_slider(track,m.slider_h);
       if(mode=="volume"){panel_key(w,0,w.panel,m,m.key_h,m.key_h,false);panel_icon(w,0,icon_font);w.key_commands[0]=tile_controls::MEDIA_MUTE;}
     }else if(mode=="toggle"){
       panel_key(w,0,w.panel,m,m.toggle_w,m.toggle_h,false);lv_obj_set_style_radius(w.keys[0],LV_RADIUS_CIRCLE,0);
@@ -7409,15 +7415,28 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
   auto set_disabled=[&](unsigned n,bool disabled){if(disabled)lv_obj_add_state(w.keys[n],LV_STATE_DISABLED);else lv_obj_remove_state(w.keys[n],LV_STATE_DISABLED);};
   if(tile_controls::is_key_row(mode)){
     std::array<tile_controls::Key,3> keys;unsigned count=tile_controls::keys_for(t,keys,now);
+    // With the volume above them, the keys stand centred under its slider, a row lower.
+    const bool volume=pair&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET);
+    const int row_w=count?count*key_w+(count-1)*m.gap:0;
+    const int key_x=volume?(pair_w-row_w)/2:0,key_y=volume?m.slider_h+m.gap:0;
     for(unsigned n=0;n<3;++n){
       if(n>=count){lv_obj_add_flag(w.keys[n],LV_OBJ_FLAG_HIDDEN);w.key_commands[n]=tile_controls::NONE;continue;}
-      lv_obj_remove_flag(w.keys[n],LV_OBJ_FLAG_HIDDEN);lv_obj_set_pos(w.keys[n],n*(key_w+m.gap),0);
+      lv_obj_remove_flag(w.keys[n],LV_OBJ_FLAG_HIDDEN);lv_obj_set_pos(w.keys[n],key_x+n*(key_w+m.gap),key_y);
       label(w.key_icons[n],keys[n].icon);center_icon(w.key_icons[n]);w.key_commands[n]=keys[n].command;w.key_args[n]=keys[n].arg;
       // The active mode key carries the accent; "off" stays neutral grey.
       if(keys[n].checked && w.key_checked[n]!=1)lv_obj_set_style_bg_color(w.keys[n],keys[n].arg=="off"?theme::color(theme::OFF):w.panel_accent,LV_STATE_CHECKED);
       set_checked(n,keys[n].checked);set_disabled(n,keys[n].disabled);
     }
-    panel_w=count?count*key_w+(count-1)*m.gap:0;
+    panel_w=row_w;
+    if(pair&&w.control_slider){
+      set_hidden(w.control_slider,!volume);
+      if(volume){
+        lv_obj_set_pos(w.control_slider,0,0);
+        // Keep the dragged value while the command is under way; HA's report takes over afterwards.
+        if(!lv_obj_has_state(w.control_slider,LV_STATE_PRESSED) && !(t.pending && !t.confirmed))lv_slider_set_value(w.control_slider,slider_value(t),LV_ANIM_OFF);
+        panel_w=pair_w;panel_h=key_y+m.key_h;
+      }
+    }
   }else if(mode=="mode"){
     // A thermostat's modes (firmware 0.19.0): the bar under its -/+ in "Temperature and mode", with the same rule for
     // how many fit (climate_tile::bar_room) and the same modes (climate_bar_keys). Over the card's reach on a card of
@@ -8016,6 +8035,11 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
   const int touch=std::max(ui::touch_min(),ui::px(large?48:34));
   tall_tile::Metrics m{width,height,(int)lv_font_get_line_height(w.title_font),
     (int)lv_font_get_line_height(w.value_font),w.base_circle,gap,ui::touch_min(),ui::control_max_width(),{touch+2,0},selected?1:0};
+  // A player's volume over its keys asks a second row; without the room for both, its keys alone.
+  if(selected&&tile_controls::media_volume_selected(t)&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET)){
+    auto both=m;both.row_heights={touch+2,touch+2};both.row_count=2;
+    if(tall_tile::layout(both).fits)m=both;
+  }
   auto cover_metrics=m;cover_metrics.row_count=0;
   const auto cover_base=tall_tile::layout(cover_metrics);
   auto cover=cover_tile_layout(t,cover_base.body,touch,gap,m.state_h);
@@ -8098,8 +8122,10 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
   if(!panel)hide_panel(w);
   if(panel){
     const int pw=lv_obj_get_style_width(w.panel,LV_PART_MAIN),ph=lv_obj_get_style_height(w.panel,LV_PART_MAIN);
-    if(pw>width||ph>l.rows[0].h){hide_panel(w);panel=false;}
-    else lv_obj_set_pos(w.panel,(width-pw)/2,l.rows[0].y+(l.rows[0].h-ph)/2);
+    // Its rows together: one row, or the volume's and the keys' with the gap between them.
+    const int top=l.rows[0].y,room=(l.count>1?l.rows[1].bottom():l.rows[0].bottom())-top;
+    if(pw>width||ph>room){hide_panel(w);panel=false;}
+    else lv_obj_set_pos(w.panel,(width-pw)/2,top+(room-ph)/2);
   }
   const auto d=t.domain();
   begin_extra(w,"tall",width,height);

@@ -103,6 +103,9 @@ export function roomless(domain: string, key: string, size: unknown): string {
 export function drawable(domain: string, key: string, attributes: Attributes, features: Set<string> | null): string {
   const item = controlOption(domain, key);
   if (!item) return key;
+  // A set a screen draws once it says so in its hello (a player's volume over its keys, media_rows): another before then.
+  if (item.screen?.feature && item.screen.else !== undefined && !screenHolds(item.screen, features))
+    return item.screen.else === "none" ? "none" : drawable(domain, item.screen.else, attributes, features);
   if (item.of) {
     const parts = item.of.map((part) => drawable(domain, part, attributes, features));
     if (parts.every((part, i) => part === item.of![i])) return key;

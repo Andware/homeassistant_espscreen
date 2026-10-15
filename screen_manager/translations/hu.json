@@ -1011,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Hangerő és némítás",
-          "playback": "Előző, lejátszás/szünet, következő"
+          "playback": "Előző, lejátszás/szünet, következő",
+          "volume_playback": "Hangerő és előző, lejátszás/szünet, következő"
         },
         "number": {
           "stepper": "Érték − / +",

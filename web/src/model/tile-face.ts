@@ -92,6 +92,7 @@ export function drawnControls(domain: string, chosen: string | null, live: Live 
   const drawn = chosen ? drawable(domain, chosen, live?.a || {}, rangeReady ? null : new Set<string>()) : null;
   const selected = drawn === "none" ? null : drawn;
   if (selected === "setpoint_mode" && rows < 2) return "setpoint";
+  if (selected === "volume_playback" && rows < 2) return "volume";
   if (domain !== "cover") return selected;
   const primary = coverPrimary(selected);
   return primary === "none" ? null : primary;
@@ -118,7 +119,8 @@ export function tileFace(input: FaceInput): Face {
     && (!tallControls || tallControls === "toggle" || tallControls === "run");
   const face: Omit<Face, "kind"> = {
     domain, display, full, wide, tall, thermostat, climateModes, coverExtended, coverRow, coverPrimary: coverPrimaryKind, tallAction, tallStack, bigKey, controls, tallControls,
-    tallKeys: controlKeys(domain, tallControls, state, a),
+    // A player's volume over its keys: the keys are its playback's, the volume a row above them (TileTall).
+    tallKeys: controlKeys(domain, tallControls === "volume_playback" ? "playback" : tallControls, state, a),
     panelKeys: controls && !NOT_KEYS.includes(controls) ? controlKeys(domain, controls, state, a) : [],
     modeBar: thermostat && controls === "mode",
     fillsCell: FILLS_CELL.includes(controls || "") || (controls === "stepper" && !domain.endsWith("select")),

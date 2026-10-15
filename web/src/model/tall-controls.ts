@@ -76,6 +76,8 @@ export function availableControl(domain: string, kind: string | null, state: str
   if (kind === 'brightness') return domain === 'light' && (!a.supported_color_modes?.length || a.supported_color_modes.some((mode: string) => ['brightness', 'white', 'color_temp', 'hs', 'rgb', 'rgbw', 'rgbww', 'xy'].includes(mode))) ? kind : '';
   if (kind === 'speed') return domain === 'fan' && f & bits('fan', 'SET_SPEED') ? kind : '';
   if (kind === 'position') return domain === 'cover' && f & bits('cover', 'SET_POSITION') ? kind : '';
+  // A player's volume over its playback keys (runtime_tiles media_volume_selected): where its keys stand.
+  if (kind === 'volume_playback') return domain === 'media_player' && controlKeys(domain, 'playback', state, a).length ? kind : '';
   if (kind === 'volume') return domain === 'media_player' && f & bits('media_player', 'VOLUME_SET', 'VOLUME_MUTE') ? kind : '';
   // A single temperature (feature 1) or a range with its chip (feature 2, firmware 0.19.0).
   // A humidifier's humidity between - and + (firmware 0.42.0+), whatever it reports.

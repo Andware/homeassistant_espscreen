@@ -5,6 +5,10 @@
   beside the tile lists every set that fits, so you can keep that one, pick another or choose none, and pointing at
   one shows it on the tile first. A set you chose yourself is kept and added to. "Don't show again" hides the tip;
   the inspector's Controls works as before.
+- **A media player shows its volume and its playback keys together.** On a tile two rows high or larger, a player can
+  now have both: the volume slider above previous, play/pause and next, as Home Assistant stacks them. Pick "Volume and
+  previous, play/pause, next" under Controls, or drag a player's tile larger and it is suggested. A screen gets it after
+  its next update; until then it shows the playback keys.
 - **The vacuum card shows the map, the rooms and the routines.** On every board with 8 MB of flash or more, a robot
   vacuum's card now shows its map, cleaned up and in the screen's own colours, with its state and battery above it.
   Tap rooms in the order you want and Start cleans just those (Home Assistant's clean by area), its own routines run

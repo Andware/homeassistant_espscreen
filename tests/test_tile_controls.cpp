@@ -524,6 +524,10 @@ int main() {
   limited=make("media_player.mute","playing",8); limited.controls="volume"; assert(panel_available(limited));
   limited.controls="playback"; assert(!panel_available(limited));
   limited.supported=16; assert(panel_available(limited));
+  // A player's volume over its keys (volume_playback): the keys are its first group, so it stands where they do.
+  limited.controls="volume_playback"; assert(media_volume_selected(limited) && panel_kind(limited) == "playback" && panel_available(limited));
+  limited.supported=8; assert(!panel_available(limited));
+  limited.supported=16; limited.controls="volume";
   limited.state="unavailable"; assert(!panel_available(limited));
   return 0;
 }

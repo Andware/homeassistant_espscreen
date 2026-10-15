@@ -28,7 +28,7 @@ ENTITIES = [
     {'supported_features': 3, 'temperature': None, 'target_temp_low': 19, 'target_temp_high': 23},
     {'supported_features': 8},                                 # a thermostat's fan only; a cover's stop
 ]
-FEATURES = [None, [], ['climate_range'], ['cover_rows']]
+FEATURES = [None, [], ['climate_range'], ['cover_rows'], ['media_rows']]
 
 
 def cases():

@@ -1023,6 +1023,29 @@ class Run:
                 await self.render(f'{size}-{page + 1}')
         return checks
 
+    async def media_tiles(self, grid):
+        """A player's tile on taller cards (`--only mediatiles`): its keys alone as before, then its volume over its keys
+        (volume_playback, media_rows), on a card of one column two rows high, a square and a 3 x 2, where the grid has them."""
+        if grid.rows < 2: return 0
+        sizes = ['tall', *(['square'] if grid.columns >= 2 else []), *(['3x2'] if grid.columns >= 3 else [])]
+        cases = [(size, controls) for size in sizes for controls in ('playback', 'volume_playback')][:grid.pages]
+        states = {'media_player.demo_sonos': {'state': 'playing', 'attributes': {
+            'friendly_name': 'Living room', 'volume_level': 0.42, 'is_volume_muted': False, 'media_title': 'Evening Drive',
+            'media_artist': 'Nova Coast', 'media_album_name': 'Low Sun', 'supported_features': 8321599}}}
+        tiles = [dict(entity='media_player.demo_sonos', name='Living room', slot=page * grid.slots,
+                      options={'size': size, 'controls': controls, 'icon': 'speaker'}) for page, (size, controls) in enumerate(cases)]
+        record = send_layout.migrate_legacy(dict(title='Music', tiles=tiles), grid)
+        values = [send_layout.state_message(index, tile, states) for index, tile in enumerate(send_layout.compile_tiles(record['layout'], grid))]
+        bars = [[{'k': 'clock'}] for _ in record['layout']['pages']]
+        region = dict(keepalive=120, clock_24h=True, numbers='point', group_min=1, percent_space=False)
+        await self.sender.synchronize(self.inbox.object_id, record, region, values, bars)
+        checks = await self.self_test()
+        for page, (size, controls) in enumerate(cases):
+            await self.call('render_page', page=page)
+            await self.page_done(page)
+            await self.render(f'media-{size}-{controls}')
+        return checks
+
     async def bedside_clock(self, grid):
         """The bedside clock over its page with three keys (firmware 0.8.0+), on every board and both orientations: its
         digits come from a size the looks work out from the glass (FONT_BEDSIDE_SIZE), and the self test fails a board
@@ -3157,6 +3180,8 @@ class Run:
             return 1, await self.bedside_clock(grid)
         if self.only == 'media':
             return 1, await self.media_panel(grid)
+        if self.only == 'mediatiles':
+            return 1, await self.media_tiles(grid)
         if self.only == 'saver':
             return 1, await self.saver_panel()
         if self.only == 'humidifier':
@@ -3261,7 +3286,7 @@ def main():
     parser.add_argument('--out', type=Path, default=REPO / '.esphome' / 'render' / 'out')
     parser.add_argument('--work', type=Path, help='where the host builds go (default: .esphome/render/build)')
     parser.add_argument('--camera', default='960x540', help='the camera picture of the camera alert, WxH')
-    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock', 'vacuum'], help='after the demo layout arrives, run only this stage')
+    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'mediatiles', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock', 'vacuum'], help='after the demo layout arrives, run only this stage')
     parser.add_argument('--plugin', type=Path, help='a plugin folder (docs/PLUGINS.md) to build into the variants, then run the plugin '
                         'round alone: tests/fixtures/plugins/host_probe proves the plugin host on the real firmware')
     parser.add_argument('--port-base', type=int, help='the first API port (default host.PORT_BASE); another worktree may use it')

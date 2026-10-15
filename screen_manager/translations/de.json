@@ -1011,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Lautstärke und Stumm",
-          "playback": "Zurück, Wiedergabe/Pause, Weiter"
+          "playback": "Zurück, Wiedergabe/Pause, Weiter",
+          "volume_playback": "Lautstärke und Zurück, Wiedergabe/Pause, Weiter"
         },
         "number": {
           "stepper": "Wert − / +",

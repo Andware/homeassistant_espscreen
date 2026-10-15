@@ -1011,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Volume en dempen",
-          "playback": "Vorige, play/pauze, volgende"
+          "playback": "Vorige, play/pauze, volgende",
+          "volume_playback": "Volume en vorige, play/pauze, volgende"
         },
         "number": {
           "stepper": "Waarde − / +",

@@ -1011,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Volume and mute",
-          "playback": "Previous, play/pause, next"
+          "playback": "Previous, play/pause, next",
+          "volume_playback": "Volume and previous, play/pause, next"
         },
         "number": {
           "stepper": "Value − / +",

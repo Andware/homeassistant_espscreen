@@ -53,7 +53,9 @@ const rangeStyle = computed(() => ({ ...card.sliderStyle, "--fill": `${card.fill
         <span v-else-if="card.domain === 'humidifier' && !card.gone" class="target-value">{{ card.texts.reading || card.texts.status }}</span>
         <span v-else-if="card.domain !== 'screen' && !card.gone && card.face.tallControls !== 'toggle'" class="target-value">{{ card.domain === 'light' && card.lit ? `${card.fill}%` : card.texts.status }}</span>
       </span>
-      <span v-if="card.face.tallControls" class="ctl" :class="{ playback: card.face.tallControls === 'playback' }">
+      <!-- A player's volume over its keys (volume_playback): a row of its own above them, as the screen stacks them. -->
+      <span v-if="card.face.tallControls === 'volume_playback' && card.features & bits('media_player', 'VOLUME_SET')" class="ctl volume-row"><span class="range" :style="rangeStyle"></span></span>
+      <span v-if="card.face.tallControls" class="ctl" :class="{ playback: ['playback', 'volume_playback'].includes(card.face.tallControls) }">
         <span v-if="card.face.tallControls === 'toggle'" class="tog" :class="{ off: !card.on }"></span>
         <span v-else-if="card.face.tallControls === 'setpoint'" class="stp"><span class="mdi">{{ card.key("minus") || "−" }}</span><RangeChip v-if="card.chip" :chip="card.chip" :icon="card.key(card.chip.icon)" /><b v-else :style="{ '--pill-ems': textEms(card.texts.setpoint + '8') }">{{ card.texts.setpoint }}</b><span class="mdi">{{ card.key("plus") || "+" }}</span></span>
         <ModeBar v-else-if="card.face.tallControls === 'mode' && card.face.thermostat" :a="card.current?.a || {}" :mode="card.current?.state || ''" :domain="card.domain" place="tall" :columns="card.shape.columns" />

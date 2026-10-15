@@ -92,11 +92,17 @@ inline bool cover_tilt_selected(const Tile &t) {
 inline bool climate_modes_selected(const Tile &t) {
   return thermostat(t) && t.controls=="setpoint_mode";
 }
+// A player's volume over its playback keys (Home Assistant's two media tile features stacked), where a taller card has
+// the room: the keys are its first group, the volume slider the second.
+inline bool media_volume_selected(const Tile &t) {
+  return t.domain()=="media_player" && t.controls=="volume_playback";
+}
 // A select's "stepper" is a pair of chevron keys; numbers and climate get the -/+ pill.
 inline std::string panel_kind(const Tile &t) {
   auto c = t.controls, d = t.domain();
   if(d=="cover"){if(c=="tilt")return {};if(c=="buttons_tilt")return "buttons";if(c=="position_tilt")return "position";}
   if((d=="climate"||d=="humidifier")&&c=="setpoint_mode")return "setpoint";
+  if(d=="media_player"&&c=="volume_playback")return "playback";
   // The small slider of a wide card is that domain's slider: the manager sends no control set beside it
   // (resolve_controls), so the kind comes from the domain.
   if (c.empty() && t.inline_control == "slider") return inline_kind(d);

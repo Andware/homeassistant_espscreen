@@ -1011,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Volume et sourdine",
-          "playback": "Précédent, lecture/pause, suivant"
+          "playback": "Précédent, lecture/pause, suivant",
+          "volume_playback": "Volume et précédent, lecture/pause, suivant"
         },
         "number": {
           "stepper": "Valeur − / +",

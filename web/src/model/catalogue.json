@@ -1438,6 +1438,19 @@
        }
       ]
      }
+    },
+    {
+     "key": "volume_playback",
+     "screen": {
+      "feature": "media_rows",
+      "else": "playback"
+     },
+     "rows": 2,
+     "of": [
+      "volume",
+      "playback"
+     ],
+     "one_row": "volume"
     }
    ],
    "inline": {
@@ -1450,6 +1463,9 @@
      ]
     }
    },
+   "grow": [
+    "volume_playback"
+   ],
    "toggle": null,
    "taps": [],
    "guards": [],

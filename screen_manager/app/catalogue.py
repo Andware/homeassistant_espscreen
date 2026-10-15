@@ -251,6 +251,11 @@ def drawable(domain, key, attributes, features):
     item = option(domain, 'controls', key)
     if item is None:
         return key
+    # A set a screen draws once it says so in its hello (a player's volume over its keys, media_rows): another the
+    # screen draws before then (`else`).
+    screen = item.get('screen') or {}
+    if screen.get('feature') and 'else' in screen and not screen_holds(screen, features=features):
+        return 'none' if screen['else'] == 'none' else drawable(domain, screen['else'], attributes, features)
     if 'of' in item:
         parts = [drawable(domain, part, attributes, features) for part in item['of']]
         if parts == item['of']:

@@ -687,6 +687,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -732,6 +742,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "automation",
@@ -770,6 +792,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -824,6 +858,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -870,6 +917,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -932,6 +993,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "automation",
@@ -970,6 +1046,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "automation",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -1081,6 +1169,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -1126,6 +1224,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "automation",
@@ -1164,6 +1274,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -1218,6 +1340,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -1264,6 +1399,20 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -1326,6 +1475,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "automation",
@@ -1364,6 +1528,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "automation",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -2015,6 +2191,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -2060,6 +2246,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "button",
@@ -2098,6 +2296,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -2152,6 +2362,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -2198,6 +2421,20 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -2260,6 +2497,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "button",
@@ -2298,6 +2550,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "button",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -3169,6 +3433,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "climate",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -3214,6 +3488,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "climate",
+"expect": "none",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "climate",
@@ -3252,6 +3538,18 @@
 "expect": "setpoint",
 "features": [
 "cover_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "climate",
+"expect": "setpoint",
+"features": [
+"media_rows"
 ],
 "key": "setpoint",
 "kind": "drawable"
@@ -3306,6 +3604,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "climate",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -3352,6 +3663,20 @@
 "expect": "none",
 "features": [
 "cover_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "climate",
+"expect": "none",
+"features": [
+"media_rows"
 ],
 "key": "setpoint",
 "kind": "drawable"
@@ -3414,6 +3739,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "climate",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "climate",
@@ -3452,6 +3792,18 @@
 "expect": "none",
 "features": [
 "cover_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "climate",
+"expect": "none",
+"features": [
+"media_rows"
 ],
 "key": "setpoint",
 "kind": "drawable"
@@ -3563,6 +3915,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -3608,6 +3970,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "climate",
@@ -3646,6 +4020,18 @@
 "expect": "mode",
 "features": [
 "cover_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
 ],
 "key": "mode",
 "kind": "drawable"
@@ -3700,6 +4086,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -3746,6 +4145,20 @@
 "expect": "mode",
 "features": [
 "cover_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
 ],
 "key": "mode",
 "kind": "drawable"
@@ -3808,6 +4221,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "climate",
@@ -3846,6 +4274,18 @@
 "expect": "mode",
 "features": [
 "cover_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
 ],
 "key": "mode",
 "kind": "drawable"
@@ -3957,6 +4397,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "climate",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -4002,6 +4452,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "climate",
@@ -4040,6 +4502,18 @@
 "expect": "setpoint_mode",
 "features": [
 "cover_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "climate",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
 ],
 "key": "setpoint_mode",
 "kind": "drawable"
@@ -4094,6 +4568,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "climate",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -4140,6 +4627,20 @@
 "expect": "mode",
 "features": [
 "cover_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
 ],
 "key": "setpoint_mode",
 "kind": "drawable"
@@ -4202,6 +4703,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "climate",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "climate",
@@ -4240,6 +4756,18 @@
 "expect": "mode",
 "features": [
 "cover_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "climate",
+"expect": "mode",
+"features": [
+"media_rows"
 ],
 "key": "setpoint_mode",
 "kind": "drawable"
@@ -5331,6 +5859,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -5376,6 +5914,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "cover",
@@ -5414,6 +5964,18 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -5468,6 +6030,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -5514,6 +6089,20 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -5576,6 +6165,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "cover",
@@ -5614,6 +6218,18 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "cover",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -5725,6 +6341,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -5770,6 +6396,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "cover",
@@ -5808,6 +6446,18 @@
 "expect": "position",
 "features": [
 "cover_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
 ],
 "key": "position",
 "kind": "drawable"
@@ -5862,6 +6512,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -5908,6 +6571,20 @@
 "expect": "position",
 "features": [
 "cover_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
 ],
 "key": "position",
 "kind": "drawable"
@@ -5970,6 +6647,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "cover",
@@ -6008,6 +6700,18 @@
 "expect": "position",
 "features": [
 "cover_rows"
+],
+"key": "position",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "cover",
+"expect": "position",
+"features": [
+"media_rows"
 ],
 "key": "position",
 "kind": "drawable"
@@ -6119,6 +6823,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -6164,6 +6878,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "cover",
@@ -6202,6 +6928,18 @@
 "expect": "tilt",
 "features": [
 "cover_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
 ],
 "key": "tilt",
 "kind": "drawable"
@@ -6256,6 +6994,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -6302,6 +7053,20 @@
 "expect": "tilt",
 "features": [
 "cover_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
 ],
 "key": "tilt",
 "kind": "drawable"
@@ -6364,6 +7129,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "cover",
@@ -6402,6 +7182,18 @@
 "expect": "tilt",
 "features": [
 "cover_rows"
+],
+"key": "tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "cover",
+"expect": "tilt",
+"features": [
+"media_rows"
 ],
 "key": "tilt",
 "kind": "drawable"
@@ -6513,6 +7305,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -6558,6 +7360,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "cover",
@@ -6596,6 +7410,18 @@
 "expect": "buttons_tilt",
 "features": [
 "cover_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
 ],
 "key": "buttons_tilt",
 "kind": "drawable"
@@ -6650,6 +7476,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -6696,6 +7535,20 @@
 "expect": "buttons_tilt",
 "features": [
 "cover_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
 ],
 "key": "buttons_tilt",
 "kind": "drawable"
@@ -6758,6 +7611,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "cover",
@@ -6796,6 +7664,18 @@
 "expect": "buttons_tilt",
 "features": [
 "cover_rows"
+],
+"key": "buttons_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "cover",
+"expect": "buttons_tilt",
+"features": [
+"media_rows"
 ],
 "key": "buttons_tilt",
 "kind": "drawable"
@@ -6907,6 +7787,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -6952,6 +7842,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "cover",
@@ -6990,6 +7892,18 @@
 "expect": "position_tilt",
 "features": [
 "cover_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
 ],
 "key": "position_tilt",
 "kind": "drawable"
@@ -7044,6 +7958,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -7090,6 +8017,20 @@
 "expect": "position_tilt",
 "features": [
 "cover_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
 ],
 "key": "position_tilt",
 "kind": "drawable"
@@ -7152,6 +8093,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "cover",
@@ -7190,6 +8146,18 @@
 "expect": "position_tilt",
 "features": [
 "cover_rows"
+],
+"key": "position_tilt",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "cover",
+"expect": "position_tilt",
+"features": [
+"media_rows"
 ],
 "key": "position_tilt",
 "kind": "drawable"
@@ -7951,6 +8919,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -7996,6 +8974,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "fan",
@@ -8034,6 +9024,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -8088,6 +9090,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -8134,6 +9149,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -8196,6 +9225,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "fan",
@@ -8234,6 +9278,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "fan",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -8345,6 +9401,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -8390,6 +9456,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "fan",
@@ -8428,6 +9506,18 @@
 "expect": "speed",
 "features": [
 "cover_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
 ],
 "key": "speed",
 "kind": "drawable"
@@ -8482,6 +9572,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -8528,6 +9631,20 @@
 "expect": "speed",
 "features": [
 "cover_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
 ],
 "key": "speed",
 "kind": "drawable"
@@ -8590,6 +9707,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "fan",
@@ -8628,6 +9760,18 @@
 "expect": "speed",
 "features": [
 "cover_rows"
+],
+"key": "speed",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "fan",
+"expect": "speed",
+"features": [
+"media_rows"
 ],
 "key": "speed",
 "kind": "drawable"
@@ -9719,6 +10863,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -9764,6 +10918,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "humidifier",
@@ -9802,6 +10968,18 @@
 "expect": "setpoint",
 "features": [
 "cover_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
 ],
 "key": "setpoint",
 "kind": "drawable"
@@ -9856,6 +11034,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -9902,6 +11093,20 @@
 "expect": "setpoint",
 "features": [
 "cover_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
 ],
 "key": "setpoint",
 "kind": "drawable"
@@ -9964,6 +11169,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "humidifier",
@@ -10002,6 +11222,18 @@
 "expect": "setpoint",
 "features": [
 "cover_rows"
+],
+"key": "setpoint",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
 ],
 "key": "setpoint",
 "kind": "drawable"
@@ -10113,6 +11345,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -10158,6 +11400,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "humidifier",
@@ -10196,6 +11450,18 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -10250,6 +11516,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -10296,6 +11575,20 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -10358,6 +11651,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "humidifier",
@@ -10396,6 +11704,18 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "humidifier",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -10507,6 +11827,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "humidifier",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -10552,6 +11882,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "humidifier",
+"expect": "none",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "humidifier",
@@ -10590,6 +11932,18 @@
 "expect": "mode",
 "features": [
 "cover_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "humidifier",
+"expect": "mode",
+"features": [
+"media_rows"
 ],
 "key": "mode",
 "kind": "drawable"
@@ -10644,6 +11998,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "humidifier",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -10690,6 +12057,20 @@
 "expect": "none",
 "features": [
 "cover_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "humidifier",
+"expect": "none",
+"features": [
+"media_rows"
 ],
 "key": "mode",
 "kind": "drawable"
@@ -10752,6 +12133,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "humidifier",
+"expect": "mode",
+"features": [
+"media_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "humidifier",
@@ -10790,6 +12186,18 @@
 "expect": "none",
 "features": [
 "cover_rows"
+],
+"key": "mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "humidifier",
+"expect": "none",
+"features": [
+"media_rows"
 ],
 "key": "mode",
 "kind": "drawable"
@@ -10901,6 +12309,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "humidifier",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -10946,6 +12364,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "humidifier",
@@ -10984,6 +12414,18 @@
 "expect": "setpoint_mode",
 "features": [
 "cover_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "humidifier",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
 ],
 "key": "setpoint_mode",
 "kind": "drawable"
@@ -11038,6 +12480,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "humidifier",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -11084,6 +12539,20 @@
 "expect": "setpoint",
 "features": [
 "cover_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
 ],
 "key": "setpoint_mode",
 "kind": "drawable"
@@ -11146,6 +12615,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "humidifier",
+"expect": "setpoint_mode",
+"features": [
+"media_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "humidifier",
@@ -11184,6 +12668,18 @@
 "expect": "setpoint",
 "features": [
 "cover_rows"
+],
+"key": "setpoint_mode",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "humidifier",
+"expect": "setpoint",
+"features": [
+"media_rows"
 ],
 "key": "setpoint_mode",
 "kind": "drawable"
@@ -11295,6 +12791,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -11340,6 +12846,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "humidifier",
@@ -11378,6 +12896,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -11432,6 +12962,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -11478,6 +13021,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -11540,6 +13097,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "humidifier",
@@ -11578,6 +13150,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "humidifier",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -12229,6 +13813,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -12274,6 +13868,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "input_boolean",
@@ -12312,6 +13918,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -12366,6 +13984,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -12412,6 +14043,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -12474,6 +14119,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "input_boolean",
@@ -12512,6 +14172,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "input_boolean",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -13163,6 +14835,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -13208,6 +14890,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "input_button",
@@ -13246,6 +14940,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -13300,6 +15006,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -13346,6 +15065,20 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -13408,6 +15141,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "input_button",
@@ -13446,6 +15194,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "input_button",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -14207,6 +15967,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -14252,6 +16022,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "input_number",
@@ -14290,6 +16072,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -14344,6 +16138,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -14390,6 +16197,20 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -14452,6 +16273,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "input_number",
@@ -14490,6 +16326,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "input_number",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -14601,6 +16449,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -14646,6 +16504,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "input_number",
@@ -14684,6 +16554,18 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -14738,6 +16620,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -14784,6 +16679,20 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -14846,6 +16755,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "input_number",
@@ -14884,6 +16808,18 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "input_number",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -15535,6 +17471,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -15580,6 +17526,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "input_select",
@@ -15618,6 +17576,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -15672,6 +17642,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -15718,6 +17701,20 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -15780,6 +17777,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "input_select",
@@ -15818,6 +17830,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "input_select",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -16579,6 +18603,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -16624,6 +18658,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "light",
@@ -16662,6 +18708,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -16716,6 +18774,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -16762,6 +18833,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -16824,6 +18909,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "light",
@@ -16862,6 +18962,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "light",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -16973,6 +19085,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -17018,6 +19140,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "light",
@@ -17056,6 +19190,18 @@
 "expect": "brightness",
 "features": [
 "cover_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
 ],
 "key": "brightness",
 "kind": "drawable"
@@ -17110,6 +19256,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -17156,6 +19315,20 @@
 "expect": "brightness",
 "features": [
 "cover_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
 ],
 "key": "brightness",
 "kind": "drawable"
@@ -17218,6 +19391,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "light",
@@ -17256,6 +19444,18 @@
 "expect": "brightness",
 "features": [
 "cover_rows"
+],
+"key": "brightness",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "light",
+"expect": "brightness",
+"features": [
+"media_rows"
 ],
 "key": "brightness",
 "kind": "drawable"
@@ -17368,6 +19568,17 @@
 "tile": {
 "entity": "media_player.case",
 "options": {
+"controls": "volume_playback",
+"size": "single"
+}
+}
+},
+{
+"expect": null,
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
 "controls": "none",
 "size": "single"
 }
@@ -17428,6 +19639,17 @@
 }
 },
 {
+"expect": "volume",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "wide"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17493,6 +19715,17 @@
 }
 },
 {
+"expect": "volume_playback",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "tall"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17558,6 +19791,17 @@
 }
 },
 {
+"expect": "volume_playback",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "square"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17623,6 +19867,17 @@
 }
 },
 {
+"expect": "volume_playback",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "full"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17693,6 +19948,17 @@
 "tile": {
 "entity": "media_player.case",
 "options": {
+"controls": "volume_playback",
+"size": "1x1"
+}
+}
+},
+{
+"expect": null,
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
 "controls": "none",
 "size": "1x1"
 }
@@ -17753,6 +20019,17 @@
 }
 },
 {
+"expect": "volume_playback",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "1x3"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17818,6 +20095,17 @@
 }
 },
 {
+"expect": "volume",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "3x1"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17883,6 +20171,17 @@
 }
 },
 {
+"expect": "volume_playback",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "2x3"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -17948,6 +20247,17 @@
 }
 },
 {
+"expect": "volume_playback",
+"kind": "resolve",
+"tile": {
+"entity": "media_player.case",
+"options": {
+"controls": "volume_playback",
+"size": "3x2"
+}
+}
+},
+{
 "expect": null,
 "kind": "resolve",
 "tile": {
@@ -18017,6 +20327,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -18062,6 +20382,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "media_player",
@@ -18100,6 +20432,18 @@
 "expect": "volume",
 "features": [
 "cover_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
 ],
 "key": "volume",
 "kind": "drawable"
@@ -18154,6 +20498,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -18200,6 +20557,20 @@
 "expect": "volume",
 "features": [
 "cover_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
 ],
 "key": "volume",
 "kind": "drawable"
@@ -18262,6 +20633,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "media_player",
@@ -18300,6 +20686,18 @@
 "expect": "volume",
 "features": [
 "cover_rows"
+],
+"key": "volume",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "volume",
+"features": [
+"media_rows"
 ],
 "key": "volume",
 "kind": "drawable"
@@ -18411,6 +20809,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -18456,6 +20864,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "media_player",
@@ -18494,6 +20914,18 @@
 "expect": "playback",
 "features": [
 "cover_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
 ],
 "key": "playback",
 "kind": "drawable"
@@ -18548,6 +20980,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -18594,6 +21039,20 @@
 "expect": "playback",
 "features": [
 "cover_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
 ],
 "key": "playback",
 "kind": "drawable"
@@ -18656,6 +21115,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "media_player",
@@ -18694,6 +21168,18 @@
 "expect": "playback",
 "features": [
 "cover_rows"
+],
+"key": "playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"media_rows"
 ],
 "key": "playback",
 "kind": "drawable"
@@ -18765,6 +21251,488 @@
 "domain": "media_player",
 "expect": "playback",
 "key": "playback",
+"kind": "roomless",
+"size": "3x2"
+},
+{
+"attributes": {},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 0
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": null,
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"climate_range"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "playback",
+"features": [
+"cover_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "media_player",
+"expect": "volume_playback",
+"features": [
+"media_rows"
+],
+"key": "volume_playback",
+"kind": "drawable"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "single"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "wide"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "tall"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "square"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "full"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "1x1"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "1x3"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "3x1"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
+"kind": "roomless",
+"size": "2x3"
+},
+{
+"domain": "media_player",
+"expect": "volume_playback",
+"key": "volume_playback",
 "kind": "roomless",
 "size": "3x2"
 },
@@ -19455,6 +22423,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -19500,6 +22478,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "number",
@@ -19538,6 +22528,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -19592,6 +22594,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -19638,6 +22653,20 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -19700,6 +22729,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "number",
@@ -19738,6 +22782,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "number",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -19849,6 +22905,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -19894,6 +22960,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "number",
@@ -19932,6 +23010,18 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -19986,6 +23076,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -20032,6 +23135,20 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -20094,6 +23211,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "number",
@@ -20132,6 +23264,18 @@
 "expect": "slider",
 "features": [
 "cover_rows"
+],
+"key": "slider",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "number",
+"expect": "slider",
+"features": [
+"media_rows"
 ],
 "key": "slider",
 "kind": "drawable"
@@ -20783,6 +23927,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -20828,6 +23982,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "remote",
@@ -20866,6 +24032,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -20920,6 +24098,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -20966,6 +24157,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -21028,6 +24233,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "remote",
@@ -21066,6 +24286,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "remote",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -21717,6 +24949,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -21762,6 +25004,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "scene",
@@ -21800,6 +25054,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -21854,6 +25120,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -21900,6 +25179,20 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -21962,6 +25255,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "scene",
@@ -22000,6 +25308,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "scene",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -22651,6 +25971,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -22696,6 +26026,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "script",
@@ -22734,6 +26076,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -22788,6 +26142,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -22834,6 +26201,20 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -22896,6 +26277,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "script",
@@ -22934,6 +26330,18 @@
 "expect": "run",
 "features": [
 "cover_rows"
+],
+"key": "run",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "script",
+"expect": "run",
+"features": [
+"media_rows"
 ],
 "key": "run",
 "kind": "drawable"
@@ -23585,6 +26993,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -23630,6 +27048,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "select",
@@ -23668,6 +27098,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -23722,6 +27164,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -23768,6 +27223,20 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -23830,6 +27299,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "select",
@@ -23868,6 +27352,18 @@
 "expect": "stepper",
 "features": [
 "cover_rows"
+],
+"key": "stepper",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "select",
+"expect": "stepper",
+"features": [
+"media_rows"
 ],
 "key": "stepper",
 "kind": "drawable"
@@ -24519,6 +28015,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -24564,6 +28070,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "switch",
@@ -24602,6 +28120,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -24656,6 +28186,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -24702,6 +28245,20 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -24764,6 +28321,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "switch",
@@ -24802,6 +28374,18 @@
 "expect": "toggle",
 "features": [
 "cover_rows"
+],
+"key": "toggle",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "switch",
+"expect": "toggle",
+"features": [
+"media_rows"
 ],
 "key": "toggle",
 "kind": "drawable"
@@ -25453,6 +29037,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -25498,6 +29092,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "timer",
@@ -25536,6 +29142,18 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -25590,6 +29208,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -25636,6 +29267,20 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -25698,6 +29343,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "timer",
@@ -25736,6 +29396,18 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "timer",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -26387,6 +30059,16 @@
 "kind": "drawable"
 },
 {
+"attributes": {},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
 "attributes": {
 "supported_features": 0
 },
@@ -26432,6 +30114,18 @@
 },
 {
 "attributes": {
+"supported_features": 0
+},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8388607
 },
 "domain": "vacuum",
@@ -26470,6 +30164,18 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8388607
+},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -26524,6 +30230,19 @@
 },
 {
 "attributes": {
+"supported_features": 1,
+"temperature": 21
+},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 2,
 "target_temp_high": 23,
 "target_temp_low": 19
@@ -26570,6 +30289,20 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 2,
+"target_temp_high": 23,
+"target_temp_low": 19
+},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
@@ -26632,6 +30365,21 @@
 },
 {
 "attributes": {
+"supported_features": 3,
+"target_temp_high": 23,
+"target_temp_low": 19,
+"temperature": null
+},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
 "supported_features": 8
 },
 "domain": "vacuum",
@@ -26670,6 +30418,18 @@
 "expect": "buttons",
 "features": [
 "cover_rows"
+],
+"key": "buttons",
+"kind": "drawable"
+},
+{
+"attributes": {
+"supported_features": 8
+},
+"domain": "vacuum",
+"expect": "buttons",
+"features": [
+"media_rows"
 ],
 "key": "buttons",
 "kind": "drawable"
