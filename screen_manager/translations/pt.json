@@ -242,7 +242,16 @@
       "resume": "Retomar",
       "start_cleaning": "Iniciar limpeza",
       "clean": "Limpar",
-      "dock": "Base"
+      "dock": "Base",
+      "stop": "Parar",
+      "by_room": "Por área",
+      "routines": "Rotinas",
+      "suction_water": "Aspirar e lavar",
+      "pick_rooms": "Escolha uma ou mais áreas",
+      "order_hint": "Nem todo robô mantém esta ordem",
+      "no_rooms": "Nenhuma área associada",
+      "no_rooms_how": "Associe os segmentos às áreas no Home Assistant, nas definições do aspirador.",
+      "routines_note": "Criadas na app do robô"
     },
     "cover": {
       "position": "Posição",
@@ -383,7 +392,8 @@
         "cleaning": "A Limpar",
         "paused": "Em pausa",
         "returning": "A regressar à base",
-        "idle": "Inativo"
+        "idle": "Inativo",
+        "error": "Erro"
       },
       "weather": {
         "sunny": "Ensolarado",

@@ -60,7 +60,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -364,7 +365,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -576,7 +578,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -699,7 +702,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -820,7 +824,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -943,7 +948,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1066,7 +1072,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1189,7 +1196,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1312,7 +1320,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1433,7 +1442,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1564,7 +1574,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1685,7 +1696,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1816,7 +1828,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -1927,7 +1940,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2028,7 +2042,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2149,7 +2164,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2270,7 +2286,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2391,7 +2408,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2512,7 +2530,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2644,7 +2663,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -2773,7 +2793,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3077,7 +3098,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3289,7 +3311,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3412,7 +3435,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3533,7 +3557,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3656,7 +3681,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3779,7 +3805,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -3902,7 +3929,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -4025,7 +4053,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -4146,7 +4175,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -4275,7 +4305,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -4579,7 +4610,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -4791,7 +4823,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -4914,7 +4947,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5035,7 +5069,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5158,7 +5193,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5281,7 +5317,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5404,7 +5441,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5527,7 +5565,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5648,7 +5687,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5779,7 +5819,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -5900,7 +5941,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6031,7 +6073,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6142,7 +6185,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6243,7 +6287,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6364,7 +6409,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6485,7 +6531,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6606,7 +6653,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6727,7 +6775,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6859,7 +6908,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -6990,7 +7040,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7111,7 +7162,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7242,7 +7294,8 @@
   "max_pages": 16,
   "max_tiles": 256,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7353,7 +7406,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7454,7 +7508,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7575,7 +7630,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7696,7 +7752,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7817,7 +7874,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -7938,7 +7996,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {
@@ -8070,7 +8129,8 @@
   "max_pages": 24,
   "max_tiles": 128,
   "modules": [
-   "dock"
+   "dock",
+   "vacuum_card"
   ],
   "orientations": {
    "landscape": {

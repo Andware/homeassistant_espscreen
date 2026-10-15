@@ -242,7 +242,16 @@
       "resume": "Folytatás",
       "start_cleaning": "Takarítás indítása",
       "clean": "Takarítás",
-      "dock": "Dokkoló"
+      "dock": "Dokkoló",
+      "stop": "Leállítás",
+      "by_room": "Terület szerint",
+      "routines": "Rutinok",
+      "suction_water": "Szívás és felmosás",
+      "pick_rooms": "Válassz egy vagy több területet",
+      "order_hint": "Nem minden robot tartja ezt a sorrendet",
+      "no_rooms": "Nincs hozzárendelt terület",
+      "no_rooms_how": "Rendeld a szegmenseket területekhez a Home Assistantban, a porszívó beállításainál.",
+      "routines_note": "A robot saját alkalmazásában készült"
     },
     "cover": {
       "position": "Pozíció",
@@ -383,7 +392,8 @@
         "cleaning": "Takarítás",
         "paused": "Szünetel",
         "returning": "Dokkolás folyamatban",
-        "idle": "Tétlen"
+        "idle": "Tétlen",
+        "error": "Hiba"
       },
       "weather": {
         "sunny": "Napos",
