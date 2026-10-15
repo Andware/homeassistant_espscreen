@@ -8,6 +8,9 @@
   the tile. The first cell now keeps the name, as on a tile of one cell, and the control fills every cell after it, on
   the screen and in the editor, so its edges stand where the tiles above and below have theirs. A tile two cells wide
   stays as it was. The screen needs this firmware.
+- **AEC keeps 48 kHz playback on the Waveshare P4 and optional Tab5 transport.** The codec bus and speaker now
+  run at 48 kHz while the existing audio stack converts microphone and reference together to 16 kHz for echo
+  cancellation. Music no longer goes through a 16 kHz playback path. Native-I2S fallback settings are unchanged.
 - **Editor: a long list of media players scrolls and has a search.** Adding a player to the screensaver opened a menu
   that ran off the window in a home with many players, and the ones below could not be reached. It now opens a search
   field with a list that scrolls, and typing narrows it by name or area. Every other menu of the editor scrolls when it
@@ -33,6 +36,11 @@
 - **A plugin added with a link stays on the screen after an update (#260).** Updating a plugin added with a link to a
   newer release built the screen without it, and its tiles showed "plugin missing" until it was removed and added
   again. The screen's build now takes the new release.
+- **Tab5 optional echo cancellation.** The ST7121 profile can select
+  `TAB5_AUDIO_TRANSPORT: "aec"` to use the existing ES7210/AEC stack with the Tab5's electrical
+  playback reference. It adds an Echo cancellation switch under Extras and in Home Assistant.
+  Native I2S remains the default; no assistant or AI provider is included.
+
 - **Waveshare P4 board audio and relays.** The relay-equipped 86 panel exposes its two outputs as Home Assistant
   switches, both off at boot. Extras adds microphone gain, automatic codec gain and live echo-cancellation on/off.
   Its AEC transport reuses the existing speaker, microphone and media-player interfaces; other boards keep their

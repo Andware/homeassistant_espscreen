@@ -4,6 +4,7 @@ packages:
   half_duplex: !include ../../features/audio-half-duplex.yaml
 
 substitutions:
+  AUDIO_SAMPLE_RATE: "16000"
   AUDIO_HALF_DUPLEX: "true"
   P4_AEC_SETTINGS: ""
 

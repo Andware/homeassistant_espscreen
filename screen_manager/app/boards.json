@@ -1780,7 +1780,8 @@
    "order": 16,
    "settings": [
     "media_player",
-    "microphone"
+    "microphone",
+    "echo_cancellation"
    ],
    "status": "new",
    "touch": "ST7121"
@@ -5994,7 +5995,8 @@
    "order": 16,
    "settings": [
     "media_player",
-    "microphone"
+    "microphone",
+    "echo_cancellation"
    ],
    "status": "new",
    "touch": "ST7121"
@@ -7204,7 +7206,8 @@
    "order": 16,
    "settings": [
     "media_player",
-    "microphone"
+    "microphone",
+    "echo_cancellation"
    ],
    "status": "new",
    "touch": "ST7121"

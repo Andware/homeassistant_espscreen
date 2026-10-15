@@ -29,16 +29,24 @@ is selected and the DSP initialized; it is not a measurement of echo suppression
 The P4 board selects `P4_AUDIO_TRANSPORT: "aec"` in this branch. To omit the audio stack/AEC
 libraries entirely, select `P4_AUDIO_TRANSPORT: "i2s"` in Override YAML and rebuild. This keeps
 the original half-duplex I2S transport, gain and ALC. No AEC entity is present in that build.
-Other boards continue to use ESPHome's own codecs and transport. The extended codec is named
+Other boards retain their default codecs and transport; the Tab5 can opt into the same
+AEC transport with its own wiring ([Tab5 notes](TAB5.md#optional-echo-cancellation)). The extended codec is named
 `es7210_extended` so importing it for this P4 cannot silently replace another board's driver.
 
 ## Processing and reference
 
 The codecs share one physical I2S bus: MCLK13, BCLK12, LRCLK10, DIN11 and DOUT9.
-The ES7210 emits four 16-bit Philips TDM slots at 16 kHz, ordered MIC1, MIC3, MIC2, MIC4.
+The ES7210 emits four 16-bit Philips TDM slots at 48 kHz, ordered MIC1, MIC3, MIC2, MIC4.
 Slot 0 supplies the microphone, and slot 1 supplies ADC3, the electrical playback reference.
 ADC3 remains at 24 dB analogue gain, unity digital gain and no ALC. There is one bus owner
-and no separate software-loopback delay estimate. The microphone endpoint supplies mono PCM.
+and no separate software-loopback delay estimate. The stack converts the selected microphone
+and reference together from 48 kHz to 16 kHz before AEC, keeping their relative timing aligned.
+The microphone endpoint supplies mono 16 kHz PCM. The speaker, mixer and player keep 48 kHz
+playback; AEC bypass changes neither rate. Native I2S retains its original 16 kHz bus.
+
+This uses the pinned audio stack's existing Espressif sample-rate converter, without another
+AEC implementation. Conversion increases runtime buffer and processing requirements; verify
+continuous capture/playback and cancellation on hardware after changing the bus rate.
 
 Espressif FD low-cost AEC uses filter length 4. The reviewed startup fix skips only completely
 zero initial frames before the first real mic/reference input. Later silence and echo tails
@@ -73,7 +81,7 @@ The earlier audio work was exercised on one pre-v3 Waveshare P4 (revision 1.3). 
 are not acceptance of this port. Tab5, D1001 and other hardware are not validated by this change.
 
 Focused tests exercise real driver register writes, reference isolation, failed-write recovery,
-initial zero frames and AEC bypass/resume. Only P4 firmware is built locally. Check on the panel:
+initial zero frames and AEC bypass/resume. Compile the affected configuration, then check on the panel:
 
 1. Cold boot, existing tiles, touch, brightness, Wi-Fi and HA connection.
 2. Both relay entities and commanded states; off again after reboot. Contact behavior requires
@@ -100,4 +108,5 @@ Both variants compile with the corrected board boot hook. Generated source retai
 screen initialization and gain controls; native I2S excludes the AEC and audio-stack components.
 Neither build contains a voice assistant, wake-word component or Ethernet configuration.
 Static RAM does not include runtime buffer/DSP allocations; measure those on hardware.
-These are build results, not acoustic acceptance of the new firmware.
+These are build results from the earlier 16 kHz bus configuration, not size measurements
+or acoustic acceptance of the 48 kHz playback path.
