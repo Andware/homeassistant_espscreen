@@ -1024,26 +1024,76 @@ class Run:
         return checks
 
     async def media_tiles(self, grid):
-        """A player's tile on taller cards (`--only mediatiles`): its keys alone as before, then its volume over its keys
-        (volume_playback, media_rows), on a card of one column two rows high, a square and a 3 x 2, where the grid has them."""
+        """A player's tile on taller cards (`--only mediatiles`), as a sheet per board (media-sheet.png): every size of
+        two rows or more the grid takes up to 3 x 3, its keys alone as before beside its volume and keys (volume_playback,
+        media_rows: over the keys on a narrow card, standing at the right on a wide one), and the pair paused, at no volume
+        and at full volume, with a long title and its artist, and in Dark mode."""
+        from core import span_offered
         if grid.rows < 2: return 0
-        sizes = ['tall', *(['square'] if grid.columns >= 2 else []), *(['3x2'] if grid.columns >= 3 else [])]
-        cases = [(size, controls) for size in sizes for controls in ('playback', 'volume_playback')][:grid.pages]
-        states = {'media_player.demo_sonos': {'state': 'playing', 'attributes': {
-            'friendly_name': 'Living room', 'volume_level': 0.42, 'is_volume_muted': False, 'media_title': 'Evening Drive',
-            'media_artist': 'Nova Coast', 'media_album_name': 'Low Sun', 'supported_features': 8321599}}}
-        tiles = [dict(entity='media_player.demo_sonos', name='Living room', slot=page * grid.slots,
-                      options={'size': size, 'controls': controls, 'icon': 'speaker'}) for page, (size, controls) in enumerate(cases)]
-        record = send_layout.migrate_legacy(dict(title='Music', tiles=tiles), grid)
-        values = [send_layout.state_message(index, tile, states) for index, tile in enumerate(send_layout.compile_tiles(record['layout'], grid))]
-        bars = [[{'k': 'clock'}] for _ in record['layout']['pages']]
+        sizes = ['tall', *(['square'] if grid.columns >= 2 else [])]
+        sizes += [f'{c}x{r}' for r in (2, 3) for c in (1, 2, 3) if span_offered(c, r, grid) and f'{c}x{r}' not in ('1x2', '2x2')]
+        def player(state='playing', volume=0.42, title='Evening Drive', artist='Nova Coast', muted=False):
+            return {'state': state, 'attributes': {'friendly_name': 'Living room', 'volume_level': volume, 'is_volume_muted': muted,
+                    'media_title': title, 'media_artist': artist, 'media_album_name': 'Low Sun', 'supported_features': 8321599}}
+        long_title = 'Songs for the Long Way Home, Part Two'
+        cases = [(f'{size} keys', size, 'playback', player()) for size in sizes]
+        cases += [(f'{size} volume+keys', size, 'volume_playback', player()) for size in sizes]
+        for size in sizes[:2]:
+            cases += [(f'{size} paused', size, 'volume_playback', player('paused')),
+                      (f'{size} no volume', size, 'volume_playback', player(volume=0.0)),
+                      (f'{size} full volume', size, 'volume_playback', player(volume=1.0)),
+                      (f'{size} long title', size, 'volume_playback', player(title=long_title, artist='Harbour Lights'))]
+        shots = []
         region = dict(keepalive=120, clock_24h=True, numbers='point', group_min=1, percent_space=False)
-        await self.sender.synchronize(self.inbox.object_id, record, region, values, bars)
-        checks = await self.self_test()
-        for page, (size, controls) in enumerate(cases):
+        checks = 0
+        for start in range(0, len(cases), grid.pages):
+            batch = cases[start:start + grid.pages]
+            states, tiles = {}, []
+            for page, (_, size, controls, state) in enumerate(batch):
+                entity = f'media_player.player_{page}'
+                states[entity] = state
+                tiles.append(dict(entity=entity, name='Living room', slot=page * grid.slots, options={'size': size, 'controls': controls, 'icon': 'speaker'}))
+            record = send_layout.migrate_legacy(dict(title='Music', tiles=tiles), grid)
+            values = [send_layout.state_message(index, tile, states, send_layout.extras(tile, states)) for index, tile in enumerate(send_layout.compile_tiles(record['layout'], grid))]
+            bars = [[{'k': 'clock'}] for _ in record['layout']['pages']]
+            await self.sender.synchronize(self.inbox.object_id, record, region, values, bars)
+            checks += await self.self_test()
+            for page, (label, *_ ) in enumerate(batch):
+                await self.call('render_page', page=page)
+                await self.page_done(page)
+                name = 'media-' + label.replace(' ', '-').replace('+', '-')
+                await self.render(name)
+                shots.append((label, name))
+        # Dark mode, the pair on the first two sizes.
+        dark = [(f'{size} dark', size) for size in sizes[:2]]
+        states = {f'media_player.player_{i}': player() for i in range(len(dark))}
+        tiles = [dict(entity=f'media_player.player_{i}', name='Living room', slot=i * grid.slots, options={'size': size, 'controls': 'volume_playback', 'icon': 'speaker'})
+                 for i, (_, size) in enumerate(dark)]
+        record = send_layout.migrate_legacy(dict(title='Music', tiles=tiles), grid)
+        values = [send_layout.state_message(index, tile, states, send_layout.extras(tile, states)) for index, tile in enumerate(send_layout.compile_tiles(record['layout'], grid))]
+        await self.sender.synchronize(self.inbox.object_id, record, region, values, [[{'k': 'clock'}] for _ in record['layout']['pages']])
+        self.client.switch_command(self.dark_switch.key, True)
+        await asyncio.sleep(1.5)
+        for page, (label, _) in enumerate(dark):
             await self.call('render_page', page=page)
             await self.page_done(page)
-            await self.render(f'media-{size}-{controls}')
+            name = 'media-' + label.replace(' ', '-')
+            await self.render(name)
+            shots.append((label, name))
+        self.client.switch_command(self.dark_switch.key, False)
+        await asyncio.sleep(1.0)
+        # One sheet of them all, four across, each with its label.
+        images = [(label, Image.open(self.out / f'{name}.png').convert('RGB')) for label, name in shots]
+        w, h = images[0][1].size
+        across, pad, top = 4, 16, 22
+        rows = (len(images) + across - 1) // across
+        sheet = Image.new('RGB', (across * (w + pad) + pad, rows * (h + pad + top) + pad), (250, 250, 250))
+        draw = ImageDraw.Draw(sheet)
+        for i, (label, image) in enumerate(images):
+            x, y = pad + (i % across) * (w + pad), pad + (i // across) * (h + pad + top)
+            draw.text((x, y), label, fill=(40, 40, 40))
+            sheet.paste(image, (x, y + top))
+        sheet.save(self.out / 'media-sheet.png')
         return checks
 
     async def bedside_clock(self, grid):

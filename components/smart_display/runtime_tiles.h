@@ -559,7 +559,7 @@ struct Widgets {
   const lv_point_precise_t *fill_points{}; unsigned fill_count=0; int fill_x=0, fill_y=0, fill_base=0; lv_color_t fill_color{}; lv_opa_t fill_opa=0;
   // Direct controls on a wide card: a panel at the right with pill keys, a -/+ pill,
   // a slider or a toggle. Objects are rebuilt only when the control set changes.
-  lv_obj_t *panel{}; std::string panel_mode; bool panel_dirty=false, panel_full=false, panel_tall=false, panel_pair=false; int panel_w=0; uint16_t panel_layout_w=0,panel_layout_h=0;
+  lv_obj_t *panel{}; std::string panel_mode; bool panel_dirty=false, panel_full=false, panel_tall=false; uint8_t panel_pair=0; int panel_w=0; uint16_t panel_layout_w=0,panel_layout_h=0;
   std::array<lv_obj_t *,3> keys{}, key_icons{}; std::array<int,3> key_commands{}; std::array<std::string,3> key_args; std::array<int,3> key_checked{};
   // A thermostat's mode bar as its panel ("Mode", firmware 0.19.0): its segments, on the panel's track (pill).
   std::array<lv_obj_t *,climate_tile::SEGMENTS> segments{};
@@ -5944,6 +5944,20 @@ inline void slider_handle(lv_obj_t *slider, int width, int height) {
   int stub = slider_stub(height), below = width > stub ? 1000 * stub / (width - stub) : 0;
   if (lv_slider_get_min_value(slider) != -below || lv_slider_get_max_value(slider) != 1000) lv_slider_set_range(slider, -below, 1000);
 }
+// The same handle on a standing slider (a player's volume at the right of its card): the fill rises from the bottom,
+// the white bar lies across it an eighth of the slider's width under the end of the fill.
+inline void slider_handle_standing(lv_obj_t *slider, int width, int height) {
+  int handle = slider_handle_width(width), inset = std::max(1, width / 8) + handle / 2, half = width >> 1;
+  int corner = width > 20 ? width * 12 / 42 : LV_RADIUS_CIRCLE;
+  set_number(slider, LV_STYLE_RADIUS, corner, LV_PART_MAIN);
+  set_number(slider, LV_STYLE_RADIUS, corner, LV_PART_INDICATOR);
+  set_number(slider, LV_STYLE_PAD_TOP, handle / 2 - inset - half, LV_PART_KNOB);
+  set_number(slider, LV_STYLE_PAD_BOTTOM, inset + handle / 2 - (width - half), LV_PART_KNOB);
+  set_number(slider, LV_STYLE_PAD_LEFT, -(width / 4), LV_PART_KNOB);
+  set_number(slider, LV_STYLE_PAD_RIGHT, -(width / 4), LV_PART_KNOB);
+  int stub = slider_stub(width), below = height > stub ? 1000 * stub / (height - stub) : 0;
+  if (lv_slider_get_min_value(slider) != -below || lv_slider_get_max_value(slider) != 1000) lv_slider_set_range(slider, -below, 1000);
+}
 // An off light or fan shows only the grey track, as in Home Assistant: no fill, no handle.
 inline void slider_bar(lv_obj_t *slider, bool shown) {
   set_number(slider, LV_STYLE_BG_OPA, shown ? LV_OPA_COVER : LV_OPA_TRANSP, LV_PART_INDICATOR);
@@ -7294,7 +7308,10 @@ inline void stepper_keys(Widgets &w,int width,int height,const lv_font_t *text_f
 }
 // Build (once per control set) and lay out the panel; returns the width it takes
 // from the text, including the gap, or 0 when the card shows no panel.
-inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int content_h) {
+// `standing`: the height of a player's volume standing at the right of its card (volume_playback on a card wider than
+// high, render_tall draws it among the card's parts): the panel holds the keys alone; -1 the keys alone, without room
+// for the volume; 0 lays the volume over the keys.
+inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int content_h,int standing=0) {
   std::string mode=tile_controls::panel_kind(t);
   // A full card that draws its setpoint and mode keys as rows (render_tall) takes the taller card's control sizes.
   const bool taller=t.row_span()>1 && (!w.full || tile_controls::climate_modes_selected(t));
@@ -7345,6 +7362,8 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
   // A player's volume over its playback keys (volume_playback) on a taller card: one panel, the slider a row above.
   const bool pair=taller&&mode=="playback"&&tile_controls::media_volume_selected(t);
   const int pair_w=pair?std::max(3*key_w+2*m.gap,m.pill_w):0;
+  // 1: the volume over the keys, 2: standing at the card's right, 3: no room for it, the keys alone.
+  const uint8_t pair_form=!pair?0:standing>0?2:standing<0?3:1;
   auto make_slider=[&](int width,int h){
     auto *slider=lv_slider_create(w.panel);w.control_slider=slider;
     lv_obj_remove_flag(slider,LV_OBJ_FLAG_GESTURE_BUBBLE);lv_obj_remove_flag(slider,LV_OBJ_FLAG_SCROLLABLE);
@@ -7359,11 +7378,12 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
     lv_obj_add_event_cb(slider,slider_event,LV_EVENT_ALL,(void*)(uintptr_t)w.index);
   };
   if(!w.panel){w.panel=panel_obj(w.tile,false);}
-  if(w.panel_mode!=mode || w.panel_full!=w.full || w.panel_tall!=taller || w.panel_pair!=pair){
-    end_panel(w);w.panel_mode=mode;w.panel_full=w.full;w.panel_tall=taller;w.panel_pair=pair;w.panel_dirty=true;
+  if(w.panel_mode!=mode || w.panel_full!=w.full || w.panel_tall!=taller || w.panel_pair!=pair_form){
+    end_panel(w);w.panel_mode=mode;w.panel_full=w.full;w.panel_tall=taller;w.panel_pair=pair_form;w.panel_dirty=true;
     if(tile_controls::is_key_row(mode)){
       for(unsigned n=0;n<3;++n){panel_key(w,n,w.panel,m,key_w,m.key_h,false);panel_icon(w,n,icon_font);}
-      if(pair)make_slider(pair_w,m.slider_h);
+      // Standing at the card's right (form 2), the volume is one of the card's own parts (render_tall, media_standing).
+      if(pair_form==1)make_slider(pair_w,m.slider_h);
     }else if(mode=="mode"){
       // Drawn per render (draw_mode_bar): the track and a segment per mode, as many as its width holds.
     }else if(mode=="setpoint"||mode=="stepper"){
@@ -7416,7 +7436,7 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
   if(tile_controls::is_key_row(mode)){
     std::array<tile_controls::Key,3> keys;unsigned count=tile_controls::keys_for(t,keys,now);
     // With the volume above them, the keys stand centred under its slider, a row lower.
-    const bool volume=pair&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET);
+    const bool volume=pair_form==1&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET);
     const int row_w=count?count*key_w+(count-1)*m.gap:0;
     const int key_x=volume?(pair_w-row_w)/2:0,key_y=volume?m.slider_h+m.gap:0;
     for(unsigned n=0;n<3;++n){
@@ -7428,7 +7448,7 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
       set_checked(n,keys[n].checked);set_disabled(n,keys[n].disabled);
     }
     panel_w=row_w;
-    if(pair&&w.control_slider){
+    if(pair_form==1&&w.control_slider){
       set_hidden(w.control_slider,!volume);
       if(volume){
         lv_obj_set_pos(w.control_slider,0,0);
@@ -8029,16 +8049,48 @@ inline bool render_camera_card(Widgets &w,const Tile &t,int width,int height){
 }
 // False only for a full-page cover whose slat group cannot be drawn here (no tilt, or too little room): the caller
 // then draws the ordinary full card with the primary controls, untouched by this function.
+// A player's volume standing at the right of its taller card (volume_playback on a card wider than high), beside its
+// playback keys: one of the card's own parts, so it stays inside the card's content however the keys stand, with the
+// tile slider's look (slider_handle_standing) and colours (style_panel's: the fill in the accent over 20 % of it).
+constexpr unsigned MEDIA_STANDING_PART=34;
+inline void media_standing(Widgets &w,const Tile &t,int x,int y,int width,int height){
+  auto *&s=w.parts[MEDIA_STANDING_PART];
+  if(s&&!lv_obj_check_type(s,&lv_slider_class)){lv_obj_delete(s);s=nullptr;}
+  if(!s){
+    s=lv_slider_create(w.extra);
+    lv_obj_remove_flag(s,LV_OBJ_FLAG_GESTURE_BUBBLE);lv_obj_remove_flag(s,LV_OBJ_FLAG_SCROLLABLE);
+    lv_slider_set_orientation(s,LV_SLIDER_ORIENTATION_VERTICAL);
+    lv_obj_set_style_pad_all(s,0,LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(s,LV_OPA_COVER,LV_PART_MAIN);lv_obj_set_style_bg_opa(s,LV_OPA_COVER,LV_PART_INDICATOR);
+    lv_obj_set_style_radius(s,2,LV_PART_KNOB);lv_obj_add_style(s,theme::style(theme::Paint::knob),LV_PART_KNOB);lv_obj_set_style_bg_opa(s,LV_OPA_COVER,LV_PART_KNOB);
+    lv_obj_set_style_border_width(s,0,LV_PART_KNOB);lv_obj_set_style_shadow_width(s,0,LV_PART_KNOB);
+    lv_obj_add_event_cb(s,slider_event,LV_EVENT_ALL,(void*)(uintptr_t)w.index);
+  }
+  lv_obj_set_pos(s,x,y);lv_obj_set_size(s,width,height);slider_handle_standing(s,width,height);
+  const lv_color_t fill=t.muted?theme::color(theme::OFF):w.panel_accent,card=lv_color_hex(theme::surface(t.background));
+  set_color(s,LV_STYLE_BG_COLOR,lv_color_mix(fill,card,51),LV_PART_MAIN);set_color(s,LV_STYLE_BG_COLOR,fill,LV_PART_INDICATOR);
+  if(!lv_obj_has_state(s,LV_STATE_PRESSED) && !(t.pending && !t.confirmed))lv_slider_set_value(s,slider_value(t),LV_ANIM_OFF);
+  lv_obj_remove_flag(s,LV_OBJ_FLAG_HIDDEN);
+}
 inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int height) {
   selected=selected&&tile_controls::panel_available(t);
   const bool large=ui::large();const int gap=ui::px(large?8:4);
   const int touch=std::max(ui::touch_min(),ui::px(large?48:34));
   tall_tile::Metrics m{width,height,(int)lv_font_get_line_height(w.title_font),
     (int)lv_font_get_line_height(w.value_font),w.base_circle,gap,ui::touch_min(),ui::control_max_width(),{touch+2,0},selected?1:0};
-  // A player's volume over its keys asks a second row; without the room for both, its keys alone.
-  if(selected&&tile_controls::media_volume_selected(t)&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET)){
-    auto both=m;both.row_heights={touch+2,touch+2};both.row_count=2;
-    if(tall_tile::layout(both).fits)m=both;
+  // A player's volume beside its keys: on a card wider than high it stands at the right, the whole height of the card,
+  // and the heading, the track and the keys share the rest; on a narrower card it lies over the keys as a second row.
+  // Without the room for either, its keys alone.
+  // `standing` the volume's height at the card's right, -1 no room for the volume: the keys alone.
+  const int whole_w=width;int standing=0;
+  if(selected&&!w.full&&tile_controls::media_volume_selected(t)&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET)){
+    const int lane=touch,inner=width-lane-gap;
+    auto beside=m;beside.width=inner;
+    if(width*4>=height*5&&inner>=3*touch+2*gap&&tall_tile::layout(beside).fits){m=beside;standing=height;width=inner;}
+    else{
+      auto both=m;both.row_heights={touch+2,touch+2};both.row_count=2;
+      if(tall_tile::layout(both).fits)m=both;else standing=-1;
+    }
   }
   auto cover_metrics=m;cover_metrics.row_count=0;
   const auto cover_base=tall_tile::layout(cover_metrics);
@@ -8118,7 +8170,7 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
     tile_picture_place(w,t,c,0,(height-c)/2);
   }
   if(cover.fits){render_cover_tile(w,t,cover,width,height);return true;}
-  bool panel=selected&&layout_panel(w,t,large,width,height);
+  bool panel=selected&&layout_panel(w,t,large,width,height,standing);
   if(!panel)hide_panel(w);
   if(panel){
     const int pw=lv_obj_get_style_width(w.panel,LV_PART_MAIN),ph=lv_obj_get_style_height(w.panel,LV_PART_MAIN);
@@ -8128,8 +8180,9 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
     else lv_obj_set_pos(w.panel,(width-pw)/2,top+(room-ph)/2);
   }
   const auto d=t.domain();
-  begin_extra(w,"tall",width,height);
+  begin_extra(w,"tall",whole_w,height);
   for(auto *part:w.parts)if(part)lv_obj_add_flag(part,LV_OBJ_FLAG_HIDDEN);
+  if(panel&&standing>0)media_standing(w,t,width+gap,0,whole_w-width-gap,standing);
   auto text=[&](int i,const std::string &value,const lv_font_t *font,tall_tile::Rect area,lv_text_align_t align){
     if(value.empty()||area.h<(int)lv_font_get_line_height(font))return false;
     auto *p=part_label(w,i,font,area.x,area.y,area.w,align,value);
@@ -9544,11 +9597,12 @@ inline bool check_tile_geometry() {
       }
     }
     if(w.wide && !w.full && grid.columns>1 && tile_grid){
-      // A wide card is two cells of its row plus the gap between them.
+      // A wide card is its cells of the row plus the gaps between them: two, or a span's own (a 3 x 2).
       const int gap=lv_obj_get_style_pad_column(tile_grid,LV_PART_MAIN);
-      // Two of the columns' free units: LVGL shares the room exactly and rounds each track, so the sum is rounded once.
+      const int span=w.index<model.count?(int)model.tiles[w.index].column_span():2;
+      // The columns' free units: LVGL shares the room exactly and rounds each track, so the sum is rounded once.
       const int room=lv_obj_get_content_width(tile_grid)-(int)(grid.columns-1)*gap;
-      int expected=(2*room+(int)grid.columns/2)/(int)grid.columns+gap;
+      int expected=(span*room+(int)grid.columns/2)/(int)grid.columns+(span-1)*gap;
       const bool width_ok=std::abs(lv_obj_get_width(w.tile)-expected)<=1;
       fits=fits && width_ok;
       if(!width_ok)ESP_LOGE("ui_test","Wide width FAIL slot=%u width=%d expected=%d",(unsigned)w.index,(int)lv_obj_get_width(w.tile),expected);
@@ -9591,7 +9645,9 @@ inline bool check_tile_geometry() {
       fits=fits&&circle.x1>=content.x1&&circle.x2<title.x1&&circle.y1>=content.y1&&circle.y2<=content.y2;
       for(auto *part:w.parts)if(part&&!lv_obj_has_flag(part,LV_OBJ_FLAG_HIDDEN)){
         lv_area_t a;lv_obj_get_coords(part,&a);
-        fits=fits&&a.x1>=content.x1&&a.x2<=content.x2&&a.y1>std::max(title.y2,value.y2)&&a.y2<=content.y2;
+        // Under the heading, or wholly right of it (a player's volume standing at the card's right, media_standing).
+        const bool beside_head=a.x1>std::max(title.x2,lv_obj_has_flag(w.value,LV_OBJ_FLAG_HIDDEN)?title.x2:value.x2);
+        fits=fits&&a.x1>=content.x1&&a.x2<=content.x2&&(beside_head||a.y1>std::max(title.y2,value.y2))&&a.y1>=content.y1&&a.y2<=content.y2;
         if(w.panel&&!lv_obj_has_flag(w.panel,LV_OBJ_FLAG_HIDDEN)){
           lv_area_t b;lv_obj_get_coords(w.panel,&b);fits=fits&&(a.x2<b.x1||b.x2<a.x1||a.y2<b.y1||b.y2<a.y1);
         }
