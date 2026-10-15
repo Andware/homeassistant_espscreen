@@ -2374,7 +2374,7 @@
         "full_hint": "Na parte de baixo do mosaico de página inteira; um toque em qualquer outro sítio funciona como definido abaixo.",
         "wide_hint": "À direita do mosaico de largura dupla, como as linhas no Home Assistant. Tocar no nome funciona como definido abaixo.",
         "needs_firmware": "O ecrã mostra o controlo direto a partir do firmware 0.2.19; até lá, o mosaico fica como estava.",
-        "tall_hint": "",
+        "tall_hint": "Escolha os controlos mostrados na altura extra. Um mosaico que cresce sugere o conjunto mais completo que cabe; a sua escolha mantém-se.",
         "room_hint": "O ecrã desenha-os onde o mosaico tem espaço (firmware 0.57.0 ou mais recente): por baixo do nome num mosaico simples, ao lado num de largura dupla. Onde não cabem, o mosaico fica como sem eles.",
         "tilt": "",
         "tilt_hint": ""
@@ -2615,7 +2615,16 @@
           "blue-grey": "Cinzento azulado"
         }
       },
-      "anchor_hint": "Clique no ícone para escolher outro, ou no nome para mudar o nome do mosaico"
+      "anchor_hint": "Clique no ícone para escolher outro, ou no nome para mudar o nome do mosaico",
+      "grow": {
+        "title": "Espaço para mais controlos",
+        "applied": "Em {columns} × {rows} cabem mais controlos. Escolha o que este mosaico mostra; pode alterar depois em Controlos.",
+        "offered": "Em {columns} × {rows} este mosaico tem espaço para isto. Escolha o que mostra; pode alterar depois em Controlos.",
+        "suggested": "Sugerido",
+        "none": "Sem controlos",
+        "never": "Não mostrar novamente",
+        "done": "Concluído"
+      }
     },
     "precision": {
       "label": "Mostrar precisão",

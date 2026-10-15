@@ -441,6 +441,10 @@
     }
    ],
    "inline": null,
+   "grow": [
+    "setpoint_mode",
+    "setpoint"
+   ],
    "toggle": null,
    "taps": [],
    "guards": [],
@@ -629,6 +633,10 @@
      ]
     }
    },
+   "grow": [
+    "position_tilt",
+    "buttons_tilt"
+   ],
    "toggle": null,
    "taps": [],
    "guards": [],
@@ -744,6 +752,10 @@
      ]
     }
    },
+   "grow": [
+    "speed",
+    "toggle"
+   ],
    "toggle": null,
    "taps": [],
    "guards": [],
@@ -836,6 +848,10 @@
     }
    ],
    "inline": null,
+   "grow": [
+    "setpoint_mode",
+    "slider"
+   ],
    "toggle": null,
    "taps": [],
    "guards": [],
@@ -1133,6 +1149,10 @@
      ]
     }
    },
+   "grow": [
+    "brightness",
+    "toggle"
+   ],
    "toggle": null,
    "taps": [],
    "guards": [],

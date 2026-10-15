@@ -46,7 +46,7 @@ import { useEntitiesStore } from "../stores/entities";
 import { usePluginsStore } from "../stores/plugins";
 import { useScreenStore } from "../stores/screen";
 import { useInventoryStore } from "../stores/inventory";
-import { moveTileToPage, removeTile, retargetPageTile, setTileOption } from "../editor/tiles";
+import { moveTileToPage, removeTile, retargetPageTile, setTileOption, tilePanel } from "../editor/tiles";
 import { useDocumentStore } from "../stores/document";
 import { useInspectorStore } from "../stores/inspector";
 
@@ -94,8 +94,7 @@ const key = computed(() => props.tile.in !== undefined);
 // What the panel's choices are worked out from (model/tile-options.ts): what Home Assistant says the entity can do, the
 // screen's firmware and board, the domain's control sets, and what the entity reports now.
 const catalogue = computed(() => inv.inventory.controls?.[domain.value]);
-const panel = computed<TilePanel>(() => ({ caps: caps.value, supports: scr.supports, pictures: scr.pictures, catalogue: catalogue.value, columns: grid.columns,
-  attributes: entities.liveOf(props.tile.entity)?.a || {}, rangeless: scr.currentScreen?.climate_range === false }));
+const panel = computed<TilePanel>(() => tilePanel(props.tile));
 // Every choice the panel shows is one the add-on saves (app 0.4.0, GitHub #47): tried the way the panel applies it,
 // against the same card check the save runs. The tile's own choice always stays in sight.
 const offer = <T extends string | number>(key: string, choices: [T, string][], now: unknown) => offeredChoices(props.tile, key, choices, now, Boolean(catalogue.value));

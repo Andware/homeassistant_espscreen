@@ -406,7 +406,8 @@ whole finger does not fit; its touch area keeps the finger's size. A card one ro
 standing sliders beside a name read worse than two bars). A card at least twice as wide as high puts its heading at the
 left where that gives the controls a richer tier and the whole name fits the left half. Where nothing fits, the card is
 the one it is without them, and the cover's card keeps every control. Open, stop and close come with a positional blind
-only where the room holds them too; resizing never adds a group the user did not choose.
+only where the room holds them too. A tile that grows by its edge gets the slats suggested where the blind has them
+(docs/CATALOGUE.md, "A tile that grows"), and the tip beside it lets the user keep, change or drop them.
 
 The slats of a tilt slider are drawn at the angle the blind stands at (`cover_tile::slats`, `cover_paint::slats_draw`):
 flat when open, nearly upright and overlapping when closed, in a pale tint behind the slider's accent handle. The

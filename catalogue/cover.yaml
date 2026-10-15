@@ -8,6 +8,9 @@ displays:
   watch: {}
 # `room`: a screen that says cover_rows (firmware 0.57.0) lays a cover's controls out by the room its card has
 # (cover_tile.h): the slats on a card one row high, and a control on a card of one cell, where they fit.
+# A tile that grows suggests the richest set it has room for (docs/CATALOGUE.md, "A tile that grows"): a blind's
+# position and slats, else its keys and slats, where the card has room for them.
+grow: [position_tilt, buttons_tilt]
 controls:
   buttons:
     needs: {actions: [cover.open_cover, cover.close_cover, cover.stop_cover]}

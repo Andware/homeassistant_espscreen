@@ -15,7 +15,7 @@ export type TypeMemory = { bytes: number; extras: boolean };
 type Type = { firmware: string | null; key: boolean; memory: TypeMemory; cards?: Record<string, TypeMemory>; features: Record<string, number>; actions: Record<string, string[][]>;
   displays: Option[]; controls: Option[]; inline: Option | null; toggle: Needs | null; taps: string[]; guards: string[]; picture: Record<string, unknown[]> | null;
   map: { framing: string[]; distance: string[]; overlay: string[]; follow: string[]; markers: string[]; names: string[];
-    zones: string[]; streets: string[]; look: string[]; with: string[]; max: number } | null; favorite?: Option[]; energy?: { flow: string[] } };
+    zones: string[]; streets: string[]; look: string[]; with: string[]; max: number } | null; favorite?: Option[]; energy?: { flow: string[] }; grow?: string[] };
 type Attributes = Record<string, any>;
 
 export const TYPES = data.domains as unknown as Record<string, Type>;
@@ -25,6 +25,11 @@ export const DOMAINS = new Set(Object.keys(TYPES));
 export const ofType = (domain: string): Type | undefined => TYPES[domain];
 export const controlKeys = (domain: string) => (TYPES[domain]?.controls ?? []).map((item) => item.key);
 export const displayKeys = (domain: string) => (TYPES[domain]?.displays ?? []).map((item) => item.key);
+/** What a tile that grows suggests first, the richest first (catalogue `grow`), then the type's other sets in its order. */
+export const growOrder = (domain: string) => [...new Set([...(TYPES[domain]?.grow ?? []), ...controlKeys(domain)])];
+/** The parts of a control set: a pair's two, any other its own, none none. */
+export const controlParts = (domain: string, key: string | null | undefined): string[] =>
+  !key || key === "none" ? [] : controlOption(domain, key)?.of ?? [key];
 export const controlOption = (domain: string, key: string | null | undefined) => TYPES[domain]?.controls.find((item) => item.key === key);
 export const displayOption = (domain: string, key: string | null | undefined) => TYPES[domain]?.displays.find((item) => item.key === key);
 /** Home Assistant's feature bits of a type by their names (catalogue/_ha.json, from its source), joined. */

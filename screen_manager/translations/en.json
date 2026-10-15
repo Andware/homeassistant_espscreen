@@ -2013,7 +2013,7 @@
         "full_hint": "At the bottom of the full-page tile; a tap anywhere else works as set below.",
         "wide_hint": "On the right of the double-width tile, like the rows in Home Assistant. Tapping the name works as set below.",
         "needs_firmware": "The screen shows direct control from firmware 0.2.19; until then the tile stays as it was.",
-        "tall_hint": "Choose the controls shown in the extra height. Resizing keeps your selection; it never adds controls automatically.",
+        "tall_hint": "Choose the controls shown in the extra height. A tile that grows suggests the richest set that fits; your choice stays as you set it.",
         "room_hint": "The screen draws them where the tile has room for them (firmware 0.57.0 or newer): under the name on a single tile, beside it on a double-width one. Where they don't fit, the tile looks as it does without them.",
         "tilt": "Slat tilt",
         "tilt_hint": "Adds the supported slat slider or tilt buttons when there is enough room. On smaller tiles, use the detail view. Your open/close selection stays unchanged."
@@ -2254,7 +2254,16 @@
           "blue-grey": "Blue grey"
         }
       },
-      "anchor_hint": "Click its icon to choose another, or its name to rename the tile"
+      "anchor_hint": "Click its icon to choose another, or its name to rename the tile",
+      "grow": {
+        "title": "Room for more controls",
+        "applied": "This tile fits more controls at {columns} × {rows}. Pick what it shows; you can change it later under Controls.",
+        "offered": "At {columns} × {rows} this tile has room for these. Pick what it shows; you can change it later under Controls.",
+        "suggested": "Suggested",
+        "none": "No controls",
+        "never": "Don't show again",
+        "done": "Done"
+      }
     },
     "precision": {
       "label": "Display precision",

@@ -9,7 +9,7 @@ import { t } from "../i18n";
 import rules from "./page-rules.json";
 import { isTallSize, isWideSize } from "./sizes";
 import { validateCardOptions } from "./page-validation";
-import { controlOption, drawable, fits, ofType, roomControls } from "./catalogue";
+import { controlOption, controlParts, drawable, fits, growOrder, ofType, resolveControls, roomControls } from "./catalogue";
 import { ACTS_ON_TAP, holdHintKey, SLIDER_DOMAINS, SWITCHES_ON_TAP, TOGGLE_BEFORE } from "./layout";
 import { coverPrimary, hasCoverTilt, withCoverTilt } from "./tall-controls";
 import type { Capability, PageTile, Tile, TileOptions } from "../types";
@@ -256,6 +256,33 @@ export function tiltOffered(tile: Tile, panel: TilePanel, controls: string) {
   // A screen that lays a cover out by its room (firmware 0.57.0) takes them on a card of one row or one cell as well.
   return domain === "cover" && (isTallSize(size) || size === "full" || Boolean(controlOption(domain, "tilt")?.room))
     && (tilt || Boolean(panel.caps?.controls.includes("tilt") && choiceOffered(tile, "controls", withCoverTilt(coverPrimary(controls), true), Boolean(panel.catalogue))));
+}
+/** Every control set a card of `size` offers in full, a blind's slats with its keys or its position as one set: room for
+ * it (model/catalogue.ts fits), a screen that draws it for this entity, Home Assistant offering it, and a save that takes it. */
+export function controlSets(tile: Tile, panel: TilePanel, size: string): string[] {
+  const domain = domainOf(tile), c = panel.caps, sized: Tile = { ...tile, options: { ...tile.options, size } };
+  if (size === "single" || !panel.catalogue) return [];
+  return panel.catalogue.choices.map((choice) => choice.key).filter((key) => key !== "none"
+    && fits(controlOption(domain, key), size, panel.columns)
+    && drawable(domain, key, panel.attributes, panel.rangeless ? new Set<string>() : null) === key
+    && (!c || c.controls.includes(key)) && choiceOffered(sized, "controls", key, true));
+}
+export type Growth = { sets: string[]; suggested: string | null; drawn: string; gained: boolean };
+/** What a tile that grows from `before` to `after` has room for (app 0.4.89, docs/CATALOGUE.md "A tile that grows"):
+ * the sets it offers there, whether one is new, and the richest that keeps the set chosen for it (catalogue `grow`, so a
+ * blind whose keys were chosen gets keys and slats, one that kept its default gets the position and the slats). `drawn`: what it draws
+ * at `after` with its options as they are. Null where the type has no controls or the face takes none (a watch, a slider). */
+export function growthOf(tile: Tile, panel: TilePanel, before: string, after: string): Growth | null {
+  const domain = domainOf(tile), display = tileDisplay(tile);
+  if (!["standard", "cover"].includes(display) || option(tile, "inline", "none") === "slider") return null;
+  const sets = controlSets(tile, panel, after);
+  if (!sets.length) return null;
+  // A set someone chose is kept and added to; a tile that only ever had its type's default gets the richest set.
+  const had = tile.options?.controls === undefined ? [] : controlParts(domain, resolveControls({ entity: tile.entity, options: { ...tile.options, size: before } }));
+  const suggested = growOrder(domain).find((key) => sets.includes(key) && had.every((part) => controlParts(domain, key).includes(part))) ?? null;
+  const drawn = resolveControls({ entity: tile.entity, options: { ...tile.options, size: after } }) ?? "none";
+  const earlier = controlSets(tile, panel, before);
+  return { sets, suggested, drawn, gained: sets.some((key) => !earlier.includes(key)) };
 }
 /** What the panel says of the control: a warning for one Home Assistant does not offer, else where it stands. */
 export function controlHint(tile: Tile, panel: TilePanel, controls: string): Hint {

@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **A tile that grows shows more controls.** Drag a tile larger and it now gets the controls that fit its new size:
+  a blind shows its position and its slats, a thermostat its temperature and mode keys, a light its brightness. A tip
+  beside the tile lists every set that fits, so you can keep that one, pick another or choose none, and pointing at
+  one shows it on the tile first. A set you chose yourself is kept and added to. "Don't show again" hides the tip;
+  the inspector's Controls works as before.
 - **The vacuum card shows the map, the rooms and the routines.** On every board with 8 MB of flash or more, a robot
   vacuum's card now shows its map, cleaned up and in the screen's own colours, with its state and battery above it.
   Tap rooms in the order you want and Start cleans just those (Home Assistant's clean by area), its own routines run

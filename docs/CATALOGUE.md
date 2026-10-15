@@ -77,6 +77,7 @@ controls:                     # direct controls on a card; the first is the defa
     screen: {firmware: 0.3.1}             # a hard requirement: the add-on asks for this firmware first
     one_row: setpoint                     # what a card one row high draws instead
     room: {feature: cover_rows}           # a screen with this feature lays the control out by its card's room (cover_tile.h)
+grow: [setpoint_mode]         # what a tile that grows suggests first, the richest first (see "A tile that grows")
 inline:                       # the small slider beside the name
   needs: {actions: [{action: light.turn_on, field: brightness_pct}]}
 toggle: {actions: [lock.lock]}   # what On / off as a tap needs; without this key: <domain>.toggle listed by Home Assistant
@@ -92,7 +93,7 @@ favorite:                     # what a favourite sets as it starts, each where t
   shuffle: {needs: {actions: [media_player.shuffle_set]}}
 ```
 
-A control may also say `sizes: {full: false}` (not on a full-page card), and the keys of an option are `needs`,
+A type's `grow` names only its own controls. A control may also say `sizes: {full: false}` (not on a full-page card), and the keys of an option are `needs`,
 `screen`, `sizes`, `wide`, `rows`, `of`, `one_row`, `fallback`, `range` and `room`; `tools/generate_catalogue.py` refuses any
 other key (`TOP`, `OPTION`). A `keypad` has up, down, left, right and OK for every integration it names and the other
 keys (`back`, `home`, `play`, `volume_up`, `volume_down`, `mute`) where the remote has them, and every command must be
@@ -126,6 +127,26 @@ A variant's `when` is stricter than `needs`: it only holds on features Home Assi
 Every action and every feature a file names must be one Home Assistant has for that type (`catalogue/_ha.json`), every
 control needs its words in the translations (`addon.labels.controls.<type>.<key>`), and every option another one names
 must exist. `tools/generate_catalogue.py` stops on anything else.
+
+## A tile that grows
+
+When someone drags a tile's edge to make it larger, the editor gives it the controls its new room has space for, and a
+tip beside the tile lists every set that fits there, so the user keeps it, picks another or chooses none. Nothing new
+reaches the screen: the editor writes the chosen set into the tile's `controls`, and the add-on and the firmware treat it
+as any other choice.
+
+Which set comes first follows the type's `grow` list, then its `controls` in their order:
+
+- The suggestion is the first set the new size offers (it fits, the screen draws it for this entity, Home Assistant
+  offers it, the save takes it) that keeps the set chosen for the tile. A blind whose keys were chosen gets keys and
+  slats, one that kept its type's default gets the position and the slats.
+- A tile that shrinks keeps what it has; a card one row high still draws what fits there (`one_row`).
+- A face without controls (a watch, a small slider, a map) keeps its face and gets no suggestion.
+- The tip lists the same sets the inspector's Controls offers, richest first, and "Don't show again" hides only the tip,
+  in that browser.
+
+`web/src/model/tile-options.ts` (`controlSets`, `growthOf`) holds the rule, `resizeTile` in `web/src/editor/tiles.ts`
+writes the suggestion with the new size as one step of undo, and `web/src/components/GrowTip.vue` is the tip.
 
 ## Adding an entity type
 

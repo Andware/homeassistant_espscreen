@@ -31,7 +31,7 @@ VERSION = re.compile(r'^\d+\.\d+\.\d+$')
 FIRST_TYPES = frozenset('alarm_control_panel automation binary_sensor button camera climate cover fan image input_boolean input_button '
                         'input_number input_select light lock media_player number person scene screen script select sensor sun switch '
                         'timer vacuum weather'.split())
-TOP = {'domain', 'firmware', 'displays', 'controls', 'inline', 'toggle', 'taps', 'guards', 'picture', 'map', 'key', 'keypad', 'memory', 'cards', 'favorite', 'energy'}
+TOP = {'domain', 'firmware', 'displays', 'controls', 'inline', 'toggle', 'taps', 'guards', 'picture', 'map', 'key', 'keypad', 'memory', 'cards', 'favorite', 'energy', 'grow'}
 # What one tile of a type keeps in the memory inside a screen's chip (firmware 0.34.0+, docs/TILE_MEMORY.md): `bytes`
 # measured on a board with PSRAM, `extras` whether it keeps a block of extras. Every type says it, so a new one cannot
 # leave the screen's memory budget guessing; the most a tile may keep is a sanity bound, not a rule.
@@ -221,6 +221,12 @@ def normalise(tile, types, translations, facts, commands=None):
         for key in controls:
             if key not in (words.get(domain) or {}):
                 fail(where, f'control {key} has no words: add addon.labels.controls.{domain}.{key} to the translations')
+        # What a tile that grows suggests first (app 0.4.89), the richest first: the first of these the new size has room
+        # for and that keeps what the tile drew before (docs/CATALOGUE.md, "A tile that grows").
+        grow = list(data.get('grow') or [])
+        for key in grow:
+            if key not in controls:
+                fail(where, f'grow names {key}, which is no control here')
         picture = data.get('picture')
         if picture is not None:
             check_keys(f'{where} picture', picture, {'fit', 'overlay', 'refresh'})
@@ -271,6 +277,7 @@ def normalise(tile, types, translations, facts, commands=None):
             'displays': [option(f'{where} displays {key}', domain, key, value, displays) for key, value in displays.items()],
             'controls': [option(f'{where} controls {key}', domain, key, value, controls) for key, value in controls.items()],
             'inline': option(f'{where} inline', domain, 'slider', data['inline'], {}) if 'inline' in data else None,
+            **({'grow': grow} if grow else {}),
             'toggle': needs(f'{where} toggle', domain, data['toggle']) if 'toggle' in data else None,
             'taps': list(data.get('taps') or []),
             'guards': list(data.get('guards') or []),
