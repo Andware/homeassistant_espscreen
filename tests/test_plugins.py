@@ -426,6 +426,51 @@ class Links(unittest.IsolatedAsyncioTestCase):
         await service.refresh_links(force=True)
         self.assertEqual(read, [('https://github.com/someone/tessera-bus', '.')])
 
+    async def test_an_update_builds_the_new_release_in(self):
+        """#260: the plugins file of an update named the new release, not nothing. A release added with a link is not
+        in the index and its snapshot is kept only after the file is written, so the link it was read from stands in."""
+        import plugins as plugin_service
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        config = Path(tmp.name) / 'esphome'
+        config.mkdir()
+
+        class FakeFirmware:
+            task = None
+            job = None
+
+            def save_plugins(self, profile, text):
+                (config / profile.replace('.yaml', '.plugins.yaml')).write_text(text)
+
+            def start(self, data):
+                async def build():
+                    self.job = {'state': 'success'}
+                self.task = asyncio.get_running_loop().create_task(build())
+
+        class FakeManager:
+            firmware = FakeFirmware()
+
+            def __init__(self):
+                self.build_queue = BuildQueue(self)
+            ha = type('HA', (), {'changed': asyncio.Event(), 'dirty': set()})()
+            page_senders = {}
+
+            def screen(self, inbox):
+                return {'id': inbox, 'node': inbox, 'board': 'guition'}
+
+            def notify(self):
+                pass
+        FakeManager.updates = type('U', (), {'resolve': lambda self, screen: (screen['id'] + '.yaml', '10.0.0.1')})()
+        service = plugin_service.Plugins(FakeManager(), Path(tmp.name) / 'data', config)
+        for version, ref in (('1.0.0', 'a' * 40), ('1.1.0', 'b' * 40)):
+            service.links['bus'] = plugin_service.Entry(manifest(version=version), {'en': ENGLISH}, {}, 'link', 'community',
+                                                        repo='https://github.com/someone/tessera-bus', path='.', ref=ref)
+            await service.apply('hall', {'add': [{'id': 'bus', 'source': 'link', 'consent': True}]})
+            await service.manager.build_queue.idle()
+            with self.subTest(version):
+                self.assertIn(f'ref: {ref}  # bus {version}', (config / 'hall.plugins.yaml').read_text())
+                self.assertEqual(service.store.get('hall', 'bus')['state'], 'active')
+
 
 class LinkPath(unittest.IsolatedAsyncioTestCase):
     """The folder in a link goes into the screen's plugins file and into git's path: only plain names, never a step up."""

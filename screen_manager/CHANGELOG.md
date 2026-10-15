@@ -20,6 +20,9 @@
   no tile for, such as a `plant.*` of Plant Monitor, now gets its entity id in `context.entity` too, so the plugin can
   ask Home Assistant about that entity. Before, it got the state and attributes but an empty entity id. A plugin's
   `tessera::action` works on such an entity too, as a `todo.add_item` on a to-do list.
+- **A plugin added with a link stays on the screen after an update (#260).** Updating a plugin added with a link to a
+  newer release built the screen without it, and its tiles showed "plugin missing" until it was removed and added
+  again. The screen's build now takes the new release.
 - **Waveshare P4 board audio and relays.** The relay-equipped 86 panel exposes its two outputs as Home Assistant
   switches, both off at boot. Extras adds microphone gain, automatic codec gain and live echo-cancellation on/off.
   Its AEC transport reuses the existing speaker, microphone and media-player interfaces; other boards keep their

@@ -395,12 +395,18 @@ class Plugins:
         """What an installed plugin is: its folder, the branch it follows, or the release it is pinned to."""
         if record.get('source') == 'folder':
             return self.folders.get(record['id'])
-        if record.get('source') == 'branch':
-            # Pinned to the commit it was built from, as every source but a folder.
+        # Pinned to the commit it was built from, as every source but a folder: its snapshot, or the link or index entry
+        # of that same commit. A release just read from a link has no snapshot until apply() has written the plugins
+        # file, and is in no index, so the link stands in (#260).
+        ref = record.get('ref')
+        found = self.snapshot_of(record['id'], ref)
+        if not found and record.get('source') in ('link', 'branch'):
             link = self.links.get(record['id'])
-            return self.snapshot_of(record['id'], record.get('ref')) or (link if link and link.ref == record.get('ref') else None)
-        return self.snapshot_of(record['id'], record.get('ref')) or (
-            self.index.get(record['id']) if self.index.get(record['id']) and self.index[record['id']].ref == record.get('ref') else None)
+            found = link if link and link.ref == ref else None
+        if not found and record.get('source') != 'branch':
+            index = self.index.get(record['id'])
+            found = index if index and index.ref == ref else None
+        return found
 
     def secret_values(self, entry, inbox=None):
         """The secrets a fetch of this plugin may carry: filled in for its own origin (a folder someone is making in
