@@ -12564,9 +12564,14 @@ namespace touch_input {
 // The edge swipe of every board, in the touchscreen's own coordinates: where a touch starts, where it goes, and when
 // it ends. The capacitive boards feed it from pressed, moved and released below; the resistive ones call these three
 // from their own triggers (features/resistive-touch.yaml), where only the top and the bottom band are armed.
+// Where and when the touch started, on the glass: the Dock rises from there under the finger.
+inline int edge_start_y = 0;
+inline uint32_t edge_pressed_ms = 0;
 inline void edge_press(int x, int y) {
   int sx = x, sy = y;
   screen_point(sx, sy);
+  edge_start_y = sy;
+  edge_pressed_ms = lv_tick_get();
   screen_input::edge_swipe.begin(sx, sy, overlay_card::screen_width(), overlay_card::screen_height());
   if (screen_input::edge_swipe.armed() && starts_on_control(sx, sy)) {
     ESP_LOGI("touch", "edge swipe off: the touch starts on a slider");
@@ -12578,6 +12583,10 @@ inline void edge_move(int x, int y) {
   int sx = x, sy = y;
   screen_point(sx, sy);
   using Gesture = screen_input::EdgeSwipe::Gesture;
+#ifdef SD_MOD_DOCK
+  // The finger that opened the Dock carries it until it lets go.
+  if (dock::lifting()) { dock::lift_move(sy); return; }
+#endif
   const auto gesture = screen_input::edge_swipe.update(sx, sy);
   if (gesture == Gesture::none) return;
 #ifdef SD_MOD_DOCK
@@ -12620,7 +12629,7 @@ inline void edge_move(int x, int y) {
   if (gesture == Gesture::home) {
 #ifdef SD_MOD_DOCK
     // Full: up from the bottom opens the dock, over whatever is open, once the pages are there to show.
-    if (navigation_ready() && dock::show()) {
+    if (navigation_ready() && dock::show(true, edge_start_y, sy, edge_pressed_ms)) {
       ESP_LOGI("touch", "edge swipe up: dock");
       swipe_glow(Edge::bottom);
       return;
@@ -12645,6 +12654,9 @@ inline void edge_move(int x, int y) {
 }
 
 inline void edge_release() {
+#ifdef SD_MOD_DOCK
+  dock::lift_release();
+#endif
   if (screen_input::edge_swipe.armed() && screen_input::edge_swipe.inward() > 0)
     ESP_LOGI("touch", "edge swipe not fired: %d px travelled, %d px across", screen_input::edge_swipe.inward(), screen_input::edge_swipe.sideways());
   screen_input::edge_swipe.end();

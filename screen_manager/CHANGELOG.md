@@ -5,7 +5,8 @@
   camera's pictures are no longer decoded while the screen draws, and once the camera's stream has ended the screen
   draws the whole page once more.
 - **The Dock: swipe up for every page at once.** On every board with 8 MB of flash or more, a swipe up from the bottom
-  edge now opens the Dock, a drawer with all pages as small pictures with their names, in two rows: tap one to go
+  edge now opens the Dock, a drawer with all pages as small pictures with their names, in two rows. It comes up with
+  your finger and opens the rest of the way when you let go (pulled up only a little, it falls back). Tap a page to go
   there, drag it down to close it, or swipe up once more to go home. The CYD and the other 4 MB boards keep going home on that swipe and get none of
   its code, so their room for updates stays the same.
 - **In the Dock, per page.** On a screen whose board has the Dock, a page's settings say how it stands there: its
