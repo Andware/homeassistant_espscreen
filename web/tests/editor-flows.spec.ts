@@ -115,9 +115,13 @@ describe("the editor", () => {
     screen.dock = false;
     let view = mount(PageInspector, { props: { id } });
     expect(view.find(".dock-field").exists()).toBe(false);
+    expect(view.find("#page-part-dock").exists()).toBe(false);
     view.unmount();
     screen.dock = true;
     view = mount(PageInspector, { props: { id } });
+    // The Dock is a part of the small page at the head of the settings (app 0.4.89): chosen there, its field shows.
+    expect(view.find(".dock-field").exists()).toBe(false);
+    await view.find("#page-part-dock").trigger("click");
     const modes = () => view.findAll(".dock-field .seg button");
     expect(modes().map((b) => b.attributes("aria-pressed"))).toEqual(["true", "false", "false"]);
     expect(view.find(".dock-field .picker").exists()).toBe(false);

@@ -1460,7 +1460,8 @@
       "remove": "Rimuovi",
       "loading": "Caricamento…",
       "back": "← Indietro",
-      "copy": "Copia"
+      "copy": "Copia",
+      "done": "Fatto"
     },
     "nav": {
       "plugins": "Plugin",
@@ -2665,28 +2666,22 @@
       "screen_name": "Titolo dello schermo",
       "screen_name_hint": "Ogni pagina senza un titolo proprio mostra questo.",
       "no_title_hint": "Lascia vuoto per mostrare solo il logo.",
-      "right": "Destra: ora, sensori o orologio",
       "item_label": "{name}, spazio {slot}. Enter: configura, frecce: sposta",
       "remove_named": "Rimuovi {name} dalla barra superiore",
       "max": "Massimo 1 elemento | Massimo {n} elementi",
       "add_title": "Aggiungi l'ora, la data, l'orologio analogico o un'entità",
-      "add_button": "Aggiungi ora, data o un'entità",
       "hint": {
         "overflow": "Non tutto sta accanto al nome: lo schermo tralascia gli elementi tratteggiati. Rimuovine uno o scegli un nome più corto.",
-        "reorder": "Trascina per riordinare; tocca un elemento per configurarlo.",
         "needs_firmware": "Sensori, data e orologio analogico compaiono a partire dal firmware {version}; fino a quell'aggiornamento questo schermo mostra il nome e, se l'ora è nella barra, l'orologio."
       },
       "detail": {
         "hidden": "Nascosto: non attivo al momento",
         "overflow": "Non sta accanto al nome",
-        "dial": "Quadrante",
         "hidden_signal": "Nascosto finché il segnale è buono",
         "hidden_link": "Nascosto finché tutto è connesso",
         "hidden_battery": "Nascosto finché la batteria è sopra il 20 %"
       },
       "live": {
-        "hidden": "Nascosto al momento: non attivo",
-        "overflow": "Al momento non sta accanto al nome",
         "looks": "Come appare sullo schermo"
       },
       "analog_sample": "Piccolo quadrante con l'ora",
@@ -2717,7 +2712,6 @@
         "none_found": "Nessuna entità trovata.",
         "plugins": "Dai plugin"
       },
-      "left": "Sinistra",
       "left_hint": "Titolo e pulsante Home: nelle impostazioni della pagina",
       "wifi_sample": "Il segnale di questo schermo",
       "link_sample": "Solo quando Home Assistant o Tessera manca",
@@ -2728,7 +2722,18 @@
       "battery_hint": "Lo schermo legge la propria batteria, quindi questo elemento resta nella barra quando Home Assistant non c'è. L'icona segue il livello come la disegna Home Assistant, con un fulmine durante la ricarica.",
       "battery_show_hint": "Solo se scarica lascia la barra libera finché la batteria non è al 20 % o meno.",
       "status_firmware": "Questo elemento compare dal firmware {version}. Fino a quell'aggiornamento, lo schermo lo omette.",
-      "plugin_item": "Mostra ciò che dice il suo plugin, solo quando ha qualcosa da dire. Su uno schermo senza quel plugin non compare."
+      "plugin_item": "Mostra ciò che dice il suo plugin, solo quando ha qualcosa da dire. Su uno schermo senza quel plugin non compare.",
+      "left_move": "Sposta a sinistra",
+      "right_move": "Sposta a destra",
+      "strip": {
+        "left_title": "Titolo e pulsante Home",
+        "left_hint": "Lato sinistro · si imposta in {page}",
+        "place": "Elemento {place} di {count}",
+        "hint": "Tocca un elemento della barra per impostarlo. Trascinalo a sinistra o a destra per spostarlo.",
+        "copy": "Copia questa barra su altre pagine",
+        "copy_hint": "I suoi elementi, o tutta la barra con il titolo",
+        "page_settings": "Impostazioni di {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3433,7 +3438,10 @@
       "bar_entities": "Anche a destra",
       "actions_blocked": "Home Assistant non permette ancora a questo schermo di eseguire azioni, quindi toccare un riquadro non fa nulla.",
       "allow_actions": "Consenti azioni",
-      "actions_allowed": "{name} ora può comandare i tuoi dispositivi."
+      "actions_allowed": "{name} ora può comandare i tuoi dispositivi.",
+      "part_page": "La pagina: titolo e navigazione",
+      "part_page_hint": "Titolo, pagina iniziale e come ci si arriva",
+      "home_control_hint": "Mette il pulsante Home a sinistra nella barra in alto di questa pagina. Porta alla pagina iniziale."
     },
     "feedback": {
       "question": "Il tuo schermo funziona come ti aspetti?",
@@ -3567,7 +3575,8 @@
         "tile": "Riquadro",
         "page": "Pagina",
         "bar": "Barra superiore"
-      }
+      },
+      "back": "Torna a {name}"
     },
     "confirm": {
       "leave_question": "Hai modifiche non salvate. Andare comunque alla panoramica?",

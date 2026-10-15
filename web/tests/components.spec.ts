@@ -1123,8 +1123,9 @@ describe("the title above a page (app 0.2.105, in the page's settings since 0.3.
   });
   it("leaves the title out of the top bar's panel and leads to the page instead", async () => {
     loadLayout({ title: "Living room", tiles: [], pages: 2, page_titles: ["", "Music"] });
-    insp.openBar(0, 1);
-    const drawer = mount(TopbarInspector, { props: { index: 0 } });
+    // The left side of the bar at the head of its inspector (app 0.4.89).
+    insp.openBar(-1, 1);
+    const drawer = mount(TopbarInspector, { props: { index: -1 } });
     expect(drawer.find("#screen-title").exists()).toBe(false);
     expect(drawer.find("#page-title").exists()).toBe(false);
     expect(drawer.find(".nav-row").text()).toContain("Music");

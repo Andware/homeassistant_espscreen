@@ -1,0 +1,56 @@
+<script setup lang="ts">
+// The top bar in small at the head of its inspector (app 0.4.89): the title and Home button on the left, every item as
+// the screen shows it, and a place to add one. It is the way through the bar: a part tapped shows its settings under it
+// (Reka Tabs, so the arrow keys walk the parts and Home and End jump to the ends), and an item pressed and moved left or
+// right takes another place. An item that is hidden right now stands dashed, one the glass leaves out for want of room
+// dashed in orange, as on the mockup. Items that don't fit go on the next line, in the screen's order; many (a large board
+// takes up to sixteen) stand under the title in lines of their own.
+import { computed } from "vue";
+import { TabsList, TabsRoot, TabsTrigger } from "reka-ui";
+import { t } from "../i18n";
+import { glyph, itemKey } from "../model/topbar";
+import type { HeaderItem } from "../types";
+import Icon from "./ui/Icon.vue";
+import TesseraMark from "./TesseraMark.vue";
+import { useTopbarStore } from "../stores/topbar";
+
+const topbar = useTopbarStore();
+const props = defineProps<{ items: readonly HeaderItem[]; selected: string; overflow: ReadonlySet<number>; title: string; home: boolean; full: boolean; max: number; dragging: number }>();
+const emit = defineEmits<{ select: [value: string]; press: [event: PointerEvent, index: number] }>();
+const wrap = computed(() => props.items.length > 6);
+// What a part shows: its glyph and, unless it is an icon alone, its words.
+function face(item: HeaderItem) {
+  const view = topbar.topbarView(item);
+  const code = topbar.topbarGlyph(item);
+  const iconOnly = view.analog || item.content === "icon";
+  return { glyph: code ? glyph(code) : "", text: iconOnly ? "" : view.text || "", color: view.color || undefined, shown: view.shown };
+}
+// A press chooses the item at once and may start a drag: the drag holds the mouse's own press back, which Reka Tabs
+// would choose on.
+function press(e: PointerEvent, index: number) {
+  if (e.button === 0) emit("select", String(index));
+  emit("press", e, index);
+}
+const justAdded = (item: HeaderItem) => topbar.topbarAdded?.key === itemKey(item) && Date.now() - topbar.topbarAdded.time < 1200;
+</script>
+
+<template>
+  <TabsRoot :model-value="selected" activation-mode="automatic" @update:model-value="(value) => emit('select', String(value))">
+    <TabsList class="bar-strip" :class="{ wrap }" :aria-label="t('editor.topbar.title')">
+      <TabsTrigger value="left" class="strip-slot strip-left" :title="t('editor.topbar.strip.left_title')">
+        <TesseraMark v-if="home" class="strip-home" />
+        <span class="strip-title">{{ title }}</span>
+        <small v-if="wrap" class="strip-count">{{ t('editor.topbar.items', { used: items.length }, max) }}</small>
+      </TabsTrigger>
+      <TabsTrigger v-for="(item, i) in items" :key="itemKey(item) + i" :value="String(i)" class="strip-slot strip-item" :data-index="i"
+        :class="{ 'is-hidden': !face(item).shown, 'is-overflow': overflow.has(i), 'just-added': justAdded(item), dragging: dragging === i }"
+        :title="topbar.topbarLabel(item)" :aria-label="t('editor.topbar.item_label', { name: topbar.topbarLabel(item), slot: i + 1 })"
+        @pointerdown="press($event, i)">
+        <span v-if="face(item).glyph" class="mdi" :style="face(item).color ? { color: face(item).color } : undefined">{{ face(item).glyph }}</span>
+        <span v-if="face(item).text && face(item).shown" class="strip-text">{{ face(item).text }}</span>
+      </TabsTrigger>
+      <TabsTrigger value="add" class="strip-slot strip-add" id="topbar-add" :disabled="full"
+        :title="full ? t('editor.topbar.max', max) : t('editor.topbar.add_title')" :aria-label="t('editor.topbar.add_title')"><Icon name="plus" /></TabsTrigger>
+    </TabsList>
+  </TabsRoot>
+</template>

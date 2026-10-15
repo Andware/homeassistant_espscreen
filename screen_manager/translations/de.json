@@ -1460,7 +1460,8 @@
       "remove": "Entfernen",
       "loading": "Wird geladen…",
       "back": "← Zurück",
-      "copy": "Kopieren"
+      "copy": "Kopieren",
+      "done": "Fertig"
     },
     "nav": {
       "plugins": "Plugins",
@@ -2665,28 +2666,22 @@
       "screen_name": "Titel des Bildschirms",
       "screen_name_hint": "Jede Seite ohne eigenen Titel zeigt diesen.",
       "no_title_hint": "Leer lassen, um nur das Logo zu zeigen.",
-      "right": "Rechts: Uhrzeit, Sensoren oder eine Uhr",
       "item_label": "{name}, Platz {slot}. Enter: einstellen, Pfeile: verschieben",
       "remove_named": "{name} aus der Kopfleiste entfernen",
       "max": "Höchstens 1 Element | Höchstens {n} Elemente",
       "add_title": "Uhrzeit, Datum, Analoguhr oder eine Entität hinzufügen",
-      "add_button": "Uhrzeit, Datum oder Entität hinzufügen",
       "hint": {
         "overflow": "Nicht alles passt neben den Namen: Der Bildschirm lässt die gestrichelten Elemente weg. Entferne eines oder wähle einen kürzeren Namen.",
-        "reorder": "Zum Umsortieren ziehen; zum Einstellen auf ein Element tippen.",
         "needs_firmware": "Sensoren, Datum und Analoguhr erscheinen ab Firmware {version}; bis zu diesem Update zeigt dieser Bildschirm den Namen und, falls die Uhrzeit in der Leiste ist, die Uhr."
       },
       "detail": {
         "hidden": "Ausgeblendet: gerade nicht aktiv",
         "overflow": "Passt nicht neben den Namen",
-        "dial": "Zifferblatt",
         "hidden_signal": "Ausgeblendet, solange das Signal gut ist",
         "hidden_link": "Ausgeblendet, solange alles verbunden ist",
         "hidden_battery": "Ausgeblendet, solange der Akku über 20 % ist"
       },
       "live": {
-        "hidden": "Gerade ausgeblendet: nicht aktiv",
-        "overflow": "Passt gerade nicht neben den Namen",
         "looks": "So sieht es auf dem Bildschirm aus"
       },
       "analog_sample": "Kleines Zifferblatt mit der Uhrzeit",
@@ -2717,7 +2712,6 @@
         "none_found": "Keine Entitäten gefunden.",
         "plugins": "Aus Plugins"
       },
-      "left": "Links",
       "left_hint": "Titel und Startseiten-Schaltfläche: in den Seiteneinstellungen",
       "wifi_sample": "Das Signal dieses Bildschirms",
       "link_sample": "Nur wenn Home Assistant oder Tessera fehlt",
@@ -2728,7 +2722,18 @@
       "battery_hint": "Der Bildschirm liest seinen eigenen Akku, daher bleibt dieses Element in der Leiste, wenn Home Assistant weg ist. Das Symbol folgt dem Ladestand so, wie Home Assistant ihn zeichnet, mit einem Blitz während des Ladens.",
       "battery_show_hint": "Nur wenn niedrig hält die Leiste frei, bis der Akku bei 20 % oder weniger ist.",
       "status_firmware": "Dieses Element erscheint ab Firmware {version}. Bis zu diesem Update lässt der Bildschirm es weg.",
-      "plugin_item": "Zeigt, was sein Plugin sagt, nur solange es etwas zu sagen hat. Auf einem Bildschirm ohne dieses Plugin bleibt es weg."
+      "plugin_item": "Zeigt, was sein Plugin sagt, nur solange es etwas zu sagen hat. Auf einem Bildschirm ohne dieses Plugin bleibt es weg.",
+      "left_move": "Nach links",
+      "right_move": "Nach rechts",
+      "strip": {
+        "left_title": "Titel und Home-Taste",
+        "left_hint": "Linke Seite · einstellbar in {page}",
+        "place": "Element {place} von {count}",
+        "hint": "Tippe ein Element in der Leiste an, um es einzustellen. Ziehe es nach links oder rechts, um es zu verschieben.",
+        "copy": "Diese Leiste auf andere Seiten kopieren",
+        "copy_hint": "Ihre Elemente oder die ganze Leiste mit Titel",
+        "page_settings": "Einstellungen von {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3433,7 +3438,10 @@
       "bar_entities": "Außerdem rechts",
       "actions_blocked": "Home Assistant lässt diesen Bildschirm noch keine Aktionen ausführen, ein Tippen auf eine Kachel bewirkt also nichts.",
       "allow_actions": "Aktionen erlauben",
-      "actions_allowed": "{name} darf deine Geräte jetzt steuern."
+      "actions_allowed": "{name} darf deine Geräte jetzt steuern.",
+      "part_page": "Die Seite: Titel und Navigation",
+      "part_page_hint": "Titel, Startseite und wie man hierher kommt",
+      "home_control_hint": "Setzt die Home-Taste links in die obere Leiste dieser Seite. Sie führt zur Startseite."
     },
     "feedback": {
       "question": "Funktioniert dein Bildschirm wie erwartet?",
@@ -3567,7 +3575,8 @@
         "tile": "Kachel",
         "page": "Seite",
         "bar": "Kopfleiste"
-      }
+      },
+      "back": "Zurück zu {name}"
     },
     "confirm": {
       "leave_question": "Du hast nicht gespeicherte Änderungen. Trotzdem zur Übersicht?",

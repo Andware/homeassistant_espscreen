@@ -1460,7 +1460,8 @@
       "remove": "Verwijderen",
       "loading": "Laden…",
       "back": "← Terug",
-      "copy": "Kopiëren"
+      "copy": "Kopiëren",
+      "done": "Klaar"
     },
     "nav": {
       "new_screen": "Nieuw scherm",
@@ -2304,28 +2305,22 @@
       "screen_name": "Titel van het scherm",
       "screen_name_hint": "Elke pagina zonder eigen titel zegt dit.",
       "no_title_hint": "Laat leeg om alleen het logo te tonen.",
-      "right": "Rechts: tijd, sensoren of een klok",
       "item_label": "{name}, plek {slot}. Enter: instellen, pijltjes: verplaatsen",
       "remove_named": "{name} uit de bovenbalk halen",
       "max": "Maximaal 1 onderdeel | Maximaal {n} onderdelen",
       "add_title": "Tijd, datum, analoge klok of een entiteit toevoegen",
-      "add_button": "Tijd, datum of entiteit toevoegen",
       "hint": {
         "overflow": "Niet alles past naast de naam: het scherm laat de gestreepte onderdelen weg. Haal er een weg of kies een kortere naam.",
-        "reorder": "Sleep om de volgorde te wijzigen; tik op een onderdeel om het in te stellen.",
         "needs_firmware": "Sensoren, de datum en de analoge klok verschijnen vanaf firmware {version}; tot die update toont dit scherm de naam en, als de tijd in de balk staat, de klok."
       },
       "detail": {
         "hidden": "Verborgen: nu niet actief",
         "overflow": "Past niet naast de naam",
-        "dial": "Wijzerplaat",
         "hidden_signal": "Verborgen zolang het signaal goed is",
         "hidden_link": "Verborgen zolang alles verbonden is",
         "hidden_battery": "Verborgen zolang de accu boven 20 % is"
       },
       "live": {
-        "hidden": "Nu verborgen: niet actief",
-        "overflow": "Past nu niet naast de naam",
         "looks": "Zo staat het op het scherm"
       },
       "analog_sample": "Kleine wijzerplaat met de tijd",
@@ -2356,7 +2351,6 @@
         "none_found": "Geen entiteiten gevonden.",
         "plugins": "Van plugins"
       },
-      "left": "Links",
       "left_hint": "Titel en thuisknop: in de pagina-instellingen",
       "wifi_sample": "Het signaal van dit scherm zelf",
       "link_sample": "Alleen als Home Assistant of Tessera weg is",
@@ -2367,7 +2361,18 @@
       "battery_hint": "Het scherm leest zijn eigen accu, dus dit item blijft in de balk als Home Assistant weg is. Het icoon volgt het niveau zoals Home Assistant het tekent, met een bliksemschicht tijdens het laden.",
       "battery_show_hint": "Alleen als laag houdt de balk leeg tot de accu op 20 % of minder staat.",
       "status_firmware": "Dit item verschijnt vanaf firmware {version}. Tot die update laat het scherm het weg.",
-      "plugin_item": "Toont wat de plugin zegt, alleen als hij iets te zeggen heeft. Op een scherm zonder die plugin blijft het weg."
+      "plugin_item": "Toont wat de plugin zegt, alleen als hij iets te zeggen heeft. Op een scherm zonder die plugin blijft het weg.",
+      "left_move": "Naar links",
+      "right_move": "Naar rechts",
+      "strip": {
+        "left_title": "Titel en Home-knop",
+        "left_hint": "Linkerkant · in te stellen bij {page}",
+        "place": "Item {place} van {count}",
+        "hint": "Tik een item in de balk om het in te stellen. Sleep het naar links of rechts om het te verplaatsen.",
+        "copy": "Deze balk naar andere pagina's kopiëren",
+        "copy_hint": "De items, of de hele balk met de titel",
+        "page_settings": "Instellingen van {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3074,7 +3079,10 @@
       "bar_entities": "Ook rechts in de balk",
       "actions_blocked": "Home Assistant laat dit scherm nog geen acties uitvoeren, dus een tik op een tegel doet niets.",
       "allow_actions": "Acties toestaan",
-      "actions_allowed": "{name} mag je apparaten nu bedienen."
+      "actions_allowed": "{name} mag je apparaten nu bedienen.",
+      "part_page": "De pagina: titel en navigatie",
+      "part_page_hint": "Titel, startpagina en hoe je hier komt",
+      "home_control_hint": "Zet de Home-knop links in de topbar van deze pagina. Hij gaat naar de startpagina."
     },
     "feedback": {
       "question": "Werkt je scherm zoals je verwacht?",
@@ -3208,7 +3216,8 @@
         "tile": "Tegel",
         "page": "Pagina",
         "bar": "Bovenbalk"
-      }
+      },
+      "back": "Terug naar {name}"
     },
     "confirm": {
       "leave_question": "Je hebt niet-opgeslagen wijzigingen. Toch naar het overzicht?",

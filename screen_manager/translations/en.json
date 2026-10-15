@@ -1460,7 +1460,8 @@
       "remove": "Remove",
       "loading": "Loading…",
       "back": "← Back",
-      "copy": "Copy"
+      "copy": "Copy",
+      "done": "Done"
     },
     "nav": {
       "new_screen": "New screen",
@@ -2304,28 +2305,22 @@
       "screen_name": "Screen title",
       "screen_name_hint": "Every page without a title of its own says this.",
       "no_title_hint": "Leave it empty to show only the logo.",
-      "right": "Right: time, sensors, or a clock",
       "item_label": "{name}, slot {slot}. Enter: configure, arrows: move",
       "remove_named": "Remove {name} from the top bar",
       "max": "Maximum 1 item | Maximum {n} items",
       "add_title": "Add the time, date, analog clock, or an entity",
-      "add_button": "Add time, date, or an entity",
       "hint": {
         "overflow": "Not everything fits next to the name: the screen drops the dashed items. Remove one or choose a shorter name.",
-        "reorder": "Drag to reorder; tap an item to configure it.",
         "needs_firmware": "Sensors, the date, and the analog clock appear from firmware {version}; until that update, this screen shows the name and, if the time is in the bar, the clock."
       },
       "detail": {
         "hidden": "Hidden: not active right now",
         "overflow": "Doesn't fit next to the name",
-        "dial": "Dial",
         "hidden_signal": "Hidden while the signal is good",
         "hidden_link": "Hidden while everything is connected",
         "hidden_battery": "Hidden while the battery is above 20 %"
       },
       "live": {
-        "hidden": "Hidden right now: not active",
-        "overflow": "Doesn't currently fit next to the name",
         "looks": "How it looks on the screen"
       },
       "analog_sample": "Small dial with the time",
@@ -2356,7 +2351,6 @@
         "none_found": "No entities found.",
         "plugins": "From plugins"
       },
-      "left": "Left",
       "left_hint": "Title and home button: in the page settings",
       "wifi_sample": "This screen's own signal",
       "link_sample": "Only when Home Assistant or Tessera is away",
@@ -2367,7 +2361,18 @@
       "battery_hint": "The screen reads its own battery, so this item stays in the bar when Home Assistant is away. The icon follows the level the way Home Assistant draws it, with a lightning bolt while it charges.",
       "battery_show_hint": "Only when low keeps the bar clear until the battery is at 20 % or less.",
       "status_firmware": "This item shows from firmware {version}. Until that update, the screen leaves it out.",
-      "plugin_item": "Shows what its plugin says, only while it has something to say. On a screen without that plugin it stays away."
+      "plugin_item": "Shows what its plugin says, only while it has something to say. On a screen without that plugin it stays away.",
+      "left_move": "Move left",
+      "right_move": "Move right",
+      "strip": {
+        "left_title": "Title and Home button",
+        "left_hint": "Left side · set in the settings of {page}",
+        "place": "Item {place} of {count}",
+        "hint": "Tap an item in the bar to set it up. Drag it left or right to move it.",
+        "copy": "Copy this bar to other pages",
+        "copy_hint": "Its items, or the whole bar with its title",
+        "page_settings": "Settings of {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3074,7 +3079,10 @@
       "bar_entities": "Also on the right",
       "actions_blocked": "Home Assistant doesn't let this screen perform actions yet, so a tap on a tile does nothing.",
       "allow_actions": "Allow actions",
-      "actions_allowed": "{name} may now control your devices."
+      "actions_allowed": "{name} may now control your devices.",
+      "part_page": "The page: title and navigation",
+      "part_page_hint": "Title, home page and how you get here",
+      "home_control_hint": "Puts the Home button at the left of this page's top bar. It leads to the home page."
     },
     "feedback": {
       "question": "Does your screen work as you expect?",
@@ -3208,7 +3216,8 @@
         "tile": "Tile",
         "page": "Page",
         "bar": "Top bar"
-      }
+      },
+      "back": "Back to {name}"
     },
     "confirm": {
       "leave_question": "You have unsaved changes. Go to the overview anyway?",

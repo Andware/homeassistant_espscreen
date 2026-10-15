@@ -22,6 +22,8 @@ export type SortableRowsOptions<T> = {
   enabled?: () => boolean;
   /** The dragged row took another place. */
   onMove?: (from: number, to: number) => void;
+  /** Rows side by side (the top bar at the head of its inspector, app 0.4.89): the row the pointer is over is the place. */
+  axis?: "x" | "y";
 };
 
 export function useSortableRows<T>(options: SortableRowsOptions<T>) {
@@ -31,7 +33,10 @@ export function useSortableRows<T>(options: SortableRowsOptions<T>) {
   const pointer = usePointerDrag({
     onStart: () => { drag.value.active = true; live.value = [...options.items()]; },
     onMove: (e) => {
-      const from = drag.value.index, to = dropIndex(rows().map((row) => row.getBoundingClientRect()), from, e.clientY);
+      const from = drag.value.index, boxes = rows().map((row) => row.getBoundingClientRect());
+      // Side by side, and wrapping onto more lines when there are many: the place the pointer is over.
+      const over = boxes.findIndex((box) => e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom);
+      const to = options.axis === "x" ? (over < 0 ? from : over) : dropIndex(boxes, from, e.clientY);
       if (to === from || !live.value) return;
       live.value = moved(live.value, from, to);
       drag.value.index = to;

@@ -1460,7 +1460,8 @@
       "remove": "Eltávolítás",
       "loading": "Betöltés…",
       "back": "← Vissza",
-      "copy": "Másolás"
+      "copy": "Másolás",
+      "done": "Kész"
     },
     "nav": {
       "plugins": "Bővítmények",
@@ -2665,28 +2666,22 @@
       "screen_name": "Kijelző címe",
       "screen_name_hint": "Minden saját cím nélküli oldal ezt mutatja.",
       "no_title_hint": "Hagyd üresen, ha csak a logót szeretnéd látni.",
-      "right": "Jobb oldal: idő, érzékelők vagy óra",
       "item_label": "{name}, {slot}. hely. Enter: beállítás, nyilak: áthelyezés",
       "remove_named": "{name} eltávolítása a felső sávból",
       "max": "Legfeljebb 1 elem | Legfeljebb {n} elem",
       "add_title": "Idő, dátum, analóg óra vagy entitás hozzáadása",
-      "add_button": "Idő, dátum vagy entitás hozzáadása",
       "hint": {
         "overflow": "Nem fér el minden a név mellett: a kijelző elhagyja a szaggatott keretes elemeket. Távolíts el egyet, vagy válassz rövidebb nevet.",
-        "reorder": "Húzással rendezheted át; koppints egy elemre a beállításához.",
         "needs_firmware": "Az érzékelők, a dátum és az analóg óra a(z) {version} firmware-től jelennek meg; addig ez a kijelző a nevet mutatja, és ha az idő a sávban van, az órát."
       },
       "detail": {
         "hidden": "Rejtve: most nem aktív",
         "overflow": "Nem fér el a név mellett",
-        "dial": "Számlap",
         "hidden_signal": "Rejtve, amíg a jel jó",
         "hidden_link": "Rejtve, amíg minden csatlakoztatva van",
         "hidden_battery": "Rejtve, amíg az akkumulátor 20 % fölött van"
       },
       "live": {
-        "hidden": "Most rejtve: nem aktív",
-        "overflow": "Jelenleg nem fér el a név mellett",
         "looks": "Így néz ki a kijelzőn"
       },
       "analog_sample": "Kis számlap az idővel",
@@ -2717,7 +2712,6 @@
         "none_found": "Nincs találat.",
         "plugins": "Bővítményekből"
       },
-      "left": "Bal oldal",
       "left_hint": "Cím és kezdőlap gomb: az oldal beállításaiban",
       "wifi_sample": "A kijelző saját jele",
       "link_sample": "Csak ha a Home Assistant vagy a Tessera nem elérhető",
@@ -2728,7 +2722,18 @@
       "battery_hint": "A kijelző maga olvassa az akkumulátorát, így ez az elem a sávon marad, amikor a Home Assistant nem elérhető. Az ikon úgy követi a töltöttséget, ahogy a Home Assistant rajzolja, töltés közben villámmal.",
       "battery_show_hint": "A Csak ha alacsony üresen hagyja a sávot, amíg az akkumulátor 20 % vagy kevesebb nem lesz.",
       "status_firmware": "Ez az elem a(z) {version} firmware-től jelenik meg. A frissítésig a kijelző kihagyja.",
-      "plugin_item": "Azt mutatja, amit a bővítménye mond, csak amíg van mit mondania. Egy képernyőn e bővítmény nélkül nem jelenik meg."
+      "plugin_item": "Azt mutatja, amit a bővítménye mond, csak amíg van mit mondania. Egy képernyőn e bővítmény nélkül nem jelenik meg.",
+      "left_move": "Balra",
+      "right_move": "Jobbra",
+      "strip": {
+        "left_title": "Cím és Kezdőlap gomb",
+        "left_hint": "Bal oldal · itt állítható: {page}",
+        "place": "{place}. elem / {count}",
+        "hint": "Koppints egy elemre a sávban a beállításához. Húzd balra vagy jobbra az áthelyezéshez.",
+        "copy": "Sáv másolása más oldalakra",
+        "copy_hint": "Az elemei, vagy az egész sáv a címmel",
+        "page_settings": "{page} beállításai"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3433,7 +3438,10 @@
       "bar_entities": "Jobb oldalon is",
       "actions_blocked": "A Home Assistant még nem engedi, hogy ez a kijelző műveleteket hajtson végre, így egy csempe megérintése nem csinál semmit.",
       "allow_actions": "Műveletek engedélyezése",
-      "actions_allowed": "{name} mostantól vezérelheti az eszközeidet."
+      "actions_allowed": "{name} mostantól vezérelheti az eszközeidet.",
+      "part_page": "Az oldal: cím és navigáció",
+      "part_page_hint": "Cím, kezdőlap és hogyan jutsz ide",
+      "home_control_hint": "A Kezdőlap gombot az oldal felső sávjának bal szélére teszi. A kezdőlapra visz."
     },
     "feedback": {
       "question": "Úgy működik a kijelződ, ahogy várod?",
@@ -3567,7 +3575,8 @@
         "tile": "Csempe",
         "page": "Oldal",
         "bar": "Felső sáv"
-      }
+      },
+      "back": "Vissza ide: {name}"
     },
     "confirm": {
       "leave_question": "Nem mentett módosításaid vannak. Mégis az áttekintésre lépsz?",

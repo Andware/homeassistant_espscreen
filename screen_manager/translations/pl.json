@@ -1460,7 +1460,8 @@
       "remove": "Usuń",
       "loading": "Ładowanie…",
       "back": "← Wstecz",
-      "copy": "Kopiuj"
+      "copy": "Kopiuj",
+      "done": "Gotowe"
     },
     "nav": {
       "plugins": "Wtyczki",
@@ -2665,28 +2666,22 @@
       "screen_name": "Tytuł ekranu",
       "screen_name_hint": "Każda strona bez własnego tytułu pokazuje ten tytuł.",
       "no_title_hint": "Zostaw puste, aby pokazać tylko logo.",
-      "right": "Po prawej: godzina, sensory lub zegar",
       "item_label": "{name}, miejsce {slot}. Enter: konfiguruj, strzałki: przenieś",
       "remove_named": "Usuń {name} z górnego paska",
       "max": "Maksymalnie 1 element | Maksymalnie {n} elementy | Maksymalnie {n} elementów",
       "add_title": "Dodaj godzinę, datę, zegar analogowy lub encję",
-      "add_button": "Dodaj godzinę, datę lub encję",
       "hint": {
         "overflow": "Nie wszystko mieści się obok nazwy: ekran pomija elementy z przerywaną ramką. Usuń jeden z nich albo wybierz krótszą nazwę.",
-        "reorder": "Przeciągnij, aby zmienić kolejność; kliknij element, aby go skonfigurować.",
         "needs_firmware": "Sensory, data i zegar analogowy pojawiają się od wersji firmware {version}; do tej aktualizacji ekran pokazuje nazwę oraz zegar, jeśli godzina jest na pasku."
       },
       "detail": {
         "hidden": "Ukryty: teraz nieaktywny",
         "overflow": "Nie mieści się obok nazwy",
-        "dial": "Tarcza",
         "hidden_signal": "Ukryty, dopóki sygnał jest dobry",
         "hidden_link": "Ukryty, dopóki wszystko jest połączone",
         "hidden_battery": "Ukryte, dopóki bateria ma ponad 20 %"
       },
       "live": {
-        "hidden": "Teraz ukryty: nieaktywny",
-        "overflow": "Obecnie nie mieści się obok nazwy",
         "looks": "Tak wygląda na ekranie"
       },
       "analog_sample": "Mała tarcza z godziną",
@@ -2717,7 +2712,6 @@
         "none_found": "Nie znaleziono encji.",
         "plugins": "Z wtyczek"
       },
-      "left": "Lewa strona",
       "left_hint": "Tytuł i przycisk strony głównej: w ustawieniach strony",
       "wifi_sample": "Sygnał tego ekranu",
       "link_sample": "Tylko gdy brakuje Home Assistant lub Tessera",
@@ -2728,7 +2722,18 @@
       "battery_hint": "Ekran sam odczytuje swoją baterię, więc ten element zostaje na pasku, gdy Home Assistant jest niedostępny. Ikona pokazuje poziom tak, jak rysuje go Home Assistant, z błyskawicą podczas ładowania.",
       "battery_show_hint": "Tylko gdy słaba zostawia pasek pusty, dopóki bateria nie spadnie do 20 % lub mniej.",
       "status_firmware": "Ten element pojawia się od firmware {version}. Do tej aktualizacji ekran go pomija.",
-      "plugin_item": "Pokazuje to, co mówi jego wtyczka, tylko gdy ma coś do powiedzenia. Na ekranie bez tej wtyczki się nie pojawia."
+      "plugin_item": "Pokazuje to, co mówi jego wtyczka, tylko gdy ma coś do powiedzenia. Na ekranie bez tej wtyczki się nie pojawia.",
+      "left_move": "W lewo",
+      "right_move": "W prawo",
+      "strip": {
+        "left_title": "Tytuł i przycisk Home",
+        "left_hint": "Lewa strona · ustawiana w: {page}",
+        "place": "Element {place} z {count}",
+        "hint": "Dotknij elementu na pasku, aby go ustawić. Przeciągnij w lewo lub w prawo, aby go przenieść.",
+        "copy": "Kopiuj ten pasek na inne strony",
+        "copy_hint": "Jego elementy albo cały pasek z tytułem",
+        "page_settings": "Ustawienia: {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3433,7 +3438,10 @@
       "bar_entities": "Także po prawej",
       "actions_blocked": "Home Assistant jeszcze nie pozwala temu ekranowi wykonywać akcji, więc dotknięcie kafelka nic nie robi.",
       "allow_actions": "Zezwól na akcje",
-      "actions_allowed": "{name} może teraz sterować twoimi urządzeniami."
+      "actions_allowed": "{name} może teraz sterować twoimi urządzeniami.",
+      "part_page": "Strona: tytuł i nawigacja",
+      "part_page_hint": "Tytuł, strona główna i jak tu trafić",
+      "home_control_hint": "Umieszcza przycisk Home po lewej stronie górnego paska tej strony. Prowadzi do strony głównej."
     },
     "feedback": {
       "question": "Czy ekran działa tak, jak oczekujesz?",
@@ -3567,7 +3575,8 @@
         "tile": "Kafelek",
         "page": "Strona",
         "bar": "Górny pasek"
-      }
+      },
+      "back": "Wróć do: {name}"
     },
     "confirm": {
       "leave_question": "Masz niezapisane zmiany. Mimo to przejść do przeglądu?",

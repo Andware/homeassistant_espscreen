@@ -7,6 +7,15 @@
 - **In the Dock, per page.** On a screen whose board has the Dock, a page's settings say how it stands there: its
   **Picture** (the default), an **Icon** of its own from the same icons as the tiles, or **Hidden**. A page left out of
   swiping is not in the Dock either.
+- **The top bar's settings start from the bar itself.** At the head of its settings the editor draws the top bar as the
+  screen does: the title on the left, every item, and a + to add one. Tap a part and only its settings show under it;
+  the bar stays in view and shows each change on the item at once, also while you pick an icon. Drag an item left or
+  right in the bar to move it. Many items go on more lines, and an item the screen leaves out for want of room is
+  dashed in orange. Copying the bar to other pages is in the menu behind the three dots.
+- **A page's settings start from the page.** A small page at the head shows its top bar, its tiles and, on a board with
+  the Dock, its place in the Dock: tap the Dock for how the page stands there, or the top bar to set that up, and a
+  back button takes you to the page again. Escape goes one step back at a time, and the settings have room between
+  their groups instead of lines.
 - **A new page asks what it needs.** The Add page window chooses the top bar with chips: the home key is on, and the
   clock and the screen's other items are a tap away instead of a clock on every new page. On a screen with the Dock it
   also asks how the page stands in the Dock: its picture, an icon, or hidden.

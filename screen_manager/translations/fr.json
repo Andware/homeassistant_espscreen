@@ -1460,7 +1460,8 @@
       "remove": "Retirer",
       "loading": "Chargement…",
       "back": "← Retour",
-      "copy": "Copier"
+      "copy": "Copier",
+      "done": "Terminé"
     },
     "nav": {
       "plugins": "Plugins",
@@ -2665,28 +2666,22 @@
       "screen_name": "Titre de l'écran",
       "screen_name_hint": "Chaque page sans titre propre affiche celui-ci.",
       "no_title_hint": "Laissez vide pour n'afficher que le logo.",
-      "right": "Droite : heure, capteurs ou horloge",
       "item_label": "{name}, emplacement {slot}. Enter : configurer, flèches : déplacer",
       "remove_named": "Retirer {name} de la barre supérieure",
       "max": "{n} élément au maximum | {n} éléments au maximum",
       "add_title": "Ajouter l'heure, la date, l'horloge analogique ou une entité",
-      "add_button": "Ajouter l'heure, la date ou une entité",
       "hint": {
         "overflow": "Tout ne tient pas à côté du nom : l'écran laisse de côté les éléments en pointillés. Retirez-en un ou choisissez un nom plus court.",
-        "reorder": "Faites glisser pour réorganiser ; appuyez sur un élément pour le configurer.",
         "needs_firmware": "Les capteurs, la date et l'horloge analogique apparaissent à partir du firmware {version} ; d'ici cette mise à jour, cet écran affiche le nom et, si l'heure est dans la barre, l'horloge."
       },
       "detail": {
         "hidden": "Masqué : pas actif en ce moment",
         "overflow": "Ne tient pas à côté du nom",
-        "dial": "Cadran",
         "hidden_signal": "Masqué tant que le signal est bon",
         "hidden_link": "Masqué tant que tout est connecté",
         "hidden_battery": "Masqué tant que la batterie dépasse 20 %"
       },
       "live": {
-        "hidden": "Masqué en ce moment : pas actif",
-        "overflow": "Ne tient pas à côté du nom pour l'instant",
         "looks": "Aperçu sur l'écran"
       },
       "analog_sample": "Petit cadran avec l'heure",
@@ -2717,7 +2712,6 @@
         "none_found": "Aucune entité trouvée.",
         "plugins": "Des plugins"
       },
-      "left": "Gauche",
       "left_hint": "Titre et bouton d’accueil : dans les réglages de la page",
       "wifi_sample": "Le signal de cet écran",
       "link_sample": "Seulement si Home Assistant ou Tessera est absent",
@@ -2728,7 +2722,18 @@
       "battery_hint": "L'écran lit sa propre batterie : cet élément reste dans la barre quand Home Assistant est absent. L'icône suit le niveau comme Home Assistant la dessine, avec un éclair pendant la charge.",
       "battery_show_hint": "Seulement si faible laisse la barre libre jusqu’à ce que la batterie soit à 20 % ou moins.",
       "status_firmware": "Cet élément apparaît à partir du firmware {version}. D'ici là, l'écran l'omet.",
-      "plugin_item": "Affiche ce que dit son plugin, seulement quand il a quelque chose à dire. Sur un écran sans ce plugin, il reste absent."
+      "plugin_item": "Affiche ce que dit son plugin, seulement quand il a quelque chose à dire. Sur un écran sans ce plugin, il reste absent.",
+      "left_move": "Déplacer à gauche",
+      "right_move": "Déplacer à droite",
+      "strip": {
+        "left_title": "Titre et bouton Accueil",
+        "left_hint": "Côté gauche · se règle dans {page}",
+        "place": "Élément {place} sur {count}",
+        "hint": "Touchez un élément de la barre pour le régler. Faites-le glisser à gauche ou à droite pour le déplacer.",
+        "copy": "Copier cette barre vers d'autres pages",
+        "copy_hint": "Ses éléments, ou toute la barre avec son titre",
+        "page_settings": "Réglages de {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3433,7 +3438,10 @@
       "bar_entities": "Aussi à droite",
       "actions_blocked": "Home Assistant ne laisse pas encore cet écran effectuer d'actions, un appui sur une tuile ne fait donc rien.",
       "allow_actions": "Autoriser les actions",
-      "actions_allowed": "{name} peut maintenant commander vos appareils."
+      "actions_allowed": "{name} peut maintenant commander vos appareils.",
+      "part_page": "La page : titre et navigation",
+      "part_page_hint": "Titre, page d'accueil et comment y arriver",
+      "home_control_hint": "Place le bouton Accueil à gauche de la barre du haut de cette page. Il mène à la page d'accueil."
     },
     "feedback": {
       "question": "Votre écran fonctionne-t-il comme prévu ?",
@@ -3567,7 +3575,8 @@
         "tile": "Tuile",
         "page": "Page",
         "bar": "Barre supérieure"
-      }
+      },
+      "back": "Retour à {name}"
     },
     "confirm": {
       "leave_question": "Vous avez des modifications non enregistrées. Revenir quand même à l'aperçu ?",

@@ -1460,7 +1460,8 @@
       "remove": "Eliminar",
       "loading": "Cargando…",
       "back": "← Volver",
-      "copy": "Copiar"
+      "copy": "Copiar",
+      "done": "Listo"
     },
     "nav": {
       "plugins": "Plugins",
@@ -2665,28 +2666,22 @@
       "screen_name": "Título de la pantalla",
       "screen_name_hint": "Cada página sin título propio muestra este.",
       "no_title_hint": "Déjalo vacío para mostrar solo el logotipo.",
-      "right": "Derecha: hora, sensores o un reloj",
       "item_label": "{name}, hueco {slot}. Enter: configurar; flechas: mover",
       "remove_named": "Eliminar {name} de la barra superior",
       "max": "Máximo 1 elemento | Máximo {n} elementos",
       "add_title": "Añade la hora, la fecha, el reloj analógico o una entidad",
-      "add_button": "Añadir hora, fecha o una entidad",
       "hint": {
         "overflow": "No todo cabe junto al nombre: la pantalla omite los elementos con borde discontinuo. Elimina uno o elige un nombre más corto.",
-        "reorder": "Arrastra para reordenar; toca un elemento para configurarlo.",
         "needs_firmware": "Los sensores, la fecha y el reloj analógico aparecen a partir del firmware {version}; hasta esa actualización, esta pantalla muestra el nombre y, si la hora está en la barra, el reloj."
       },
       "detail": {
         "hidden": "Oculto: ahora no está activo",
         "overflow": "No cabe junto al nombre",
-        "dial": "Esfera",
         "hidden_signal": "Oculto mientras la señal es buena",
         "hidden_link": "Oculto mientras todo está conectado",
         "hidden_battery": "Oculto mientras la batería esté por encima del 20 %"
       },
       "live": {
-        "hidden": "Oculto ahora mismo: no está activo",
-        "overflow": "Ahora mismo no cabe junto al nombre",
         "looks": "Así se ve en la pantalla"
       },
       "analog_sample": "Esfera pequeña con la hora",
@@ -2717,7 +2712,6 @@
         "none_found": "No se han encontrado entidades.",
         "plugins": "De plugins"
       },
-      "left": "Izquierda",
       "left_hint": "Título y botón de inicio: en los ajustes de la página",
       "wifi_sample": "La señal de esta pantalla",
       "link_sample": "Solo cuando falta Home Assistant o Tessera",
@@ -2728,7 +2722,18 @@
       "battery_hint": "La pantalla lee su propia batería, así que este elemento sigue en la barra cuando Home Assistant no está. El icono sigue el nivel como lo dibuja Home Assistant, con un rayo mientras se carga.",
       "battery_show_hint": "Solo si está baja deja la barra libre hasta que la batería esté al 20 % o menos.",
       "status_firmware": "Este elemento aparece desde el firmware {version}. Hasta esa actualización, la pantalla lo omite.",
-      "plugin_item": "Muestra lo que dice su plugin, solo cuando tiene algo que decir. En una pantalla sin ese plugin no aparece."
+      "plugin_item": "Muestra lo que dice su plugin, solo cuando tiene algo que decir. En una pantalla sin ese plugin no aparece.",
+      "left_move": "Mover a la izquierda",
+      "right_move": "Mover a la derecha",
+      "strip": {
+        "left_title": "Título y botón de inicio",
+        "left_hint": "Lado izquierdo · se ajusta en {page}",
+        "place": "Elemento {place} de {count}",
+        "hint": "Toca un elemento de la barra para configurarlo. Arrástralo a izquierda o derecha para moverlo.",
+        "copy": "Copiar esta barra a otras páginas",
+        "copy_hint": "Sus elementos, o la barra entera con su título",
+        "page_settings": "Ajustes de {page}"
+      }
     },
     "screen_settings": {
       "groups": {
@@ -3433,7 +3438,10 @@
       "bar_entities": "También a la derecha",
       "actions_blocked": "Home Assistant todavía no deja que esta pantalla realice acciones, así que tocar un mosaico no hace nada.",
       "allow_actions": "Permitir acciones",
-      "actions_allowed": "{name} ya puede controlar tus dispositivos."
+      "actions_allowed": "{name} ya puede controlar tus dispositivos.",
+      "part_page": "La página: título y navegación",
+      "part_page_hint": "Título, página de inicio y cómo se llega aquí",
+      "home_control_hint": "Pone el botón de inicio a la izquierda de la barra superior de esta página. Lleva a la página de inicio."
     },
     "feedback": {
       "question": "¿Tu pantalla funciona como esperas?",
@@ -3567,7 +3575,8 @@
         "tile": "Mosaico",
         "page": "Página",
         "bar": "Barra superior"
-      }
+      },
+      "back": "Volver a {name}"
     },
     "confirm": {
       "leave_question": "Tienes cambios sin guardar. ¿Ir al resumen de todos modos?",

@@ -8,7 +8,7 @@ import { send } from "../api";
 import { t } from "../i18n";
 import { clockSample } from "../model/clock";
 import * as pages from "../model/pages";
-import { agoText, batteryView, itemKey, LINK_GLYPH, SAMPLE_BATTERY, SAMPLE_RSSI, type ItemView, wifiView } from "../model/topbar";
+import { agoText, batteryView, BUILTIN_ICONS, itemKey, LINK_GLYPH, SAMPLE_BATTERY, SAMPLE_RSSI, STATUS_CODES, type ItemView, wifiView } from "../model/topbar";
 import { useVisibleInterval } from "../composables/useVisibleInterval";
 import type { HeaderItem } from "../types";
 import { useDocumentStore } from "./document";
@@ -128,6 +128,14 @@ export const useTopbarStore = defineStore("topbar", () => {
     return { icon: p.i || null, text: p.k === "ago" ? agoText(p.e, Math.floor(ui.now / 1000), region.screenLanguage) : p.t, color: p.c ? `#${p.c}` : null, shown: p.shown };
   }
 
+  // The glyph an item stands with in the editor's lists and in the bar at the head of its inspector: the screen's own
+  // items their mark, the clock and the date their own, an entity what it shows right now.
+  function topbarGlyph(item: HeaderItem): string | undefined {
+    const view = topbarView(item);
+    if (STATUS_CODES[item.type]) return view.icon || STATUS_CODES[item.type];
+    return view.analog || item.type !== "entity" ? entities.iconNamed(BUILTIN_ICONS[item.type])?.cp : view.icon || undefined;
+  }
+
   // ---- Adding, moving and taking items off a page's bar ----
   // The new chip lights up briefly so the eye finds it.
   const topbarAdded = ref<null | { key: string; time: number }>(null);
@@ -185,7 +193,7 @@ export const useTopbarStore = defineStore("topbar", () => {
   return {
     topbarAdded,
     // What the mockup and the drawer read as they draw (stores/lookup.ts).
-    ...lookups({ topbarItems, homeKeyShown, topbarLabel, topbarView }),
+    ...lookups({ topbarItems, homeKeyShown, topbarLabel, topbarView, topbarGlyph }),
     setTopbarItems, copyPageBars, addTopbarItem: topbarList.add, moveTopbarItem: topbarList.move, removeTopbarItem: topbarList.remove,
     loadTopbarPreview, start,
   };
