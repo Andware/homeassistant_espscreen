@@ -5,6 +5,8 @@ packages:
   player: !include ../features/audio-player.yaml
 
 substitutions:
+  # Keep playback at the codec rate; only microphone/reference audio is converted for AEC.
+  AUDIO_SAMPLE_RATE: "48000"
   AUDIO_HALF_DUPLEX: "false"
   ES7210_AEC_SETTINGS: |-
     settings_screen::board_rows.push_back(settings_screen::toggle(screen_text::txt::settings_echo_cancellation,
@@ -37,7 +39,9 @@ esp_aec:
 
 esp_audio_stack:
   id: board_audio_stack
-  sample_rate: 16000
+  sample_rate: ${AUDIO_SAMPLE_RATE}
+  # The pinned stack converts the selected TDM mic and reference together, preserving alignment.
+  output_sample_rate: 16000
   bits_per_sample: 16
   slot_bit_width: 16
   rx_slot_mode: stereo

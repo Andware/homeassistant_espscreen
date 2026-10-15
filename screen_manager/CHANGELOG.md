@@ -1,5 +1,8 @@
 ## Unreleased
 
+- **AEC keeps 48 kHz playback on the Waveshare P4 and optional Tab5 transport.** The codec bus and speaker now
+  run at 48 kHz while the existing audio stack converts microphone and reference together to 16 kHz for echo
+  cancellation. Music no longer goes through a 16 kHz playback path. Native-I2S fallback settings are unchanged.
 - **Editor: a long list of media players scrolls and has a search.** Adding a player to the screensaver opened a menu
   that ran off the window in a home with many players, and the ones below could not be reached. It now opens a search
   field with a list that scrolls, and typing narrows it by name or area. Every other menu of the editor scrolls when it

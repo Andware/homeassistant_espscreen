@@ -107,7 +107,7 @@ microphone. Its gain starts at **0 dB**, with unity digital gain and no ALC, unl
 the attenuated Waveshare reference's 24 dB. Measure its level and clipping on hardware.
 
 The codecs share MCLK30, BCLK27 and LRCLK29, with DOUT26 to the ES8388 and DIN28 from
-the ES7210. One owner drives the full-duplex bus at 16 kHz with four 16-bit Philips TDM
+the ES7210. One owner drives the full-duplex bus at 48 kHz with four 16-bit Philips TDM
 slots. The ES7210's SDOUT1 order is MIC1, MIC3, MIC2, MIC4: microphone slot 2 retains
 the physical MIC2 of the original right-channel input, and slot 1 supplies the
 reference. TX slot 0 supplies the left DAC output. Check ES8388 playback/framing on
@@ -116,15 +116,20 @@ and the 500 ms speaker buffer are retained.
 
 This uses one microphone, with no beamforming. The extended ADC configures its
 hardware high-pass filters; the native-I2S microphone's software DC correction is
-not part of the AEC adapter. The fixed 16 kHz bus also changes media bandwidth from
-the native path, whose shared player normally runs at 48 kHz.
+not part of the AEC adapter. The stack converts the selected microphone and reference
+together to 16 kHz for the speech AEC processor. Playback remains at 48 kHz, matching
+the native player's rate. AEC bypass still delivers 16 kHz microphone audio and keeps
+48 kHz playback. This uses the pinned stack's existing sample-rate converter; the new
+bus rate and additional processing require another hardware acceptance test.
 
 ### Hardware acceptance
 
 1. Keep a known working firmware available. Check display, touch, Wi-Fi and HA after
    a reboot and a cold start, before testing audio.
-2. Play a short spoken announcement at moderate volume. Check its beginning and
-   end, then repeat with microphone capture running. Both must remain continuous.
+2. Compare music with the native 48 kHz path, then play a short spoken announcement
+   at moderate volume. Check its beginning and end, then repeat with microphone
+   capture running. Both must remain continuous. Check logs for a 48 kHz bus,
+   16 kHz microphone output and conversion ratio 3.
 3. Verify microphone mute and volume. Check the AEC switch on the panel and in HA,
    then in the matching Tessera editor, including its restored state after reboot.
 4. With identical speaker volume and microphone gain, capture the microphone output
