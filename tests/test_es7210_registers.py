@@ -98,12 +98,16 @@ class Es7210Registers(unittest.TestCase):
 
              assert(boot.set_alc_enabled(false)); gains(boot,0xcb);
              assert(boot.regs[0x12]==0); // Legacy stereo mode remains the default.
-             for(uint8_t channel=1;channel<=4;++channel){
+             // Both the original bus and 48 kHz playback must preserve TDM and reference isolation.
+             for(uint32_t sample_rate : {16000U,48000U})for(uint8_t channel=1;channel<=4;++channel){
               ES7210 tdm;
-              tdm.set_sample_rate(16000); tdm.set_mic_gain(30);
+              tdm.set_sample_rate(sample_rate); tdm.set_mic_gain(30);
               tdm.set_tdm(true); tdm.set_reference(channel,0);
               tdm.set_digital_gain(6); tdm.set_alc_enabled(true);
               tdm.setup(); assert(!tdm.is_failed());
+              // Both supported rates use MCLK = 256 * Fs with the same ADC clock dividers.
+              assert(tdm.regs[0x02]==0xc1 && tdm.regs[0x07]==0x20);
+              assert(tdm.regs[0x04]==0x01 && tdm.regs[0x05]==0x00);
               assert(tdm.regs[0x11]==0x60 && tdm.regs[0x12]==0x02);
               const auto ref_reg=0x1b+4-channel;
               const auto ref_gain_reg=0x43+channel-1;
@@ -142,4 +146,4 @@ class Es7210Registers(unittest.TestCase):
             driver = root / 'components/es7210_extended'
             subprocess.run(['clang++', '-std=c++17', '-Wall', '-Wextra', '-Werror', f'-I{out}', f'-I{driver}', str(out/'test.cpp'), str(driver/'es7210.cpp'), '-o', str(out/'test')], check=True)
             subprocess.run([str(out/'test')], check=True)
-            print('PASS: ES7210 legacy gain/ALC, TDM format, all four reference-channel mappings, independent reference gain and I2C failure recovery')
+            print('PASS: ES7210 legacy gain/ALC, 16/48 kHz clock setup, TDM format, all four reference-channel mappings, independent reference gain and I2C failure recovery')
