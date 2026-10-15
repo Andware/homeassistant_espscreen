@@ -45,7 +45,7 @@ const groups = computed(() => iconGroupsMatching(inv.inventory.icons?.groups || 
       <div v-if="insp.iconPickerOpen" class="picker" @pointerleave="show(null)">
         <label class="search-field"><Icon name="magnify" /><input v-model="query" type="search" :placeholder="t('editor.icon.search')" :aria-label="t('editor.icon.search_label')" /></label>
         <button type="button" class="icon-choice icon-auto" :aria-pressed="selected === 'auto' ? 'true' : 'false'" :title="autoLabel" @pointerenter="show('auto')" @click="pick('auto')">
-          <span class="mdi">{{ glyph(automatic) }}</span><span>{{ autoLabel }}</span>
+          <span class="mdi">{{ automatic ? glyph(automatic) : "" }}</span><span>{{ autoLabel }}</span>
         </button>
         <button v-if="allowNone" type="button" class="icon-choice icon-auto" :aria-pressed="selected === 'none' ? 'true' : 'false'" :title="t('editor.icon.none')" @pointerenter="show('none')" @click="pick('none')">
           <span class="mdi"></span><span>{{ t("editor.icon.none_text_only") }}</span>

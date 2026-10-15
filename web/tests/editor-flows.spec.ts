@@ -122,6 +122,11 @@ describe("the editor", () => {
     expect(view.find(".dock-check").exists()).toBe(true);
     // The icon row, with the page's picture as its default: an empty automatic icon must not take the row with it.
     expect(view.text()).toContain("Picture of the page");
+    // Opened, the picker keeps the row and offers the picture first, then the icons.
+    await view.find("button.choice-field").trigger("click");
+    expect(view.find(".picker .icon-auto").exists()).toBe(true);
+    expect(view.find(".picker .icon-auto").text()).toContain("Picture of the page");
+    await view.find("button.choice-field").trigger("click");
     setPageIcon(id, "sofa");
     expect(doc.document!.pages[1].icon).toBe("sofa");
     setPageIcon(id, "auto");
