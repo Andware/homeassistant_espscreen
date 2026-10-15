@@ -6,6 +6,7 @@ import { computed } from "vue";
 import { t } from "../i18n";
 import { clockSample } from "../model/clock";
 import { moved } from "../model/reorder";
+import { itemKey } from "../model/topbar";
 import type { HeaderItem, SaverKind, ScreensaverChoice } from "../types";
 import { useEntitiesStore } from "./entities";
 import { useInspectorStore } from "./inspector";
@@ -103,6 +104,8 @@ export const useScreensaverStore = defineStore("screensaver", () => {
   const saverList = itemList({
     items: () => saverItems.value, set: setSaverItems, max: () => SAVER_ITEMS_MAX, open: (index) => insp.openSaverItem(index), inspector: "saver-item",
     label: (item) => topbar.topbarLabel(item), toast: (message, action) => ui.toast(message, action),
+    // The new entity lights up briefly in the row at the head, as a new item does in the top bar.
+    added: (item) => { topbar.topbarAdded = { key: itemKey(item), time: Date.now() }; },
     // One entity once: the clock has no room for the same one twice, whatever it shows of it.
     same: (a, b) => a.entity === b.entity,
     full: () => t("editor.screen_settings.screensaver.items_full", { n: SAVER_ITEMS_MAX }),
@@ -147,13 +150,11 @@ export const useScreensaverStore = defineStore("screensaver", () => {
       temperature: degrees !== undefined && degrees !== null && degrees !== "" ? `${Math.round(Number(degrees))}°` : null,
     };
   });
-  // The way back from an entity of the clock: the clock's own drawer.
-  const clockCrumb = () => ({ text: saverLabel("clock"), open: () => insp.openSaverStep("clock") });
 
   return {
     saver, saverReady, standbyOn, savedOrder, players, cameraChoices, weatherChoices, saverItems, weatherSource, glassRatio, clockPreview,
     // What the card and the drawers read as they draw (stores/lookup.ts).
-    ...lookups({ isOn, stepsShown, entityPlace, entitiesOf, summary, clockCrumb }),
+    ...lookups({ isOn, stepsShown, entityPlace, entitiesOf, summary }),
     changeSaver, toggleStep, moveStep, setPlayers, addPlayer, removePlayer, setSaverItems,
     addSaverItem: saverList.add, updateSaverItem: saverList.update, moveSaverItem: saverList.move, removeSaverItem: saverList.remove,
   };

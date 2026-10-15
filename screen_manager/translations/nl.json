@@ -2242,7 +2242,8 @@
           "grey": "Grijs",
           "blue-grey": "Blauwgrijs"
         }
-      }
+      },
+      "anchor_hint": "Klik op het icoon om een ander te kiezen, of op de naam om de tegel een andere naam te geven"
     },
     "precision": {
       "label": "Precisie weergeven",
@@ -2306,7 +2307,6 @@
       "screen_name_hint": "Elke pagina zonder eigen titel zegt dit.",
       "no_title_hint": "Laat leeg om alleen het logo te tonen.",
       "item_label": "{name}, plek {slot}. Enter: instellen, pijltjes: verplaatsen",
-      "remove_named": "{name} uit de bovenbalk halen",
       "max": "Maximaal 1 onderdeel | Maximaal {n} onderdelen",
       "add_title": "Tijd, datum, analoge klok of een entiteit toevoegen",
       "hint": {
@@ -2337,8 +2337,6 @@
       "clock_12": "12-uursklok · wijzigen onder {settings}",
       "clock_settings": "Instellingen → Taal & regio",
       "date_hint": "Vandaag is het {date}. De datum volgt de eigen klok van het scherm.",
-      "up": "Omhoog",
-      "down": "Omlaag",
       "add": {
         "title": "Toevoegen aan de bovenbalk",
         "slots": "{used} van {n} plek gebruikt | {used} van {n} plekken gebruikt",
@@ -2459,17 +2457,15 @@
         "players": "Spelers, de eerste bovenaan",
         "players_hint": "De eerste die speelt, verschijnt met zijn hoes.",
         "player_add": "Speler toevoegen",
-        "player_search": "Zoek een speler",
+        "player_search": "Spelers zoeken",
         "player_none": "Geen speler gevonden",
         "remove_player": "{name} weghalen",
         "keys_hint": "Afspelen, pauze en het volume werken op de screensaver. Een tik ergens anders maakt het scherm wakker.",
         "choose_camera": "Kies een camera",
         "camera_hint": "Het beeld, elke 15 seconden",
-        "glass": "Op het scherm",
         "temperature": "Temperatuur",
         "weather_auto": "Automatisch",
         "weather_none": "Geen temperatuur",
-        "beside": "Ernaast",
         "items_add": "Voeg een entiteit toe",
         "items_hint": "Naast de temperatuur, op één regel: een sensor, een deur, een lamp.",
         "items_full": "De klok heeft ruimte voor {n} entiteiten.",
@@ -2482,7 +2478,9 @@
         "item_both": "Beide",
         "item_look": "Toont",
         "item_hint": "Zwart-wit op de screensaver, welke kleur de entiteit ook heeft.",
-        "items_add_title": "Aan de klok toevoegen"
+        "items_add_title": "Aan de klok toevoegen",
+        "clock_part": "Tijd, datum en temperatuur",
+        "row_hint": "Tik een entiteit in de rij om haar in te stellen. Sleep haar naar links of rechts om haar te verplaatsen."
       },
       "plugins": {
         "title": "Plugins",

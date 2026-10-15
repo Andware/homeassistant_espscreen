@@ -2242,7 +2242,8 @@
           "grey": "Grey",
           "blue-grey": "Blue grey"
         }
-      }
+      },
+      "anchor_hint": "Click its icon to choose another, or its name to rename the tile"
     },
     "precision": {
       "label": "Display precision",
@@ -2306,7 +2307,6 @@
       "screen_name_hint": "Every page without a title of its own says this.",
       "no_title_hint": "Leave it empty to show only the logo.",
       "item_label": "{name}, slot {slot}. Enter: configure, arrows: move",
-      "remove_named": "Remove {name} from the top bar",
       "max": "Maximum 1 item | Maximum {n} items",
       "add_title": "Add the time, date, analog clock, or an entity",
       "hint": {
@@ -2337,8 +2337,6 @@
       "clock_12": "12 hour clock · change under {settings}",
       "clock_settings": "Settings → Language & region",
       "date_hint": "{date} today. The date follows the screen's own clock.",
-      "up": "Up",
-      "down": "Down",
       "add": {
         "title": "Add to the top bar",
         "slots": "{used} of {n} slot used | {used} of {n} slots used",
@@ -2465,11 +2463,9 @@
         "keys_hint": "Play, pause and the volume work on the screensaver. A tap anywhere else wakes the screen.",
         "choose_camera": "Choose a camera",
         "camera_hint": "Its picture, every 15 seconds",
-        "glass": "On the screen",
         "temperature": "Temperature",
         "weather_auto": "Automatic",
         "weather_none": "No temperature",
-        "beside": "Beside it",
         "items_add": "Add an entity",
         "items_hint": "Shown next to the temperature, in one line: a sensor, a door, a lamp.",
         "items_full": "The clock has room for {n} entities.",
@@ -2482,7 +2478,9 @@
         "item_both": "Both",
         "item_look": "Shows",
         "item_hint": "Black and white on the screensaver, whatever the colour of the entity.",
-        "items_add_title": "Add to the clock"
+        "items_add_title": "Add to the clock",
+        "clock_part": "Time, date and temperature",
+        "row_hint": "Tap an entity in the row to set it up. Drag it left or right to move it."
       },
       "plugins": {
         "title": "Plugins",

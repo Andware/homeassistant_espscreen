@@ -2603,7 +2603,8 @@
           "grey": "Grau",
           "blue-grey": "Blaugrau"
         }
-      }
+      },
+      "anchor_hint": "Klicke auf das Symbol, um ein anderes zu wählen, oder auf den Namen, um die Kachel umzubenennen"
     },
     "precision": {
       "label": "Anzeigegenauigkeit",
@@ -2667,7 +2668,6 @@
       "screen_name_hint": "Jede Seite ohne eigenen Titel zeigt diesen.",
       "no_title_hint": "Leer lassen, um nur das Logo zu zeigen.",
       "item_label": "{name}, Platz {slot}. Enter: einstellen, Pfeile: verschieben",
-      "remove_named": "{name} aus der Kopfleiste entfernen",
       "max": "Höchstens 1 Element | Höchstens {n} Elemente",
       "add_title": "Uhrzeit, Datum, Analoguhr oder eine Entität hinzufügen",
       "hint": {
@@ -2698,8 +2698,6 @@
       "clock_12": "12-Stunden-Uhr · ändern unter {settings}",
       "clock_settings": "Einstellungen → Sprache & Region",
       "date_hint": "Heute: {date}. Das Datum folgt der eigenen Uhr des Bildschirms.",
-      "up": "Nach oben",
-      "down": "Nach unten",
       "add": {
         "title": "Zur Kopfleiste hinzufügen",
         "slots": "{used} von {n} Platz belegt | {used} von {n} Plätzen belegt",
@@ -2824,11 +2822,9 @@
         "keys_hint": "Wiedergabe, Pause und Lautstärke funktionieren auf dem Bildschirmschoner. Ein Tippen woanders weckt den Bildschirm.",
         "choose_camera": "Kamera wählen",
         "camera_hint": "Ihr Bild, alle 15 Sekunden",
-        "glass": "Auf dem Bildschirm",
         "temperature": "Temperatur",
         "weather_auto": "Automatisch",
         "weather_none": "Keine Temperatur",
-        "beside": "Daneben",
         "items_add": "Entität hinzufügen",
         "items_hint": "Neben der Temperatur in einer Zeile: ein Sensor, eine Tür, eine Lampe.",
         "items_full": "Die Uhr hat Platz für {n} Entitäten.",
@@ -2841,7 +2837,11 @@
         "item_both": "Beides",
         "item_look": "Zeigt",
         "item_hint": "Schwarzweiß auf dem Bildschirmschoner, egal welche Farbe die Entität hat.",
-        "items_add_title": "Zur Uhr hinzufügen"
+        "items_add_title": "Zur Uhr hinzufügen",
+        "clock_part": "Uhrzeit, Datum und Temperatur",
+        "row_hint": "Tippe eine Entität in der Zeile an, um sie einzustellen. Ziehe sie nach links oder rechts, um sie zu verschieben.",
+        "player_search": "Player suchen",
+        "player_none": "Kein Player gefunden"
       },
       "plugins": {
         "title": "Plugins",

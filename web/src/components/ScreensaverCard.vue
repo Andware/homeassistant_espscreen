@@ -23,7 +23,9 @@ const pictures = computed(() => Boolean(screensaver.saver?.pictures));
 const steps = useSortableRows<SaverKind>({ rows: "#screensaver-steps > .saver-row", items: () => screensaver.savedOrder,
   commit: (list) => screensaver.changeSaver({ order: list }), skip: ".ui-switch", grip: ".grip", enabled: () => screensaver.saverReady && pictures.value });
 const order = computed(() => screensaver.stepsShown(steps.live.value));
-const opened = (kind: SaverKind) => insp.inspector?.kind === "saver" && insp.inspector.step === kind;
+// The clock stays marked while one of its entities or its + is open: they are the clock's own inspector (SaverClock.vue).
+const opened = (kind: SaverKind) => (insp.inspector?.kind === "saver" && insp.inspector.step === kind)
+  || (kind === "clock" && (insp.inspector?.kind === "saver-item" || insp.inspector?.kind === "saver-add"));
 const line = (kind: SaverKind) => (screensaver.isOn(kind) ? screensaver.summary(kind) : { text: t("editor.screen_settings.screensaver.summary.off"), missing: false });
 function open(e: MouseEvent, kind: SaverKind) {
   if (steps.click(e) || (e.target as HTMLElement).closest(".ui-switch")) return;

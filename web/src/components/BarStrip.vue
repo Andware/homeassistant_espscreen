@@ -4,7 +4,8 @@
 // (Reka Tabs, so the arrow keys walk the parts and Home and End jump to the ends), and an item pressed and moved left or
 // right takes another place. An item that is hidden right now stands dashed, one the glass leaves out for want of room
 // dashed in orange, as on the mockup. Items that don't fit go on the next line, in the screen's order; many (a large board
-// takes up to sixteen) stand under the title in lines of their own.
+// takes up to sixteen) stand under the title in lines of their own. The screensaver's clock row is the same strip (app
+// 0.4.89): its time and temperature on the left, its entities as it draws them (`face`), white on black (`saver`).
 import { computed } from "vue";
 import { TabsList, TabsRoot, TabsTrigger } from "reka-ui";
 import { t } from "../i18n";
@@ -15,11 +16,14 @@ import TesseraMark from "./TesseraMark.vue";
 import { useTopbarStore } from "../stores/topbar";
 
 const topbar = useTopbarStore();
-const props = defineProps<{ items: readonly HeaderItem[]; selected: string; overflow: ReadonlySet<number>; title: string; home: boolean; full: boolean; max: number; dragging: number }>();
+export type StripFace = { glyph: string; text: string; color?: string; shown: boolean };
+const props = defineProps<{ items: readonly HeaderItem[]; selected: string; overflow: ReadonlySet<number>; title: string; home: boolean; full: boolean; max: number; dragging: number;
+  face?: (item: HeaderItem) => StripFace; label?: string; leftTitle?: string; addTitle?: string; addId?: string; saver?: boolean }>();
 const emit = defineEmits<{ select: [value: string]; press: [event: PointerEvent, index: number] }>();
 const wrap = computed(() => props.items.length > 6);
 // What a part shows: its glyph and, unless it is an icon alone, its words.
-function face(item: HeaderItem) {
+function face(item: HeaderItem): StripFace {
+  if (props.face) return props.face(item);
   const view = topbar.topbarView(item);
   const code = topbar.topbarGlyph(item);
   const iconOnly = view.analog || item.content === "icon";
@@ -36,8 +40,8 @@ const justAdded = (item: HeaderItem) => topbar.topbarAdded?.key === itemKey(item
 
 <template>
   <TabsRoot :model-value="selected" activation-mode="automatic" @update:model-value="(value) => emit('select', String(value))">
-    <TabsList class="bar-strip" :class="{ wrap }" :aria-label="t('editor.topbar.title')">
-      <TabsTrigger value="left" class="strip-slot strip-left" :title="t('editor.topbar.strip.left_title')">
+    <TabsList class="bar-strip" :class="{ wrap, saver }" :aria-label="label || t('editor.topbar.title')">
+      <TabsTrigger value="left" class="strip-slot strip-left" :title="leftTitle || t('editor.topbar.strip.left_title')">
         <TesseraMark v-if="home" class="strip-home" />
         <span class="strip-title">{{ title }}</span>
         <small v-if="wrap" class="strip-count">{{ t('editor.topbar.items', { used: items.length }, max) }}</small>
@@ -49,8 +53,8 @@ const justAdded = (item: HeaderItem) => topbar.topbarAdded?.key === itemKey(item
         <span v-if="face(item).glyph" class="mdi" :style="face(item).color ? { color: face(item).color } : undefined">{{ face(item).glyph }}</span>
         <span v-if="face(item).text && face(item).shown" class="strip-text">{{ face(item).text }}</span>
       </TabsTrigger>
-      <TabsTrigger value="add" class="strip-slot strip-add" id="topbar-add" :disabled="full"
-        :title="full ? t('editor.topbar.max', max) : t('editor.topbar.add_title')" :aria-label="t('editor.topbar.add_title')"><Icon name="plus" /></TabsTrigger>
+      <TabsTrigger value="add" class="strip-slot strip-add" :id="addId || 'topbar-add'" :disabled="full"
+        :title="full ? t('editor.topbar.max', max) : addTitle || t('editor.topbar.add_title')" :aria-label="addTitle || t('editor.topbar.add_title')"><Icon name="plus" /></TabsTrigger>
     </TabsList>
   </TabsRoot>
 </template>

@@ -2603,7 +2603,8 @@
           "grey": "Szary",
           "blue-grey": "Niebieskoszary"
         }
-      }
+      },
+      "anchor_hint": "Kliknij ikonę, aby wybrać inną, lub nazwę, aby zmienić nazwę kafelka"
     },
     "precision": {
       "label": "Precyzja",
@@ -2667,7 +2668,6 @@
       "screen_name_hint": "Każda strona bez własnego tytułu pokazuje ten tytuł.",
       "no_title_hint": "Zostaw puste, aby pokazać tylko logo.",
       "item_label": "{name}, miejsce {slot}. Enter: konfiguruj, strzałki: przenieś",
-      "remove_named": "Usuń {name} z górnego paska",
       "max": "Maksymalnie 1 element | Maksymalnie {n} elementy | Maksymalnie {n} elementów",
       "add_title": "Dodaj godzinę, datę, zegar analogowy lub encję",
       "hint": {
@@ -2698,8 +2698,6 @@
       "clock_12": "Zegar 12-godzinny · zmiana: {settings}",
       "clock_settings": "Ustawienia → Język i region",
       "date_hint": "Dziś: {date}. Data pochodzi z zegara samego ekranu.",
-      "up": "W górę",
-      "down": "W dół",
       "add": {
         "title": "Dodaj do górnego paska",
         "slots": "Zajęto {used} z {n} miejsca | Zajęto {used} z {n} miejsc | Zajęto {used} z {n} miejsc",
@@ -2824,11 +2822,9 @@
         "keys_hint": "Odtwarzanie, pauza i głośność działają na wygaszaczu. Dotknięcie w innym miejscu budzi ekran.",
         "choose_camera": "Wybierz kamerę",
         "camera_hint": "Jej obraz co 15 sekund",
-        "glass": "Na ekranie",
         "temperature": "Temperatura",
         "weather_auto": "Automatycznie",
         "weather_none": "Bez temperatury",
-        "beside": "Obok",
         "items_add": "Dodaj encję",
         "items_hint": "Obok temperatury, w jednej linii: czujnik, drzwi, lampa.",
         "items_full": "Zegar ma miejsce na {n} encje.",
@@ -2841,7 +2837,11 @@
         "item_both": "Oba",
         "item_look": "Pokazuje",
         "item_hint": "Czarno-biało na wygaszaczu, niezależnie od koloru encji.",
-        "items_add_title": "Dodaj do zegara"
+        "items_add_title": "Dodaj do zegara",
+        "clock_part": "Godzina, data i temperatura",
+        "row_hint": "Dotknij encji w rzędzie, aby ją ustawić. Przeciągnij ją w lewo lub w prawo, aby ją przenieść.",
+        "player_search": "Szukaj odtwarzaczy",
+        "player_none": "Brak pasującego odtwarzacza"
       },
       "plugins": {
         "title": "Wtyczki",

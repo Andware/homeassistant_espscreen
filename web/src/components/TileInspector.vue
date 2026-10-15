@@ -1,17 +1,22 @@
 <script setup lang="ts">
 // One tile's settings. Every change applies live, so the card on the mockup shows the result while you pick. What each
 // field offers and what it says of a choice is model/tile-options.ts, from the tile, what Home Assistant says the entity
-// can do and the screen's firmware; a map's and a favourite's own settings are sections of their own (inspector/).
+// can do and the screen's firmware; a map's and a favourite's own settings are sections of their own (inspector/). The
+// tile itself stands at the head (TileAnchor, app 0.4.89), and its icons, the actions to perform or another entity take
+// the place under it instead of opening inside the settings; Done or Escape goes back (stores/inspector.ts escape).
 import { computed, ref, watch } from "vue";
 import { t } from "../i18n";
 import { domainInfo, entriesOf, inlineControlKind, pageTarget } from "../model/layout";
+import { glyph } from "../model/topbar";
 import { titleOf } from "../model/pages";
 import { copyChosen, shortcut } from "../editor/clipboard";
 import PluginTileInspector from "./PluginTileInspector.vue";
 import TileEntityFix from "./TileEntityFix.vue";
 import type { Tile } from "../types";
 import ActionPicker from "./ActionPicker.vue";
+import IconChoices from "./IconChoices.vue";
 import IconPicker from "./IconPicker.vue";
+import TileAnchor from "./TileAnchor.vue";
 import { coverPrimary, hasCoverTilt, withCoverTilt } from "../model/tall-controls";
 import ChoiceField from "./ChoiceField.vue";
 import CalendarSection from "./inspector/CalendarSection.vue";
@@ -138,6 +143,8 @@ const controlNote = computed(() => controlHint(props.tile, panel.value, controls
 const choosingAction = ref(false);
 const tap = computed(() => choosingAction.value ? "action" : current("tap", "auto") as string);
 watch(() => props.tile.options?.tap, (stored) => { if (stored === "action") choosingAction.value = false; });
+// The actions closed without one chosen (Done, Escape): the tile keeps the tap choice it had.
+watch(() => insp.actionPickerOpen, (open) => { if (!open) choosingAction.value = false; });
 // A plugin on this screen may offer a tap of its own for this kind of tile (docs/PLUGINS.md): a thermostat that opens its
 // schedule.
 const taps = computed(() => tapChoices(props.tile, panel.value, tap.value, plugins.pluginsEnabled ? plugins.tapActionsFor(scr.currentScreen, domain.value) : []));
@@ -201,6 +208,12 @@ function previewBackground(key: string | null) {
   if (key && props.tile.id && key !== (props.tile.options?.background || "auto")) insp.optionPreview = { tileId: props.tile.id, key: "background", value: key };
   else if (insp.optionPreview?.key === "background") insp.optionPreview = null;
 }
+// What takes the place under the tile instead of its settings: its icons, the actions to perform, or another entity.
+const place = computed(() => (insp.entityPickerOpen && domain.value !== "screen" ? "entity"
+  : insp.actionPickerOpen && tap.value === "action" && domain.value !== "screen" && !goesTo.value ? "action"
+  : insp.iconPickerOpen && showIcon.value ? "icon" : ""));
+const placeTitle = computed(() => ({ entity: t("editor.broken.fix.choose"), action: t("editor.action.label"), icon: t("editor.icon.label") } as Record<string, string>)[place.value] || "");
+function done() { insp.iconPickerOpen = false; insp.actionPickerOpen = false; insp.entityPickerOpen = false; insp.optionPreview = null; }
 const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.options?.background || "auto"]?.label || "");
 </script>
 
@@ -222,8 +235,24 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
       </UiMenu>
     </template>
   </InspectorHead>
-  <div class="dr-body">
-    <!-- Its entity gone or away for a while, or another one asked for from the menu: the picker comes first. -->
+  <div class="dr-body bar-body tile-body">
+    <!-- The tile as its page draws it stays at the head while what is under it scrolls. -->
+    <div class="bar-anchor">
+      <TileAnchor :tile="tile" :icon="showIcon" @icon="insp.iconPickerOpen = true" @name="insp.renameTile(tile)" />
+      <div v-if="place" class="bar-cap" id="tile-place">
+        <span class="bar-cap-av"><span class="mdi" aria-hidden="true">{{ glyph(entities.tileIconCp(tile)) }}</span></span>
+        <span class="bar-cap-tx"><b>{{ placeTitle }}</b><small>{{ tile.name || name }}</small></span>
+        <button type="button" class="btn quiet mini" id="tile-done" @click="done">{{ t('editor.common.done') }}</button>
+      </div>
+    </div>
+    <div v-if="place" class="bar-part">
+      <TileEntityFix v-if="place === 'entity'" :tile="tile" aside />
+      <ActionPicker v-else-if="place === 'action'" :tile="tile" choosing />
+      <IconChoices v-else :tile="tile" :selected="tile.options?.icon || 'auto'" :automatic="entities.automaticIcon(tile.entity)"
+        :auto-label="t(fromHA ? 'editor.tile.icon.auto_ha' : 'editor.tile.icon.auto_default')" @pick="(n) => setTileOption(tile, 'icon', n)" />
+    </div>
+    <template v-else>
+    <!-- Its entity gone or away for a while: the picker comes first. -->
     <TileEntityFix v-if="domain !== 'screen'" :tile="tile" />
     <NameField :tile="tile" :fallback="name" />
     <p v-if="bedside" class="hint">{{ t("editor.tile.keys.hint") }}</p>
@@ -318,7 +347,7 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
     </template>
 
     <Section :title="t('editor.tile.sections.style')" class="style-section">
-      <IconPicker v-if="showIcon" :tile="tile" :selected="tile.options?.icon || 'auto'" :automatic="entities.automaticIcon(tile.entity)"
+      <IconPicker v-if="showIcon" aside :tile="tile" :selected="tile.options?.icon || 'auto'" :automatic="entities.automaticIcon(tile.entity)"
         :auto-label="t(fromHA ? 'editor.tile.icon.auto_ha' : 'editor.tile.icon.auto_default')"
         :note="scr.supports(0, 2, 18) ? '' : t('editor.tile.icon.needs_firmware')"
         @pick="(n) => setTileOption(tile, 'icon', n)" />
@@ -343,6 +372,7 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
         </UiMenu>
         <button type="button" class="btn danger-soft" @click="removeTile(tile)"><Icon name="delete-outline" />{{ t("editor.common.remove") }}</button>
       </div>
+    </template>
     </template>
   </div>
   </template>

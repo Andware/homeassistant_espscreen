@@ -2603,7 +2603,8 @@
           "grey": "Gris",
           "blue-grey": "Gris bleu"
         }
-      }
+      },
+      "anchor_hint": "Cliquez sur l'icône pour en choisir une autre, ou sur le nom pour renommer la tuile"
     },
     "precision": {
       "label": "Précision d'affichage",
@@ -2667,7 +2668,6 @@
       "screen_name_hint": "Chaque page sans titre propre affiche celui-ci.",
       "no_title_hint": "Laissez vide pour n'afficher que le logo.",
       "item_label": "{name}, emplacement {slot}. Enter : configurer, flèches : déplacer",
-      "remove_named": "Retirer {name} de la barre supérieure",
       "max": "{n} élément au maximum | {n} éléments au maximum",
       "add_title": "Ajouter l'heure, la date, l'horloge analogique ou une entité",
       "hint": {
@@ -2698,8 +2698,6 @@
       "clock_12": "Horloge 12 heures · à modifier dans {settings}",
       "clock_settings": "Paramètres → Langue et région",
       "date_hint": "Aujourd'hui : {date}. La date suit l'horloge propre à l'écran.",
-      "up": "Monter",
-      "down": "Descendre",
       "add": {
         "title": "Ajouter à la barre supérieure",
         "slots": "{used} sur {n} emplacement utilisé | {used} sur {n} emplacements utilisés",
@@ -2824,11 +2822,9 @@
         "keys_hint": "Lecture, pause et volume fonctionnent sur l'économiseur d'écran. Un appui ailleurs réveille l'écran.",
         "choose_camera": "Choisir une caméra",
         "camera_hint": "Son image, toutes les 15 secondes",
-        "glass": "À l'écran",
         "temperature": "Température",
         "weather_auto": "Automatique",
         "weather_none": "Pas de température",
-        "beside": "À côté",
         "items_add": "Ajouter une entité",
         "items_hint": "À côté de la température, sur une seule ligne : un capteur, une porte, une lampe.",
         "items_full": "L'horloge a de la place pour {n} entités.",
@@ -2841,7 +2837,11 @@
         "item_both": "Les deux",
         "item_look": "Affiche",
         "item_hint": "Noir et blanc sur l'économiseur d'écran, quelle que soit la couleur de l'entité.",
-        "items_add_title": "Ajouter à l'horloge"
+        "items_add_title": "Ajouter à l'horloge",
+        "clock_part": "Heure, date et température",
+        "row_hint": "Touchez une entité de la rangée pour la régler. Faites-la glisser à gauche ou à droite pour la déplacer.",
+        "player_search": "Rechercher des lecteurs",
+        "player_none": "Aucun lecteur ne correspond"
       },
       "plugins": {
         "title": "Plugins",

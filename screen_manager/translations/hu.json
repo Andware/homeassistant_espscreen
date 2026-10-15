@@ -2603,7 +2603,8 @@
           "grey": "Szürke",
           "blue-grey": "Kékesszürke"
         }
-      }
+      },
+      "anchor_hint": "Kattints az ikonra egy másik választásához, vagy a névre a csempe átnevezéséhez"
     },
     "precision": {
       "label": "Pontosság",
@@ -2667,7 +2668,6 @@
       "screen_name_hint": "Minden saját cím nélküli oldal ezt mutatja.",
       "no_title_hint": "Hagyd üresen, ha csak a logót szeretnéd látni.",
       "item_label": "{name}, {slot}. hely. Enter: beállítás, nyilak: áthelyezés",
-      "remove_named": "{name} eltávolítása a felső sávból",
       "max": "Legfeljebb 1 elem | Legfeljebb {n} elem",
       "add_title": "Idő, dátum, analóg óra vagy entitás hozzáadása",
       "hint": {
@@ -2698,8 +2698,6 @@
       "clock_12": "12 órás óra · módosítás itt: {settings}",
       "clock_settings": "Beállítások → Nyelv és régió",
       "date_hint": "Ma {date}. A dátum a kijelző saját óráját követi.",
-      "up": "Fel",
-      "down": "Le",
       "add": {
         "title": "Hozzáadás a felső sávhoz",
         "slots": "{used} / {n} hely foglalt | {used} / {n} hely foglalt",
@@ -2824,11 +2822,9 @@
         "keys_hint": "A lejátszás, a szünet és a hangerő működik a képernyővédőn. Máshol egy koppintás felébreszti a képernyőt.",
         "choose_camera": "Válassz kamerát",
         "camera_hint": "A képe, 15 másodpercenként",
-        "glass": "A képernyőn",
         "temperature": "Hőmérséklet",
         "weather_auto": "Automatikus",
         "weather_none": "Nincs hőmérséklet",
-        "beside": "Mellette",
         "items_add": "Entitás hozzáadása",
         "items_hint": "A hőmérséklet mellett, egy sorban: egy érzékelő, egy ajtó, egy lámpa.",
         "items_full": "Az órán {n} entitásnak van hely.",
@@ -2841,7 +2837,11 @@
         "item_both": "Mindkettő",
         "item_look": "Mutatja",
         "item_hint": "Fekete-fehéren a képernyőkímélőn, az entitás színétől függetlenül.",
-        "items_add_title": "Hozzáadás az órához"
+        "items_add_title": "Hozzáadás az órához",
+        "clock_part": "Idő, dátum és hőmérséklet",
+        "row_hint": "Koppints egy entitásra a sorban a beállításához. Húzd balra vagy jobbra az áthelyezéshez.",
+        "player_search": "Lejátszók keresése",
+        "player_none": "Nincs ilyen lejátszó"
       },
       "plugins": {
         "title": "Bővítmények",
