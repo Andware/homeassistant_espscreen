@@ -14,7 +14,7 @@ import { useEntitiesStore } from "../src/stores/entities";
 import { useScreenStore } from "../src/stores/screen";
 import { useSessionStore } from "../src/stores/session";
 import { useInventoryStore } from "../src/stores/inventory";
-import { addPage, setPageIcon, setPageInDock } from "../src/editor/pages";
+import { addPage, setPageDock } from "../src/editor/pages";
 import { addTile, liveEntries, placeTile, retargetPageTile, setTileOption } from "../src/editor/tiles";
 import { useDocumentStore } from "../src/stores/document";
 
@@ -108,33 +108,35 @@ describe("the editor", () => {
     expect(doc.undoCount).toBe(1);
   });
 
-  it("offers Show in Dock and a page's own icon on a screen with the Dock, and none without it", async () => {
+  it("offers In the Dock (picture, icon, hidden) on a screen with the Dock, and nothing without it", async () => {
     addPage();
     const id = doc.document!.pages[1].id;
     const screen = useInventoryStore().inventory.screens[0];
     screen.dock = false;
     let view = mount(PageInspector, { props: { id } });
-    expect(view.find(".dock-check").exists()).toBe(false);
-    expect(view.text()).not.toContain("Picture of the page");
+    expect(view.find(".dock-field").exists()).toBe(false);
     view.unmount();
     screen.dock = true;
     view = mount(PageInspector, { props: { id } });
-    expect(view.find(".dock-check").exists()).toBe(true);
-    // The icon row, with the page's picture as its default: an empty automatic icon must not take the row with it.
-    expect(view.text()).toContain("Picture of the page");
-    // Opened, the picker keeps the row and offers the picture first, then the icons.
-    await view.find("button.choice-field").trigger("click");
-    expect(view.find(".picker .icon-auto").exists()).toBe(true);
-    expect(view.find(".picker .icon-auto").text()).toContain("Picture of the page");
-    await view.find("button.choice-field").trigger("click");
-    setPageIcon(id, "sofa");
-    expect(doc.document!.pages[1].icon).toBe("sofa");
-    setPageIcon(id, "auto");
+    const modes = () => view.findAll(".dock-field .seg button");
+    expect(modes().map((b) => b.attributes("aria-pressed"))).toEqual(["true", "false", "false"]);
+    expect(view.find(".dock-field .picker").exists()).toBe(false);
+    // Icon opens the picker at once, with the page's picture first: an empty automatic icon must not take the row with it.
+    await modes()[1].trigger("click");
+    expect(view.find(".dock-field .picker .icon-auto").text()).toContain("Picture of the page");
     expect("icon" in doc.document!.pages[1]).toBe(false);
-    setPageInDock(id, false);
+    setPageDock(id, "icon", "sofa");
     await nextTick();
+    expect(doc.document!.pages[1].icon).toBe("sofa");
+    expect(modes()[1].attributes("aria-pressed")).toBe("true");
+    // Hidden leaves it out and keeps the icon for when it comes back; Picture drops the icon.
+    await modes()[2].trigger("click");
     expect(doc.document!.pages[1].navigation.showInDock).toBe(false);
-    expect(view.text()).not.toContain("Picture of the page");
+    expect(doc.document!.pages[1].icon).toBe("sofa");
+    expect(view.find(".dock-field .picker").exists()).toBe(false);
+    await modes()[0].trigger("click");
+    expect("showInDock" in doc.document!.pages[1].navigation).toBe(false);
+    expect("icon" in doc.document!.pages[1]).toBe(false);
     view.unmount();
   });
 

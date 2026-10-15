@@ -527,7 +527,7 @@ describe('creating a page', () => {
     expect(chips.map((chip) => chip.attributes('data-state'))).toEqual(['on', 'off']);
     await chips[1].trigger('click');
     expect(view.find('.dock-group').exists()).toBe(true);
-    await view.find('.dock-group button.choice-field').trigger('click');
+    await view.findAll('.dock-group .seg button')[1].trigger('click');
     await view.find('.dock-group .icon-choice:not(.icon-auto)').trigger('click');
     await view.find('form').trigger('submit');
     const page = doc.document!.pages.at(-1)!;
@@ -538,8 +538,8 @@ describe('creating a page', () => {
     doc.undo(); expect(JSON.stringify(doc.document)).toBe(before);
     // Left out of the Dock: the page says so, and no icon is asked for.
     const again = mount(PageWizard);
-    await again.find('.dock-group .ui-chip').trigger('click');
-    expect(again.find('.dock-group button.choice-field').exists()).toBe(false);
+    await again.findAll('.dock-group .seg button')[2].trigger('click');
+    expect(again.find('.dock-group .picker').exists()).toBe(false);
     await again.find('form').trigger('submit');
     expect(doc.document!.pages.at(-1)!.navigation.showInDock).toBe(false);
   });

@@ -70,6 +70,18 @@ export function setPageInDock(id: string, shown: boolean) {
     else page.navigation.showInDock = false;
   });
 }
+// How a page stands in the Dock (DockField), in one edit: its picture, an icon of its own, or left out. Left out keeps
+// a chosen icon, so choosing the Dock again brings it back; its picture drops the icon.
+export function setPageDock(id: string, mode: "picture" | "icon" | "hidden", icon?: string) {
+  return useDocumentStore().editDocument((draft) => {
+    const page = draft.pages.find((item) => item.id === id);
+    if (!page) return;
+    if (mode === "hidden") { page.navigation.showInDock = false; return; }
+    delete page.navigation.showInDock;
+    if (mode === "icon" && icon) page.icon = icon;
+    else delete page.icon;
+  });
+}
 // A page's own icon for the Dock, or "auto" for its picture: the key goes then, so the document stays as it was.
 export function setPageIcon(id: string, icon: string) {
   return useDocumentStore().editDocument((draft) => {

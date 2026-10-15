@@ -4,13 +4,12 @@
   edge now opens the Dock, a drawer with all pages as small pictures with their names, in two rows: tap one to go
   there, drag it down to close it, or swipe up once more to go home. The CYD and the other 4 MB boards keep going home on that swipe and get none of
   its code, so their room for updates stays the same.
-- **Show in Dock, per page.** A page's settings in the editor have **Show in Dock** on a screen whose board has the
-  Dock. It is on for every page; turn it off to leave a page out. A page left out of swiping is not in the Dock either.
-- **An icon for a page in the Dock.** Under Show in Dock a page can have an icon of its own, from the same icons as
-  the tiles. The Dock then shows that icon instead of a small picture of the page.
+- **In the Dock, per page.** On a screen whose board has the Dock, a page's settings say how it stands there: its
+  **Picture** (the default), an **Icon** of its own from the same icons as the tiles, or **Hidden**. A page left out of
+  swiping is not in the Dock either.
 - **A new page asks what it needs.** The Add page window chooses the top bar with chips: the home key is on, and the
   clock and the screen's other items are a tap away instead of a clock on every new page. On a screen with the Dock it
-  also asks whether the page is in the Dock and which icon it shows there.
+  also asks how the page stands in the Dock: its picture, an icon, or hidden.
 - **Swipe between pages is on for a new screen.** A screen set up from now on can swipe through its pages, open the
   settings from the top edge and open the Dock from the bottom edge without turning anything on first. A screen you
   already have keeps the setting it has.
