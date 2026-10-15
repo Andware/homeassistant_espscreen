@@ -12581,10 +12581,17 @@ inline void edge_move(int x, int y) {
   const auto gesture = screen_input::edge_swipe.update(sx, sy);
   if (gesture == Gesture::none) return;
 #ifdef SD_MOD_DOCK
-  // While the dock is open a page turns only by a tap in it, and up from the bottom closes it again.
+  // While the Dock is open a page turns only by a tap in it, and up from the bottom once more goes home: one swipe up
+  // shows the Dock, a second one goes further out, as on a tablet. The Dock closes on the way (go_home closes every card).
   if (dock::open() && gesture != Gesture::settings) {
     screen_input::touch_guard.consume();
-    if (gesture == Gesture::home) dock::close();
+    if (gesture == Gesture::home) {
+      ESP_LOGI("touch", "edge swipe up over the Dock: back home");
+      for (auto *indev = lv_indev_get_next(nullptr); indev; indev = lv_indev_get_next(indev)) lv_indev_wait_release(indev);
+      swipe_glow(Edge::bottom);
+      if (back_home) back_home();
+      else dock::close();
+    }
     return;
   }
 #endif

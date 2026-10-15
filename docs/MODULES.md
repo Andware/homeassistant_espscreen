@@ -48,8 +48,8 @@ the add-on and the editor offer a module's options only on boards that have it.
 
 - **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
   wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.
-  Sideways leafs through the pages when they do not all fit, a tap goes to a page, and a tap above the Dock or a drag
-  down closes it. A page's **Show in Dock** setting (`navigation.showInDock` in the page document, on unless set
+  Sideways leafs through the pages when they do not all fit, a tap goes to a page, a tap above the Dock or a drag
+  down closes it, and a second swipe up goes home. A page's **Show in Dock** setting (`navigation.showInDock` in the page document, on unless set
   off) leaves it out, and a page left out of swiping is never in it; its page message says `"dock": false` only for
   a page left out, which older firmware reads past. With every page left out, the swipe goes home. A page may have an
   icon of its own (`icon` in the page document, one of the pickable MDI icons, sent as its codepoint): the Dock then

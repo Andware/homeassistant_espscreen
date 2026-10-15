@@ -424,6 +424,19 @@ class Run:
         await asyncio.sleep(0.5)
         if (await self.render('_dock-dragged', keep=False)).tobytes() != before.tobytes():
             self.failures.append('dock: page 1 looks different after the drawer was dragged away')
+        # Up once more over the open Dock goes home: from page 2, the Dock opens and a second swipe up lands on page 1.
+        await self.call('render_page', page=1)
+        await self.page_done(1)
+        start = len(self.lines)
+        await self.finger(up)
+        await self.until(lambda l: 'edge swipe up: dock' in l, 6, 'swipe up never opened the dock from page 2', start)
+        await asyncio.sleep(0.8)
+        await self.finger(up)
+        await self.until(lambda l: 'edge swipe up over the Dock: back home' in l, 6, 'a second swipe up never went home', start)
+        await self.page_done(0)
+        await asyncio.sleep(0.5)
+        if (await self.render('_dock-home', keep=False)).tobytes() != before.tobytes():
+            self.failures.append('dock: a second swipe up did not leave page 1 as it was, Dock closed')
 
     async def moments(self, pages):
         """A page change by a finger, forward and back to page 1, with the title read back in the moment after it."""
