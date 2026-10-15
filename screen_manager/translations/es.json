@@ -2603,7 +2603,8 @@
           "grey": "Gris",
           "blue-grey": "Gris azulado"
         }
-      }
+      },
+      "anchor_hint": "Haz clic en el icono para elegir otro, o en el nombre para cambiar el nombre del mosaico"
     },
     "precision": {
       "label": "Precisión de visualización",
@@ -2667,7 +2668,6 @@
       "screen_name_hint": "Cada página sin título propio muestra este.",
       "no_title_hint": "Déjalo vacío para mostrar solo el logotipo.",
       "item_label": "{name}, hueco {slot}. Enter: configurar; flechas: mover",
-      "remove_named": "Eliminar {name} de la barra superior",
       "max": "Máximo 1 elemento | Máximo {n} elementos",
       "add_title": "Añade la hora, la fecha, el reloj analógico o una entidad",
       "hint": {
@@ -2698,8 +2698,6 @@
       "clock_12": "Reloj de 12 horas · cámbialo en {settings}",
       "clock_settings": "Configuración → Idioma y región",
       "date_hint": "Hoy: {date}. La fecha sigue el reloj de la propia pantalla.",
-      "up": "Subir",
-      "down": "Bajar",
       "add": {
         "title": "Añadir a la barra superior",
         "slots": "{used} de {n} hueco usado | {used} de {n} huecos usados",
@@ -2824,11 +2822,9 @@
         "keys_hint": "Reproducir, pausa y volumen funcionan en el salvapantallas. Un toque en otro sitio despierta la pantalla.",
         "choose_camera": "Elige una cámara",
         "camera_hint": "Su imagen, cada 15 segundos",
-        "glass": "En la pantalla",
         "temperature": "Temperatura",
         "weather_auto": "Automática",
         "weather_none": "Sin temperatura",
-        "beside": "Al lado",
         "items_add": "Añadir una entidad",
         "items_hint": "Junto a la temperatura, en una línea: un sensor, una puerta, una lámpara.",
         "items_full": "El reloj tiene sitio para {n} entidades.",
@@ -2841,7 +2837,11 @@
         "item_both": "Ambos",
         "item_look": "Muestra",
         "item_hint": "En blanco y negro en el salvapantallas, sea cual sea el color de la entidad.",
-        "items_add_title": "Añadir al reloj"
+        "items_add_title": "Añadir al reloj",
+        "clock_part": "Hora, fecha y temperatura",
+        "row_hint": "Toca una entidad de la fila para configurarla. Arrástrala a izquierda o derecha para moverla.",
+        "player_search": "Buscar reproductores",
+        "player_none": "Ningún reproductor coincide"
       },
       "plugins": {
         "title": "Plugins",

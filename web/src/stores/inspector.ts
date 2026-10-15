@@ -147,7 +147,7 @@ export const useInspectorStore = defineStore("inspector", () => {
     inspector.value = { kind: "saver", step };
   }
   function openSaverAdd() {
-    back.value = null;
+    iconPickerOpen.value = false; back.value = null;
     doc.selectedTileId = null;
     inspector.value = { kind: "saver-add" };
   }
@@ -168,11 +168,15 @@ export const useInspectorStore = defineStore("inspector", () => {
     back.value = null;
     if (to?.kind === "page") openPage(to.id);
   }
-  /** Escape goes one step out (app 0.4.89): an open icon choice closes, Add goes back to its bar, a top bar opened from its
-   * page goes back to that page, and only then the inspector closes. */
+  /** Escape goes one step out (app 0.4.89): an open icon choice, a tile's actions or another entity closes, Add goes back to its bar or its clock, a top bar
+   * opened from its page goes back to that page, and only then the inspector closes. */
   function escape() {
     if (iconPickerOpen.value) { iconPickerOpen.value = false; optionPreview.value = null; return; }
+    // A tile's actions or another entity in the place under it (app 0.4.89).
+    if (actionPickerOpen.value) { actionPickerOpen.value = false; actionSearch.value = ""; return; }
+    if (entityPickerOpen.value) { entityPickerOpen.value = false; return; }
     if (inspector.value?.kind === "bar-add") { openBar(-1); return; }
+    if (inspector.value?.kind === "saver-add") { openSaverStep("clock"); return; }
     if (back.value) { goBack(); return; }
     closeInspector();
   }

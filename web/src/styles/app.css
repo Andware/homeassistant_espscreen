@@ -775,7 +775,7 @@ button.insp-sec-head:hover h3 { color: var(--ink); }
    font, each part a place to tap, the chosen one raised with the accent ring. Hidden items stand dashed, items the glass
    leaves out for want of room dashed in orange. Items that don't fit beside the title go on the next line, and many items
    (more than six) stand under the title in lines of their own. The bar stays while the part under it scrolls. */
-.bar-body, .page-body { padding-top: 0; }
+.bar-body, .page-body, .tile-body { padding-top: 0; }
 .bar-anchor, .page-anchor { position: sticky; top: 0; z-index: 2; background: var(--surface); padding: 12px 16px 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .bar-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 4px; border-radius: 12px; background: #e7e7e7; color: #1b1b1b; font-family: "Bar Roboto", var(--ui-font); min-width: 0; }
 .strip-slot { position: relative; display: inline-flex; align-items: center; gap: 3px; height: 34px; padding: 0 6px; border-radius: 8px; color: #1b1b1b; font-size: 12.5px; white-space: nowrap; flex: none; touch-action: pan-y; }
@@ -798,6 +798,12 @@ button.insp-sec-head:hover h3 { color: var(--ink); }
 .strip-add { width: 30px; justify-content: center; padding: 0; color: var(--accent); }
 .strip-add:disabled { opacity: 0.4; cursor: default; }
 .strip-add .ui-icon { font-size: 18px; }
+/* The screensaver clock's row (app 0.4.89, SaverClock.vue): the same strip, white on black as the screensaver draws it. */
+.bar-strip.saver { background: #000; color: #fff; }
+.bar-strip.saver .strip-slot { color: #fff; }
+.bar-strip.saver .strip-slot:hover:not(:disabled):not([data-state="active"]) { background: rgba(255, 255, 255, 0.12); }
+.bar-strip.saver .strip-slot[data-state="active"] { background: #2b2b2b; box-shadow: 0 0 0 2px var(--accent); }
+.bar-strip.saver .strip-title { font-variant-numeric: tabular-nums; }
 .bar-cap { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .bar-cap-av { width: 32px; height: 32px; border-radius: 9px; background: var(--seg); color: var(--ink-2); display: grid; place-items: center; flex: none; font-size: 18px; }
 .bar-cap-av .ui-icon { font-size: 18px; }
@@ -1531,8 +1537,9 @@ section.advanced code { font-size: 11.5px; }
 .app.phone .drawer-enter-active, .app.phone .drawer-leave-active { transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .app.phone .dr-head { padding: 14px 12px 14px 16px; }
 .app.phone .dr-body { display: flex; flex-direction: column; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
-/* On a phone the sheet starts with what a tile is changed for most: a way to another entity when its own is gone, then
-   its name, then its icon and colour. */
+/* On a phone the sheet starts with what a tile is changed for most: the tile itself at the head, a way to another
+   entity when its own is gone, then its name, then its icon and colour. */
+.app.phone .dr-body > .bar-anchor { order: -4; }
 .app.phone .dr-body .entity-fix { order: -3; }
 .app.phone .dr-body .name-sec { order: -2; }
 .app.phone .dr-body .style-section { order: -1; }

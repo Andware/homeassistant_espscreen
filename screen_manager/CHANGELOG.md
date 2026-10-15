@@ -21,6 +21,12 @@
   the Dock, its place in the Dock: tap the Dock for how the page stands there, or the top bar to set that up, and a
   back button takes you to the page again. Escape goes one step back at a time, and the settings have room between
   their groups instead of lines.
+- **The screensaver's clock and a tile start from themselves too.** The clock's settings draw its row of entities at
+  the head, white on black as the screensaver does: tap the clock for its temperature, an entity for how it shows, or +
+  to add one, and drag an entity left or right to move it. A tile's settings show the tile itself at the head as its
+  page draws it, with every change and the icon you point at. Its icons, the actions to perform and another entity now
+  take the place of the settings under it instead of opening between them; Done or Escape goes back. Tap the tile's icon
+  for its icons, or its name to rename it.
 - **A new page asks what it needs.** The Add page window chooses the top bar with chips: the home key is on, and the
   clock and the screen's other items are a tap away instead of a clock on every new page. On a screen with the Dock it
   also asks how the page stands in the Dock: its picture, an icon, or hidden.

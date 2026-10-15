@@ -2603,7 +2603,8 @@
           "grey": "Grigio",
           "blue-grey": "Grigio blu"
         }
-      }
+      },
+      "anchor_hint": "Fai clic sull'icona per sceglierne un'altra, o sul nome per rinominare il riquadro"
     },
     "precision": {
       "label": "Visualizza la precisione",
@@ -2667,7 +2668,6 @@
       "screen_name_hint": "Ogni pagina senza un titolo proprio mostra questo.",
       "no_title_hint": "Lascia vuoto per mostrare solo il logo.",
       "item_label": "{name}, spazio {slot}. Enter: configura, frecce: sposta",
-      "remove_named": "Rimuovi {name} dalla barra superiore",
       "max": "Massimo 1 elemento | Massimo {n} elementi",
       "add_title": "Aggiungi l'ora, la data, l'orologio analogico o un'entità",
       "hint": {
@@ -2698,8 +2698,6 @@
       "clock_12": "Orologio a 12 ore · si cambia in {settings}",
       "clock_settings": "Impostazioni → Lingua e regione",
       "date_hint": "Oggi: {date}. La data segue l'orologio dello schermo stesso.",
-      "up": "Su",
-      "down": "Giù",
       "add": {
         "title": "Aggiungi alla barra superiore",
         "slots": "{used} di {n} spazio usato | {used} di {n} spazi usati",
@@ -2824,11 +2822,9 @@
         "keys_hint": "Riproduci, pausa e volume funzionano sul salvaschermo. Un tocco altrove riattiva lo schermo.",
         "choose_camera": "Scegli una telecamera",
         "camera_hint": "La sua immagine, ogni 15 secondi",
-        "glass": "Sullo schermo",
         "temperature": "Temperatura",
         "weather_auto": "Automatica",
         "weather_none": "Nessuna temperatura",
-        "beside": "Accanto",
         "items_add": "Aggiungi un'entità",
         "items_hint": "Accanto alla temperatura, su una riga: un sensore, una porta, una lampada.",
         "items_full": "L'orologio ha spazio per {n} entità.",
@@ -2841,7 +2837,11 @@
         "item_both": "Entrambi",
         "item_look": "Mostra",
         "item_hint": "In bianco e nero sul salvaschermo, qualunque sia il colore dell'entità.",
-        "items_add_title": "Aggiungi all'orologio"
+        "items_add_title": "Aggiungi all'orologio",
+        "clock_part": "Ora, data e temperatura",
+        "row_hint": "Tocca un'entità della riga per impostarla. Trascinala a sinistra o a destra per spostarla.",
+        "player_search": "Cerca lettori",
+        "player_none": "Nessun lettore corrisponde"
       },
       "plugins": {
         "title": "Plugin",
