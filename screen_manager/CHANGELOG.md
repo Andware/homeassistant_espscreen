@@ -8,6 +8,9 @@
   Dock. It is on for every page; turn it off to leave a page out. A page left out of swiping is not in the Dock either.
 - **An icon for a page in the Dock.** Under Show in Dock a page can have an icon of its own, from the same icons as
   the tiles. The Dock then shows that icon instead of a small picture of the page.
+- **A new page asks what it needs.** The Add page window chooses the top bar with chips: the home key is on, and the
+  clock and the screen's other items are a tap away instead of a clock on every new page. On a screen with the Dock it
+  also asks whether the page is in the Dock and which icon it shows there.
 - **Swipe between pages is on for a new screen.** A screen set up from now on can swipe through its pages, open the
   settings from the top edge and open the Dock from the bottom edge without turning anything on first. A screen you
   already have keeps the setting it has.

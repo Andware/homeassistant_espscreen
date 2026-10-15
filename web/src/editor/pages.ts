@@ -15,13 +15,17 @@ import type { PageLayout, PageTile } from "../types";
 
 const toast = (message: string) => useUiStore().toast(message);
 
-export function addPage(bar?: PageLayout["pages"][number]["topbar"]) {
+// `extras`: what the page wizard chose for the Dock (an icon of its own, left out of it), in the same single edit.
+export function addPage(bar?: PageLayout["pages"][number]["topbar"], extras: { icon?: string; showInDock?: boolean } = {}) {
   const doc = useDocumentStore();
   if (doc.document && doc.document.pages.length >= doc.editorLayout.grid.pages) { toast(t("addon.errors.pages.pages_full")); return false; }
   let created = "";
   if (doc.editDocument((draft) => {
     const selected = draft.pages.find((page) => page.id === doc.selectedPageId) || draft.pages.at(-1)!;
-    const page = pages.emptyPage(bar || selected.topbar); created = page.id; draft.pages.push(page);
+    const page = pages.emptyPage(bar || selected.topbar); created = page.id;
+    if (extras.icon) page.icon = extras.icon;
+    if (extras.showInDock === false) page.navigation.showInDock = false;
+    draft.pages.push(page);
   })) { doc.selectedPageId = created; return true; }
   return false;
 }

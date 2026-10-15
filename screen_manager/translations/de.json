@@ -3345,6 +3345,8 @@
       "show_in_dock": "Im Dock anzeigen",
       "show_in_dock_hint": "Das Dock öffnet sich mit einem Wisch vom unteren Rand nach oben und zeigt jede Seite zum Springen. Aus: Diese Seite fehlt darin.",
       "dock_picture": "Bild der Seite",
+      "wizard_home": "Home-Taste",
+      "wizard_dock": "Dock",
       "home_control": "Startseiten-Schaltfläche auf dieser Seite anzeigen",
       "clock_control": "Uhrzeit",
       "edit_topbar": "Kopfleiste dieser Seite bearbeiten",

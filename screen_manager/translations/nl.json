@@ -2986,6 +2986,8 @@
       "show_in_dock": "Toon in Dock",
       "show_in_dock_hint": "Het Dock opent met een veeg omhoog vanaf de onderrand en toont elke pagina om naartoe te springen. Uit: deze pagina staat er niet in.",
       "dock_picture": "Afbeelding van de pagina",
+      "wizard_home": "Thuisknop",
+      "wizard_dock": "Dock",
       "home_control": "Toon een thuisknop op deze pagina",
       "clock_control": "Tijd",
       "edit_topbar": "Bewerk de topbalk van deze pagina",

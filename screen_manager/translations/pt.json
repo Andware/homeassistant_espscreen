@@ -3345,6 +3345,8 @@
       "show_in_dock": "Mostrar na Dock",
       "show_in_dock_hint": "A Dock abre ao deslizar para cima a partir da borda inferior e mostra cada página para saltar para ela. Desligado: esta página fica de fora.",
       "dock_picture": "Imagem da página",
+      "wizard_home": "Botão Início",
+      "wizard_dock": "Dock",
       "home_control": "Mostrar um botão de início nesta página",
       "clock_control": "Hora",
       "edit_topbar": "Editar a barra superior desta página",

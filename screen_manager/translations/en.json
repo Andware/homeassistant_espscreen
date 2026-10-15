@@ -2986,6 +2986,8 @@
       "show_in_dock": "Show in Dock",
       "show_in_dock_hint": "The Dock opens with a swipe up from the bottom edge and shows every page to jump to. When off, this page is left out of it.",
       "dock_picture": "Picture of the page",
+      "wizard_home": "Home key",
+      "wizard_dock": "Dock",
       "home_control": "Show a Home control on this page",
       "clock_control": "Time",
       "edit_topbar": "Edit this page’s top bar",

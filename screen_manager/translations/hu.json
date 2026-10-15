@@ -3345,6 +3345,8 @@
       "show_in_dock": "Megjelenítés a Dockban",
       "show_in_dock_hint": "A Dock az alsó szélről felfelé húzva nyílik meg, és minden oldalt megmutat, hogy odaugorj. Kikapcsolva: ez az oldal nem szerepel benne.",
       "dock_picture": "Az oldal képe",
+      "wizard_home": "Kezdőlap gomb",
+      "wizard_dock": "Dock",
       "home_control": "Kezdőlap gomb megjelenítése ezen az oldalon",
       "clock_control": "Idő",
       "edit_topbar": "Az oldal felső sávjának szerkesztése",

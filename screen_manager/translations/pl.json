@@ -3345,6 +3345,8 @@
       "show_in_dock": "Pokaż w Docku",
       "show_in_dock_hint": "Dock otwiera się przesunięciem w górę od dolnej krawędzi i pokazuje każdą stronę, by do niej przejść. Wyłączone: tej strony w nim nie ma.",
       "dock_picture": "Podgląd strony",
+      "wizard_home": "Przycisk strony głównej",
+      "wizard_dock": "Dock",
       "home_control": "Pokaż przycisk strony głównej na tej stronie",
       "clock_control": "Godzina",
       "edit_topbar": "Edytuj górny pasek tej strony",

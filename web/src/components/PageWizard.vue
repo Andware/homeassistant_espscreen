@@ -4,13 +4,13 @@ import { t } from '../i18n';
 import { clone, emptyPage, instanceId } from '../model/pages';
 import { matchesQuery } from '../model/search';
 import { tilePalette } from '../model/tile-palette';
-import { glyph } from '../model/topbar';
+import { BUILTIN_ICONS, glyph, STATUS_CODES } from '../model/topbar';
 import type { HeaderItem } from '../types';
 import CheckRow from './ui/CheckRow.vue';
 import rules from '../model/page-rules.json';
 import Icon from './ui/Icon.vue';
-import SwitchRow from './ui/SwitchRow.vue';
-import TesseraMark from './TesseraMark.vue';
+import UiChips, { type Chip } from './ui/UiChips.vue';
+import IconPicker from './IconPicker.vue';
 import { useEntitiesStore } from '../stores/entities';
 import { useScreenStore } from "../stores/screen";
 import { useInventoryStore } from "../stores/inventory";
@@ -24,9 +24,24 @@ const doc = useDocumentStore();
 
 const emit = defineEmits<{ close: [] }>();
 const dialog = ref<HTMLDialogElement>();
-const title = ref(''), home = ref(true), clock = ref(true), query = ref('');
+const title = ref(''), query = ref(''), icon = ref('auto');
 const chosen = ref<string[]>([]);
-const count = computed(() => chosen.value.length + Number(clock.value));
+// The top bar's quick choices as chips (app dev): the home key on, as every page has it, and the screen's own items off,
+// the clock among them, so a new page starts with a bar of what was asked for and not a clock nobody picked.
+const quick = ref<string[]>(['home']);
+// The Dock's choices, on a screen whose board has it (docs/MODULES.md): in it, with the page's picture or an icon.
+const dock = computed(() => Boolean(scr.currentScreen?.dock));
+const dockChoice = ref<string[]>(['dock']);
+const builtins = computed(() => (inv.inventory.header?.builtin || []).filter((b) => b.type !== 'battery' || scr.currentScreen?.battery));
+const builtinItem = (type: string) => (type === 'wifi' || type === 'battery' ? { type, content: 'icon', show: 'always' } : { type });
+const picked = computed(() => quick.value.filter((value) => value !== 'home'));
+const count = computed(() => chosen.value.length + picked.value.length);
+const barChips = computed<Chip[]>(() => [
+  { value: 'home', label: t('editor.pages.wizard_home'), glyph: glyph(entities.iconNamed('home')?.cp || 'F02DC') },
+  ...builtins.value.map((b) => ({ value: b.type, label: b.label, glyph: glyph(STATUS_CODES[b.type] || entities.iconNamed(BUILTIN_ICONS[b.type])?.cp || 'F0150'),
+    disabled: !quick.value.includes(b.type) && count.value >= scr.topbarMax })),
+]);
+const dockChips = computed<Chip[]>(() => [{ value: 'dock', label: t('editor.pages.show_in_dock'), glyph: glyph(entities.iconNamed('dock-bottom')?.cp || 'F10A9') }]);
 const matches = computed(() => {
   // Only what the top bar can show (app 0.4.1): the add-on's header domains, so Create never fails on a camera.
   return inv.inventory.entities.filter(entity => rules.headerDomains.includes(entity.id.split('.')[0]) && matchesQuery(query.value, entity.name, entity.id, entity.area));
@@ -45,12 +60,13 @@ function create() {
   }
   const page = emptyPage();
   page.topbar.title = title.value.trim() ? { source: 'text', text: title.value.trim() } : { source: 'screen' };
-  if (!home.value) page.topbar.leading = [];
+  if (!quick.value.includes('home')) page.topbar.leading = [];
   page.topbar.trailing = [
-    ...(clock.value ? [{ id: instanceId(), type: 'clock' } as HeaderItem & { id: string }] : []),
+    ...picked.value.map((type) => ({ id: instanceId(), ...builtinItem(type) } as HeaderItem & { id: string })),
     ...chosen.value.map(entity => ({ id: instanceId(), type: 'entity', entity, content: 'state', icon: 'auto', show: 'always' } as HeaderItem & { id: string })),
   ];
-  if (addPage(page.topbar)) emit('close');
+  const extras = dock.value ? { icon: icon.value === 'auto' ? undefined : icon.value, showInDock: dockChoice.value.includes('dock') } : {};
+  if (addPage(page.topbar, extras)) emit('close');
 }
 onMounted(() => dialog.value?.showModal());
 </script>
@@ -67,10 +83,14 @@ onMounted(() => dialog.value?.showModal());
         <small v-if="invalidTitle" class="help warn">{{ t('addon.errors.layout.page_title') }}</small>
       </div>
       <div v-if="!scr.pageReady" class="notice warn"><Icon name="alert-circle-outline" /><span class="notice-text">{{ t('editor.pages.shared_bar') }}</span></div>
-      <div v-if="scr.pageReady" class="wizard-group">
+      <div v-if="scr.pageReady && dock" class="wizard-group dock-group">
+        <h3>{{ t('editor.pages.wizard_dock') }}</h3>
+        <UiChips v-model="dockChoice" :chips="dockChips" :label="t('editor.pages.wizard_dock')" />
+        <IconPicker v-if="dockChoice.includes('dock')" :selected="icon" automatic="" :auto-label="t('editor.pages.dock_picture')" @pick="(name) => (icon = name)" />
+      </div>
+      <div v-if="scr.pageReady" class="wizard-group bar-group">
         <h3>{{ t('editor.topbar.title') }}</h3>
-        <SwitchRow class="bar-choice home-choice" :label="t('editor.pages.home_control')" v-model="home"><template #icon><TesseraMark /></template></SwitchRow>
-        <SwitchRow class="bar-choice clock-choice" icon="clock-outline" :label="t('editor.pages.clock_control')" :disabled="!clock && count >= scr.topbarMax" v-model="clock" />
+        <UiChips v-model="quick" :chips="barChips" :label="t('editor.topbar.title')" />
       </div>
       <div v-if="scr.pageReady" class="f">
         <label class="f-label" for="new-page-entity">{{ t('editor.pages.bar_entities') }} <span class="f-value">{{ count }} / {{ scr.topbarMax }}</span></label>
@@ -98,7 +118,7 @@ form { display: grid; gap: 18px; }
 header, footer { display: flex; align-items: center; gap: 10px; }
 header { justify-content: space-between; } h2 { margin: 0; font-size: 18px; }
 footer { justify-content: flex-end; }
-.wizard-group { display: grid; gap: 2px; }
+.wizard-group { display: grid; gap: 8px; }
 .wizard-group h3 { font-size: 12.5px; margin-bottom: 2px; }
 .entity-options { max-height: 230px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
 .entity-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; flex: none; font-size: 17px; }
