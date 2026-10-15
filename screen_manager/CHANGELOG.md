@@ -27,6 +27,9 @@
   page draws it, with every change and the icon you point at. Its icons, the actions to perform and another entity now
   take the place of the settings under it instead of opening between them; Done or Escape goes back. Tap the tile's icon
   for its icons, or its name to rename it.
+- **Two small fixes in the editor.** The screensaver's steps show their grip again when the pointer rests on one,
+  instead of an empty square, and the rotation's four angles go under their name on a narrow card instead of running
+  past its edge.
 - **A new page asks what it needs.** The Add page window chooses the top bar with chips: the home key is on, and the
   clock and the screen's other items are a tap away instead of a clock on every new page. On a screen with the Dock it
   also asks how the page stands in the Dock: its picture, an icon, or hidden.

@@ -871,6 +871,12 @@ button.insp-sec-head:hover h3 { color: var(--ink); }
 .set-card > .s-action { padding: 2px 0 4px; }
 .srow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
 .srow > .s-label { color: var(--ink-2); }
+/* A choice of several (the rotation's four angles) goes under its name when the card is too narrow for both, and never
+   past the card's edge. */
+.srow.setting-choice { flex-wrap: wrap; row-gap: 6px; }
+.srow.setting-choice .s-control { margin-left: auto; max-width: 100%; min-width: 0; }
+.srow.setting-choice .seg { max-width: 100%; }
+.srow.setting-choice .seg button { padding-inline: 9px; }
 .srow.inactive .s-label, .srow.inactive .s-control { opacity: 0.45; }
 /* The row ⌘K found: a soft wash that fades, so the eye lands on it. */
 .srow.spotlit { animation: spotlit 1.6s ease-out; border-radius: 8px; }
