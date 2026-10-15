@@ -364,6 +364,38 @@ class Run:
             await asyncio.sleep(0.05)
         return seen
 
+    async def page_switcher(self, pages):
+        """Up from the bottom edge (docs/MODULES.md): on a board with the page_switcher module the window with every
+        page opens, is rendered, and a tap beside it leaves the page as it was; on a lite board it goes home."""
+        shapes = json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board]
+        self.client.switch_command(self.swipe_switch.key, True)
+        await asyncio.sleep(0.3)
+        await self.call('render_page', page=0)
+        await self.page_done(0)
+        before = await self.render('_switcher-before', keep=False)
+        width, height = self.canvas
+        x, start = width // 2, len(self.lines)
+        points = [int(height * (0.995 - 0.5 * i / 28)) for i in range(29)]
+        await self.call('render_finger', x=x, y=points[0], down=True)
+        await asyncio.sleep(0.15)
+        for y in points[1:]:
+            await self.call('render_finger', x=x, y=y, down=True)
+            await asyncio.sleep(0.005)
+        await self.call('render_finger', x=x, y=points[-1], down=False)
+        if 'page_switcher' not in shapes['modules']:
+            await self.until(lambda l: 'edge swipe up: close everything' in l, 6, 'swipe up on a lite board never went home', start)
+            return
+        await self.until(lambda l: 'edge swipe up: page switcher' in l, 6, 'swipe up never opened the page switcher', start)
+        await asyncio.sleep(0.6)  # the glow along the bottom edge fades out first
+        await self.render('page-switcher')
+        await self.call('render_finger', x=2, y=height - 2, down=True)
+        await asyncio.sleep(0.1)
+        await self.call('render_finger', x=2, y=height - 2, down=False)
+        await asyncio.sleep(0.3)
+        after = await self.render('_switcher-after', keep=False)
+        if after.tobytes() != before.tobytes():
+            self.failures.append('page switcher: page 1 looks different after a tap beside the window closed it')
+
     async def moments(self, pages):
         """A page change by a finger, forward and back to page 1, with the title read back in the moment after it."""
         if pages < 2:
@@ -2862,10 +2894,13 @@ class Run:
             return 1, await self.weather_panel(grid)
         if self.only == 'calendar':
             return 1, await self.calendar_panel(grid)
+        if self.only == 'switcher':
+            return 1, await self.page_switcher(pages)
         if self.only == 'plugin':
             return 1, await self.plugin_round(grid)
         checks = await self.self_test()
         await self.moments(pages)
+        await self.page_switcher(pages)
         for page in range(pages):
             await self.call('render_page', page=page)
             await self.page_done(page)
@@ -2951,7 +2986,7 @@ def main():
     parser.add_argument('--out', type=Path, default=REPO / '.esphome' / 'render' / 'out')
     parser.add_argument('--work', type=Path, help='where the host builds go (default: .esphome/render/build)')
     parser.add_argument('--camera', default='960x540', help='the camera picture of the camera alert, WxH')
-    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars'], help='after the demo layout arrives, run only this stage')
+    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'switcher'], help='after the demo layout arrives, run only this stage')
     parser.add_argument('--plugin', type=Path, help='a plugin folder (docs/PLUGINS.md) to build into the variants, then run the plugin '
                         'round alone: tests/fixtures/plugins/host_probe proves the plugin host on the real firmware')
     parser.add_argument('--port-base', type=int, help='the first API port (default host.PORT_BASE); another worktree may use it')

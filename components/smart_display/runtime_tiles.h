@@ -12541,6 +12541,17 @@ inline bool starts_on_control(int x, int y) {
   return false;
 }
 
+}  // namespace touch_input
+}  // namespace runtime_tiles
+// The modules of the tier (docs/MODULES.md): only their define brings their code in, so a lite screen has none of it.
+#define SMART_DISPLAY_MODULE_SITE
+#ifdef SD_MOD_PAGE_SWITCHER
+#include "module_page_switcher.h"
+#endif
+#undef SMART_DISPLAY_MODULE_SITE
+namespace runtime_tiles {
+namespace touch_input {
+
 // The edge swipe of every board, in the touchscreen's own coordinates: where a touch starts, where it goes, and when
 // it ends. The capacitive boards feed it from pressed, moved and released below; the resistive ones call these three
 // from their own triggers (features/resistive-touch.yaml), where only the top and the bottom band are armed.
@@ -12560,6 +12571,14 @@ inline void edge_move(int x, int y) {
   using Gesture = screen_input::EdgeSwipe::Gesture;
   const auto gesture = screen_input::edge_swipe.update(sx, sy);
   if (gesture == Gesture::none) return;
+#ifdef SD_MOD_PAGE_SWITCHER
+  // While the page switcher is open a page turns only by a tap in it, and up from the bottom closes it again.
+  if (page_switcher::open() && gesture != Gesture::settings) {
+    screen_input::touch_guard.consume();
+    if (gesture == Gesture::home) page_switcher::close();
+    return;
+  }
+#endif
   // Up from the bottom and down from the top work wherever the person is, over a card, a camera or the settings page,
   // as on a phone (firmware 0.28.0+). A page turns only over the tiles.
   const bool page = gesture == Gesture::previous || gesture == Gesture::next;
@@ -12583,6 +12602,15 @@ inline void edge_move(int x, int y) {
   // from a side edge is one page. Either way the edge it came from lights up for a moment, so the gesture is answered
   // before the new page is drawn.
   if (gesture == Gesture::home) {
+#ifdef SD_MOD_PAGE_SWITCHER
+    // Full: up from the bottom opens the page switcher, over whatever is open, once the pages are there to show.
+    if (navigation_ready()) {
+      ESP_LOGI("touch", "edge swipe up: page switcher");
+      swipe_glow(Edge::bottom);
+      page_switcher::show();
+      return;
+    }
+#endif
     ESP_LOGI("touch", "edge swipe up: close everything, back home");
     swipe_glow(Edge::bottom);
     if (back_home) back_home();

@@ -211,6 +211,10 @@ def shapes():
                  # writes `allow_partition_access` into a screen's own YAML and sends a screen that still has
                  # ESPHome's table the wide one after an update (docs/FLASH_LAYOUT.md).
                  'wide_slots': profiles.wide_slots(board),
+                 # Its UI tier and the modules that come with it (docs/MODULES.md): what the editor and the add-on may
+                 # offer a screen of this board beyond what every board has.
+                 'tier': profiles.tier(board),
+                 'modules': profiles.modules(board),
                  # Whether it has a battery (firmware 0.41.0, profiles.battery): the editor offers the top bar's battery
                  # item on a screen of this board before it ever connected; a screen's hello says `battery` itself.
                  'battery': profiles.battery(board),

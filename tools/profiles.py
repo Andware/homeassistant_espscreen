@@ -100,6 +100,26 @@ def hotspot(board):
     return flash_mb(board) > 4
 
 
+def _modules():
+    """components/smart_display/modules.py, the firmware's own table of tiers and modules, read where it lives."""
+    import importlib.util
+    path = Path(__file__).resolve().parents[1] / 'components' / 'smart_display' / 'modules.py'
+    spec = importlib.util.spec_from_file_location('smart_display_modules', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def tier(board):
+    """The UI tier of a board (docs/MODULES.md): lite below 8 MB of flash, full above, as the firmware works it out."""
+    return _modules().tier_for_flash(flash_mb(board))
+
+
+def modules(board):
+    """The modules a screen of this board has, by its tier (docs/MODULES.md)."""
+    return _modules().modules_for(tier(board))
+
+
 def wide_slots(board):
     """Whether a board's flash takes the wide table (firmware 0.33.1+ of those boards): its files include packages/hardware/flash-4mb.yaml,
     as every board with 4 MB of flash does. Its update slots are then 2,031,616 bytes in place of ESPHome's 1,835,008,

@@ -772,12 +772,18 @@ class Build:
         shutil.rmtree(mirror_root, ignore_errors=True)
         mirror = mirror_root / 'packages'
         mirror.mkdir(parents=True)
-        (mirror / 'core.yaml').write_text(host_core(tree))
         chain = Chain()
         board = tree / 'packages' / 'boards' / item.file
         if not board.is_file():
             raise SystemExit(f'{tree} has no packages/boards/{item.file}')
         walk(tree, board, mirror, chain)
+        # The host has no esp32 block to read the flash from: a board with 4 MB says so, and builds lite (docs/MODULES.md).
+        core = host_core(tree)
+        if any(Path(f).name == 'flash-4mb.yaml' for f in chain.files):
+            if 'smart_display:\n  language: ${LANGUAGE}\n' not in core:
+                shape_error('smart_display in packages/core.yaml')
+            core = core.replace('smart_display:\n  language: ${LANGUAGE}\n', 'smart_display:\n  language: ${LANGUAGE}\n  flash_mb: 4\n')
+        (mirror / 'core.yaml').write_text(core)
         (mirror_root / 'host-hw.yaml').write_text(host_hw(board.read_text(), chain))
         (mirror_root / 'chain.txt').write_text('\n'.join([str(f) for f in chain.files] + [''] + chain.notes) + '\n')
         chain_text = ''.join((mirror / f).read_text() for f in chain.files)

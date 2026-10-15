@@ -41,6 +41,7 @@
 
 - [CATALOGUE.md](CATALOGUE.md): what a tile of each entity type can do, and adding an entity type.
 - [RESPONSIVE.md](RESPONSIVE.md): how one firmware fits every glass: looks, grids, the font set and card design rules.
+- [MODULES.md](MODULES.md): tiers and modules, the parts of the UI only boards with 8 MB of flash or more get (a recipe).
 - [ADDING_A_BOARD.md](ADDING_A_BOARD.md): adding a board, from its datasheet to the glass.
 - [BOARD_RELEASES.md](BOARD_RELEASES.md): which boards a change reaches, and the firmware number it gets.
 - [PROFILES.md](PROFILES.md): how a screen's YAML is put together from the core, looks, features and board files.
