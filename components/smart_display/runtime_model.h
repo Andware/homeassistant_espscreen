@@ -708,7 +708,10 @@ struct Tile {
     if (builtin()) return true;
     if (!received || state.empty() || state == "unavailable") return false;
     auto d = domain();
-    return state != "unknown" || d == "scene" || d == "button" || d == "input_button";
+    // A cover that cannot tell whether it is open (an awning or a blind without feedback: Home Assistant's is_closed is
+    // None) reports "unknown" and still takes its keys, as in Home Assistant, where only "unavailable" turns them off
+    // (frontend data/cover.ts canOpen, canClose, canStop).
+    return state != "unknown" || d == "scene" || d == "button" || d == "input_button" || d == "cover";
   }
   // Home Assistant's stateActive() (frontend src/common/entity/state_active.ts), the rule its cards colour by: an
   // entity it calls inactive is grey, such as an airco that is off, a closed blind, a docked robot, a player in

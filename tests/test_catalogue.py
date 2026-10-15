@@ -149,7 +149,8 @@ class Cards(unittest.TestCase):
             {'entity': 'cover.a', 'o': {'size': size, 'controls': controls}, 'a': {'supported_features': 255}}, features, span_of)['o']['controls']
         self.assertEqual(sent('wide', 'position_tilt', frozenset({'cover_rows'})), 'position_tilt')
         self.assertEqual(sent('wide', 'position_tilt', frozenset()), 'position')
-        self.assertEqual(sent('single', 'position', frozenset()), 'none')
+        older = catalogue.drawn_controls({'entity': 'cover.a', 'o': {'size': 'single', 'controls': 'position'}, 'a': {}}, frozenset(), span_of)
+        self.assertNotIn('controls', older['o'])                                    # as resolve_controls sent it before
         self.assertEqual(sent('single', 'position', None), 'position')              # the hello not known: as it is
 
 

@@ -7,6 +7,22 @@
   screen: on a large screen everything is on the card, on a smaller one rooms, routines and suction open their own
   view. The keys follow what the robot can do, an error says why, and while it cleans you see the room and how far it
   is. The CYD and the other 4 MB boards keep the card they had.
+- **Slats at their angle, and on more tiles.** A blind's tilt slider now shows its slats at the angle they stand at:
+  flat when open, overlapping when closed, in a soft tint so the handle stays on top. With **Slat tilt** switched on, a
+  cover tile lays out what its room holds: the position and the slats standing side by side, with open, stop and close
+  under or beside them on a large tile, two bars on a low one, or one bar and a key that swaps it to the slats on the
+  smallest. On the CYD and the 4.3-inch Waveshare the slats no longer drop off a 1x2 or 2x2 tile, and a cover with only
+  tilt keys gets them as a second row.
+- **Covers on 1x1 and 2x1 tiles.** On larger screens a cover's controls now fit a single tile too: a position bar, open,
+  stop and close, or position and slats as two bars. A double-width tile takes the slats as well. Choose them under
+  Controls in the editor; where a tile has no room for them, it looks as it did. This needs the new firmware.
+- **Awnings and blinds without feedback keep their buttons.** A cover whose motor does not report whether it is open
+  (many awnings, Somfy RTS and other radio motors) shows its state as unknown in Home Assistant. Its tile had no buttons
+  on the screen then, although the editor showed them. Now open, stop and close work as they do in Home Assistant, and
+  a cover that only assumes its state keeps both open and close at hand.
+- **Cover groups, one cover at a time.** The card of a cover group has a key at the top right, where a light group's
+  lamps key stands. It opens a page with a card for every cover in the group: its position bar, or open, stop and close,
+  and for a blind with slats a … key that opens its tilt.
 - **Tap sound clicks as your finger lands.** With the Tap sound plugin the click now comes the moment a finger touches
   a tile, a key, a slider or a row of the settings, instead of after you let go. Dragging a slider, a cover's
   position or a player's seek bar clicks softly at every step, evenly spaced however fast you drag: every 5 %, or every

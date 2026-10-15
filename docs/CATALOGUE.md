@@ -31,7 +31,9 @@ Three questions are answered by the catalogue, the same way in Python and TypeSc
 1. **What may be chosen for an entity** (`offers`): the options of its type whose `needs` the entity meets. The editor
    shows only these.
 2. **What a card of a given size draws** (`resolve_controls`): the chosen control or the type's default, and on a card
-   one row high what fits there (`one_row`).
+   one row high what fits there (`one_row`). A control with `room` stays whole on any card, a card of one cell
+   included where it was chosen: the screen lays it out by the room it has, and a screen whose hello lacks `room`'s
+   feature gets what it always got (`roomless`: the `one_row` part, nothing on a card of one cell).
 3. **What a screen gets** (`drawn_controls`): what that entity can draw (`fallback`) on that screen (`screen`, what the
    screen's firmware says it draws).
 
@@ -74,6 +76,7 @@ controls:                     # direct controls on a card; the first is the defa
     rows: 2                               # needs a card two rows high
     screen: {firmware: 0.3.1}             # a hard requirement: the add-on asks for this firmware first
     one_row: setpoint                     # what a card one row high draws instead
+    room: {feature: cover_rows}           # a screen with this feature lays the control out by its card's room (cover_tile.h)
 inline:                       # the small slider beside the name
   needs: {actions: [{action: light.turn_on, field: brightness_pct}]}
 toggle: {actions: [lock.lock]}   # what On / off as a tap needs; without this key: <domain>.toggle listed by Home Assistant
@@ -90,7 +93,7 @@ favorite:                     # what a favourite sets as it starts, each where t
 ```
 
 A control may also say `sizes: {full: false}` (not on a full-page card), and the keys of an option are `needs`,
-`screen`, `sizes`, `wide`, `rows`, `of`, `one_row`, `fallback` and `range`; `tools/generate_catalogue.py` refuses any
+`screen`, `sizes`, `wide`, `rows`, `of`, `one_row`, `fallback`, `range` and `room`; `tools/generate_catalogue.py` refuses any
 other key (`TOP`, `OPTION`). A `keypad` has up, down, left, right and OK for every integration it names and the other
 keys (`back`, `home`, `play`, `volume_up`, `volume_down`, `mute`) where the remote has them, and every command must be
 one `catalogue/_remote_commands.json` lists for that integration.

@@ -31,6 +31,7 @@ import catalogue
 import ha_catalogue
 import light_effects
 import light_groups
+import cover_groups
 import media_library
 import vacuum_card
 import speakers
@@ -2362,7 +2363,9 @@ class Manager:
             return tuple(dict.fromkeys((*vacuum_related(tile['entity'], device, self.ha.states).values(),
                                         *vacuum_card.related(tile['entity'], device, self.ha.states))))
         if tile['entity'].startswith('cover.'):
-            return tuple(cover_related(tile['entity'], self.device_entries(tile['entity']), self.ha.states).values())
+            # Its device's battery, and a group's covers (its page, firmware 0.57.0).
+            return (tuple(cover_related(tile['entity'], self.device_entries(tile['entity']), self.ha.states).values()) +
+                    tuple(cover_groups.cover_ids(tile['entity'], self.ha.states)))
         # A map (app 0.4.33) is drawn from everyone on it and the zones around them: a move or a zone's edit reaches
         # its movement mark only through this.
         if (tile.get('options') or {}).get('display') == 'map':
@@ -2616,10 +2619,10 @@ class Manager:
     def watched_entities(self):
         """Entities whose state changes matter: tiles on any layout plus the screens' own diagnostics.
 
-        Cached per (registry, layouts, the lamps of the light groups on them): the first two are replaced as whole
-        objects when they change; a group's lamps live in its state."""
-        groups = tuple((tile['entity'], tuple(light_groups.lamp_ids(tile['entity'], self.ha.states)))
-                       for layout in self.layouts.values() for tile in layout['tiles'] if tile['entity'].startswith('light.'))
+        Cached per (registry, layouts, the lamps of the light groups and the covers of the cover groups on them): the first
+        two are replaced as whole objects when they change; a group's members live in its state."""
+        groups = tuple((tile['entity'], tuple(light_groups.lamp_ids(tile['entity'], self.ha.states) or cover_groups.cover_ids(tile['entity'], self.ha.states)))
+                       for layout in self.layouts.values() for tile in layout['tiles'] if tile['entity'].startswith(('light.', 'cover.')))
         # The speakers a player's menu lists change with what this app started and the libraries it read.
         media = (tuple(sorted(self.outputs.items())), tuple(sorted(e for e, known in self.accounts.items() if known[1])))
         savers = tuple(sorted(e for choice in self.savers.choices.values() for e in screen_saver.entities(choice, self.ha.states)))
@@ -2798,6 +2801,11 @@ class Manager:
             members=light_groups.lamps(tile['entity'],self.ha.states)
             if members:
                 message.setdefault('x',{})['lamps']=members
+        # A cover group's covers for its page (firmware 0.57.0), to a screen whose hello says group_covers.
+        if features and cover_groups.FEATURE in features and tile['entity'].startswith('cover.'):
+            members=cover_groups.covers(tile['entity'],self.ha.states)
+            if members:
+                message.setdefault('x',{})['covers']=members
         if tile['entity'].startswith('alarm_control_panel.'):
             for key,value in alarm_extras(state,entry).items():
                 message.setdefault('x',{})[key]=value

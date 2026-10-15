@@ -57,6 +57,12 @@ int main() {
   CoverCard garage_card = cover_card(garage);
   assert(!garage_card.position && !garage_card.tilt && garage_card.keys && !garage_card.tilt_keys);
   assert(cover_keys(garage, keys) == 3 && keys[2].disabled && !keys[0].disabled);
+  // An awning that only assumes its state (a Somfy RTS motor): open and close both stay, as in Home Assistant.
+  Tile awning = make("cover.awning", "closed", 11); awning.device_class = "awning"; awning.edit_extra().assumed = true;
+  assert(cover_keys(awning, keys) == 3 && !keys[0].disabled && !keys[2].disabled && !strcmp(keys[0].icon, glyph::EXPAND));
+  awning.state = "unknown";
+  awning.controls = "buttons";
+  assert(awning.available() && panel_available(awning));
   // Slats that tilt without a position get tilt keys; a key that cannot tilt further is disabled.
   Tile slats = make("cover.slats", "open", 3 | 16 | 32); slats.edit_extra().tilt = 100;
   CoverCard slats_card = cover_card(slats);

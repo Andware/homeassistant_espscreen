@@ -387,22 +387,35 @@ against its page as on the screen (`cardHeight` in `web/src/model/ui-scale.ts`).
   section checked on glass and an entry in `boards.yaml`.
 
 
-### Optional cover slat controls
+### A cover's controls by its room
 
-Taller and full-page cover tiles can explicitly select a slat group alongside
-an optional primary control. The editor keeps those choices separate; resizing
-never enables the extra group. Supported HA actions determine whether the group
-contains a tilt-position slider or individual open, stop and close tilt keys.
+A cover tile with its slats chosen (and, on a screen that says `cover_rows` in its hello, a cover tile one row high or
+of one cell with any control chosen) lays its controls out by the room its card has. `cover_tile::layout` takes the
+richest tier that fits, measured in the look's finger (`ui::touch_min`, 7 mm) and fonts, never a board's name:
 
-`cover_tile.h` lays out the selected groups using measured body dimensions,
-caption height and the active look's physical touch size. It changes a vertical
-key stack to a row when that makes the groups fit. If space is insufficient,
-only the primary controls remain on the tile, and the existing detail overlay
-keeps the supported slat controls. No board identity or fixed glass resolution
-participates in this decision.
+| Tier | What the card draws | Where it fits |
+| --- | --- | --- |
+| `COLUMNS_KEYS` | position and slats standing side by side, open/stop/close in a row under them | a tall card with room for a row of keys too |
+| `COLUMNS_SIDE` | the same, the keys stacked beside the sliders | a card wider than tall |
+| `COLUMNS` | the two standing sliders (or key stacks), a caption under each | a card two sliders high |
+| `ROWS` | each group lying in a row of its own: bars, as Home Assistant stacks its tile features | a low card two rows high |
+| `SWAP` | one row and a key that turns it from the primary control to the slats and back | a card one row high |
 
-The tile and overlay share `cover_slider`, `cover_tilt_keys`, and
-`cover_position_action`. Position fills the closed part of the blind; slat tilt
-uses the HA tilt percentage directly. The tile also uses the existing captured
-slider lifecycle, so a lost press cannot send an action. Capability and pending
-checks run again when an interaction commits.
+A bar or a key may be drawn at 85 % of a finger (`cover_tile::bar_height`, the size of the tile's own bars) where a
+whole finger does not fit; its touch area keeps the finger's size. A card one row high lays its controls only (two thin
+standing sliders beside a name read worse than two bars). A card at least twice as wide as high puts its heading at the
+left where that gives the controls a richer tier and the whole name fits the left half. Where nothing fits, the card is
+the one it is without them, and the cover's card keeps every control. Open, stop and close come with a positional blind
+only where the room holds them too; resizing never adds a group the user did not choose.
+
+The slats of a tilt slider are drawn at the angle the blind stands at (`cover_tile::slats`, `cover_paint::slats_draw`):
+flat when open, nearly upright and overlapping when closed, in a pale tint behind the slider's accent handle. The
+slider draws them itself, so they turn with every value without objects of their own; the tile, the cover's card and a
+cover group's page share the one drawing (`cover_paint.h`). The editor lays the card out with `model/cover-tile.ts`, a
+port that `tests/test_editor_parity.py` compares with the C++ on a sweep of rooms.
+
+The tile and the card share `cover_slider`, `cover_bar`, `cover_tilt_keys` and `cover_position_action`. A standing
+position slider fills the closed part of the blind; a lying one fills the open part, as Home Assistant's
+cover-position feature does (`cover_bar_raw` turns its value around before it goes out). The tile uses the existing
+captured slider lifecycle, so a lost press cannot send an action. Capability and pending checks run again when an
+interaction commits.

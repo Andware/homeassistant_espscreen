@@ -277,6 +277,11 @@ def drawn_controls(message, features, spans=lambda size: None):
     item = option(domain, 'controls', key)
     if item and item.get('room') and not screen_holds(item['room'], features=features):
         key = roomless(domain, key, options.get('size'), spans)
+        # Where resolve_controls sent no controls before (a card of one cell, slats alone one row high), an older screen
+        # gets none again, not even 'none'.
+        if key == 'none':
+            del options['controls']
+            return message
     drawn = 'none' if key == 'none' else drawable(domain, key, (message.get('a') or {}), features)
     if drawn != options['controls']:
         options['controls'] = drawn

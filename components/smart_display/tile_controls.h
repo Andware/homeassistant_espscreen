@@ -605,8 +605,10 @@ inline unsigned cover_keys(const Tile &t, std::array<Key, 3> &out) {
   unsigned n = 0;
   const uint32_t f = t.supported ? t.supported : feature::COVER_OPEN | feature::COVER_STOP | feature::COVER_CLOSE;
   bool sideways = sideways_cover(t.device_class);
-  bool fully_open = std::isfinite(t.position) ? t.position >= 99.5f : t.state == "open";
-  bool fully_closed = std::isfinite(t.position) ? t.position <= 0.5f : t.state == "closed";
+  // A cover that only assumes its state (assumed_state, firmware 0.57.0) keeps open and close, as Home Assistant does.
+  const bool assumed = t.extra().assumed;
+  bool fully_open = !assumed && (std::isfinite(t.position) ? t.position >= 99.5f : t.state == "open");
+  bool fully_closed = !assumed && (std::isfinite(t.position) ? t.position <= 0.5f : t.state == "closed");
   if (f & feature::COVER_OPEN) out[n++] = Key{sideways ? glyph::EXPAND : glyph::UP, COVER_OPEN, "", t.state == "opening", fully_open && t.state != "closing"};
   if (f & feature::COVER_STOP) out[n++] = Key{glyph::STOP, COVER_STOP, "", false, false};
   if (f & feature::COVER_CLOSE) out[n++] = Key{sideways ? glyph::COLLAPSE : glyph::DOWN, COVER_CLOSE, "", t.state == "closing", fully_closed && t.state != "opening"};
@@ -614,7 +616,7 @@ inline unsigned cover_keys(const Tile &t, std::array<Key, 3> &out) {
 }
 inline unsigned cover_tilt_keys(const Tile &t, std::array<Key, 3> &out) {
   unsigned n = 0;
-  const float tilt = t.extra().tilt;
+  const float tilt = t.extra().assumed ? NAN : t.extra().tilt;
   if (t.supported & feature::COVER_OPEN_TILT) out[n++] = Key{glyph::BLINDS_OPEN, COVER_OPEN_TILT, "", false, std::isfinite(tilt) && tilt >= 99.5f};
   if (t.supported & feature::COVER_STOP_TILT) out[n++] = Key{glyph::STOP, COVER_STOP_TILT, "", false, false};
   if (t.supported & feature::COVER_CLOSE_TILT) out[n++] = Key{glyph::BLINDS, COVER_CLOSE_TILT, "", false, std::isfinite(tilt) && tilt <= 0.5f};
