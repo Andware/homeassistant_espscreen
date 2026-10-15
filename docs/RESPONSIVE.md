@@ -168,17 +168,17 @@ shows as a box on the screen, so a new one goes into all five lists and `GLYPHS`
   face a board carries, when they fit under the name and beside the unit and the value has no letter that face
   lacks (a word keeps the value's own face); a 4-inch Guition has no such room and keeps its face. A cell at
   least twice the look's cell height stacks the icon above the name and state.
-- **A control that fills its room takes the card's right half** (`runtime_tiles::half_content_width`): the card
-  is read as two cards side by side with the grid's gap between them, and the control fills the content of the
-  right one, a card's padding inside each edge. A double-width card is two cells of its row, so its slider, its
-  - / + pill and a player's volume with its mute key take the second one, and their edges stand where the cards
-  in the rows above and below have theirs. A card of three or more cells gives them half its width, its right
-  edge still on the content of the card above. A row of keys divides that same room between three of them,
-  never above the key size the look gives and never under `ui::touch_min()`; a switch and a run key keep their
-  own size against the same edge. The look's numbers in `panel_metrics` are what one cell of a CYD and a 4-inch
-  Guition measures, give or take two pixels, which is why writing them as a rule changes nothing there, and why
-  a board whose grid divides its glass differently needs it: on the Waveshare's three columns that number was a
-  slider of 251 px on a card of 478, leaving the name 28 % of the card where a Guition leaves it 36 %.
+- **A control that fills its room takes every cell after the first** (`runtime_tiles::rest_content_width`). The
+  first cell of a wide card holds its icon, name and state, as a card of one cell does, and the control fills the
+  cells beside it as if they were one card, a card's padding inside each edge. A double-width card's slider, its
+  - / + pill and a player's volume with its mute key take the second cell; on a card of three cells they take the
+  second and the third. Their edges stand where the cards in the rows above and below have theirs. A row of keys
+  divides that same room between three of them, never above the key size the look gives and never under
+  `ui::touch_min()`; a switch and a run key keep their own size against the same edge. The look's numbers in
+  `panel_metrics` are what one cell of a CYD and a 4-inch Guition measures, give or take two pixels, which is why
+  writing them as a rule changes nothing there, and why a board whose grid divides its glass differently needs it:
+  on the Waveshare's three columns that number was a slider of 251 px on a card of 478, leaving the name 28 % of
+  the card where a Guition leaves it 36 %.
 - What does not fit is left out: the forecast shows as many day columns as the width holds (seven at
   most, none below two), a single clock card drops its date when it has no room beside the dial, a
   wide card gets a control panel only when the panel, the icon and some name fit.

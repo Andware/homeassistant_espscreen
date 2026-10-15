@@ -428,10 +428,11 @@ a:hover { text-decoration: underline; }
 .device.compact .tile:has(> .mini-slider) { padding-block: 4px; gap: 3px; }
 .device.compact .tile .mini-slider { height: 8px; }
 .tile .mini-slider { height: 10px; border-radius: 5px; background: linear-gradient(to right, #ffbf38 60%, #fff1d3 60%); flex: none; width: 100%; }
-/* A control that fills its room takes the card's right half, as the screens draw it (runtime_tiles::half_content_width):
-   half its room once a gap between two cards and both paddings are off, on a card of two cells or more. */
-.tile.wide { --tile-fill: calc((100% - 26px) / 2); }
-.device.compact .tile.wide { --tile-fill: calc((100% - 22px) / 2); }
+/* A control that fills its room takes every cell after the first, as the screens draw it (runtime_tiles::rest_content_width):
+   the first cell keeps the name, and the control the rest of the card once a gap between two cards and both paddings
+   (--tile-between) are off. On a card of two cells that is half its room; --tile-cols is the card's span. */
+.tile.wide { --tile-between: 26px; --tile-fill: calc(100% - (100% - (var(--tile-cols, 2) - 1) * var(--tile-between)) / var(--tile-cols, 2) - var(--tile-between)); }
+.device.compact .tile.wide { --tile-between: 22px; }
 .tile.wide .mini-slider { width: var(--tile-fill); }
 .tile.wide .ctl.fill { width: var(--tile-fill); }
 .tile.wide .ctl.fill .range, .tile.wide .ctl.fill .stp { flex: 1; min-width: 0; }

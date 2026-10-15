@@ -5898,18 +5898,22 @@ inline const lv_font_t *name_font(const Widgets &w, int room) {
 inline int content_height(const Widgets &w) {
   return tile_height(w) - lv_obj_get_style_space_top(w.tile, LV_PART_MAIN) - lv_obj_get_style_space_bottom(w.tile, LV_PART_MAIN);
 }
-// The room a control that fills it takes on a wide card of one row: the card's right half, as if the card were two
-// cards side by side with the grid's gap between them, less a card's padding and border. On a card of two cells that
-// is the second cell, so the control's edges stand where the cards in the rows above and below have theirs; a card
-// of three or more cells gives it half its width, as the editor draws it (GitHub #250: before, one cell at the
-// right end of every wide card, a short slider on a card of three). The look's own numbers (panel_metrics) are what
-// one cell of a Guition and a CYD measures, give or take two pixels; a board whose grid divides its glass
-// differently (three columns on a 4.3 inch) gets its own half instead of that number.
-inline int half_content_width(const Widgets &w) {
+// The room a control that fills it takes on a wide card of one row: every cell after the first. The first cell holds
+// the icon, the name and the state, as a card of one cell does, and the control fills the cells beside it as if they
+// were one card, less a card's padding and border; its edges then stand where the cards in the rows above and below
+// have theirs. On a card of two cells that is the second cell; on a card of three, the second and the third (GitHub
+// #250: before, one cell at the right end of every wide card, a short slider on a card of three). The look's own
+// numbers (panel_metrics) are what one cell of a Guition and a CYD measures, give or take two pixels; a board whose
+// grid divides its glass differently (three columns on a 4.3 inch) gets its own cells instead of that number.
+inline int rest_content_width(const Widgets &w) {
   const int edges = tile_width(w) - content_width(w);
-  const int gap = tile_grid ? lv_obj_get_style_pad_column(tile_grid, LV_PART_MAIN) : 0;
-  const int half = (tile_width(w) - gap) / 2 - edges;
-  return half > 0 ? half : std::max(1, content_width(w) / 2);
+  if (tile_grid && grid.wide_span() > 1) {
+    const int gap = lv_obj_get_style_pad_column(tile_grid, LV_PART_MAIN);
+    const int cell = (lv_obj_get_content_width(tile_grid) - (int) (grid.columns - 1) * gap) / (int) grid.columns;
+    const int rest = tile_width(w) - cell - gap - edges;
+    if (rest > 0) return rest;
+  }
+  return std::max(1, w.base_width > edges ? w.base_width - edges : content_width(w) / 2);
 }
 // The head of a card: the icon circle at the left, the name and the state as two lines beside it. One rule for
 // every card that draws it (a single or double-width card, the top of a full-page card), whatever grid the board
@@ -7240,8 +7244,8 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
   const lv_font_t *icon_font=w.full?w.icon_font:mini_icon_font?mini_icon_font:w.icon_font;
   const lv_font_t *text_font=control_font?control_font:w.title_font;
   auto d=t.domain();
-  // A wide card's controls fill its right half (half_content_width); a card over the whole page
-  // keeps the wide sizes of panel_metrics_full, centred under it. A row of keys divides that half between three
+  // A wide card's controls fill every cell after its first (rest_content_width); a card over the whole page
+  // keeps the wide sizes of panel_metrics_full, centred under it. A row of keys divides that room between three
   // of them, and never takes a key above the size the look gives it.
   // A full card's sizes are the look's, but its glass can be narrower than they are (a small screen standing up):
   // every width stays inside the card, and a key never below the touch minimum.
@@ -7250,7 +7254,13 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
     m.slider_w=std::min(m.slider_w,std::max(ui::touch_min(),content_w-m.key_h-m.gap));
     m.toggle_w=std::min(m.toggle_w,content_w);
   }
-  const int fill=(w.full||taller)?m.pill_w:half_content_width(w);
+  const int fill=(w.full||taller)?m.pill_w:rest_content_width(w);
+  // That room follows the card's width (GitHub #250): a slot that showed a card of another width builds its parts again,
+  // as a taller card does when it is resized.
+  if(!w.full&&!taller){
+    if(w.panel_layout_w!=fill){end_panel(w);w.panel_mode.clear();}
+    w.panel_layout_w=fill;w.panel_layout_h=0;
+  }
   const int keys_room=w.full?content_w:fill;
   const int key_w=std::min(m.key_w,std::max(ui::touch_min(),(keys_room-2*m.gap)/3));
   // A player's volume shares that room with its mute key; every other slider takes it whole.
@@ -8318,13 +8328,13 @@ inline void render_slot(size_t slot) {
   bool with_panel=(w.wide||taller) && !t.builtin() && !watch && fresh() && t.available() &&
                   (inline_panel || (!t.controls.empty() && t.inline_control!="slider"));
   // A panel needs its own width plus the icon and some name; a narrow wide card stays a plain card. What it
-  // needs is what it takes: the half its controls fill (layout_panel), or the toggle and the run key their own
+  // needs is what it takes: the cells its controls fill (layout_panel), or the toggle and the run key their own
   // width.
   if(with_panel && !w.full && !taller){
     const bool lt=ui::large();
     const PanelMetrics pm=panel_metrics(lt);
     const std::string kind=tile_controls::panel_kind(t);
-    const int panel_need=kind=="toggle"?pm.toggle_w:kind=="run"?pm.key_w*3/2:half_content_width(w);
+    const int panel_need=kind=="toggle"?pm.toggle_w:kind=="run"?pm.key_w*3/2:rest_content_width(w);
     if(content_width(w)<panel_need+pm.text_gap+ui::px(lt?54:36)+ui::px(60))with_panel=false;
   }
   // A wide card with a panel says what its control is doing, unless the second line was set by hand.

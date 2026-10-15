@@ -64,7 +64,7 @@ export type Face = {
   panelKeys: ControlKey[];
   /** A thermostat's modes as its mode bar, on a card of one row or the whole page. */
   modeBar: boolean;
-  /** The control fills the card's right half (runtime_tiles::half_content_width). */
+  /** The control fills every cell after the first (runtime_tiles::rest_content_width). */
   fillsCell: boolean;
 };
 
@@ -72,8 +72,8 @@ export type Face = {
 const BIG_KEY_DOMAINS = ["light", "switch", "input_boolean", "fan", "script", "scene", "button", "input_button"];
 // Controls whose keys are not a row of keys: a toggle, a -/+, a slider, a run key.
 const NOT_KEYS = ["toggle", "setpoint", "volume", "run", "stepper", "slider", "brightness", "speed", "position"];
-// The screens give a control that fills its room the card's right half (on a card of two cells its second cell, so
-// its edges stand where the cards above and below have theirs); keys, a switch and a run key keep their own size.
+// The screens give a control that fills its room every cell after the first (the first keeps the name), so its edges
+// stand where the cards above and below have theirs; keys, a switch and a run key keep their own size.
 const FILLS_CELL = ["brightness", "speed", "position", "slider", "volume", "setpoint", "mode"];
 const CLOCK_FACES = ["dial", "flip", "digital"];
 
