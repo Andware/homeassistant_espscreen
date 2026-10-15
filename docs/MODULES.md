@@ -46,6 +46,10 @@ the add-on and the editor offer a module's options only on boards that have it.
 
 ## The modules
 
-- **dock** (full): up from the bottom edge opens the Dock, a drawer along the bottom of the glass with every page as a
-  small picture and its name, in two rows. Sideways leafs through the pages when they do not all fit, a tap goes to
-  a page, and a tap above the Dock or a drag down closes it. On lite, up from the bottom goes home.
+- **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
+  wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.
+  Sideways leafs through the pages when they do not all fit, a tap goes to a page, and a tap above the Dock or a drag
+  down closes it. A page's **Show in Dock** setting (`navigation.showInDock` in the page document, on unless set
+  off) leaves it out, and a page left out of swiping is never in it; its page message says `"dock": false` only for
+  a page left out, which older firmware reads past. With every page left out, the swipe goes home. On lite, up from
+  the bottom goes home.

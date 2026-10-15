@@ -189,29 +189,37 @@ inline lv_obj_t *block(lv_obj_t *parent, int x, int y, int w, int h, int radius,
   return o;
 }
 
-// One page in small: the top bar as a dot and two strokes, then its tiles on the grid with the page's margins.
-inline void picture(lv_obj_t *parent, int page, int w, int h, const std::array<Placement, TILES_MAX> &placement) {
-  auto *glass = block(parent, 0, 0, w, h, std::max(2, w / 24), theme::hex(theme::PAGE));
-  const int margin = std::max(2, w * 3 / 100), gap = std::max(1, w * 2 / 100), bar = std::max(4, h * 11 / 100);
-  const uint32_t stroke = theme::hex(theme::TRACK);
-  block(glass, margin, margin, bar * 3 / 5, bar * 3 / 5, LV_RADIUS_CIRCLE, stroke);
-  block(glass, margin + bar, margin + bar / 5, w / 6, bar / 5, bar, stroke);
-  block(glass, w - margin - w / 12, margin + bar / 5, w / 12, bar / 5, bar, stroke);
+// One page in small, quiet: the top bar as one thin stroke, then its tiles on the grid with room between them, a tile
+// that is off a plain card as on the glass and one that is on a pale wash of its colour. `here` rings the page on the
+// glass in the accent.
+inline void picture(lv_obj_t *parent, int page, int w, int h, const std::array<Placement, TILES_MAX> &placement, bool here) {
+  auto *glass = block(parent, 0, 0, w, h, std::max(3, w / 14), theme::hex(theme::PAGE));
+  const int margin = std::max(3, w * 6 / 100), gap = std::max(2, w * 4 / 100), bar = std::max(4, h * 10 / 100);
+  block(glass, margin, margin + bar / 3, w / 4, std::max(1, bar / 4), bar, theme::hex(theme::TRACK));
   const int top = margin + bar, cols = static_cast<int>(grid.columns), rows = static_cast<int>(grid.rows);
   const int cell_w = (w - 2 * margin - (cols - 1) * gap) / cols, cell_h = (h - top - margin - (rows - 1) * gap) / rows;
-  const int radius = std::max(1, std::min(cell_w, cell_h) / 6);
+  const int radius = std::max(2, std::min(cell_w, cell_h) / 4);
   for (size_t i = 0; i < model.count && i < grid.max_tiles(); ++i) {
     if (placement[i].page != page) continue;
     const auto &t = model.tiles[i];
     const int col = placement[i].slot % cols, row = placement[i].slot / cols;
     const int cs = static_cast<int>(t.column_span()), rs = static_cast<int>(t.row_span());
-    const uint32_t colour = t.active() ? theme::mix(tile_controls::accent(t), theme::hex(theme::CARD), 110) : theme::hex(theme::CARD);
+    const uint32_t colour = t.active() ? theme::mix(tile_controls::accent(t), theme::hex(theme::CARD), 70) : theme::hex(theme::CARD);
     block(glass, margin + col * (cell_w + gap), top + row * (cell_h + gap), cs * cell_w + (cs - 1) * gap,
           rs * cell_h + (rs - 1) * gap, radius, colour);
   }
+  // The ring lies over the picture as a layer of its own: a border on the picture itself would move its tiles in by
+  // the border's width (LVGL places children inside it).
+  if (here) {
+    auto *ring = block(glass, 0, 0, w, h, std::max(3, w / 14), theme::hex(theme::ACCENT));
+    lv_obj_add_flag(ring, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_set_style_bg_opa(ring, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(ring, std::max(2, ui::px(2)), 0);
+    lv_obj_set_style_border_color(ring, theme::color(theme::ACCENT), 0);
+  }
 }
 
-inline void build() {
+inline bool build() {
   drop_leaving();
   root = lv_obj_create(lv_layer_top());
   lv_obj_remove_style_all(root);
@@ -220,26 +228,45 @@ inline void build() {
   lv_obj_set_style_bg_color(root, theme::color(theme::SCRIM), 0);
   lv_obj_add_event_cb(root, backdrop, LV_EVENT_CLICKED, nullptr);
 
-  const int W = overlay_card::screen_width(), H = overlay_card::screen_height();
+  const int glass = overlay_card::screen_width(), H = overlay_card::screen_height();
+  // A small drawer, not a sheet: at most 12 cm wide, in the middle of the bottom edge. A 4-inch glass is narrower
+  // than that, so there it spans the glass.
+  const int W = std::min(glass, ui::mm(120));
   glass_w = W;
-  const int pages = static_cast<int>(page_count());
-  const int pad = ui::mm(4), gap = ui::mm(3), inset = ui::mm(1) + ui::mm(1) / 2, line = lv_font_get_line_height(label_font);
+  // The pages it shows: every page of the swipe (a detail page, left out of it, is reached by its tile) that its
+  // page settings leave in the Dock. An app from before the page settings sends no records: then every page.
+  std::vector<int> shown;
+  const auto &records = model.page_data.records;
+  for (int i = 0; i < static_cast<int>(page_count()); ++i)
+    if (static_cast<size_t>(i) >= records.size() || (!records[i].excluded && records[i].dock)) shown.push_back(i);
+  const int pages = static_cast<int>(shown.size());
+  ESP_LOGI("dock", "shows %d of %u pages", pages, page_count());
+  // Every page left out: nothing to show, and the swipe goes home as it does on a lite screen.
+  if (pages == 0) {
+    lv_obj_delete(root);
+    root = nullptr;
+    return false;
+  }
+  const int pad = ui::mm(4), gap = ui::mm(3), inset = ui::mm(1) + ui::mm(1) / 2, line = lv_font_get_line_height(small_font);
   const int grab = ui::mm(6), dots_h = ui::mm(4), room_w = W - 2 * pad;
-  // The columns of one drawer's width: every page in two rows when each picture keeps at least 13 mm, no more columns
-  // than that, and so few that two rows stay within half the glass.
+  // The columns of one drawer's width: every page in two rows when each picture keeps at least 13 mm (no more columns
+  // than that), each picture at most 32 mm, and so many that the drawer stays within half the glass.
   auto item_w_of = [&](int cols) { return (room_w - (cols - 1) * gap) / cols; };
-  auto item_h_of = [&](int cols) { return inset + (item_w_of(cols) - 2 * inset) * H / W + ui::mm(1) + line + inset; };
+  // A picture has the glass's proportions, whatever the drawer's width.
+  auto item_h_of = [&](int cols) { return inset + (item_w_of(cols) - 2 * inset) * H / glass + ui::mm(1) + line + inset; };
   // One row when every page fits in it, two otherwise; the dots when they do not all fit in two.
   auto rows_of = [&](int cols) { return pages > cols ? 2 : 1; };
   auto drawer_of = [&](int cols) {
     return grab + rows_of(cols) * item_h_of(cols) + (rows_of(cols) - 1) * gap + (pages > 2 * cols ? dots_h : 0) + pad;
   };
   const int most = std::max(1, (room_w + gap) / (ui::mm(13) + gap));
-  int cols = std::min(std::max(1, (pages + 1) / 2), most);
+  // No picture wider than 32 mm, so a few pages stand side by side in one row instead of two rows of large ones.
+  const int fewest = (room_w + gap + ui::mm(32) + gap - 1) / (ui::mm(32) + gap);
+  int cols = std::min(std::max({1, (pages + 1) / 2, fewest}), most);
   while (cols < most && drawer_of(cols) > H / 2) ++cols;
   const int per_view = 2 * cols;
   views = (pages + per_view - 1) / per_view;
-  const int item_w = item_w_of(cols), item_h = item_h_of(cols), pic_w = item_w - 2 * inset, pic_h = pic_w * H / W;
+  const int item_w = item_w_of(cols), item_h = item_h_of(cols), pic_w = item_w - 2 * inset, pic_h = pic_w * H / glass;
   const int rows = rows_of(cols), band = rows * item_h + (rows - 1) * gap;
   drawer_h = drawer_of(cols);
   // The drawer reaches below the glass by its corner and the overshoot's way, so the bottom never shows a gap.
@@ -248,7 +275,7 @@ inline void build() {
   drawer = lv_obj_create(root);
   lv_obj_remove_style_all(drawer);
   lv_obj_remove_flag(drawer, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_pos(drawer, 0, H - drawer_h);
+  lv_obj_set_pos(drawer, (glass - W) / 2, H - drawer_h);
   lv_obj_set_size(drawer, W, drawer_h + below);
   lv_obj_set_style_radius(drawer, ui::mm(6), 0);
   lv_obj_set_style_bg_opa(drawer, LV_OPA_COVER, 0);
@@ -272,6 +299,8 @@ inline void build() {
   std::array<Placement, TILES_MAX> placement;
   place(model, placement);
   const int current = shown_page ? *shown_page : 0;
+  // Where the page on the glass stands among them; a page the Dock leaves out opens it at the start.
+  const int at = static_cast<int>(std::find(shown.begin(), shown.end(), current) - shown.begin()) % std::max(1, pages);
   // Each view is a drawer's width, so a sideways swipe stops at the next one; its pages fill it row by row.
   std::vector<lv_obj_t *> items;
   for (int v = 0; v < views; ++v) {
@@ -283,7 +312,7 @@ inline void build() {
     lv_obj_set_pos(view, v * W, 0);
     lv_obj_set_size(view, W, band);
     for (int k = 0; k < per_view && v * per_view + k < pages; ++k) {
-      const int page = v * per_view + k, col = k % cols, row = k / cols;
+      const int page = shown[v * per_view + k], col = k % cols, row = k / cols;
       auto *item = lv_obj_create(view);
       lv_obj_remove_style_all(item);
       lv_obj_remove_flag(item, LV_OBJ_FLAG_SCROLLABLE);
@@ -291,9 +320,8 @@ inline void build() {
       lv_obj_set_pos(item, pad + col * (item_w + gap), row * (item_h + gap));
       lv_obj_set_size(item, item_w, item_h);
       lv_obj_set_style_radius(item, ui::mm(3), 0);
-      lv_obj_set_style_bg_color(item, theme::color(theme::CARD_PRESSED), 0);
-      lv_obj_set_style_bg_opa(item, page == current ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
-      lv_obj_set_style_bg_opa(item, LV_OPA_COVER, LV_STATE_PRESSED);
+      // Under a finger the page dims a little; the page on the glass has its ring and its name in the accent.
+      lv_obj_set_style_opa(item, LV_OPA_60, LV_STATE_PRESSED);
       lv_obj_add_event_cb(item, pick, LV_EVENT_CLICKED, reinterpret_cast<void *>(static_cast<intptr_t>(page)));
       auto *pic = lv_obj_create(item);
       lv_obj_remove_style_all(pic);
@@ -301,20 +329,20 @@ inline void build() {
       lv_obj_remove_flag(pic, LV_OBJ_FLAG_SCROLLABLE);
       lv_obj_set_pos(pic, inset, inset);
       lv_obj_set_size(pic, pic_w, pic_h);
-      picture(pic, page, pic_w, pic_h, placement);
+      picture(pic, page, pic_w, pic_h, placement, page == current);
       auto *name = lv_label_create(item);
       lv_label_set_text(name, model.title_of(page).c_str());
       lv_label_set_long_mode(name, LV_LABEL_LONG_MODE_DOTS);
       // One line, its end dotted: LVGL dots a label only when its height is fixed.
       lv_obj_set_size(name, item_w - 2 * inset, line);
       lv_obj_set_style_text_align(name, LV_TEXT_ALIGN_CENTER, 0);
-      lv_obj_set_style_text_font(name, label_font, 0);
-      lv_obj_set_style_text_color(name, theme::color(theme::INK), 0);
+      lv_obj_set_style_text_font(name, small_font, 0);
+      lv_obj_set_style_text_color(name, theme::color(page == current ? theme::ACCENT : theme::INK), 0);
       lv_obj_set_pos(name, inset, inset + pic_h + ui::mm(1));
       items.push_back(item);
     }
   }
-  const int first_view = std::min(current / per_view, views - 1);
+  const int first_view = std::min(at / per_view, std::max(0, views - 1));
   if (views > 1) {
     dots = lv_obj_create(drawer);
     lv_obj_remove_style_all(dots);
@@ -334,14 +362,16 @@ inline void build() {
   animate(root, set_bg_opa, LV_OPA_TRANSP, DIM, DIM_MS, 0, lv_anim_path_ease_out);
   animate(drawer, set_rise, drawer_h, 0, RISE_MS, 0, lv_anim_path_overshoot);
   for (size_t i = 0; i < items.size(); ++i) {
-    const int page = static_cast<int>(i);
-    const uint32_t delay = 80 + ITEM_STEP_MS * static_cast<uint32_t>(std::abs(page - first_view * per_view));
+    const int k = static_cast<int>(i);
+    const uint32_t delay = 80 + ITEM_STEP_MS * static_cast<uint32_t>(std::abs(k - first_view * per_view));
     animate(items[i], set_rise, ui::mm(3), 0, ITEM_MS, delay, lv_anim_path_ease_out);
     animate(items[i], set_opa, LV_OPA_TRANSP, LV_OPA_COVER, ITEM_MS, delay, lv_anim_path_ease_out);
   }
+  return true;
 }
 
-inline void show() {
+// Whether the Dock opened: with every page left out of it, the caller goes home instead.
+inline bool show() {
   static bool hooked = false;
   if (!hooked) {
     hooked = true;
@@ -352,7 +382,7 @@ inline void show() {
   }
   settings_screen::close();
   if (dismiss) dismiss();
-  build();
+  return build();
 }
 }  // namespace dock
 #endif

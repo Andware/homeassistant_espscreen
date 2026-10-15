@@ -3342,6 +3342,8 @@
       "start_fresh_confirm": "Iniziare con una pagina vuota su questo schermo? Il layout originale rimane nel backup di migrazione. Gli altri schermi non cambiano.",
       "offline_notice": "In attesa che lo schermo si riconnetta. L’editor usa le ultime funzionalità verificate.",
       "include_navigation_hint": "Se disattivato, i collegamenti diretti aprono comunque questa pagina. Indietro appare nella barra inferiore o sostituisce Home se la barra è nascosta.",
+      "show_in_dock": "Mostra nel Dock",
+      "show_in_dock_hint": "Il Dock si apre scorrendo verso l'alto dal bordo inferiore e mostra ogni pagina per raggiungerla. Disattivato: questa pagina non compare.",
       "home_control": "Mostra un pulsante Home su questa pagina",
       "clock_control": "Ora",
       "edit_topbar": "Modifica la barra superiore di questa pagina",

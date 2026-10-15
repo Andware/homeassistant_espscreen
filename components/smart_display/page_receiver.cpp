@@ -311,6 +311,7 @@ std::string receive(const std::string &payload) {
         next.title = string(root["title"], 96);
         next.home_control = root["home_control"].as<bool>();
         next.excluded = root["excluded"].as<bool>();
+        if (root["dock"].is<bool>()) next.dock = root["dock"].as<bool>();
         if (!transfer.page(index)) return false;
         model.page_data.records[index] = std::move(next);
       } else {

@@ -3342,6 +3342,8 @@
       "start_fresh_confirm": "Zacząć od jednej pustej strony na tym ekranie? Oryginalny układ pozostaje w kopii migracji. Pozostałe ekrany nie zmienią się.",
       "offline_notice": "Oczekiwanie na ponowne połączenie ekranu. Edytor używa ostatnio sprawdzonych możliwości.",
       "include_navigation_hint": "Po wyłączeniu stronę nadal otwierają bezpośrednie linki. Wstecz pojawia się na dolnym pasku lub zastępuje przycisk strony głównej, gdy pasek jest ukryty.",
+      "show_in_dock": "Pokaż w Docku",
+      "show_in_dock_hint": "Dock otwiera się przesunięciem w górę od dolnej krawędzi i pokazuje każdą stronę, by do niej przejść. Wyłączone: tej strony w nim nie ma.",
       "home_control": "Pokaż przycisk strony głównej na tej stronie",
       "clock_control": "Godzina",
       "edit_topbar": "Edytuj górny pasek tej strony",

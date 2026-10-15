@@ -139,6 +139,23 @@ class PageLayoutTests(unittest.TestCase):
             if order != (0, 1, 2):
                 self.assertNotEqual(fingerprint(layout), revision)
 
+    def test_show_in_dock_is_optional_and_changes_no_tile(self):
+        # The Dock (docs/MODULES.md): a page without showInDock is in it, a saved document needs no migration, and the
+        # key changes the document's revision but no tile.
+        record = self.migrate({"title": "Screen", "pages": 2, "tiles": [{"entity": "screen.page_2"}]})
+        layout = record["layout"]
+        before = compile_tiles(layout, Grid())
+        revision = fingerprint(layout)
+        layout["pages"][1]["navigation"]["showInDock"] = False
+        validate_document(layout, Grid())
+        self.assertEqual(compile_tiles(layout, Grid()), before)
+        self.assertNotEqual(fingerprint(layout), revision)
+        for wrong in ("no", 0, None):
+            broken = deepcopy(layout)
+            broken["pages"][1]["navigation"]["showInDock"] = wrong
+            with self.assertRaises(LayoutError):
+                validate_document(broken, Grid())
+
     def test_exclusion_changes_only_the_sequential_route(self):
         record = self.migrate({"title": "Screen", "pages": 5, "tiles": [{"entity": "screen.page_5"}]})
         layout = record["layout"]

@@ -101,7 +101,8 @@ export type PageTile = {
 };
 export type Page = {
   id: string;
-  navigation: { excludeFromPagination: boolean };
+  // showInDock: whether the Dock of a larger board shows the page (docs/MODULES.md); left out, it does.
+  navigation: { excludeFromPagination: boolean; showInDock?: boolean };
   topbar: {
     leading: { id: string; kind: "home" }[];
     title: { source: "screen" } | { source: "text"; text: string };
@@ -243,6 +244,8 @@ export type Screen = {
   firmware_image?: { size: number; slot: number } | null;
   // Whether it has a battery the top bar can show (app 0.4.68, firmware 0.41.0): its hello said so, or its board has one.
   battery?: boolean;
+  // Whether its board has the Dock (boards.json `modules`, docs/MODULES.md): a page then offers Show in Dock.
+  dock?: boolean;
   /** Streams a camera live (a P4 whose hello says `live`, or such a board while it is offline): Live is a camera tile's
    * first and default pace there (app dev). */
   live_camera?: boolean;

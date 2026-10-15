@@ -3342,6 +3342,8 @@
       "start_fresh_confirm": "Mit einer leeren Seite auf diesem Bildschirm beginnen? Das ursprüngliche Layout bleibt in der Migrationssicherung erhalten. Andere Bildschirme bleiben unverändert.",
       "offline_notice": "Warten auf die erneute Verbindung des Bildschirms. Der Editor verwendet die zuletzt geprüften Funktionen.",
       "include_navigation_hint": "Wenn ausgeschaltet, bleibt die Seite über direkte Links erreichbar. Zurück erscheint unten oder ersetzt das Haus, wenn die untere Leiste ausgeblendet ist.",
+      "show_in_dock": "Im Dock anzeigen",
+      "show_in_dock_hint": "Das Dock öffnet sich mit einem Wisch vom unteren Rand nach oben und zeigt jede Seite zum Springen. Aus: Diese Seite fehlt darin.",
       "home_control": "Startseiten-Schaltfläche auf dieser Seite anzeigen",
       "clock_control": "Uhrzeit",
       "edit_topbar": "Kopfleiste dieser Seite bearbeiten",

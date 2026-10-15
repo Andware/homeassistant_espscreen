@@ -15,7 +15,7 @@ import SwitchRow from "./ui/SwitchRow.vue";
 import HelpTip from "./HelpTip.vue";
 import { useScreenStore } from "../stores/screen";
 import { useTopbarStore } from "../stores/topbar";
-import { duplicateEditorPage, pageCopyable, pageTitleShown, movePage, pageTitle, removePage, screenTitle, setHomePage, setPageExcluded, setPageHomeControl, setPageTitle, setScreenTitle } from "../editor/pages";
+import { duplicateEditorPage, pageCopyable, pageTitleShown, movePage, pageTitle, removePage, screenTitle, setHomePage, setPageExcluded, setPageHomeControl, setPageInDock, setPageTitle, setScreenTitle } from "../editor/pages";
 import { useDocumentStore } from "../stores/document";
 import { useInspectorStore } from "../stores/inspector";
 
@@ -88,6 +88,9 @@ const tiles = computed(() => page.value?.tiles.length || 0);
         </div>
         <SwitchRow class="page-check" :label="t('editor.pages.include_navigation')" :description="t('editor.pages.include_navigation_hint')"
           :model-value="!page.navigation.excludeFromPagination" :disabled="!scr.pageReady" @update:model-value="(on) => setPageExcluded(id, !on)" />
+        <SwitchRow v-if="scr.currentScreen?.dock && !page.navigation.excludeFromPagination" class="dock-check" :label="t('editor.pages.show_in_dock')"
+          :description="t('editor.pages.show_in_dock_hint')" :model-value="page.navigation.showInDock !== false" :disabled="!scr.pageReady"
+          @update:model-value="(on) => setPageInDock(id, on)" />
         <SwitchRow class="home-control" :label="t('editor.pages.home_control')"
           :model-value="!!page.topbar.leading.length" :disabled="!scr.pageReady" @update:model-value="(on) => setPageHomeControl(id, on)" />
         <div v-if="count > 1" class="f">

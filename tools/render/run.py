@@ -392,6 +392,10 @@ class Run:
             await self.until(lambda l: 'edge swipe up: close everything' in l, 6, 'swipe up on a lite board never went home', start)
             return
         await self.until(lambda l: 'edge swipe up: dock' in l, 6, 'swipe up never opened the dock', start)
+        # Every page but the one left out (a large grid may hold fewer than eight pages of the demo's tiles).
+        shows = next((re.search(r'shows (\d+) of (\d+) pages', l) for l in self.lines[start:] if re.search(r'shows \d+ of \d+ pages', l)), None)
+        if not shows or int(shows[1]) != int(shows[2]) - 1:
+            self.failures.append(f'dock: the page left out of it still counts ({shows[0] if shows else "no count logged"})')
         # The way in, as it moves: snapshots as fast as the host takes them, made into dock-open.gif.
         frames, clock = [], time.monotonic()
         while time.monotonic() - clock < 1.0:
@@ -412,8 +416,8 @@ class Run:
         await self.finger(up)
         await self.until(lambda l: 'edge swipe up: dock' in l, 6, 'swipe up never opened the dock again', start)
         await asyncio.sleep(0.8)
-        # From low in the Dock (a single row of pages still reaches above 0.84 of the glass) to the bottom edge.
-        grip = [(width // 2, int(height * 0.84) + int(height * 0.155 * i / 20)) for i in range(21)]
+        # From low in the Dock (a single row of pages still reaches above 0.78 of the glass) to the bottom edge.
+        grip = [(width // 2, int(height * 0.78) + int(height * 0.215 * i / 20)) for i in range(21)]
         start = len(self.lines)
         await self.finger(grip, step=0.02)  # a hand's pace: some 0.4 s, which every board's touch read follows
         await self.until(lambda l: 'dock: dragged away' in l, 6, 'a drag down never closed the drawer', start)
@@ -2875,7 +2879,7 @@ class Run:
         if self.only != 'plugin':
             await self.render('starting')
         # Each step of it as the screen says it (firmware 0.38.0), from Wi-Fi to an update, then back as it was.
-        if 'render_boot' in self.services and self.only != 'plugin':
+        if 'render_boot' in self.services and self.only not in ('plugin', 'dock'):  # the Dock's round needs no boot screens
             for name, given in BOOT_STATES:
                 await self.call('render_boot', **{**BOOT_DEFAULTS, **given})
                 await self.render(name)
@@ -2886,6 +2890,8 @@ class Run:
         many = self.only == 'dock'  # every page the screen holds, to see the dock full
         record, values, bars, region = send_layout.configuration(grid, now=MOMENT, titles=DOCK_TITLES if many else PAGE_TITLES,
                                                                  pages=len(DOCK_TITLES) if many else None)
+        if many:  # the third page left out of the Dock in its page settings: the Dock shows the other seven
+            record['layout']['pages'][2]['navigation']['showInDock'] = False
         self.sender = send_layout.api_sender(self.client, services)
         await self.sender.synchronize(self.inbox.object_id, record, region, values, bars)
         tiles = len(values)

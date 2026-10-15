@@ -3342,6 +3342,8 @@
       "start_fresh_confirm": "Começar com uma página vazia neste ecrã? A disposição original permanece na cópia de migração. Os outros ecrãs não são alterados.",
       "offline_notice": "A aguardar que o ecrã volte a ligar. O editor usa as últimas capacidades verificadas.",
       "include_navigation_hint": "Se estiver desligado, as ligações diretas continuam a abrir esta página. Voltar aparece na barra inferior ou substitui Início se a barra estiver oculta.",
+      "show_in_dock": "Mostrar na Dock",
+      "show_in_dock_hint": "A Dock abre ao deslizar para cima a partir da borda inferior e mostra cada página para saltar para ela. Desligado: esta página fica de fora.",
       "home_control": "Mostrar um botão de início nesta página",
       "clock_control": "Hora",
       "edit_topbar": "Editar a barra superior desta página",

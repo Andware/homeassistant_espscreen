@@ -733,6 +733,11 @@ def has_battery(screen, said=()):
         return True
     return bool(SHAPES.get(board_of(screen), {}).get('battery'))
 
+def has_module(screen, name):
+    """Whether this screen's board has the firmware module `name` (docs/MODULES.md): boards.json's `modules`, worked
+    out from the board's flash as the firmware does. A board this app does not know has none."""
+    return name in SHAPES.get(board_of(screen), {}).get('modules', ())
+
 def dimmable(screen):
     """Whether this screen's backlight takes levels: no normal brightness without it, and standby and night as the
     switch they really are."""

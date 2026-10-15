@@ -38,7 +38,7 @@ export function validatePageShape(layout: PageLayout, plugins = false) {
   if (!Array.isArray(layout.pages)) fail();
   for (const page of layout.pages) {
     fields(page, ['id', 'navigation', 'topbar', 'tiles']);
-    fields(page.navigation, ['excludeFromPagination']);
+    fields(page.navigation, ['excludeFromPagination', 'showInDock'], ['excludeFromPagination']);
     const bar = page.topbar;
     fields(bar, ['leading', 'title', 'trailing']);
     fields(bar.title, bar.title?.source === 'screen' ? ['source'] : ['source', 'text']);

@@ -76,6 +76,10 @@ def page_message(page, index, items, *, initial):
         title = page["topbar"]["title"]
         message.update(id=page["id"], title=title.get("text", "") if title["source"] == "text" else "",
                        home_control=bool(page["topbar"]["leading"]), excluded=page["navigation"]["excludeFromPagination"])
+        # Only a page the Dock leaves out says so: every other page message stays as it was, and firmware from before
+        # the Dock reads past the key.
+        if page["navigation"].get("showInDock") is False:
+            message["dock"] = False
     return message
 
 

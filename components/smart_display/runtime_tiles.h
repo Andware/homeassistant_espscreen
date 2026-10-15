@@ -12613,10 +12613,9 @@ inline void edge_move(int x, int y) {
   if (gesture == Gesture::home) {
 #ifdef SD_MOD_DOCK
     // Full: up from the bottom opens the dock, over whatever is open, once the pages are there to show.
-    if (navigation_ready()) {
+    if (navigation_ready() && dock::show()) {
       ESP_LOGI("touch", "edge swipe up: dock");
       swipe_glow(Edge::bottom);
-      dock::show();
       return;
     }
 #endif

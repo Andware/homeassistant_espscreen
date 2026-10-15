@@ -57,6 +57,15 @@ export function connectTile(tileId: string, target: string | "home") {
 export function setPageExcluded(id: string, excluded: boolean) {
   return useDocumentStore().editDocument((draft) => { const page = draft.pages.find((item) => item.id === id); if (page) page.navigation.excludeFromPagination = excluded; });
 }
+// The Dock shows a page unless it says otherwise; shown again, the key goes, so the document stays as it was.
+export function setPageInDock(id: string, shown: boolean) {
+  return useDocumentStore().editDocument((draft) => {
+    const page = draft.pages.find((item) => item.id === id);
+    if (!page) return;
+    if (shown) delete page.navigation.showInDock;
+    else page.navigation.showInDock = false;
+  });
+}
 // A full copy of a page puts its tiles on the screen twice: a page tile when the firmware takes that (0.2.65), any other
 // entity from 0.16.0, but never a clock with keys, which is on a screen once.
 export function pageCopyable(page: PageTile[] | undefined) {

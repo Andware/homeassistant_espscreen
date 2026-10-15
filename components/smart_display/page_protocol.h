@@ -80,6 +80,9 @@ struct Page {
   header_bar::Bar bar;
   bool home_control = false;
   bool excluded = false;
+  // Whether the Dock shows it (module dock, docs/MODULES.md): `"dock": false` in its page message hides it, and a
+  // message without the key, from an app before it, shows it.
+  bool dock = true;
 };
 
 struct Pages {

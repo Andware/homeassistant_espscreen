@@ -447,8 +447,9 @@ def validate_document(data, grid):
     if not isinstance(data["homePageId"], str) or data["homePageId"] not in page_ids:
         raise LayoutError(t('addon.errors.pages.home_invalid'))
     for page in pages:
-        navigation = _object(page["navigation"], {"excludeFromPagination"}, {"excludeFromPagination"})
-        if type(navigation["excludeFromPagination"]) is not bool:
+        # showInDock (the Dock of the larger boards, docs/MODULES.md) is optional: a page without it is in the Dock.
+        navigation = _object(page["navigation"], {"excludeFromPagination", "showInDock"}, {"excludeFromPagination"})
+        if type(navigation["excludeFromPagination"]) is not bool or type(navigation.get("showInDock", True)) is not bool:
             raise LayoutError(t('addon.errors.pages.navigation'))
         bar = _object(page["topbar"], {"leading", "title", "trailing"}, {"leading", "title", "trailing"})
         title = _object(bar["title"], {"source", "text"}, {"source"})

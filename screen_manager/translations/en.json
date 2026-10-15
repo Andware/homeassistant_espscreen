@@ -2983,6 +2983,8 @@
       "start_fresh_confirm": "Start with one empty page on this screen? The original layout remains in the migration backup. Other screens are unchanged.",
       "offline_notice": "Waiting for the screen to reconnect. Editing uses its last verified capabilities.",
       "include_navigation_hint": "When off, direct links still open this page. Back appears in the bottom bar, or replaces Home when that bar is hidden.",
+      "show_in_dock": "Show in Dock",
+      "show_in_dock_hint": "The Dock opens with a swipe up from the bottom edge and shows every page to jump to. When off, this page is left out of it.",
       "home_control": "Show a Home control on this page",
       "clock_control": "Time",
       "edit_topbar": "Edit this page’s top bar",
