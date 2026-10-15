@@ -48,6 +48,8 @@ the add-on and the editor offer a module's options only on boards that have it.
 
 - **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
   wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.
+  The drawer rides on the finger that opens it: its top stays under the finger until it lets go, and then a flick, or
+  more than a quarter of the drawer in view, opens it the rest of the way; less, or a flick down, lets it fall back.
   Sideways leafs through the pages when they do not all fit, a tap goes to a page, a tap above the Dock or a drag
   down closes it, and a second swipe up goes home. A page's **Show in Dock** setting (`navigation.showInDock` in the page document, on unless set
   off) leaves it out, and a page left out of swiping is never in it; its page message says `"dock": false` only for

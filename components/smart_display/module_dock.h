@@ -22,9 +22,11 @@ inline lv_obj_t *root = nullptr;
 // The drawer on its way out: it slides down, then goes. A new swipe up meanwhile deletes it at once.
 inline lv_obj_t *leaving = nullptr;
 inline lv_obj_t *drawer = nullptr, *strip = nullptr, *dots = nullptr;
-inline int drawer_h = 0, views = 1, glass_w = 0;
+inline int drawer_h = 0, views = 1, glass_w = 0, below = 0;
 
 constexpr uint32_t RISE_MS = 380, ITEM_MS = 260, ITEM_STEP_MS = 30, DIM_MS = 220, LEAVE_MS = 220, BACK_MS = 240;
+// After a finger let go of a drawer it carried up: the rest of the way, at most this long for the whole drawer.
+constexpr uint32_t SETTLE_MS = 260;
 constexpr lv_opa_t DIM = LV_OPA_50;
 
 inline bool open() { return root != nullptr; }
@@ -58,8 +60,20 @@ inline void drop_leaving() {
   lv_obj_delete(leaving);
   leaving = nullptr;
 }
+// The finger that opened the Dock from the bottom edge carries the drawer for the rest of its touch: the drawer's top
+// stays under it, as a phone's sheet does, instead of rising by itself once the swipe was recognised. Fed from the
+// touchscreen's own reports (touch_input::edge_move), not from LVGL, which waits for the release after an edge swipe.
+struct Lift {
+  bool on = false;
+  int start_y = 0, last_y = 0, speed = 0;  // speed in px a second, down positive
+  uint32_t last_ms = 0;
+};
+inline Lift lift;
+inline bool lifting() { return lift.on && drawer; }
+
 // Down and off the glass from wherever the drawer is now (a drag may have taken it part of the way), the dim with it.
 inline void close() {
+  lift.on = false;
   if (!root) return;
   drop_leaving();
   leaving = root;
@@ -143,6 +157,38 @@ inline void on_drag(lv_event_t *e) {
     animate(drawer, set_rise, drag.offset, 0, BACK_MS, 0, lv_anim_path_ease_out);
     animate(root, set_bg_opa, lv_obj_get_style_bg_opa(root, LV_PART_MAIN), DIM, BACK_MS, 0, lv_anim_path_ease_out);
   }
+}
+
+// The drawer's top at the finger: as much of it shows as the finger has come up from where it touched. Past fully open
+// it gives a third of the way, no further than the part below the glass reaches.
+inline void lift_to(int y) {
+  const int rest = drawer_h - (lift.start_y - y);
+  const int rise = rest >= 0 ? std::min(rest, drawer_h) : -std::min(below, -rest / 3);
+  lv_obj_set_style_translate_y(drawer, rise, 0);
+}
+inline void lift_move(int y) {
+  if (!lifting()) return;
+  const uint32_t now = lv_tick_get();
+  // Two reports in the same millisecond say nothing about speed; half of the last keeps one quick report from
+  // deciding alone.
+  if (now != lift.last_ms) lift.speed = (lift.speed + (y - lift.last_y) * 1000 / static_cast<int>(now - lift.last_ms)) / 2;
+  lift.last_y = y; lift.last_ms = now;
+  lift_to(y);
+}
+// Let go: a flick up opens it, a flick down closes it, and otherwise more than a quarter in view opens it. The rest of
+// the way takes as long as the part left, so a drawer let go nearly open does not crawl the last millimetres.
+inline void lift_release() {
+  if (!lifting()) { lift.on = false; return; }
+  lift.on = false;
+  const int rise = lv_obj_get_style_translate_y(drawer, LV_PART_MAIN), flick = ui::mm(50);
+  if (lift.speed > flick || (lift.speed > -flick && rise > drawer_h * 3 / 4)) {
+    ESP_LOGI("touch", "dock: let go at %d of %d px (%d px/s), closes", drawer_h - rise, drawer_h, lift.speed);
+    close();
+    return;
+  }
+  ESP_LOGI("touch", "dock: let go at %d of %d px (%d px/s), opens", drawer_h - rise, drawer_h, lift.speed);
+  const uint32_t ms = std::max<uint32_t>(120, SETTLE_MS * static_cast<uint32_t>(std::abs(rise)) / std::max(1, drawer_h));
+  animate(drawer, set_rise, rise, 0, ms, 0, lv_anim_path_ease_out);
 }
 
 inline void pick(lv_event_t *e) {
@@ -239,7 +285,7 @@ inline void icon_picture(lv_obj_t *parent, uint32_t icon, int w, int h, bool her
   }
 }
 
-inline bool build() {
+inline bool build(bool finger) {
   drop_leaving();
   root = lv_obj_create(lv_layer_top());
   lv_obj_remove_style_all(root);
@@ -290,7 +336,7 @@ inline bool build() {
   const int rows = rows_of(cols), band = rows * item_h + (rows - 1) * gap;
   drawer_h = drawer_of(cols);
   // The drawer reaches below the glass by its corner and the overshoot's way, so the bottom never shows a gap.
-  const int below = std::max(ui::mm(5), drawer_h / 8);
+  below = std::max(ui::mm(5), drawer_h / 8);
 
   drawer = lv_obj_create(root);
   lv_obj_remove_style_all(drawer);
@@ -380,8 +426,13 @@ inline bool build() {
     lv_obj_scroll_to_x(strip, first_view * W, LV_ANIM_OFF);
   }
 
-  // In: the glass dims, the drawer rises from the bottom edge and settles, its pages follow in reading order.
+  // In: the glass dims, the drawer rises from the bottom edge and settles, its pages follow in reading order. Under a
+  // finger the drawer is where the finger is and its pages are in place already: nothing in it may lag behind it.
   animate(root, set_bg_opa, LV_OPA_TRANSP, DIM, DIM_MS, 0, lv_anim_path_ease_out);
+  if (finger) {
+    lift_to(lift.last_y);
+    return true;
+  }
   animate(drawer, set_rise, drawer_h, 0, RISE_MS, 0, lv_anim_path_overshoot);
   for (size_t i = 0; i < items.size(); ++i) {
     const int k = static_cast<int>(i);
@@ -392,8 +443,10 @@ inline bool build() {
   return true;
 }
 
-// Whether the Dock opened: with every page left out of it, the caller goes home instead.
-inline bool show() {
+// Whether the Dock opened: with every page left out of it, the caller goes home instead. `finger` when a swipe up
+// from the bottom edge opens it: the finger touched at `start_y` at `pressed_ms` and is at `y` now, and carries the
+// drawer from there (lift_move, lift_release).
+inline bool show(bool finger = false, int start_y = 0, int y = 0, uint32_t pressed_ms = 0) {
   static bool hooked = false;
   if (!hooked) {
     hooked = true;
@@ -404,7 +457,18 @@ inline bool show() {
   }
   settings_screen::close();
   if (dismiss) dismiss();
-  return build();
+  lift = Lift{};
+  if (finger) {
+    lift.on = true;
+    lift.start_y = start_y;
+    lift.last_y = y;
+    lift.last_ms = lv_tick_get();
+    // The way so far as the first speed: a quick swipe may be let go before the panel reports again.
+    lift.speed = (y - start_y) * 1000 / std::max(1, static_cast<int>(lift.last_ms - pressed_ms));
+  }
+  if (build(finger)) return true;
+  lift.on = false;
+  return false;
 }
 }  // namespace dock
 #endif
