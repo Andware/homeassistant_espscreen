@@ -3,6 +3,11 @@
 - **Swipe up for every page at once.** On every board with 8 MB of flash or more, a swipe up from the bottom edge now
   opens a window with all pages as small pictures with their names: tap one to go there. The CYD and the other 4 MB
   boards keep going home on that swipe and get none of its code, so their room for updates stays the same.
+- **A wide tile's slider lines up with the tiles above it (#250).** On a tile three cells wide or more, a player's
+  volume, a brightness or a -/+ took only the last cell at the right end, a short slider where the editor showed half
+  the tile. The first cell now keeps the name, as on a tile of one cell, and the control fills every cell after it, on
+  the screen and in the editor, so its edges stand where the tiles above and below have theirs. A tile two cells wide
+  stays as it was. The screen needs this firmware.
 - **Editor: a long list of media players scrolls and has a search.** Adding a player to the screensaver opened a menu
   that ran off the window in a home with many players, and the ones below could not be reached. It now opens a search
   field with a list that scrolls, and typing narrows it by name or area. Every other menu of the editor scrolls when it
