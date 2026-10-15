@@ -239,7 +239,7 @@ What the boards have today:
 |---|---|---|
 | reTerminal D1001 | Volume, Microphone, Wake when moved | `features/audio.yaml`, and the board file for its motion sensor |
 | Waveshare ESP32-P4 86 panel | Volume, Microphone, Microphone gain, Automatic gain, Echo cancellation (AEC transport) | `hardware/wavesharep4-audio/` and the shared audio player |
-| M5Stack Tab5 | Volume, Microphone, Echo cancellation (optional AEC transport, hardware test pending) | `hardware/tab5-audio/` and the shared audio player |
+| M5Stack Tab5 | Volume, Microphone, Echo cancellation (AEC transport) | `hardware/tab5-audio/` and the shared audio player |
 | CrowPanel Advanced 10.1 | Volume, Microphone | `features/audio.yaml` |
 
 A plugin's settings work the same way, from its own ESPHome entities, on its own settings page and in its details on

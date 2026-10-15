@@ -97,9 +97,8 @@ def catalog_of(board, values, lying):
     # A board's extras (docs/SETTINGS.md, "A board's own settings"): the entities of its files, by the name ESPHome gives
     # them in an id ("Wake when moved" is wake_when_moved), that the app shows under Screen settings. One the board's files
     # do not have stops the build of this file.
-    settings_text = '\n'.join(path.read_text() for path in profiles.chain(profiles.BOARDS[board], all_variants=True))
     named = {re.sub(r'[^a-z0-9_-]', '_', name.replace(' ', '_').lower())
-             for name in re.findall(r'(?m)^[ \t]+name:[ \t]*"([^"]+)"', settings_text)}
+             for name in re.findall(r'(?m)^[ \t]+name:[ \t]*"([^"]+)"', text)}
     settings = [str(key) for key in entry.get('settings') or []]
     for key in settings:
         if not re.fullmatch(r'[a-z0-9_]+', key) or key not in named:

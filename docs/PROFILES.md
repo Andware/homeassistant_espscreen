@@ -28,10 +28,10 @@ fails when one is out of date), so neither is edited by hand. The old profiles i
 
 When a board selects a transport through an include such as `audio/${TRANSPORT}.yaml`,
 entry generation also discovers the sibling YAML variants' local components. This
-lets an override enable an optional driver without editing generated entries. The
-settings catalogue likewise checks those variants; a listed setting is available in
-the app only when the installed firmware exposes its entity. Normal profile resolution still follows the default
-transport, and listing an external component does not enable it in the firmware.
+lets an override pick the other transport without editing generated entries. The
+settings in `boards.yaml` are checked against the default files only, so a board lists only the settings its default
+firmware has. Normal profile resolution follows the default transport too, and listing an external component does
+not enable it in the firmware.
 
 A board file reads like this (the 4-inch Guition, without its comments):
 

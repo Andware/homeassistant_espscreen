@@ -29,13 +29,13 @@ class AudioVariants(unittest.TestCase):
             self.assertIn(root / 'shared.yaml', metadata)
             self.assertEqual(profiles.substitutions_of(root / 'board.yaml')['TRANSPORT'], 'i2s')
 
-    def test_tab5_entries_supply_opt_in_drivers_without_selecting_them(self):
-        self.assertEqual(profiles.substitutions('checkout/tab5.yaml')['TAB5_AUDIO_TRANSPORT'], 'i2s')
-        self.assertEqual(profiles.substitutions('checkout/tab5.yaml')['AUDIO_HALF_DUPLEX'], 'true')
+    def test_tab5_takes_echo_cancellation_by_default(self):
+        self.assertEqual(profiles.substitutions('checkout/tab5.yaml')['TAB5_AUDIO_TRANSPORT'], 'aec')
+        self.assertEqual(profiles.substitutions('checkout/tab5.yaml')['AUDIO_HALF_DUPLEX'], 'false')
         self.assertIn('es7210_extended', generate_entries.components('tab5'))
         self.assertIn('esp_aec', generate_entries.components('tab5'))
         default_files = profiles.chain(profiles.BOARDS['tab5'])
-        self.assertNotIn(ROOT / 'packages/hardware/es7210-aec.yaml', default_files)
+        self.assertIn(ROOT / 'packages/hardware/es7210-aec.yaml', default_files)
         self.assertNotIn('esp_aec', generate_entries.components('cyd'))
         self.assertNotIn('es7210_extended', generate_entries.components('cyd'))
 

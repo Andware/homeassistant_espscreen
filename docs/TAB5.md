@@ -54,10 +54,11 @@ Check the USB log and report the firmware and board variant with the results.
 The speaker (an ES8388) and the two microphones (an ES7210) are the screen's audio through `features/audio.yaml`: a
 media player in Home Assistant for announcements, text to speech and music, a **Volume** and a **Microphone** setting
 under Extras (on the screen and in Screen settings), and the speaker and microphone that plugins use, such as the voice
-assistant and Tap sound. As ESPHome's own Tab5 configuration does, both codecs share one I2S bus, which ESPHome lets
-them take in turns, so the board sets `AUDIO_HALF_DUPLEX`: the speaker lets go of the bus after a sound, the amplifier
-(SPK_EN on the first I/O expander) is on only while sound plays, and the microphone lets go of the bus whenever the
-speaker wants it, for any sound, and listens again after.
+assistant and Tap sound. Both codecs share one I2S bus. By default the AEC transport (below) runs it in both directions
+at once, so the microphone keeps listening while the speaker plays. With the plain I2S bus, as ESPHome's own Tab5
+configuration has it, the board sets `AUDIO_HALF_DUPLEX` and they take turns: the speaker lets go of the bus after a
+sound, and the microphone lets go of it whenever the speaker wants it, and listens again after. Either way the
+amplifier (SPK_EN on the first I/O expander) is on only while sound plays.
 The volume runs evenly in decibels from -45 dB to the ES8388's full scale.
 
 Four choices are the Tab5's own, in its audio configuration. At start the board turns on the ES8388's LINE1 output, where the
@@ -66,28 +67,27 @@ hand. The microphones take their gain in the ES7210's analogue stage (30 dB), be
 the right channel with their DC offset removed, as the working Tab5 voice configurations do. The speaker keeps half a
 second of sound in its buffer, so a spoken answer that arrives over the C6's Wi-Fi in bursts plays without gaps.
 
-## Optional echo cancellation
+## Echo cancellation
 
-An experimental AEC transport reuses the Waveshare P4's reviewed ES7210 extension,
+The Tab5 uses an AEC transport by default. It reuses the Waveshare P4's reviewed ES7210 extension,
 Hane's pinned audio stack and Espressif's FD low-cost algorithm. **Hardware acceptance
 is still pending for music playback, cold starts and the enabled/bypassed AEC comparison.**
 A successful compile does not confirm audio quality, acoustic cancellation or
-interruption of a voice assistant. The default remains native I2S.
+interruption of a voice assistant.
 
-With this version of the board packages, select the transport in the screen's
-**Override YAML** and rebuild only that screen:
+To use the plain I2S bus instead, select it in the screen's **Override YAML** and rebuild
+only that screen:
 
 ```yaml
 substitutions:
-  TAB5_AUDIO_TRANSPORT: "aec"
+  TAB5_AUDIO_TRANSPORT: "i2s"
 ```
 
 Keep the screen's own name, Wi-Fi settings and API/update keys. Use the ST7121 profile
-only on that display variant. Return to `"i2s"` and rebuild to remove the AEC stack and
-its DSP libraries entirely. With native I2S, no AEC entity or on-panel row exists;
-the matching editor may list the catalogue setting as unavailable.
+only on that display variant. Plain I2S removes the AEC stack and its DSP libraries
+entirely. It has no Echo cancellation switch, so the editor shows that row as unavailable.
 
-The AEC build adds **Echo cancellation** under Extras on the panel and, with the
+The AEC transport adds **Echo cancellation** under Extras on the panel and, with the
 matching app, under Screen settings. Home Assistant exposes the same switch and an
 **Echo cancellation status** diagnostic. Switching off bypasses cancellation while
 the filter keeps adapting; it is not a CPU-saving mode. "Enabled" reports DSP

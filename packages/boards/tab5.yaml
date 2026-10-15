@@ -9,7 +9,7 @@ packages:
   camera: !include ../features/camera.yaml
   self_test: !include ../features/self-test.yaml
   snapshot: !include ../features/snapshot.yaml
-  # Native I2S remains the default. The optional AEC transport uses the same ESPHome audio endpoints.
+  # Echo cancellation by default (hardware/tab5-audio/aec.yaml); "i2s" in a screen's Override YAML is the plain I2S bus.
   audio: !include ../hardware/tab5-audio/${TAB5_AUDIO_TRANSPORT}.yaml
   audio_amplifier: !include ../features/audio-amplifier.yaml
 
@@ -40,9 +40,10 @@ substitutions:
   TOUCH_TEST_READY_LOG: "ST7121 touch test ready; no tile actions"
 
   # The audio (features/audio.yaml), as ESPHome's own Tab5 configuration and M5Stack's BSP wire it: an ES8388 for the
-  # speaker and an ES7210 for the microphones on one I2S bus, which ESPHome lets them take in turns. The ES8388 turns
-  # ESPHome's volume into its DAC register from -96 dB at 0 to 0 dB at 1, half a decibel a step.
-  TAB5_AUDIO_TRANSPORT: "i2s"
+  # speaker and an ES7210 for the microphones on one I2S bus, both ways at once with echo cancellation by default
+  # (docs/TAB5.md). The ES8388 turns ESPHome's volume into its DAC register from -96 dB at 0 to 0 dB at 1, half a
+  # decibel a step.
+  TAB5_AUDIO_TRANSPORT: "aec"
   AUDIO_MIC_BUS: ts_speaker_bus
   AUDIO_DOUT_PIN: GPIO26
   AUDIO_DIN_PIN: GPIO28
