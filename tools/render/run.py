@@ -95,6 +95,7 @@ ALERT = re.compile(r'alert on=(\d) ' + ' '.join(f'{part}=(-?\\d+),(-?\\d+),(-?\\
                                               for part in ('card', 'frame', 'icon', 'title', 'subtitle', 'button', 'button2')))
 # A page's own title (app 0.2.123): a long one among them, the kind that stood in dots after a page change (GitHub #27).
 PAGE_TITLES = ['Demo cards', 'Living room downstairs', 'Kitchen']
+DOCK_TITLES = ['Home', 'Living room', 'Kitchen', 'Bedroom', 'Garden', 'Climate', 'Media', 'Energy']
 MEDIA = re.compile(r'media open=(\d) back=(\S*) pill=(\S*) libkey=(\S*) knob=(\S*) keys=(\S*) faults=(.*?) \| (.*)$')
 SAVER = re.compile(r'saver dimmed=(\d) keys=(\S*) words_right=(-?\d+)$')
 ALARM = re.compile(r'alarm open=(\d) pad=(\d) back=(\S*) title=\[(.*?)\] status=\[(.*?)\] line=\[(.*?)\] modes=(\S*) keys=(\S*) faults=(.*?) locked=(\d+)$')
@@ -364,37 +365,61 @@ class Run:
             await asyncio.sleep(0.05)
         return seen
 
-    async def page_switcher(self, pages):
-        """Up from the bottom edge (docs/MODULES.md): on a board with the page_switcher module the window with every
-        page opens, is rendered, and a tap beside it leaves the page as it was; on a lite board it goes home."""
+    async def finger(self, points, rest=0.15, step=0.005):
+        """One finger along `points`, resting on the first a moment, `step` seconds between two of them."""
+        await self.call('render_finger', x=points[0][0], y=points[0][1], down=True)
+        await asyncio.sleep(rest)
+        for x, y in points[1:]:
+            await self.call('render_finger', x=x, y=y, down=True)
+            await asyncio.sleep(step)
+        await self.call('render_finger', x=points[-1][0], y=points[-1][1], down=False)
+
+    async def dock(self, pages):
+        """Up from the bottom edge (docs/MODULES.md): on a board with the dock module the drawer with every
+        page opens, is rendered, and a tap above it, or a drag down on it, leaves the page as it was; on a lite board
+        the swipe goes home."""
         shapes = json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board]
         self.client.switch_command(self.swipe_switch.key, True)
         await asyncio.sleep(0.3)
         await self.call('render_page', page=0)
         await self.page_done(0)
-        before = await self.render('_switcher-before', keep=False)
+        before = await self.render('_dock-before', keep=False)
         width, height = self.canvas
-        x, start = width // 2, len(self.lines)
-        points = [int(height * (0.995 - 0.5 * i / 28)) for i in range(29)]
-        await self.call('render_finger', x=x, y=points[0], down=True)
-        await asyncio.sleep(0.15)
-        for y in points[1:]:
-            await self.call('render_finger', x=x, y=y, down=True)
-            await asyncio.sleep(0.005)
-        await self.call('render_finger', x=x, y=points[-1], down=False)
-        if 'page_switcher' not in shapes['modules']:
+        up = [(width // 2, int(height * (0.995 - 0.5 * i / 28))) for i in range(29)]
+        start = len(self.lines)
+        await self.finger(up)
+        if 'dock' not in shapes['modules']:
             await self.until(lambda l: 'edge swipe up: close everything' in l, 6, 'swipe up on a lite board never went home', start)
             return
-        await self.until(lambda l: 'edge swipe up: page switcher' in l, 6, 'swipe up never opened the page switcher', start)
-        await asyncio.sleep(0.6)  # the glow along the bottom edge fades out first
-        await self.render('page-switcher')
-        await self.call('render_finger', x=2, y=height - 2, down=True)
-        await asyncio.sleep(0.1)
-        await self.call('render_finger', x=2, y=height - 2, down=False)
-        await asyncio.sleep(0.3)
-        after = await self.render('_switcher-after', keep=False)
-        if after.tobytes() != before.tobytes():
-            self.failures.append('page switcher: page 1 looks different after a tap beside the window closed it')
+        await self.until(lambda l: 'edge swipe up: dock' in l, 6, 'swipe up never opened the dock', start)
+        # The way in, as it moves: snapshots as fast as the host takes them, made into dock-open.gif.
+        frames, clock = [], time.monotonic()
+        while time.monotonic() - clock < 1.0:
+            frames.append((time.monotonic() - clock, await self.snapshot(self.out / '_frame.ppm')))
+        (self.out / '_frame.ppm').unlink(missing_ok=True)
+        await self.render('dock')
+        if len(frames) > 1:
+            durations = [max(20, int(1000 * (b[0] - a[0]))) for a, b in zip(frames, frames[1:])] + [1200]
+            frames[0][1].save(self.out / 'dock-open.gif', save_all=True, append_images=[f for _, f in frames[1:]],
+                              duration=durations, loop=0)
+        # A tap above the drawer closes it.
+        await self.finger([(width // 2, 4), (width // 2, 4)], rest=0.1)
+        await asyncio.sleep(0.5)
+        if (await self.render('_dock-after', keep=False)).tobytes() != before.tobytes():
+            self.failures.append('dock: page 1 looks different after a tap above the drawer closed it')
+        # Open again, and drag it down: it follows the finger and goes.
+        start = len(self.lines)
+        await self.finger(up)
+        await self.until(lambda l: 'edge swipe up: dock' in l, 6, 'swipe up never opened the dock again', start)
+        await asyncio.sleep(0.8)
+        # From low in the Dock (a single row of pages still reaches above 0.84 of the glass) to the bottom edge.
+        grip = [(width // 2, int(height * 0.84) + int(height * 0.155 * i / 20)) for i in range(21)]
+        start = len(self.lines)
+        await self.finger(grip, step=0.02)  # a hand's pace: some 0.4 s, which every board's touch read follows
+        await self.until(lambda l: 'dock: dragged away' in l, 6, 'a drag down never closed the drawer', start)
+        await asyncio.sleep(0.5)
+        if (await self.render('_dock-dragged', keep=False)).tobytes() != before.tobytes():
+            self.failures.append('dock: page 1 looks different after the drawer was dragged away')
 
     async def moments(self, pages):
         """A page change by a finger, forward and back to page 1, with the title read back in the moment after it."""
@@ -2858,7 +2883,9 @@ class Run:
         side = json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board]['orientations']
         side = side['portrait' if self.item.rotation else 'landscape']
         grid = send_layout.Grid(side['columns'], side['rows'])
-        record, values, bars, region = send_layout.configuration(grid, now=MOMENT, titles=PAGE_TITLES)
+        many = self.only == 'dock'  # every page the screen holds, to see the dock full
+        record, values, bars, region = send_layout.configuration(grid, now=MOMENT, titles=DOCK_TITLES if many else PAGE_TITLES,
+                                                                 pages=len(DOCK_TITLES) if many else None)
         self.sender = send_layout.api_sender(self.client, services)
         await self.sender.synchronize(self.inbox.object_id, record, region, values, bars)
         tiles = len(values)
@@ -2894,13 +2921,13 @@ class Run:
             return 1, await self.weather_panel(grid)
         if self.only == 'calendar':
             return 1, await self.calendar_panel(grid)
-        if self.only == 'switcher':
-            return 1, await self.page_switcher(pages)
+        if self.only == 'dock':
+            return 1, await self.dock(pages)
         if self.only == 'plugin':
             return 1, await self.plugin_round(grid)
         checks = await self.self_test()
         await self.moments(pages)
-        await self.page_switcher(pages)
+        await self.dock(pages)
         for page in range(pages):
             await self.call('render_page', page=page)
             await self.page_done(page)
@@ -2986,7 +3013,7 @@ def main():
     parser.add_argument('--out', type=Path, default=REPO / '.esphome' / 'render' / 'out')
     parser.add_argument('--work', type=Path, help='where the host builds go (default: .esphome/render/build)')
     parser.add_argument('--camera', default='960x540', help='the camera picture of the camera alert, WxH')
-    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'switcher'], help='after the demo layout arrives, run only this stage')
+    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock'], help='after the demo layout arrives, run only this stage')
     parser.add_argument('--plugin', type=Path, help='a plugin folder (docs/PLUGINS.md) to build into the variants, then run the plugin '
                         'round alone: tests/fixtures/plugins/host_probe proves the plugin host on the real firmware')
     parser.add_argument('--port-base', type=int, help='the first API port (default host.PORT_BASE); another worktree may use it')

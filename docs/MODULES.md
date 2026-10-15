@@ -24,7 +24,7 @@ A module is listed in `components/smart_display/modules.py` with the lowest tier
 
 ```python
 MODULES = {
-    "page_switcher": {"min_tier": "full", "define": "SD_MOD_PAGE_SWITCHER"},
+    "dock": {"min_tier": "full", "define": "SD_MOD_DOCK"},
 }
 ```
 
@@ -46,6 +46,6 @@ the add-on and the editor offer a module's options only on boards that have it.
 
 ## The modules
 
-- **page_switcher** (full): up from the bottom edge opens a window with every page as a small picture and its name.
-  A tap goes to that page, a tap beside the window or another swipe up closes it. On lite, up from the bottom goes
-  home.
+- **dock** (full): up from the bottom edge opens the Dock, a drawer along the bottom of the glass with every page as a
+  small picture and its name, in two rows. Sideways leafs through the pages when they do not all fit, a tap goes to
+  a page, and a tap above the Dock or a drag down closes it. On lite, up from the bottom goes home.

@@ -115,7 +115,7 @@ settings, so a new setting never travels in the layout message.
 
 ```cpp
 // settings_screen.h, next to the others
-inline int32_t swipe_pages = 0, rotation = 0, auto_home = 1, auto_home_seconds = 120, dark_mode = 0, page_buttons = 1, beep = 0;
+inline int32_t swipe_pages = 1, rotation = 0, auto_home = 1, auto_home_seconds = 120, dark_mode = 0, page_buttons = 1, beep = 0;
 ```
 
 ### 2. The one write path, and the row

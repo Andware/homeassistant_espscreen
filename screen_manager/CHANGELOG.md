@@ -1,8 +1,12 @@
 ## Unreleased
 
-- **Swipe up for every page at once.** On every board with 8 MB of flash or more, a swipe up from the bottom edge now
-  opens a window with all pages as small pictures with their names: tap one to go there. The CYD and the other 4 MB
-  boards keep going home on that swipe and get none of its code, so their room for updates stays the same.
+- **The Dock: swipe up for every page at once.** On every board with 8 MB of flash or more, a swipe up from the bottom
+  edge now opens the Dock, a drawer with all pages as small pictures with their names, in two rows: tap one to go
+  there, drag it down to close it. The CYD and the other 4 MB boards keep going home on that swipe and get none of
+  its code, so their room for updates stays the same.
+- **Swipe between pages is on for a new screen.** A screen set up from now on can swipe through its pages, open the
+  settings from the top edge and open the Dock from the bottom edge without turning anything on first. A screen you
+  already have keeps the setting it has.
 - **A wide tile's slider lines up with the tiles above it (#250).** On a tile three cells wide or more, a player's
   volume, a brightness or a -/+ took only the last cell at the right end, a short slider where the editor showed half
   the tile. The first cell now keeps the name, as on a tile of one cell, and the control fills every cell after it, on

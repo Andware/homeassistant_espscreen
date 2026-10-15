@@ -935,7 +935,8 @@ SETTING_RULES = {
     'show_clock': (True, None, None),
     'clock_24h': (True, None, None),
     'home_on_standby': (False, None, None),
-    'swipe_pages': (False, None, None),
+    # On for a new screen, as the firmware's own default; a layout that saved it off keeps it off.
+    'swipe_pages': (True, None, None),
     'rotation': (0, 0, 270),
     # Back to page 1 by itself (firmware 0.2.44+): closes an open card and any page but the first
     # after this many seconds without a touch. Older firmware ignores both keys.

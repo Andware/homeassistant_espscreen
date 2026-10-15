@@ -482,7 +482,7 @@ inline void load_settings() {
   numbers_preference = esphome::global_preferences->make_preference<uint32_t>(0x4E554D31);
   uint32_t numbers_saved=0;
   if(numbers_preference.load(&numbers_saved))screen_text_numbers(numbers_saved);
-  uint32_t swipe_saved=0;
+  uint32_t swipe_saved=1;
   if(swipe_preference.load(&swipe_saved))swipe_pages=swipe_saved==1;
   uint32_t dark_saved=0;
   if(dark_preference.load(&dark_saved))settings_screen::dark_mode=dark_saved==1;
@@ -12554,8 +12554,8 @@ inline bool starts_on_control(int x, int y) {
 }  // namespace runtime_tiles
 // The modules of the tier (docs/MODULES.md): only their define brings their code in, so a lite screen has none of it.
 #define SMART_DISPLAY_MODULE_SITE
-#ifdef SD_MOD_PAGE_SWITCHER
-#include "module_page_switcher.h"
+#ifdef SD_MOD_DOCK
+#include "module_dock.h"
 #endif
 #undef SMART_DISPLAY_MODULE_SITE
 namespace runtime_tiles {
@@ -12580,11 +12580,11 @@ inline void edge_move(int x, int y) {
   using Gesture = screen_input::EdgeSwipe::Gesture;
   const auto gesture = screen_input::edge_swipe.update(sx, sy);
   if (gesture == Gesture::none) return;
-#ifdef SD_MOD_PAGE_SWITCHER
-  // While the page switcher is open a page turns only by a tap in it, and up from the bottom closes it again.
-  if (page_switcher::open() && gesture != Gesture::settings) {
+#ifdef SD_MOD_DOCK
+  // While the dock is open a page turns only by a tap in it, and up from the bottom closes it again.
+  if (dock::open() && gesture != Gesture::settings) {
     screen_input::touch_guard.consume();
-    if (gesture == Gesture::home) page_switcher::close();
+    if (gesture == Gesture::home) dock::close();
     return;
   }
 #endif
@@ -12611,12 +12611,12 @@ inline void edge_move(int x, int y) {
   // from a side edge is one page. Either way the edge it came from lights up for a moment, so the gesture is answered
   // before the new page is drawn.
   if (gesture == Gesture::home) {
-#ifdef SD_MOD_PAGE_SWITCHER
-    // Full: up from the bottom opens the page switcher, over whatever is open, once the pages are there to show.
+#ifdef SD_MOD_DOCK
+    // Full: up from the bottom opens the dock, over whatever is open, once the pages are there to show.
     if (navigation_ready()) {
-      ESP_LOGI("touch", "edge swipe up: page switcher");
+      ESP_LOGI("touch", "edge swipe up: dock");
       swipe_glow(Edge::bottom);
-      page_switcher::show();
+      dock::show();
       return;
     }
 #endif

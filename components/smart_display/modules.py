@@ -18,7 +18,7 @@ FULL_FLASH_MB = 8
 # name: the lowest tier that has it, and the define its code is gated by.
 MODULES = {
     # Up from the bottom edge opens a window of every page to pick from; lite goes home as before.
-    "page_switcher": {"min_tier": "full", "define": "SD_MOD_PAGE_SWITCHER"},
+    "dock": {"min_tier": "full", "define": "SD_MOD_DOCK"},
 }
 
 
