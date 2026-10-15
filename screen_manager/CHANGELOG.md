@@ -1,5 +1,9 @@
 ## Unreleased
 
+- **A live camera's top bar goes with it.** On the ESP32-P4 boards the black bar with the back key and the camera's
+  name now and then stayed over the page after the camera full screen closed, until a swipe drew the page again. A
+  camera's pictures are no longer decoded while the screen draws, and once the camera's stream has ended the screen
+  draws the whole page once more.
 - **The Dock: swipe up for every page at once.** On every board with 8 MB of flash or more, a swipe up from the bottom
   edge now opens the Dock, a drawer with all pages as small pictures with their names, in two rows: tap one to go
   there, drag it down to close it, or swipe up once more to go home. The CYD and the other 4 MB boards keep going home on that swipe and get none of
