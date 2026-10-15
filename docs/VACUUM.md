@@ -57,7 +57,8 @@ board) puts the state beside the map and one row of keys under it.
 - `components/smart_display/vacuum_model.h`: the block on the screen and the decisions without LVGL: the keys a robot
   gets, the rooms picked in order and the template for `cleaning_area_id`, floors and pages
   (`tests/test_vacuum_model.cpp`).
-- `components/smart_display/module_vacuum_card.h`: the card of the module `vacuum_card` (docs/MODULES.md): its plan
-  per glass, its views (rooms, routines, suction and water) and the map's picture.
+- `components/smart_display/module_vacuum_card.cpp`: the card of the module `vacuum_card` (docs/MODULES.md), a
+  compilation unit of its own (as media_library.cpp: the S3's literal range): its plan per glass, its views (rooms,
+  routines, suction and water) and the map's picture. `module_vacuum_card.h` is what runtime_tiles.h reaches of it.
 - `tests/test_vacuum_module.py` checks the block and the map; `tools/render/run.py --only vacuum` renders the card in
   every state, with a drawn map or your own (`VACUUM_MAP=<a PNG>`).

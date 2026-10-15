@@ -685,14 +685,8 @@ VACUUM_PROBE = '''    - action: render_vacuum
             using namespace runtime_tiles;
             lv_obj_update_layout(lv_screen_active());
             const bool open = detail_root && !lv_obj_has_flag(detail_root, LV_OBJ_FLAG_HIDDEN);
-            std::string keys;
             #ifdef SD_MOD_VACUUM_CARD
-            for (auto &h : vacuum_card::hits) {
-              if (!h.obj) continue;
-              lv_area_t a; lv_obj_get_coords(h.obj, &a);
-              keys += std::to_string(h.cmd) + "@" + std::to_string((a.x1 + a.x2) / 2) + "," + std::to_string((a.y1 + a.y2) / 2) + ";";
-            }
-            ESP_LOGI("render", "vacuum open=%d view=%d keys=%s", (int) open, (int) vacuum_card::view, keys.c_str());
+            ESP_LOGI("render", "vacuum open=%d %s", (int) open, vacuum_card::describe().c_str());
             #else
             ESP_LOGI("render", "vacuum open=%d view=-1 keys=", (int) open);
             #endif

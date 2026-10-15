@@ -47,7 +47,7 @@ the add-on and the editor offer a module's options only on boards that have it.
 ## The modules
 
 - **vacuum_card** (full): the vacuum card with the robot's map, cleaning per room and the robot's routines
-  (docs/VACUUM.md, `module_vacuum_card.h`). Its screens say `vacuum_card` in their hello and ESP Screens sends them the
+  (docs/VACUUM.md, `module_vacuum_card.cpp` with its header). Its screens say `vacuum_card` in their hello and ESP Screens sends them the
   card's block (`vc`); lite keeps the card it had (`render_vacuum_detail`).
 - **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
   wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.

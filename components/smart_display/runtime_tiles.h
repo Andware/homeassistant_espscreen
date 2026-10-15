@@ -1393,19 +1393,10 @@ inline void lock_card_closed();
 // keypad: it never waits in memory for the next person at the screen.
 inline void colour_close();
 #ifdef SD_MOD_VACUUM_CARD
-// The vacuum card of the module (module_vacuum_card.h), included at the modules' site further down.
-namespace vacuum_card {
-inline void render(Tile &t, lv_obj_t *heading, int width, int height);
-inline bool wide(const Tile &t);
-inline bool handles(int cmd);
-inline void command(Tile &t, int cmd);
-inline bool back();
-inline void picture_want();
-inline bool draws(const lv_image_dsc_t *image);
-inline void forget_pictures();
-inline void card_cleared();
-inline void closed();
-}  // namespace vacuum_card
+// The vacuum card of the module (module_vacuum_card.cpp, a compilation unit of its own).
+}  // namespace runtime_tiles
+#include "module_vacuum_card.h"
+namespace runtime_tiles {
 #endif
 inline void hide_detail(){
   alarm_close_pad();lock_card_closed();
@@ -12611,9 +12602,6 @@ inline bool starts_on_control(int x, int y) {
 #define SMART_DISPLAY_MODULE_SITE
 #ifdef SD_MOD_DOCK
 #include "module_dock.h"
-#endif
-#ifdef SD_MOD_VACUUM_CARD
-#include "module_vacuum_card.h"
 #endif
 #undef SMART_DISPLAY_MODULE_SITE
 namespace runtime_tiles {
