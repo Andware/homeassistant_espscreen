@@ -8,8 +8,9 @@
   view. The keys follow what the robot can do, an error says why, and while it cleans you see the room and how far it
   is. The CYD and the other 4 MB boards keep the card they had.
 - **Tap sound clicks as your finger lands.** With the Tap sound plugin the click now comes the moment a finger touches
-  a tile, a key, a slider or a row of the settings, instead of after you let go. Dragging a slider clicks softly at
-  every step: every 5 %, or every position of a slider with only a few. A push that wakes a dimmed screen and a touch
+  a tile, a key, a slider or a row of the settings, instead of after you let go. Dragging a slider, a cover's
+  position or a player's seek bar clicks softly at every step, evenly spaced however fast you drag: every 5 %, or every
+  position of a slider with only a few. A push that wakes a dimmed screen and a touch
   between the tiles stay silent. Plugins get this as `on_press` and `on_step` (plugin API 0.11).
 - **A live camera's top bar goes with it.** On the ESP32-P4 boards the black bar with the back key and the camera's
   name now and then stayed over the page after the camera full screen closed, until a swipe drew the page again. A

@@ -6,7 +6,9 @@
 //
 // The choices of the board's hardware (which touch panel, how the backlight dims, what a feature does at boot) stay
 // substitutions: exactly one package of a board gives each.
+#include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <vector>
 
@@ -48,10 +50,39 @@ inline std::vector<std::function<void()>> &pressed() {
   static std::vector<std::function<void()>> list;
   return list;
 }
-// A dragged slider or dial passed a step (screen_input::step_of), at most every STEP_GAP_MS.
+// A dragged slider or dial passed a step (screen_input::step_of): once for every step it passed, at most two at once.
 inline std::vector<std::function<void()>> &stepped() {
   static std::vector<std::function<void()>> list;
   return list;
+}
+inline void run_stepped() {
+  for (auto &f : stepped()) f();
+}
+// Where a dragged control is: `control` names it (its object), `step` is the step its value is on now. A control's first
+// call after a finger landed (drag_begin) only says where it starts, so a slider that jumps to the finger is no run of
+// steps; after that every step passed reaches stepped(), two at most, as a detent clicks once however fast it turns.
+// LVGL's sliders and dials come here through plugin_host.cpp; a control the core drags itself (a player's seek bar) calls
+// it from its own handler. Without a plugin that listens, nothing is kept.
+struct DragSteps {
+  const void *control = nullptr;
+  int step = 0;
+};
+inline DragSteps &drag_steps() {
+  static DragSteps steps;
+  return steps;
+}
+inline void drag_begin() { drag_steps().control = nullptr; }
+inline void drag_at(const void *control, int step) {
+  if (stepped().empty()) return;
+  auto &d = drag_steps();
+  if (d.control != control) {
+    d.control = control;
+    d.step = step;
+    return;
+  }
+  const int passed = std::min(2, std::abs(step - d.step));
+  d.step = step;
+  for (int i = 0; i < passed; ++i) run_stepped();
 }
 // When no press is heard: the push that wakes a dimmed screen, a calibration (core.yaml sets it at boot).
 inline bool (*presses_quiet)() = nullptr;

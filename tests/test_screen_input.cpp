@@ -27,6 +27,25 @@ int main() {
   assert(screen_input::step_of(190, 160, 300) == 4);
   assert(screen_input::step_of(500, 160, 300) == 20);
   assert(screen_input::step_of(7, 7, 7) == 0);
+  // A cover's slider runs the other way round (1000 at the top, a stub below 0): its steps are counted all the same.
+  assert(screen_input::step_of(500, 1000, -60) == 10);
+  assert(screen_input::step_of(1000, 1000, -60) == 20);
+  // A drag's steps (screen_hooks::drag_at): the first call after a landing only marks the start; then every step passed
+  // counts, two at most at once.
+  {
+    int steps = 0;
+    screen_hooks::stepped().push_back([&steps]() { ++steps; });
+    int control = 0;
+    screen_hooks::drag_begin();
+    screen_hooks::drag_at(&control, 9); assert(steps == 0);   // the slider jumped to the finger
+    screen_hooks::drag_at(&control, 10); assert(steps == 1);
+    screen_hooks::drag_at(&control, 10); assert(steps == 1);
+    screen_hooks::drag_at(&control, 8); assert(steps == 3);   // back two steps
+    screen_hooks::drag_at(&control, 2); assert(steps == 5);   // six at once: two clicks
+    screen_hooks::drag_begin();
+    screen_hooks::drag_at(&control, 15); assert(steps == 5);  // a new touch starts again
+    screen_hooks::stepped().clear();
+  }
   // -/+ keys: quick successive taps on the same key all count; bounce within 150 ms does not.
   screen_input::TouchGuard r;
   r.begin(1000); assert(r.accept_repeat(1060, 7)); assert(!r.accept_repeat(1070, 7));  // one contact, one step
