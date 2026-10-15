@@ -49,6 +49,10 @@ the add-on and the editor offer a module's options only on boards that have it.
 - **vacuum_card** (full): the vacuum card with the robot's map, cleaning per room and the robot's routines
   (docs/VACUUM.md, `module_vacuum_card.cpp` with its header). Its screens say `vacuum_card` in their hello and ESP Screens sends them the
   card's block (`vc`); lite keeps the card it had (`render_vacuum_detail`).
+- **cover_groups** (full): a cover group's page, a card per cover (`module_cover_groups.h`, included by
+  `group_page.h`), behind a key on the group's cover card where a light group's lamps key stands (docs/RESPONSIVE.md,
+  "A cover's controls by its room"). Its screens say `group_covers` in their hello and ESP Screens sends them the
+  group's covers (`covers`, `cover_groups.py`); lite keeps the cover card alone.
 - **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
   wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.
   The drawer rides on the finger that opens it: its top stays under the finger until it lets go, and then a flick, or

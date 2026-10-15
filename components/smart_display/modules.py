@@ -21,6 +21,8 @@ MODULES = {
     "dock": {"min_tier": "full", "define": "SD_MOD_DOCK"},
     # The vacuum card with its map, its rooms and its routines; lite keeps the card it had.
     "vacuum_card": {"min_tier": "full", "define": "SD_MOD_VACUUM_CARD"},
+    # A cover group's page, a card per cover, behind a key on its card; lite keeps the cover card alone.
+    "cover_groups": {"min_tier": "full", "define": "SD_MOD_COVER_GROUPS"},
 }
 
 

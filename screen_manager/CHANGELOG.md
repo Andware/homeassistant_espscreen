@@ -20,7 +20,7 @@
   (many awnings, Somfy RTS and other radio motors) shows its state as unknown in Home Assistant. Its tile had no buttons
   on the screen then, although the editor showed them. Now open, stop and close work as they do in Home Assistant, and
   a cover that only assumes its state keeps both open and close at hand.
-- **Cover groups, one cover at a time.** The card of a cover group has a key at the top right, where a light group's
+- **Cover groups, one cover at a time.** On every board with 8 MB of flash or more, the card of a cover group has a key at the top right, where a light group's
   lamps key stands. It opens a page with a card for every cover in the group: its position bar, or open, stop and close,
   and for a blind with slats a … key that opens its tilt.
 - **Tap sound clicks as your finger lands.** With the Tap sound plugin the click now comes the moment a finger touches
