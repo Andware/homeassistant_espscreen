@@ -29,6 +29,11 @@ export const screenText = (words: ScreenWords, key: string, named: Record<string
 const has = (key: string) => te(key);
 /** A number as Home Assistant sends it ("1234.5", "-3"), written as the screens write numbers; any other text as it is. */
 export const numberOf = (value: unknown, words: ScreenWords) => numberText(value as string | number, words.marks);
+/** A number an attribute holds, as Home Assistant's frontend writes it (formatNumber without options): at most two
+ * decimals, a half away from zero, so 61.60000000000001 is "61.6" (header_bar.attribute_number, GitHub #241). */
+const ATTRIBUTE_NUMBER = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2, useGrouping: false });
+export const attributeNumber = (value: number, words: ScreenWords) =>
+  Number.isFinite(value) ? numberOf(ATTRIBUTE_NUMBER.format(value).replace(/^-0$/, "0"), words) : String(value);
 /** What follows a number for its unit, as Home Assistant spaces it: "°", "%" or " %" by the language, " kWh"
  * (screen_text::unit_suffix). */
 export function unitSuffix(unit: string | undefined | null, percentSpace = false) {
@@ -162,7 +167,7 @@ export function subLine(sub: string, live: Live | null | undefined, status: stri
   if (sub.startsWith("text:")) return sub.slice(5);
   if (sub.startsWith("attr:")) {
     const value = live?.a?.[sub.slice(5)];
-    if (value !== undefined && value !== null && value !== "") return typeof value === "number" ? numberOf(value, words) : String(value);
+    if (value !== undefined && value !== null && value !== "") return typeof value === "number" ? attributeNumber(value, words) : String(value);
   }
   return status;
 }

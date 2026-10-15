@@ -32,6 +32,11 @@ substitutions:
   GRID_ROWS: "3"
   GRID_COLS_PORTRAIT: "1"
   GRID_ROWS_PORTRAIT: "5"
+  # More tiles and pages than the 64 and eight of a board without PSRAM (firmware 0.34.0+), as on every ESP32-P4
+  # (docs/TILE_MEMORY.md); the memory budget (tile_memory.h) says how many a layout really takes.
+  SCREEN_MAX_TILES: "256"
+  SCREEN_MAX_PAGES: "16"
+  SCREEN_MAX_BAR_ITEMS: "12"                   # a wider top bar where the glass has the width for it (GitHub #247)
   LVGL_BUFFER_SIZE: "50%"                       # LVGL's draw buffer as a share of the screen
   TOUCH_CONTROLLER: "ST7121"                    # The ESPHome driver is named st7123; the glass reports ST7121.
   TOUCH_TEST_READY_LOG: "ST7121 touch test ready; no tile actions"

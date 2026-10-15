@@ -132,6 +132,23 @@ class SecondLine(unittest.TestCase):
         # An attribute that is gone leaves the line to the screen again, instead of an empty one.
         self.assertEqual(message('attr:nope'), {})
 
+    def test_a_number_is_written_as_home_assistant_writes_an_attributes_number(self):
+        import i18n
+
+        def line(value):
+            tile = {'entity': 'climate.hall', 'options': {'sub': 'attr:current_humidity'}}
+            return ha_catalogue.subtitle_message(tile, {'attributes': {'current_humidity': value}})
+        # formatNumber without options (GitHub #241): at most two decimals, a half away from zero, whole stays whole.
+        self.assertEqual([line(v) for v in (61.60000000000001, 0.125, 21, -0.001)],
+                         [{'s': '61.6'}, {'s': '0.13'}, {'s': '21'}, {'s': '0'}])
+        # A number Home Assistant sends as text stays the text it is, as its frontend keeps it.
+        self.assertEqual(line('61.600'), {'s': '61.600'})
+        try:
+            i18n.set_screens('nl', 'comma', True)
+            self.assertEqual(line(1234.5), {'s': '1.234,5'})
+        finally:
+            i18n.set_screens('en', 'point', True)
+
     def test_the_layout_keeps_the_choice_and_refuses_a_shape_it_cannot_read(self):
         def options(sub):
             layout = validate_layout({'title': 'Home', 'tiles': [{'entity': 'script.morning', 'options': {'sub': sub}}]})

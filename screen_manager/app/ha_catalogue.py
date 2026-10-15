@@ -384,12 +384,15 @@ def subtitle_message(tile, state):
         return {}
     # A value is written the way what it is asks for, not the way its name suggests: a moment in time goes as
     # seconds, so the screen says it in its own words and its own clock the way it already says when a script
-    # last ran, instead of a second wording of the same thing over here. Anything else goes as the text it is,
-    # and the screen writes no number of its own into a line it was handed.
+    # last ran, instead of a second wording of the same thing over here. A number goes as Home Assistant writes an
+    # attribute's number, here and not on the screen. Anything else goes as the text it is, and the screen writes no
+    # number of its own into a line it was handed.
     if isinstance(value, bool):
         return {'s': core.screen_t('screen.ha.on' if value else 'screen.ha.off')}
     if isinstance(value, str):
         moment = core.epoch(value)
         if moment:
             return {'sm': moment}
+    elif header_bar.numeric(value) is not None:
+        return {'s': header_bar.short(header_bar.attribute_number(value), SUBTITLE_BYTES)}
     return {'s': header_bar.short(header_bar.clean_text(str(value)), SUBTITLE_BYTES)}

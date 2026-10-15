@@ -79,6 +79,10 @@ describe("the line under a card's name", () => {
     const live = climate("on", { brightness: 128, effect: "" });
     expect([subLine("none", live, "On", en), subLine("text:Upstairs", live, "On", en), subLine("attr:brightness", live, "On", en),
       subLine("attr:effect", live, "On", en), subLine("auto", live, "On", en)]).toEqual(["", "Upstairs", "128", "On", "On"]);
+    // A number as Home Assistant writes an attribute's number, as the app sends it (header_bar.attribute_number, #241).
+    const humid = (value: unknown) => climate("heat", { current_humidity: value });
+    expect([61.60000000000001, 0.125, 21, -0.001].map((v) => subLine("attr:current_humidity", humid(v), "Heat", en))).toEqual(["61.6", "0.13", "21", "0"]);
+    expect(subLine("attr:current_humidity", humid(1234.5), "Heat", comma)).toBe("1.234,5");
   });
 });
 

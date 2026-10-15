@@ -1554,7 +1554,7 @@ inline bool alarm_pad_open();
 // The card keys whose change is a wish (docs/OPTIMISTIC.md): play or pause, mute, shuffle, repeat, an option, a mode,
 // a thermostat's rows and the power keys.
 inline bool wish_command(int cmd){
-  return cmd==20||cmd==23||cmd==25||cmd==26||(cmd>=30&&cmd<38)||(cmd>=SELECT_OPTION_FIRST&&cmd<SELECT_OPTION_FIRST+64)||
+  return cmd==20||cmd==23||cmd==25||cmd==26||(cmd>=SELECT_OPTION_FIRST&&cmd<SELECT_OPTION_FIRST+64)||
          (cmd>=CLIMATE_MODE_FIRST&&cmd<CLIMATE_ROW_FIRST+12)||cmd==CLIMATE_POWER||cmd==LIGHT_POWER;
 }
 inline void detail_command(int cmd){
@@ -1617,12 +1617,9 @@ inline void detail_command(int cmd){
   static const std::pair<int,char> rows[]={{10,'s'},{50,'m'},{60,'w'}};
   for(const auto &[first,kind]:rows)
     if(cmd>=first && cmd<first+6){auto *row=t.choice(kind);if(row && cmd-first<(int)row->values.size())choose(t,*row,row->values[cmd-first]);}
-  // The media card's keys (20-23); its volume slider goes through commit_slider.
-  if(cmd>=20 && cmd<=26)media_action(t,cmd);
-  if(cmd>=30 && cmd<38 && cmd-30<(int)t.extra().options.size()){
-    const std::string option=t.extra().options[cmd-30];
-    if(option!=t.state)wish(t,optimistic::Field::OPTION,option,t.domain()+".select_option","option",option);
-  }
+  // The media card's keys (20-26, and 30 its power key's turn off, GitHub #239); its volume slider goes through
+  // commit_slider.
+  if((cmd>=20 && cmd<=26) || cmd==30)media_action(t,cmd);
   // A row of the select card: chosen at once on the card, confirmed by Home Assistant's next state.
   if(cmd>=SELECT_OPTION_FIRST&&cmd<SELECT_OPTION_FIRST+64&&cmd-SELECT_OPTION_FIRST<(int)t.extra().options.size()){
     const std::string option=t.extra().options[cmd-SELECT_OPTION_FIRST];

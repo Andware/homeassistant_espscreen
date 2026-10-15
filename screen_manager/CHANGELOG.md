@@ -4,6 +4,15 @@
   that ran off the window in a home with many players, and the ones below could not be reached. It now opens a search
   field with a list that scrolls, and typing narrows it by name or area. Every other menu of the editor scrolls when it
   is taller than the window, too.
+- **An icon alone in the top bar opens its card (#252).** An entity in the top bar that shows only its icon now opens
+  its card on a tap too, as it does when it shows its state. The screen needs firmware 0.56.0.
+- **The power key on a player's card turns it off (#239).** On a media player's card, the power key in its top bar did
+  nothing; the key on the tile worked. The screen needs this firmware.
+- **A number on a tile's second line as Home Assistant writes it (#241).** A second line set to a value of the entity
+  shows a number with at most two decimals, as Home Assistant does, so a humidity of 61.60000000000001 shows as 61.6.
+  The editor's preview shows the same.
+- **Tab5: twelve items in the top bar, and room for 256 tiles over 16 pages (#247).** The Tab5 has the PSRAM of the
+  other ESP32-P4 screens but held six top bar items, 64 tiles and eight pages. The screen needs this firmware.
 - **Tab5: the battery icon shows charging while it charges (#234).** The Tab5 showed its battery as charging while it
   ran from the pack, and as on battery while it charged: its battery monitor reads the charging current with the other
   sign. The screen needs this firmware.
