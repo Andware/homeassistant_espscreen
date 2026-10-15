@@ -2792,7 +2792,7 @@ class Manager:
                 message.setdefault('x',{})['keys']=keys
         # A second line set to a value of this entity (app 0.2.105): the finished line, or seconds for a moment in
         # time. The other three settings live in the option itself, so the screen keeps drawing them without us.
-        for key,value in ha_catalogue.subtitle_message(tile,state).items():
+        for key,value in ha_catalogue.subtitle_message(tile,state,getattr(self.ha,'units',None),entry,getattr(self.ha,'state_words',None)).items():
             message.setdefault('x',{})[key]=value
         if tile['entity'].startswith('sensor.') and hasattr(self.ha,'history'):
             hours=tile.get('options',{}).get('history_hours',24)
@@ -4473,7 +4473,10 @@ def create_app(manager, development=False):
             word = (durations.text(message['state'], (state.get('attributes') or {}).get('unit_of_measurement'), i18n.screen_language())
                     if eid.startswith('sensor.') and durations.is_duration(state.get('attributes')) else None)
             result[eid] = {'state': message['state'], 'a': attributes,
-                           'word': word or state_word(eid, state.get('state'), state.get('attributes'), entry, getattr(manager.ha, 'state_words', None))}
+                           'word': word or state_word(eid, state.get('state'), state.get('attributes'), entry, getattr(manager.ha, 'state_words', None)),
+                           # A tile's second line set to one of its values, written as the screen gets it (ha_catalogue).
+                           'sub': ha_catalogue.subtitle_lines(eid, state, getattr(manager.ha, 'units', None), entry,
+                                                              getattr(manager.ha, 'state_words', None))}
         return web.json_response({'states': result})
     async def firmware_preview(request):
         """The device's normal packets, for an unsaved layout. No device registration or HA actions."""

@@ -151,10 +151,11 @@ def number_text(value, precision=None):
 
 def attribute_number(value):
     """A number an attribute holds, as Home Assistant's frontend writes it (computeAttributeValueDisplay, formatNumber
-    without options): at most two decimals, a half rounded away from zero as Intl.NumberFormat rounds, in the screens'
-    number format. 61.60000000000001 is "61.6" (GitHub #241)."""
-    text = format(Decimal(value).quantize(Decimal('0.01'), ROUND_HALF_UP).normalize(), 'f')
-    return screen_number(text[1:] if text == '-0' else text)
+    without options): at most two decimals, in the screens' number format. Intl.NumberFormat rounds the number as
+    JavaScript writes it, a half away from zero: 2.675 is "2.68", although the float is 2.67499..., and -0.001 is
+    "-0". repr writes a float as JavaScript does. 61.60000000000001 is "61.6" (GitHub #241)."""
+    exact = Decimal(repr(float(value))) if isinstance(value, float) else Decimal(value)
+    return screen_number(format(exact.quantize(Decimal('0.01'), ROUND_HALF_UP).normalize(), 'f'))
 
 def with_unit(text, unit):
     """Home Assistant's spacing: "21.3 °C", "65%" ("65 %" in German and French), "18°"."""
