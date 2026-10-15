@@ -27,21 +27,6 @@ inline int quantize_temperature(int value, int minimum, int maximum, int step) {
   return std::clamp(snapped, minimum, maximum);
 }
 
-// Which step of a slider or dial a value is on, for a click while it is dragged (screen_hooks::stepped): every whole
-// unit when the range has 20 or fewer (a setting of a few positions), else every 5 %. A range that reaches below zero
-// only to draw a round end at 0 (runtime_tiles' slider_handle) counts from 0, and a reversed one (a cover's, whose fill
-// hangs from the top) the same way round. Free of LVGL, for tests/test_screen_input.cpp.
-constexpr int STEPS = 20;
-inline int step_of(int value, int low, int high) {
-  if (low > high) std::swap(low, high);
-  if (low < 0 && high > 0) low = 0;
-  const int span = high - low;
-  if (span <= 0) return 0;
-  value = std::clamp(value, low, high);
-  if (span <= STEPS) return value - low;
-  return static_cast<int>(static_cast<long>(value - low) * STEPS / span);
-}
-
 class TouchGuard {
  public:
   enum Reject { NONE, MOVED, TOO_SHORT, USED, BOUNCE };

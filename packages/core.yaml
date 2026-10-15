@@ -259,8 +259,8 @@ esphome:
           screen_power::later = [](uint32_t ms) { id(screen_power_wait).execute(ms); };
           screen_power::dark = []() { return id(display_dimmed) && runtime_tiles::standby_level() == 0; };
           screen_power::wake = []() { id(wake_display).execute(); };
-          // A press a plugin hears at once (screen_hooks::pressed): not the push that wakes a dimmed screen, nor a calibration.
-          screen_hooks::presses_quiet = []() { return id(display_dimmed) || id(calibration_active); };
+          // Feedback a finger hears or feels (touch_feedback.h): none for the push that wakes a dimmed screen, nor in a calibration.
+          touch_feedback::quiet = []() { return id(display_dimmed) || id(calibration_active); };
           {
             // A touch on the dark glass resumes drawing before LVGL reads it, so the wake overlay gets the tap.
             struct WakeListener : public esphome::touchscreen::TouchListener {

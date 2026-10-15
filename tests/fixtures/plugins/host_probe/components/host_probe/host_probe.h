@@ -19,7 +19,7 @@ class HostProbe : public Component, public tessera::Plugin {
   void on_alert() override;
   void on_touch() override;
   void on_press() override;
-  void on_step() override;
+  void on_step(const tessera::Step &step) override;
   bool settings(tessera::SettingsPage &page) override;
   void on_message(JsonObjectConst message) override;
   // The first tile made asks the app one question (tessera::send); the answer comes back in on_message.

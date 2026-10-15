@@ -62,6 +62,7 @@
 #include "plugin_api.h"
 #include "plugin_host.h"
 #include "screen_hooks.h"
+#include "touch_feedback.h"
 #include "light_card.h"
 #include "forecast_tile.h"
 #include "weather_chart.h"
@@ -3084,6 +3085,7 @@ inline void climate_hold(lv_event_t *e){
   auto &t=model.tiles[detail_index];
   if(!fresh()||!t.available()||esphome::millis()-t.edit_since<300)return;
   climate_step(t,direction);
+  touch_feedback::step(direction);   // each step of a held key clicks, as a detent (touch_feedback.h)
 }
 // A humidifier's dial (firmware 0.42.0+): Home Assistant's humidity ring (ha-control-circular-slider) round the number,
 // as a picture and not a control (the - and + set it, a finger on a small ring would not): a 270 degree track, the part from the minimum to the target filled
@@ -4895,8 +4897,8 @@ inline void media_seek_event(lv_event_t *e){
   lv_area_t area;lv_obj_get_coords(lv_obj_get_parent(media_progress_fill),&area);
   const int along=point.x-area.x1-media_bar_x;
   const uint32_t seconds=media_card::seek_seconds(along,media_bar_width,x.media_duration);
-  // The seek bar is no LVGL slider: its steps (a plugin's click) are said here, every 5 % of the track.
-  if(code==LV_EVENT_PRESSED||code==LV_EVENT_PRESSING)screen_hooks::drag_at(media_progress_fill,screen_input::step_of((int)seconds,0,(int)x.media_duration));
+  // The seek bar is no LVGL slider: it says its own steps (touch_feedback.h), every 5 % of the track.
+  if(code==LV_EVENT_PRESSED||code==LV_EVENT_PRESSING)touch_feedback::moved(media_progress_fill,(int)seconds,0,(int)x.media_duration);
   if(code==LV_EVENT_PRESSED||code==LV_EVENT_PRESSING){media_seeking=true;media_bar_at(seconds,x.media_duration,media_progress_fill,media_elapsed_label,media_bar_width);return;}
   if(code==LV_EVENT_PRESS_LOST){media_seeking=false;media_bar_at(media_elapsed(t),x.media_duration,media_progress_fill,media_elapsed_label,media_bar_width);return;}
   if(code!=LV_EVENT_RELEASED||!media_seeking)return;
@@ -7476,6 +7478,7 @@ inline void control_event(lv_event_t *e) {
   else if(tile_controls::wanted(t,command,w.key_args[n]).valid?!allowed_wish(now,400+slot*16+n,"control "+std::to_string(slot))
                                                                :!allowed(now,400+slot*16+n,"control "+std::to_string(slot)))return;
   if(!t.available())return;
+  if(held)touch_feedback::step(command==tile_controls::STEP_UP?1:-1);   // each step of a held key clicks (touch_feedback.h)
   // A range (firmware 0.19.0): the chip switches the end the -/+ move, heat or cool; the -/+ move that end.
   if(command==tile_controls::RANGE_SWITCH&&tile_controls::climate_range(t)){
     t.range_end=t.range_end==tile_controls::RANGE_HIGH?tile_controls::RANGE_LOW:tile_controls::RANGE_HIGH;

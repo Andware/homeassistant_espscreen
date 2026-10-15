@@ -49,8 +49,9 @@ namespace tessera {
 // tile lays out, each with an address the app fetches and paints for exactly that place, through the route every
 // picture of the screen takes (tile_picture.h "parts"); ui::text, a label of several lines; and tap_point(), where the
 // finger of a tile's on_tap was.
-// 0.11: on_press, a finger landing on something that takes a tap, at once; on_step, a dragged slider or dial passing a
-// step; SoundPlayer::add(), a sound after the ones before it, evenly spaced.
+// 0.11: on_press, a finger landing on something that takes a tap, at once; on_step(Step), a value under the finger
+// stepping (a dragged slider, dial or seek bar, a held key); SoundPlayer::add(), a sound after the ones before it, evenly
+// spaced.
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 11;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
@@ -141,6 +142,13 @@ class Card : public InPsram {
 };
 
 // A tap action on a tile of Home Assistant's own (a thermostat that opens the plugin's schedule): what it was tapped on.
+// One step of a value under the finger, for on_step (0.11): `direction` +1 towards the larger end of its range, -1
+// towards the smaller, 0 when not known (a held key); `edge` when it reached either end, for a firmer click there.
+struct Step {
+  int8_t direction;
+  bool edge;
+};
+
 struct TapContext {
   const char *entity;        // the tile's entity
   const char *name;          // the tile's name
@@ -263,10 +271,11 @@ class Plugin {
   // (0.11). Not for the push that wakes a dimmed screen, nor between the tiles. Runs inside the touch: start a sound,
   // never wait for one.
   virtual void on_press() {}
-  // A dragged slider, dial or seek bar passed a step: every 5 % of its range, or every position of one with 20 or fewer
-  // (0.11). Once for every step passed, two at most at once, as a detent clicks; not for the jump of a slider to where
-  // the finger lands. For a detent you can hear or feel: SoundPlayer::add() spaces a run of clicks evenly.
-  virtual void on_step() {}
+  // A value under the finger stepped (0.11): a dragged slider, dial or seek bar passed a step (every 5 % of its range, or
+  // every position of one with 20 or fewer), or a held key stepped once more. Once for every step, two at most at once,
+  // as a detent clicks; not for the jump of a slider to where the finger lands. For a detent you can hear or feel:
+  // SoundPlayer::add() spaces a run of clicks evenly. The moments of touch_feedback.h (docs/PLUGINS.md, "Touch feedback").
+  virtual void on_step(const Step &step) {}
   // Rows on the screen's settings page. Called once when the interface is up; true when the plugin added some.
   virtual bool settings(SettingsPage &page) { return false; }
   // An answer from the app to tessera::send(): {"re": <the number send returned>, "ok": true, "result": ...} or

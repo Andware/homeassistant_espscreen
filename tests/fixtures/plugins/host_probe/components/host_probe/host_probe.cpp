@@ -237,7 +237,7 @@ void HostProbe::on_cards_closed() { ESP_LOGI(TAG, "cards_closed"); }
 void HostProbe::on_alert() { ESP_LOGI(TAG, "alert"); }
 void HostProbe::on_touch() { ESP_LOGI(TAG, "touch"); }
 void HostProbe::on_press() { ESP_LOGI(TAG, "press"); }
-void HostProbe::on_step() { ESP_LOGI(TAG, "step"); }
+void HostProbe::on_step(const tessera::Step &step) { ESP_LOGI(TAG, "step %d%s", step.direction, step.edge ? " edge" : ""); }
 
 bool HostProbe::settings(tessera::SettingsPage &page) {
   if (!set_up_) ++early_;
