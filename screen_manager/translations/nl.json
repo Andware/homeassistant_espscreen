@@ -242,7 +242,16 @@
       "resume": "Hervatten",
       "start_cleaning": "Schoonmaken starten",
       "clean": "Schoonmaken",
-      "dock": "Dock"
+      "dock": "Dock",
+      "stop": "Stoppen",
+      "by_room": "Per ruimte",
+      "routines": "Routines",
+      "suction_water": "Zuigen & dweilen",
+      "pick_rooms": "Kies een of meer ruimtes",
+      "order_hint": "Niet elke robot houdt deze volgorde aan",
+      "no_rooms": "Geen ruimtes gekoppeld",
+      "no_rooms_how": "Koppel ze in Home Assistant, bij de instellingen van de stofzuiger.",
+      "routines_note": "Gemaakt in de app van de robot"
     },
     "cover": {
       "position": "Positie",
@@ -382,7 +391,8 @@
         "cleaning": "Schoonmaken",
         "paused": "Gepauzeerd",
         "returning": "Terugkeren naar dock",
-        "idle": "Inactief"
+        "idle": "Inactief",
+        "error": "Fout"
       },
       "weather": {
         "sunny": "Zonnig",

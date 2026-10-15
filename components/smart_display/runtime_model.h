@@ -13,6 +13,7 @@
 #include "optimistic.h"
 #include "energy_card.h"
 #include "calendar_card.h"
+#include "vacuum_model.h"
 #include "roomy.h"
 #include <cmath>
 #include <cstdint>
@@ -319,6 +320,8 @@ struct Extra {
   std::shared_ptr<const energy_card::Data> energy;
   // A calendar card's events (firmware 0.56.0+, calendar_card.h): its own block too, shared with the card that paints it.
   std::shared_ptr<const calendar_card::Data> calendar;
+  // A vacuum card's map, rooms and routines (module vacuum, vacuum_model.h): its own block too.
+  std::shared_ptr<const vacuum_model::Data> vacuum;
   uint32_t media_duration = 0, media_position = 0, media_position_at = 0;
   // More of a media player (firmware 0.24.0+, app 0.4.42+): the speaker it plays on and the ones it may (source_list,
   // sixteen at most), shuffle (-1 for a player without it) and repeat ("" without it), the features it reported at its

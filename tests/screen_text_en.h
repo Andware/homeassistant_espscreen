@@ -3,7 +3,7 @@
 #pragma once
 #include "components/smart_display/screen_text.h"
 
-static_assert(screen_text::KEYS_HASH == 0x29D8159Eu && screen_text::KEY_COUNT == 503,
+static_assert(screen_text::KEYS_HASH == 0x622770E9u && screen_text::KEY_COUNT == 513,
               "screen_text_keys.h does not match screen_manager/translations/en.json: run tools/i18n.py header");
 const char *const screen_text::TABLE[] = {
     ".",
@@ -206,6 +206,15 @@ const char *const screen_text::TABLE[] = {
     "Start cleaning",
     "Clean",
     "Dock",
+    "Stop",
+    "By area",
+    "Routines",
+    "Suction & mop",
+    "Pick one or more areas",
+    "Not every robot keeps this order",
+    "No areas mapped",
+    "Map the robot's segments to areas in Home Assistant, in the vacuum's settings.",
+    "Made in the robot's own app",
     "Position",
     "Tilt",
     "Tilt {n}%",
@@ -310,6 +319,7 @@ const char *const screen_text::TABLE[] = {
     "Paused",
     "Returning to dock",
     "Idle",
+    "Error",
     "Sunny",
     "Clear, night",
     "Cloudy",

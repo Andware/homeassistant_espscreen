@@ -1,5 +1,12 @@
 ## Unreleased
 
+- **The vacuum card shows the map, the rooms and the routines.** On every board with 8 MB of flash or more, a robot
+  vacuum's card now shows its map, cleaned up and in the screen's own colours, with its state and battery above it.
+  Tap rooms in the order you want and Start cleans just those (Home Assistant's clean by area), its own routines run
+  with one tap, and suction and water stay one tap away. The card shows only what your robot offers and fits each
+  screen: on a large screen everything is on the card, on a smaller one rooms, routines and suction open their own
+  view. The keys follow what the robot can do, an error says why, and while it cleans you see the room and how far it
+  is. The CYD and the other 4 MB boards keep the card they had.
 - **Tap sound clicks as your finger lands.** With the Tap sound plugin the click now comes the moment a finger touches
   a tile, a key, a slider or a row of the settings, instead of after you let go. Dragging a slider clicks softly at
   every step: every 5 %, or every position of a slider with only a few. A push that wakes a dimmed screen and a touch

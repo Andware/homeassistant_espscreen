@@ -242,7 +242,16 @@
       "resume": "Fortsetzen",
       "start_cleaning": "Reinigung starten",
       "clean": "Reinigen",
-      "dock": "Station"
+      "dock": "Station",
+      "stop": "Stopp",
+      "by_room": "Nach Bereich",
+      "routines": "Routinen",
+      "suction_water": "Saugen & Wischen",
+      "pick_rooms": "Einen oder mehrere Bereiche wählen",
+      "order_hint": "Nicht jeder Roboter hält diese Reihenfolge ein",
+      "no_rooms": "Keine Bereiche zugeordnet",
+      "no_rooms_how": "Ordne die Segmente in Home Assistant Bereichen zu, in den Einstellungen des Saugers.",
+      "routines_note": "In der App des Roboters erstellt"
     },
     "cover": {
       "position": "Position",
@@ -383,7 +392,8 @@
         "cleaning": "Reinigt",
         "paused": "Pausiert",
         "returning": "Rückkehr zur Ladestation",
-        "idle": "Leerlauf"
+        "idle": "Leerlauf",
+        "error": "Fehler"
       },
       "weather": {
         "sunny": "Sonnig",

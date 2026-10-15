@@ -32,6 +32,7 @@ import ha_catalogue
 import light_effects
 import light_groups
 import media_library
+import vacuum_card
 import speakers
 import map_card
 import energy_flow
@@ -71,7 +72,7 @@ def row_icon(eid, state, attrs, entry):
 
 LOG = logging.getLogger('screen_manager')
 
-REGISTRY_EVENTS = ('entity_registry_updated', 'device_registry_updated', 'area_registry_updated')
+REGISTRY_EVENTS = ('entity_registry_updated', 'device_registry_updated', 'area_registry_updated', 'floor_registry_updated')
 # Keepalive cadence. Firmware 0.2.33+ gets a small ping carrying the layout revision; every
 # layout message declares this number, so the firmware sizes its feed watchdog from it
 # (firmware 0.2.22+). Firmware before 0.2.33 still gets the whole layout every round.
@@ -190,7 +191,7 @@ class HomeAssistant:
         self.next_id = 0
         self.pending = {}
         self.states = {}
-        self.registry, self.devices, self.areas = [], [], []
+        self.registry, self.devices, self.areas, self.floors = [], [], [], []
         self.online = False
         self.changed = asyncio.Event()
         self.state_events = preview_events.Changes()
@@ -375,6 +376,11 @@ class HomeAssistant:
     async def registries(self):
         self.registry, self.devices, self.areas = await asyncio.gather(
             self.request('config/entity_registry/list'), self.request('config/device_registry/list'), self.request('config/area_registry/list'))
+        # The floors, in Home Assistant's order (a vacuum card groups its rooms by them, as Home Assistant's own view does).
+        try:
+            self.floors = await self.request('config/floor_registry/list') or []
+        except Exception:  # noqa: BLE001 - a Home Assistant without floors: the rooms stand in one group
+            self.floors = []
 
     async def actions_blocked(self):
         """The devices that may not perform Home Assistant actions (app 0.4.63): the ESPHome integration keeps that off
@@ -2352,7 +2358,9 @@ class Manager:
             entity = (tile.get('options') or {}).get('plugin_entity')
             return (entity,) if entity else ()
         if tile['entity'].startswith('vacuum.'):
-            return tuple(vacuum_related(tile['entity'], self.device_entries(tile['entity']), self.ha.states).values())
+            device = self.device_entries(tile['entity'])
+            return tuple(dict.fromkeys((*vacuum_related(tile['entity'], device, self.ha.states).values(),
+                                        *vacuum_card.related(tile['entity'], device, self.ha.states))))
         if tile['entity'].startswith('cover.'):
             return tuple(cover_related(tile['entity'], self.device_entries(tile['entity']), self.ha.states).values())
         # A map (app 0.4.33) is drawn from everyone on it and the zones around them: a move or a zone's edit reaches
@@ -2727,6 +2735,14 @@ class Manager:
                      icon_of=row_icon if light else None,device_name=self.device_name_of(tile['entity']) if light else None,week=week)
         if tile['entity'].startswith('vacuum.'):
             ha_catalogue.chip_words(extra,tile['entity'],self.ha.states,device,getattr(self.ha,'state_words',None))
+            # The card of the module (vacuum_card.py): its map, its rooms, its routines and why it stopped, to a screen
+            # that draws them (its hello says vacuum_card).
+            if features is not None and vacuum_card.FEATURE in features:
+                card=vacuum_card.payload(tile['entity'],self.ha.states,device,self.registry_index(),getattr(self.ha,'areas',None),
+                                         getattr(self.ha,'floors',None),getattr(self.ha,'state_words',None),self.device_name_of(tile['entity']),
+                                         lambda icon: tile_icons.GLYPHS.get(icon[4:]) if icon.startswith('mdi:') else None)
+                if card:
+                    extra={**(extra or {}),'vc':card}
         if tile['entity'].startswith('calendar.'):
             extra = {**(extra or {}), 'cal': await self.calendar_extras(tile)}
         message=state_message(index,tile,states,extra,
@@ -3269,6 +3285,10 @@ class Manager:
         if 'tiles' in request:
             await self.answer_live(inbox, screen, request)
             return
+        # A vacuum card's map (vacuum_card.py, vacuum_map.py), at the size and on the colour the card asks for.
+        if 'vmap' in request:
+            await self.answer_vacuum_map(inbox, screen, request)
+            return
         # A map tapped open over the whole glass (app 0.4.36, firmware 0.21.0+), as a camera opens.
         if camera_feed.map_supported(entity) and not request.get('size'):
             await self.answer_map_full(inbox, screen, request)
@@ -3293,6 +3313,27 @@ class Manager:
                 entity, 'full', screen, box=camera_feed.box(screen, 'full', camera_feed.picture_cap(request)))
         await self.send_auxiliary(inbox, message, action, request)
         LOG.info('%s %s on %s%s', 'Cover of' if cover else 'Camera', entity, screen['name'], '' if message['u'] else ': no image')
+
+    async def answer_vacuum_map(self, inbox, screen, request):
+        """A link to the map of a vacuum on the screen's layout, cleaned up and in the screen's look (vacuum_map.py), at
+        exactly the box the card asks for; an empty link when the robot has no map that can be had."""
+        entity = request.get('entity')
+        asked = camera_feed.vacuum_map_request(request)
+        if not asked or not isinstance(entity, str) or not entity.startswith('vacuum.') or not screen or not screen.get('online') \
+                or not camera_feed.can_show(screen) or not self.camera_allowed(inbox, entity):
+            return
+        action = self.transport(inbox, screen)
+        if not action:
+            return
+        width, height, background = asked
+        found = vacuum_card.map_entity(entity, self.device_entries(entity), self.ha.states)
+        url = ''
+        base = await camera_feed.base_url(self.ha.request)
+        dark = camera_feed.live_dark(request)
+        if base and found and await self.camera.vacuum_map(found['e'], found['m'], (width, height), background, dark):
+            url = f"{base}/camera/{self.camera.link(entity, (width, height), vacuum=(found['e'], found['m'], background, dark))}.bmp"
+        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'vmap', 'e': entity, 'u': url}, action, request)
+        LOG.info('Map of %s on %s%s', entity, screen['name'], '' if url else ': none')
 
     async def answer_saver(self, inbox, screen, request):
         """A link to the screensaver's picture (camera_feed.encode_saver) of the player or camera this screen's

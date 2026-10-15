@@ -1581,6 +1581,204 @@ class Run:
             await asyncio.sleep(1.0)
         return 1
 
+    async def vacuum_probe(self):
+        start = len(self.lines)
+        await self.call('render_vacuum')
+        line = await self.until(lambda l: 'vacuum open=' in l, 10, 'render_vacuum', start)
+        m = re.search(r'vacuum open=(\d) view=(-?\d+) keys=(\S*)', line)
+        keys = {}
+        for item in (m[3] if m else '').split(';'):
+            if '@' in item:
+                cmd, point = item.split('@')
+                keys.setdefault(int(cmd), []).append(tuple(int(n) for n in point.split(',')))
+        return {'open': bool(m and m[1] == '1'), 'view': int(m[2]) if m else -1, 'keys': keys}
+
+    async def vacuum_panel(self, grid):
+        """The vacuum card of the module (module_vacuum_card.h) the way it is used: a tap opens it with the robot's map
+        (cleaned up and in the screen's look by the add-on's own vacuum_map), rooms picked in the order of the taps with
+        Start counting them, the views of the rooms, the routines and suction and water, and the card of robots that offer
+        less: no map, no pause, no battery, no dock, unavailable. A map from VACUUM_MAP (a PNG) replaces the drawn one."""
+        import vacuum_map
+        from core import state_message
+        calls = []
+        self.client.subscribe_service_calls(calls.append)
+        ENTITY = 'vacuum.robot'
+        FULL = 4 | 8 | 16 | 32 | 512 | 4096 | 8192 | 16384
+        region = dict(keepalive=120, clock_24h=True, numbers='point', group_min=1, percent_space=False)
+        def drawn_map():
+            """A floor plan as a robot's integration draws it: a grid of 4-pixel cells, loud room colours, a hatched
+            carpet, specks and the robot at its dock. Nobody's home."""
+            from PIL import Image, ImageDraw
+            g, w, h = 4, 160, 84
+            cells = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+            d = ImageDraw.Draw(cells)
+            wall = (93, 109, 126, 255)
+            rooms = [((2, 2, 60, 22), (165, 105, 189, 255)), ((2, 22, 50, 82), (217, 136, 128, 255)),
+                     ((50, 50, 96, 82), (240, 178, 122, 255)), ((60, 2, 158, 82), (133, 193, 233, 255)), ((50, 22, 60, 50), (133, 193, 233, 255))]
+            for box, colour in rooms:
+                d.rectangle(box, fill=colour, outline=wall)
+            d.rectangle((60, 30, 96, 50), fill=wall)
+            for x in range(110, 140):
+                for y in range(18, 34):
+                    if (x + y) % 2:
+                        cells.putpixel((x, y), (169, 247, 169, 255))
+            for x, y in ((20, 40), (30, 60), (120, 70), (140, 50)):
+                cells.putpixel((x, y), wall)
+            image = cells.resize((w * g, h * g), Image.NEAREST)
+            dd = ImageDraw.Draw(image)
+            dd.ellipse((400, 10, 432, 42), fill=(255, 255, 255, 255), outline=(0, 0, 0, 255), width=2)
+            out = io.BytesIO()
+            image.save(out, 'PNG')
+            return out.getvalue()
+        own = os.environ.get('VACUUM_MAP')
+        drawing = vacuum_map.read(Path(own).read_bytes() if own else drawn_map())
+        rows = {'mode': {'e': 'select.robot_cleaning_mode', 's': 'vac_and_mop', 'o': ['vacuum', 'vac_and_mop', 'mop'],
+                         'l': ['Vacuum', 'Vac & mop', 'Mop'], 'r': 'vbm'},
+                'water': {'e': 'select.robot_mop_intensity', 's': 'standard', 'o': ['mild', 'standard', 'intense'], 'l': ['Mild', 'Standard', 'Intense']},
+                'fan': {'o': ['quiet', 'balanced', 'turbo', 'max'], 'l': ['Quiet', 'Normal', 'Turbo', 'Max']}}
+        four = [['hall', 'Hall', 'F081A', 0], ['kitchen', 'Kitchen', 'F0B7C', 0], ['bedroom', 'Bedroom', 'F02E3', 0], ['living_room', 'Living room', 'F04B9', 0]]
+        ten = [['hall', 'Hall', 'F081A', 0], ['living_room', 'Living room', 'F04B9', 0], ['kitchen', 'Kitchen', 'F0B7C', 0],
+               ['dining_room', 'Dining room', 'F0A70', 0], ['toilet', 'Toilet', 'F09AB', 0], ['landing', 'Landing', 'F04CD', 1],
+               ['bedroom', 'Bedroom', 'F02E3', 1], ['nursery', 'Nursery', 'F18FB', 1], ['bathroom', 'Bathroom', 'F09A0', 1], ['study', 'Study', 'F1239', 1]]
+        routines = [['button.robot_kitchen_clean', 'Kitchen clean'], ['button.robot_deep', 'Deep'], ['button.robot_vac_then_mop', 'Vac followed by mop']]
+        card_map = {'e': 'image.robot_home', 'm': '2026-09-15T08:00:00+00:00'}
+        def scene(state, features=FULL, battery=100, charging=True, more=None, vc=None, room=None, extra=True):
+            attributes = {'friendly_name': 'Robot', 'supported_features': features, 'fan_speed': 'turbo'}
+            if features & 32:
+                attributes['fan_speed_list'] = rows['fan']['o']
+            x = dict(rows) if extra else {}
+            if not features & 32:
+                x.pop('fan', None)
+            if battery is not None:
+                x['bat'] = battery
+                if charging:
+                    x['chg'] = 1
+            if room:
+                x['room'] = room
+            if vc is not None:
+                x['vc'] = vc
+            return {'state': state, 'attributes': attributes}, x
+        served = [0]
+        async def answer_maps(since=0):
+            # Every question not answered yet, as the add-on answers each: a card built again after a change of look
+            # asks before the next tap.
+            for call in calls:
+                data = dict(call.data)
+                if call.service != 'esphome.screen_camera' or data.get('_answered') or 'vmap' not in data:
+                    continue
+                width, height = (int(n) for n in data['vmap'].split('x'))
+                body = vacuum_map.render(drawing, (width, height), int(data['bg'], 16), data.get('dark') == '1')
+                url = self.pictures.url(f'{self.item.key}-vmap-{served[0]}.bmp', body)
+                served[0] += 1
+                await self.send({'v': 1, 'op': 'camera', 't': 'vmap', 'e': ENTITY, 'u': url, 'view': int(data['view'])})
+                call.data['_answered'] = '1'
+        record = send_layout.migrate_legacy(dict(title='Robot', tiles=[dict(entity=ENTITY, name='Robot', options={}, slot=0)]), grid)
+        tiles = send_layout.compile_tiles(record['layout'], grid)
+        bars = [[{'k': 'clock'}] for _ in record['layout']['pages']]
+        async def push(state, x):
+            states = {ENTITY: state}
+            await self.sender.synchronize(self.inbox.object_id, record, region, [state_message(0, tiles[0], states, x)], bars)
+            await asyncio.sleep(0.8)
+        async def until_open(want=True, timeout=8):
+            end = time.monotonic() + timeout
+            while True:
+                card = await self.vacuum_probe()
+                if card['open'] == want:
+                    return card
+                if time.monotonic() > end:
+                    raise RuntimeError(f'vacuum: the card never {"opened" if want else "closed"}: {card}')
+                await asyncio.sleep(0.15)
+        async def settle(since):
+            await asyncio.sleep(0.6)
+            await answer_maps(since)
+            await asyncio.sleep(1.6)
+            await answer_maps(since)
+            await asyncio.sleep(0.6)
+        async def tap_cmd(cmd, index=0):
+            card = await self.vacuum_probe()
+            spots = card['keys'].get(cmd)
+            if not spots:
+                self.warnings.append(f'vacuum: no key {cmd} on {card["view"]}: {sorted(card["keys"])}')
+                return False
+            since = len(calls)
+            await self.tap(*spots[min(index, len(spots) - 1)])
+            await settle(since)
+            return True
+        async def back():
+            card = await self.alarm_probe()
+            if card['back']:
+                await self.tap(*card['back'][:2])
+                await asyncio.sleep(0.8)
+        async def show(name, state, x, then=None, dark=False):
+            await push(state, x)
+            await self.call('render_page', page=0)
+            await self.page_done(0)
+            await asyncio.sleep(0.6)
+            spots = await self.slots()
+            since = len(calls)
+            # An unavailable tile opens no card: the card is opened while the robot is there, and then it goes.
+            gone = state['state'] == 'unavailable'
+            if gone:
+                await push({**state, 'state': 'docked'}, x)
+            await self.tap(*spots[ENTITY])
+            await until_open()
+            if gone:
+                await push(state, x)
+            await settle(since)
+            await self.render(name)
+            if dark:
+                self.client.switch_command(self.dark_switch.key, True)
+                since = len(calls)
+                await settle(since)
+                await self.render(name + '-dark')
+                self.client.switch_command(self.dark_switch.key, False)
+                await asyncio.sleep(1.5)
+            card = await self.alarm_probe()
+            if card['faults']:
+                self.warnings.append(f'vacuum {name}: {card["faults"]}')
+            if then:
+                await then()
+            card = await self.vacuum_probe()
+            while card['open'] and card['view'] > 0:
+                await back()
+                card = await self.vacuum_probe()
+            await back()
+            await until_open(False)
+        async def full_round():
+            if await tap_cmd(810 + 1):
+                await tap_cmd(810 + 3)
+                await self.render('vacuum-card-picked')
+            if await tap_cmd(840):
+                await tap_cmd(810 + 0)
+                await self.render('vacuum-rooms')
+                await back()
+            if await tap_cmd(841):
+                await self.render('vacuum-routines')
+                await back()
+            if await tap_cmd(842):
+                await self.render('vacuum-how')
+                await back()
+        await show('vacuum-card', *scene('docked', vc={'map': card_map, 'rooms': four, 'rt': routines}), then=full_round, dark=True)
+        await show('vacuum-card-cleaning', *scene('cleaning', battery=64, charging=False, room='Living room',
+                                                  vc={'map': card_map, 'rooms': four, 'rt': routines, 'pg': 45, 'ar': 18}))
+        await show('vacuum-card-error', *scene('error', battery=38, charging=False, vc={'map': card_map, 'rooms': four, 'rt': routines, 'err': 'Main brush jammed'}))
+        async def ten_round():
+            if await tap_cmd(840):
+                await self.render('vacuum-rooms-floors')
+                await back()
+        await show('vacuum-card-ten', *scene('docked', vc={'map': card_map, 'rooms': ten, 'floors': ['Ground floor', 'First floor'], 'rt': routines}), then=ten_round)
+        async def unmapped_round():
+            if await tap_cmd(840):
+                await self.render('vacuum-rooms-unmapped')
+                await back()
+        await show('vacuum-card-unmapped', *scene('docked', vc={'map': card_map, 'unmapped': 1}), then=unmapped_round)
+        await show('vacuum-card-nomap', *scene('docked', vc={'rooms': four, 'rt': routines}))
+        await show('vacuum-card-switchbot', *scene('cleaning', features=1 | 16 | 4096 | 8192, battery=72, charging=False, extra=False))
+        await show('vacuum-card-cloud', *scene('docked', features=4 | 16 | 32 | 4096 | 8192, battery=None, extra=False))
+        await show('vacuum-card-miele', *scene('cleaning', features=4 | 8 | 32 | 4096 | 8192, battery=55, charging=False, extra=False))
+        await show('vacuum-card-unavailable', *scene('unavailable', features=0, battery=None, vc={'map': card_map, 'rooms': four, 'rt': routines}))
+        return 1
+
     async def humidifier_panel(self, grid):
         """Humidifiers and dehumidifiers (firmware 0.42.0+) as tiles of every size and as their card, in the states Home
         Assistant has for them: drying, humidifying, idle, off, without a humidity sensor, unavailable. Each scene is its own layout; the cards a finger
@@ -2949,6 +3147,8 @@ class Run:
             return 1, await self.saver_panel()
         if self.only == 'humidifier':
             return 1, await self.humidifier_panel(grid)
+        if self.only == 'vacuum':
+            return 1, await self.vacuum_panel(grid)
         if self.only == 'bars':
             return 1, await self.bars_round(grid)
         if self.only == 'weather':
@@ -3047,7 +3247,7 @@ def main():
     parser.add_argument('--out', type=Path, default=REPO / '.esphome' / 'render' / 'out')
     parser.add_argument('--work', type=Path, help='where the host builds go (default: .esphome/render/build)')
     parser.add_argument('--camera', default='960x540', help='the camera picture of the camera alert, WxH')
-    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock'], help='after the demo layout arrives, run only this stage')
+    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock', 'vacuum'], help='after the demo layout arrives, run only this stage')
     parser.add_argument('--plugin', type=Path, help='a plugin folder (docs/PLUGINS.md) to build into the variants, then run the plugin '
                         'round alone: tests/fixtures/plugins/host_probe proves the plugin host on the real firmware')
     parser.add_argument('--port-base', type=int, help='the first API port (default host.PORT_BASE); another worktree may use it')

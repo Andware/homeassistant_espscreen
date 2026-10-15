@@ -277,7 +277,7 @@ esphome:
           // whole number, the look took the exact one for its sizes.
           ui::configure(atoi("${ (DISPLAY_DPI | float) | round | int }"), "${LOOK}");
           runtime_tiles::grid_bind(id(tile_scroll), atoi("${GRID_MARGIN}"), atoi("${PAGE_BAR_H}"));
-          // Full: a tap on the page dots opens the Dock, the chevrons keep the bar's outer parts (module_dock.h).
+          // Full: a tap on the page dots opens the Dock, the chevrons keep the bar's outer parts (the dock module).
           runtime_tiles::page_dots_open(id(page_number));
           // The alert card, laid out on the glass it landed on (firmware 0.2.103+): screen_alert::layout works every
           // size out from the canvas, the look and the fonts, lying down or standing up, and runtime_tiles::alert_place
@@ -694,6 +694,11 @@ api:
                     // bar_cards (firmware 0.56.0): an entity's item in the top bar opens its tile's card (hold_card), so ESP
                     // Screens names that tile in the item (`d`) and sends a tile without a cell for an entity on no tile.
                     features.add("bar_cards");
+                    // vacuum_card (module vacuum, tier full): the vacuum card draws its map, rooms and routines, so ESP
+                    // Screens sends them (the `vc` block, screen_manager/app/vacuum_card.py).
+                    #ifdef SD_MOD_VACUUM_CARD
+                    features.add("vacuum_card");
+                    #endif
                     auto sizes = root["tile_sizes"].to<JsonArray>();
                     for (const auto &size : page_protocol::TILE_SIZES)
                       if (size.fits(runtime_tiles::grid.columns, runtime_tiles::grid.rows)) sizes.add(size.name);

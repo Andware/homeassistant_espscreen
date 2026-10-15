@@ -242,7 +242,16 @@
       "resume": "Wznów",
       "start_cleaning": "Rozpocznij sprzątanie",
       "clean": "Sprzątaj",
-      "dock": "Stacja"
+      "dock": "Stacja",
+      "stop": "Zatrzymaj",
+      "by_room": "Według obszaru",
+      "routines": "Rutyny",
+      "suction_water": "Odkurzanie i mycie",
+      "pick_rooms": "Wybierz jeden lub więcej obszarów",
+      "order_hint": "Nie każdy robot zachowuje tę kolejność",
+      "no_rooms": "Brak przypisanych obszarów",
+      "no_rooms_how": "Przypisz segmenty do obszarów w Home Assistant, w ustawieniach odkurzacza.",
+      "routines_note": "Utworzone w aplikacji robota"
     },
     "cover": {
       "position": "Pozycja",
@@ -383,7 +392,8 @@
         "cleaning": "sprzątanie",
         "paused": "wstrzymano",
         "returning": "wraca do stacji dokującej",
-        "idle": "brak aktywności"
+        "idle": "brak aktywności",
+        "error": "Błąd"
       },
       "weather": {
         "sunny": "słonecznie",

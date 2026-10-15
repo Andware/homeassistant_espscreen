@@ -194,7 +194,7 @@ inline bool navigation_ready() {
 }
 inline uint64_t previous_page_id = 0;
 inline bool had_previous_page = false;
-inline uint32_t history_view_id = 0, options_view_id = 0, camera_view_id = 0, cover_view_id = 0;
+inline uint32_t history_view_id = 0, options_view_id = 0, camera_view_id = 0, cover_view_id = 0, vacuum_map_view_id = 0;
 // A player's library (firmware 0.24.0+): the folder asked for last, and the covers of its page.
 inline uint32_t library_view_id = 0, library_art_view_id = 0;
 inline void cancel_layout_input(bool invalidate_widgets = true);
@@ -1392,6 +1392,21 @@ inline void lock_card_closed();
 // Every way a card closes (Back, standby, Back to page 1, another card) also forgets a code half typed on an alarm's
 // keypad: it never waits in memory for the next person at the screen.
 inline void colour_close();
+#ifdef SD_MOD_VACUUM_CARD
+// The vacuum card of the module (module_vacuum_card.h), included at the modules' site further down.
+namespace vacuum_card {
+inline void render(Tile &t, lv_obj_t *heading, int width, int height);
+inline bool wide(const Tile &t);
+inline bool handles(int cmd);
+inline void command(Tile &t, int cmd);
+inline bool back();
+inline void picture_want();
+inline bool draws(const lv_image_dsc_t *image);
+inline void forget_pictures();
+inline void card_cleared();
+inline void closed();
+}  // namespace vacuum_card
+#endif
 inline void hide_detail(){
   alarm_close_pad();lock_card_closed();
   // The colour card is a card as well, and closes on every way a card closes.
@@ -1399,6 +1414,9 @@ inline void hide_detail(){
   // A plugin's card closes on every way Tessera's own cards close (docs/PLUGINS.md).
   plugin_host::close_card();
   if(detail_backdrop)lv_obj_add_flag(detail_backdrop,LV_OBJ_FLAG_HIDDEN);if(detail_root)lv_obj_add_flag(detail_root,LV_OBJ_FLAG_HIDDEN);
+#ifdef SD_MOD_VACUUM_CARD
+  vacuum_card::closed();
+#endif
   // A player's library and speaker menu go with its card (firmware 0.24.0+), after it: the card stays as it was.
   media_library::close();}
 inline int slider_value(const Tile &t){
@@ -1560,6 +1578,10 @@ inline bool wish_command(int cmd){
 inline void detail_command(int cmd){
   // Back on the alarm's keypad goes back to its card; everywhere else it closes the card.
   if(cmd==-1&&alarm_pad_open()){alarm_close_pad();redraw_detail();return;}
+#ifdef SD_MOD_VACUUM_CARD
+  // A view of the vacuum card (its rooms, routines, suction and water) goes back to the card.
+  if(cmd==-1&&vacuum_card::back())return;
+#endif
   if(cmd==-1){hide_detail();return;}
   // The alarm panel's modes, digits, Clear and OK (600-621): the digits count every clean tap, like the -/+ keys.
   if(cmd>=600&&cmd<=621){alarm_command(cmd);return;}
@@ -1611,6 +1633,10 @@ inline void detail_command(int cmd){
   if(cmd==27){media_library::open(t.entity);return;}
   if(cmd==28){media_library::speakers(t.entity);return;}
   if(cmd==29){media_library::inputs(t.entity);return;}
+#ifdef SD_MOD_VACUUM_CARD
+  // The vacuum card's own keys (800-899): picks and views at once, its actions when the robot answers.
+  if(vacuum_card::handles(cmd)){vacuum_card::command(t,cmd);return;}
+#endif
   if(!t.available()||t.waiting(esphome::millis()))return;
   if(cmd<4){const char *services[]={"vacuum.start","vacuum.pause","vacuum.return_to_base","vacuum.locate"};action(services[cmd],t.entity);}
   // Vacuum rows: 10-15 suction, 50-55 cleaning mode, 60-65 water.
@@ -5289,7 +5315,11 @@ inline void show_detail(unsigned index){
   lv_obj_remove_flag(detail_backdrop,LV_OBJ_FLAG_HIDDEN);lv_obj_move_foreground(detail_backdrop);
   ++card_builds;
   detail_action_count=0;card_parts.clear();card_shape_of=nullptr;card_blocked=false;detail_status=nullptr;detail_badge_status=nullptr;detail_switch=nullptr;climate_number=nullptr;climate_ends[0]=climate_ends[1]=nullptr;climate_now_mark=nullptr;climate_keys[0]=climate_keys[1]=nullptr;detail_placed=false;detail_status_brief=false;history_forget();
-  alarm_forget_widgets();media_progress_fill=nullptr;media_elapsed_label=nullptr;media_total_label=nullptr;media_detail_picture=nullptr;light_value=nullptr;lv_obj_clean(detail_root);lv_obj_remove_flag(detail_root,LV_OBJ_FLAG_HIDDEN);lv_obj_move_foreground(detail_root);
+  alarm_forget_widgets();media_progress_fill=nullptr;media_elapsed_label=nullptr;media_total_label=nullptr;media_detail_picture=nullptr;light_value=nullptr;
+#ifdef SD_MOD_VACUUM_CARD
+  vacuum_card::card_cleared();
+#endif
+  lv_obj_clean(detail_root);lv_obj_remove_flag(detail_root,LV_OBJ_FLAG_HIDDEN);lv_obj_move_foreground(detail_root);
   lv_obj_set_style_bg_color(detail_root,theme::color(theme::PAGE),0);lv_obj_set_style_bg_opa(detail_root,LV_OPA_COVER,0);
   lv_obj_set_style_bg_grad_dir(detail_root,LV_GRAD_DIR_NONE,0);
   media_knob=media_pill_obj=media_library_key=media_input_key=nullptr;
@@ -5302,7 +5332,11 @@ inline void show_detail(unsigned index){
   // range keys under it keeps a hand's width (overlay_card::reach). Asked here because every size below
   // follows from `width`.
   const bool with_history=history_card(t);
-  const auto kind=d=="media_player"?overlay_card::picture:with_history||d=="weather"?overlay_card::graph:overlay_card::controls;
+  auto kind=d=="media_player"?overlay_card::picture:with_history||d=="weather"?overlay_card::graph:overlay_card::controls;
+#ifdef SD_MOD_VACUUM_CARD
+  // The vacuum card of the module takes the whole glass on landscape glass with a map, and on low glass.
+  if(d=="vacuum"&&!with_history&&vacuum_card::wide(t))kind=overlay_card::picture;
+#endif
   bool large=ui::large();
   // A card whose stack asks for more height than the glass has stands in two columns instead.
   const int columns=d=="climate"||d=="humidifier"?climate_columns(t,large):d=="cover"?cover_columns(t,large):d=="weather"?1
@@ -5321,7 +5355,11 @@ inline void show_detail(unsigned index){
   if(with_history){
     render_history_detail(t,large,width,height,pad);
   }else if(d=="vacuum"){
+#ifdef SD_MOD_VACUUM_CARD
+    vacuum_card::render(t,heading,width,height);
+#else
     render_vacuum_detail(t,large,width,height,pad);
+#endif
   }else if(d=="climate"||d=="humidifier"){
     // A humidifier is the thermostat's card in percent: its power key, the humidity it is set to, its modes.
     render_climate_detail(t,large,width,height,columns);
@@ -10523,6 +10561,9 @@ inline bool picture_shown(const lv_image_dsc_t *image) {
   on(camera_picture);
   on(alert_picture);
   if (media_library::draws(image)) shown = true;
+#ifdef SD_MOD_VACUUM_CARD
+  if (vacuum_card::draws(image)) shown = true;
+#endif
   return shown;
 #else
   (void) image;
@@ -10537,6 +10578,9 @@ inline bool picture_away(const lv_image_dsc_t *image) {
   for (auto &w : widgets) if (drawn(w)) return false;
   if (draws(media_detail_picture, image) || draws(camera_picture, image) || draws(alert_picture, image) || media_library::draws(image))
     return false;
+#ifdef SD_MOD_VACUUM_CARD
+  if (vacuum_card::draws(image)) return false;
+#endif
   bool kept = false;
   for (auto *set : kept_sets) if (set) for (auto &w : *set) kept = kept || drawn(w);
   return kept;
@@ -10735,6 +10779,9 @@ inline void cover_forget_pictures() {
   if (media_detail_picture) { lv_image_set_src(media_detail_picture, nullptr); lv_obj_add_flag(media_detail_picture, LV_OBJ_FLAG_HIDDEN); }
 #endif
   media_face.key.clear(); media_face.src = nullptr;
+#ifdef SD_MOD_VACUUM_CARD
+  vacuum_card::forget_pictures();
+#endif
   for (auto &w : widgets) if (w.extra_mode == "media" && w.parts[MEDIA_PICTURE]) { lv_obj_delete(w.parts[MEDIA_PICTURE]); w.parts[MEDIA_PICTURE] = nullptr; w.cover_shown.clear(); }
 }
 inline void pictures_round();
@@ -11715,6 +11762,11 @@ inline void camera_answer(const std::string &view, const std::string &entity, co
   } else if (view == "cover") {  // a media card's or tile's album cover (firmware 0.2.64+)
     if (url.empty()) ESP_LOGI("camera", "no cover for %s", entity.c_str());
     loader.answer("cover|" + entity, url, now);
+#ifdef SD_MOD_VACUUM_CARD
+  } else if (view == "vmap") {  // a vacuum card's map (module vacuum)
+    if (url.empty()) ESP_LOGI("camera", "no map for %s", entity.c_str());
+    loader.answer("vmap|" + entity, url, now);
+#endif
   } else if (view == "lib") {  // the covers of a page of a player's library (firmware 0.24.0+)
     media_library::art_answer(entity, url);
   } else if (view == "live") {  // a tile's own picture (tile_picture.h), found by its question's number
@@ -12034,6 +12086,9 @@ inline void pictures_round() {
   alert_want();
   camera_want();
   card_cover_want();
+#ifdef SD_MOD_VACUUM_CARD
+  vacuum_card::picture_want();
+#endif
   picture_loader::Want library;
   if (media_library::picture_want(library)) loader.want(owners::LIBRARY, std::move(library));
   card_picture_wants();
@@ -12556,6 +12611,9 @@ inline bool starts_on_control(int x, int y) {
 #define SMART_DISPLAY_MODULE_SITE
 #ifdef SD_MOD_DOCK
 #include "module_dock.h"
+#endif
+#ifdef SD_MOD_VACUUM_CARD
+#include "module_vacuum_card.h"
 #endif
 #undef SMART_DISPLAY_MODULE_SITE
 namespace runtime_tiles {

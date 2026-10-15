@@ -677,6 +677,26 @@ ALARM_PROBE = '''    - action: render_alarm
                        (unsigned) alarm_lock.remaining_s(esphome::millis()));
             }
 '''
+# The vacuum card of the module (module_vacuum_card.h): whether it is open, its view, and the centre of every key with
+# its command, so a render can tap a room, a view or Start; a board without the module says so.
+VACUUM_PROBE = '''    - action: render_vacuum
+      then:
+        - lambda: |-
+            using namespace runtime_tiles;
+            lv_obj_update_layout(lv_screen_active());
+            const bool open = detail_root && !lv_obj_has_flag(detail_root, LV_OBJ_FLAG_HIDDEN);
+            std::string keys;
+            #ifdef SD_MOD_VACUUM_CARD
+            for (auto &h : vacuum_card::hits) {
+              if (!h.obj) continue;
+              lv_area_t a; lv_obj_get_coords(h.obj, &a);
+              keys += std::to_string(h.cmd) + "@" + std::to_string((a.x1 + a.x2) / 2) + "," + std::to_string((a.y1 + a.y2) / 2) + ";";
+            }
+            ESP_LOGI("render", "vacuum open=%d view=%d keys=%s", (int) open, (int) vacuum_card::view, keys.c_str());
+            #else
+            ESP_LOGI("render", "vacuum open=%d view=-1 keys=", (int) open);
+            #endif
+'''
 # A player's card, its speaker menu and its library (firmware 0.24.0+): what is open, the centre of every part a finger
 # uses (back, the pill, the library key, the seek knob, the card's keys), every part of the card outside the glass, and
 # the library's own account (media_library::describe).
@@ -787,7 +807,7 @@ class Build:
         (mirror_root / 'host-hw.yaml').write_text(host_hw(board.read_text(), chain))
         (mirror_root / 'chain.txt').write_text('\n'.join([str(f) for f in chain.files] + [''] + chain.notes) + '\n')
         chain_text = ''.join((mirror / f).read_text() for f in chain.files)
-        actions = ACTIONS + PROBES + ALARM_PROBE + MEDIA_PROBE + SAVER_PROBE + (SKIP_CALIBRATION if 'screen_calibration::' in chain_text else '')
+        actions = ACTIONS + PROBES + ALARM_PROBE + MEDIA_PROBE + SAVER_PROBE + VACUUM_PROBE + (SKIP_CALIBRATION if 'screen_calibration::' in chain_text else '')
         turned = f'\n  LVGL_ROTATION: "{item.rotation}"' if item.rotation else ''
         rel = f'host/{item.key}'
         plugin_package = plugin_component = ''

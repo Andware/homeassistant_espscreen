@@ -7,6 +7,8 @@
 - [DOCKER.md](DOCKER.md): Tessera Screen Manager on Home Assistant Container, without the App store.
 - [BEDSIDE.md](BEDSIDE.md): the bedside clock, a whole-page clock with keys for the night.
 - [CALENDAR.md](CALENDAR.md): the calendar card, from what is on now to the week and the month, and its filters.
+- [VACUUM.md](VACUUM.md): the vacuum card with the robot's map, cleaning per room and its routines, and what it shows
+  for robots that offer less.
 - [METER.md](METER.md): the meter display of a sensor, a ring, a tape or a bar, its range and its colours.
 - [SCREENSAVER.md](SCREENSAVER.md): what a screen shows in standby instead of its dimmed tiles: a cover, a camera or the clock.
 - [BATTERY.md](BATTERY.md): a screen's battery in its top bar, and how a board or your own YAML measures it (also a
