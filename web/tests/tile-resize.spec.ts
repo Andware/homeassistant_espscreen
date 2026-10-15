@@ -126,7 +126,8 @@ it.each([
   [{ size: 'wide', controls: 'buttons' }, 'square', 'buttons_tilt'],
   [{ size: 'wide', controls: 'position' }, 'square', 'position_tilt'],
   [{}, 'tall', 'position_tilt'],
-  [{}, 'wide', 'buttons'],
+  // A cover lays its controls out by its room (firmware 0.57.0): the slats come on a card one row high too.
+  [{}, 'wide', 'position_tilt'],
 ])('a blind that grows keeps what it drew and gains what fits: %j to %s', (options, size, controls) => {
   cover(options);
   expect(resizeTile(tile(), size as never, size === 'wide' ? 'columns' : 'rows')).toBe(true);
