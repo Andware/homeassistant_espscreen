@@ -987,6 +987,20 @@ std::string receive(const std::string &payload) {
       if (!(lamp.high > lamp.low)) lamp.low = lamp.high = 0;
       next.lamps.push_back(std::move(lamp));
     }
+    // A cover group's covers (firmware 0.57.0, app's cover_groups.py): what its page shows, in Home Assistant's order.
+    if (tile.domain() == "cover" && extra["covers"].is<JsonArray>()) for (JsonVariant c : extra["covers"].as<JsonArray>()) {
+      if (next.blinds.size() == MAX_LAMPS) break;
+      Blind blind; blind.entity = string(c["e"], 120);
+      if (!valid_entity(blind.entity) || blind.entity.rfind("cover.", 0) != 0) continue;
+      blind.name = string(c["n"], 32);
+      blind.state = string(c["s"], 16);
+      blind.device_class = string(c["dc"], 16);
+      blind.unavailable = (c["u"] | 0) == 1;
+      blind.supported = c["f"] | 0u;
+      blind.position = number(c["p"]);
+      blind.tilt = number(c["t"]);
+      next.blinds.push_back(std::move(blind));
+    }
     if (!std::isfinite(tile.battery)) tile.battery = number(extra["bat"]);
     next.charging = extra["chg"].is<int>() && extra["chg"].as<int>() == 1;
     next.room = string(extra["room"], 32);

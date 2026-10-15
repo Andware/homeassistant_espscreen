@@ -276,6 +276,16 @@ struct Lamp {
   uint16_t hue = 0, kelvin = 0, low = 0, high = 0;
 };
 constexpr size_t MAX_LAMPS = 24;
+// A cover of a cover group (firmware 0.57.0): what the group's page shows of it and may change, as a lamp of a light
+// group. The add-on sends at most MAX_LAMPS of them, only to a screen whose hello says group_covers. `supported` is the
+// cover's own supported_features (tile_controls::cover_card reads it as a tile's); position and tilt NAN where it reports
+// none.
+struct Blind {
+  std::string entity, name, state, device_class;
+  uint32_t supported = 0;
+  float position = NAN, tilt = NAN;
+  bool unavailable = false;
+};
 struct Extra {
   // The effect a light runs (its `effect` attribute), and the rows of its effects page.
   std::string effect;
@@ -283,6 +293,8 @@ struct Extra {
   std::vector<NumberRow> number_rows;
   // The lamps of a light group, for its lamp page.
   std::vector<Lamp> lamps;
+  // The covers of a cover group, for its page (firmware 0.57.0).
+  std::vector<Blind> blinds;
   // Climate: the modes as JSON lists, the current fan and swing mode, and what it is doing now.
   std::string hvac_modes, fan_modes, swing_modes, fan_mode, swing_mode, hvac_action;
   // A humidifier (firmware 0.42.0+) keeps its modes (available_modes) in hvac_modes and what it does (action) in
@@ -394,7 +406,7 @@ struct Extra {
            media_picture.empty() && map_mark.empty() && !media_duration && !media_position && !media_position_at && fan_speeds.empty() && fan_speed.empty() &&
            choices.empty() && room.empty() && !charging && std::isnan(tilt) && action.empty() && action_data.empty() &&
            action_templates.empty() && state_word.empty() && subtitle.empty() && !subtitle_at && effect.empty() &&
-           option_rows.empty() && number_rows.empty() && lamps.empty() && code_format.empty() && changed_by.empty() && !arm_code_free &&
+           option_rows.empty() && number_rows.empty() && lamps.empty() && blinds.empty() && code_format.empty() && changed_by.empty() && !arm_code_free &&
            !code_saved && !alarm_end && !alarm_delay && !assumed && activity.empty() && keypad.empty() &&
            media_source.empty() && media_repeat.empty() && media_sources.empty() && media_shuffle < 0 && !media_features &&
            speaker_flags.empty() && speaker_volumes.empty() && media_inputs.empty() && media_input.empty() && media_target.empty() &&

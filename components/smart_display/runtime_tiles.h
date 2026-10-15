@@ -31,6 +31,7 @@
 #include "page_bar.h"
 #include "tall_tile.h"
 #include "cover_tile.h"
+#include "cover_paint.h"
 #include "alert_overlay.h"
 #include "theme.h"
 #include "tile_icon.h"
@@ -1172,6 +1173,12 @@ inline std::string wish_read(const Tile &t, optimistic::Field field, const std::
     case F::LAMP_LEVEL: return lamp ? std::to_string(lamp->on ? lamp->level : 0) : std::string();
     case F::LAMP_HUE: return lamp ? std::to_string(lamp->saturation ? lamp->hue : 0) : std::string();
     case F::LAMP_KELVIN: return lamp ? std::to_string(lamp->kelvin) : std::string();
+    case F::MEMBER_POSITION: case F::MEMBER_TILT:
+      for (const auto &b : x.blinds) if (b.entity == item) {
+        const float v = field == F::MEMBER_POSITION ? b.position : b.tilt;
+        return std::isfinite(v) ? std::to_string((int) std::lround(v)) : std::string();
+      }
+      return {};
     case F::EFFECT: return x.effect;
     case F::ROW_OPTION: for (const auto &r : x.option_rows) if (r.entity == item) return r.current; return {};
     case F::ROW_NUMBER: for (const auto &r : x.number_rows) if (r.entity == item) return effects_page::number_text(r.value); return {};
@@ -1201,6 +1208,11 @@ inline void wish_write(Tile &t, optimistic::Field field, const std::string &valu
     case F::LAMP_LEVEL: if (lamp) { lamp->on = number > 0; if (number > 0) lamp->level = (uint8_t) std::min(100, number); } break;
     case F::LAMP_HUE: if (lamp) { lamp->hue = (uint16_t) number; lamp->saturation = 100; } break;
     case F::LAMP_KELVIN: if (lamp) { lamp->kelvin = (uint16_t) number; lamp->saturation = 0; } break;
+    case F::MEMBER_POSITION: case F::MEMBER_TILT:
+      if (auto *x = t.extra_ptr()) for (auto &b : x->blinds) if (b.entity == item) {
+        (field == F::MEMBER_POSITION ? b.position : b.tilt) = (float) std::clamp(number, 0, 100);
+      }
+      break;
     case F::EFFECT: t.edit_extra().effect = value; break;
     case F::ROW_OPTION: for (auto &r : t.edit_extra().option_rows) if (r.entity == item) r.current = value; break;
     case F::ROW_NUMBER: for (auto &r : t.edit_extra().number_rows) if (r.entity == item) r.value = std::strtof(value.c_str(), nullptr); break;
@@ -1582,6 +1594,8 @@ inline void detail_command(int cmd){
   if(cmd>=600&&cmd<=621){alarm_command(cmd);return;}
   // A lock's keys (700-702): Lock, Unlock, Open door.
   if(cmd>=700&&cmd<=709){lock_command(cmd);return;}
+  // A cover group's key (720): its page of covers over the card.
+  if(cmd==720){if(const Tile *t=detail_tile())group_page::open(t->entity);return;}
   // History ranges (firmware 0.2.51+): redraw after this event, which belongs to a key the redraw deletes.
   if(cmd>=160&&cmd<163){
     static const uint32_t hours[]={1,24,168};
@@ -2389,10 +2403,9 @@ inline void render_vacuum_detail(Tile &t,bool large,int width,int height,int pad
 // and the tilt as a handle over slats, each with its value below, like Home Assistant's own sliders. Open, stop
 // and close as a row of pill keys under them; the key of the direction the cover moves is filled. A slider
 // sends its value when the finger lifts, and shows it while it moves.
-// Home Assistant's purple for covers; the track and the slats are its tints.
-inline constexpr uint32_t COVER_ACCENT = theme::ha::PURPLE;
-inline uint32_t cover_track(){return theme::tint(COVER_ACCENT,37);}
-inline uint32_t cover_slats(){return theme::tint(COVER_ACCENT,80);}
+// Home Assistant's purple for covers; the track and the slats are its tints (cover_paint.h).
+inline constexpr uint32_t COVER_ACCENT = cover_paint::ACCENT;
+inline uint32_t cover_track(){return cover_paint::track();}
 inline lv_obj_t *cover_values[2]{};
 inline std::string alarm_card_line(const Tile &t);
 inline std::string lock_card_line(const Tile &t);
@@ -2429,23 +2442,6 @@ inline void cover_slider_event(lv_event_t *e){
   const auto call=tile_controls::cover_position_action(t,lv_slider_get_value(slider),tilt);
   if(call.valid())action(call.service,t.entity,call.key,call.value);
 }
-// The slats behind a tilt slider's handle, at the angle the slider stands at (cover_tile::slats): drawn by the slider
-// itself just before its handle, so they turn with every value it takes, a finger's or Home Assistant's, and cost no
-// objects of their own.
-inline void cover_slats_draw(lv_event_t *e){
-  auto *slider=lv_event_get_target_obj(e);
-  lv_area_t a;lv_obj_get_coords(slider,&a);
-  const float tilt=std::clamp(lv_slider_get_value(slider)/10.0f,0.0f,100.0f);
-  const auto s=cover_tile::slats(lv_area_get_width(&a),lv_area_get_height(&a),tilt,ui::mm(3),std::max(3,ui::mm(1)+1));
-  lv_draw_line_dsc_t d;lv_draw_line_dsc_init(&d);
-  d.color=lv_color_hex(cover_slats());d.width=s.width;d.round_start=d.round_end=1;
-  for(int i=0;i<s.count;++i){
-    const auto &l=s.slat[i];
-    d.p1={(lv_value_precise_t)std::lround(a.x1+l.x1),(lv_value_precise_t)std::lround(a.y1+l.y1)};
-    d.p2={(lv_value_precise_t)std::lround(a.x1+l.x2),(lv_value_precise_t)std::lround(a.y1+l.y2)};
-    lv_draw_line(lv_event_get_layer(e),&d);
-  }
-}
 // One slider. The position fills from the top by how far the cover is closed; the tilt has no fill and its
 // handle moves over the slats, drawn at their angle (firmware 0.57.0).
 inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback=nullptr,void *user=nullptr){
@@ -2470,7 +2466,7 @@ inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float val
     int margin=1000*(inset+handle_h)/std::max(1,h-2*(inset+handle_h));
     lv_slider_set_range(slider,-margin,1000+margin);
     lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):500,LV_ANIM_OFF);
-    lv_obj_add_event_cb(slider,cover_slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,nullptr);
+    lv_obj_add_event_cb(slider,cover_paint::slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,nullptr);
   }else{
     lv_obj_set_style_pad_top(slider,inset+handle_h-w/2,LV_PART_KNOB);lv_obj_set_style_pad_bottom(slider,1-inset-w/2,LV_PART_KNOB);
     // Reversed, the fill hangs from the top; the stub past 0 holds the handle of a cover that is fully open.
@@ -2494,26 +2490,14 @@ inline void slider_handle(lv_obj_t *slider,int width,int height);
 // handle of every tile bar (slider_handle); the tilt keeps its slats and its accent handle. A lying position slider holds
 // the open share, so its value is turned around before it goes out (cover_bar_raw).
 inline lv_obj_t *cover_bar(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback,void *user){
-  const int radius=h>20?h*12/42:LV_RADIUS_CIRCLE,handle=std::max(4,h/9),inset=std::max(4,h/6);
-  if(tilt)detail_shape(parent,x,y,w,h,cover_track(),radius);
-  auto *slider=lv_slider_create(parent);lv_obj_remove_style_all(slider);
-  lv_obj_set_pos(slider,x,y);lv_obj_set_size(slider,w,h);lv_slider_set_orientation(slider,LV_SLIDER_ORIENTATION_HORIZONTAL);
-  lv_obj_set_style_bg_color(slider,lv_color_hex(cover_track()),LV_PART_MAIN);lv_obj_set_style_bg_opa(slider,tilt?LV_OPA_TRANSP:LV_OPA_COVER,LV_PART_MAIN);
-  lv_obj_set_style_bg_color(slider,lv_color_hex(COVER_ACCENT),LV_PART_INDICATOR);lv_obj_set_style_bg_opa(slider,tilt?LV_OPA_TRANSP:LV_OPA_COVER,LV_PART_INDICATOR);
-  lv_obj_set_style_opa(slider,LV_OPA_50,LV_STATE_DISABLED);
-  if(tilt){
-    lv_obj_set_style_radius(slider,radius,LV_PART_MAIN);
-    lv_obj_set_style_bg_color(slider,lv_color_hex(COVER_ACCENT),LV_PART_KNOB);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
-    lv_obj_set_style_radius(slider,LV_RADIUS_CIRCLE,LV_PART_KNOB);
-    // LVGL's knob is a square as high as the bar; the pads make it an upright handle a third of the bar's height.
-    const int across=-(h-2*handle)/2,along=-(h-h*3/5)/2;
-    lv_obj_set_style_pad_left(slider,across,LV_PART_KNOB);lv_obj_set_style_pad_right(slider,across,LV_PART_KNOB);
-    lv_obj_set_style_pad_top(slider,along,LV_PART_KNOB);lv_obj_set_style_pad_bottom(slider,along,LV_PART_KNOB);
-    const int margin=1000*(inset+handle)/std::max(1,w-2*(inset+handle));
-    lv_slider_set_range(slider,-margin,1000+margin);
-    lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):500,LV_ANIM_OFF);
-    lv_obj_add_event_cb(slider,cover_slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,nullptr);
-  }else{
+  lv_obj_t *slider=nullptr;
+  if(tilt)slider=cover_paint::tilt_bar(parent,x,y,w,h,value);
+  else{
+    slider=lv_slider_create(parent);lv_obj_remove_style_all(slider);
+    lv_obj_set_pos(slider,x,y);lv_obj_set_size(slider,w,h);lv_slider_set_orientation(slider,LV_SLIDER_ORIENTATION_HORIZONTAL);
+    lv_obj_set_style_bg_color(slider,lv_color_hex(cover_track()),LV_PART_MAIN);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(slider,lv_color_hex(COVER_ACCENT),LV_PART_INDICATOR);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_INDICATOR);
+    lv_obj_set_style_opa(slider,LV_OPA_50,LV_STATE_DISABLED);
     lv_obj_set_style_radius(slider,2,LV_PART_KNOB);lv_obj_add_style(slider,theme::style(theme::Paint::knob),LV_PART_KNOB);
     lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
     slider_handle(slider,w,h);
@@ -2621,9 +2605,13 @@ inline uint32_t cover_card_shape(const Tile &t){
   add(std::isfinite(t.battery)?std::to_string((int)std::lround(t.battery)):"");
   return f.value;
 }
+inline lv_obj_t *climate_round_key(const climate_card::Rect &r,const char *icon,const lv_font_t *font,theme::Role fill,theme::Role ink,int command);
 inline void render_cover_detail(Tile &t,bool large,int width,int height,int pad,int columns=1){
   auto card=tile_controls::cover_card(t);
   cover_battery(t,large,width);
+  // A cover group's key (firmware 0.57.0): in the top bar at the right, where a light group's lamps key stands, it opens
+  // the group's page with a card per cover (group_page.h); after the battery where the cover has one.
+  if(group_page::available(t))climate_round_key(bar_key(std::isfinite(t.battery)?1:0),tile_controls::glyph::SLATS,mini_icon_font,theme::KEY,theme::INK,720);
   const lv_font_t *text=large?detail_font:(control_font?control_font:detail_font);
   const lv_font_t *big=watch_font?watch_font:detail_font;
   cover_values[0]=cover_values[1]=nullptr;
