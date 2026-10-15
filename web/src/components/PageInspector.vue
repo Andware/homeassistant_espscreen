@@ -13,9 +13,10 @@ import InspectorHead from "./ui/InspectorHead.vue";
 import Section from "./ui/Section.vue";
 import SwitchRow from "./ui/SwitchRow.vue";
 import HelpTip from "./HelpTip.vue";
+import IconPicker from "./IconPicker.vue";
 import { useScreenStore } from "../stores/screen";
 import { useTopbarStore } from "../stores/topbar";
-import { duplicateEditorPage, pageCopyable, pageTitleShown, movePage, pageTitle, removePage, screenTitle, setHomePage, setPageExcluded, setPageHomeControl, setPageInDock, setPageTitle, setScreenTitle } from "../editor/pages";
+import { duplicateEditorPage, pageCopyable, pageTitleShown, movePage, pageTitle, removePage, screenTitle, setHomePage, setPageExcluded, setPageHomeControl, setPageIcon, setPageInDock, setPageTitle, setScreenTitle } from "../editor/pages";
 import { useDocumentStore } from "../stores/document";
 import { useInspectorStore } from "../stores/inspector";
 
@@ -91,6 +92,9 @@ const tiles = computed(() => page.value?.tiles.length || 0);
         <SwitchRow v-if="scr.currentScreen?.dock && !page.navigation.excludeFromPagination" class="dock-check" :label="t('editor.pages.show_in_dock')"
           :description="t('editor.pages.show_in_dock_hint')" :model-value="page.navigation.showInDock !== false" :disabled="!scr.pageReady"
           @update:model-value="(on) => setPageInDock(id, on)" />
+        <!-- In the Dock a page shows its picture, or an icon of its own. -->
+        <IconPicker v-if="scr.currentScreen?.dock && !page.navigation.excludeFromPagination && page.navigation.showInDock !== false"
+          :selected="page.icon || 'auto'" automatic="" :auto-label="t('editor.pages.dock_picture')" @pick="(name) => setPageIcon(id, name)" />
         <SwitchRow class="home-control" :label="t('editor.pages.home_control')"
           :model-value="!!page.topbar.leading.length" :disabled="!scr.pageReady" @update:model-value="(on) => setPageHomeControl(id, on)" />
         <div v-if="count > 1" class="f">

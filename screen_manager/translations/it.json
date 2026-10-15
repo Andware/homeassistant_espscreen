@@ -3344,6 +3344,7 @@
       "include_navigation_hint": "Se disattivato, i collegamenti diretti aprono comunque questa pagina. Indietro appare nella barra inferiore o sostituisce Home se la barra è nascosta.",
       "show_in_dock": "Mostra nel Dock",
       "show_in_dock_hint": "Il Dock si apre scorrendo verso l'alto dal bordo inferiore e mostra ogni pagina per raggiungerla. Disattivato: questa pagina non compare.",
+      "dock_picture": "Anteprima della pagina",
       "home_control": "Mostra un pulsante Home su questa pagina",
       "clock_control": "Ora",
       "edit_topbar": "Modifica la barra superiore di questa pagina",

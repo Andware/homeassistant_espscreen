@@ -155,6 +155,15 @@ class PageLayoutTests(unittest.TestCase):
             broken["pages"][1]["navigation"]["showInDock"] = wrong
             with self.assertRaises(LayoutError):
                 validate_document(broken, Grid())
+        # A page's own icon for the Dock: a pickable icon by name, or nothing.
+        layout["pages"][1]["icon"] = "sofa"
+        validate_document(layout, Grid())
+        self.assertEqual(compile_tiles(layout, Grid()), before)
+        for wrong in ("mdi:sofa", "no-such-icon", 7, None):
+            broken = deepcopy(layout)
+            broken["pages"][1]["icon"] = wrong
+            with self.assertRaises(LayoutError):
+                validate_document(broken, Grid())
 
     def test_exclusion_changes_only_the_sequential_route(self):
         record = self.migrate({"title": "Screen", "pages": 5, "tiles": [{"entity": "screen.page_5"}]})

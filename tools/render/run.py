@@ -2892,6 +2892,10 @@ class Run:
                                                                  pages=len(DOCK_TITLES) if many else None)
         if many:  # the third page left out of the Dock in its page settings: the Dock shows the other seven
             record['layout']['pages'][2]['navigation']['showInDock'] = False
+            # Some pages with an icon of their own (Living room, Bedroom, Garden): the Dock shows those instead of a picture.
+            for page, icon in ((1, 'sofa'), (3, 'bed'), (4, 'flower')):
+                if page < len(record['layout']['pages']):
+                    record['layout']['pages'][page]['icon'] = icon
         self.sender = send_layout.api_sender(self.client, services)
         await self.sender.synchronize(self.inbox.object_id, record, region, values, bars)
         tiles = len(values)

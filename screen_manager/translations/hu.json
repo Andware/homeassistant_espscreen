@@ -3344,6 +3344,7 @@
       "include_navigation_hint": "Kikapcsolva a közvetlen hivatkozások továbbra is megnyitják ezt az oldalt. A Vissza az alsó sávban jelenik meg, vagy a Kezdőlap helyén, ha az a sáv rejtett.",
       "show_in_dock": "Megjelenítés a Dockban",
       "show_in_dock_hint": "A Dock az alsó szélről felfelé húzva nyílik meg, és minden oldalt megmutat, hogy odaugorj. Kikapcsolva: ez az oldal nem szerepel benne.",
+      "dock_picture": "Az oldal képe",
       "home_control": "Kezdőlap gomb megjelenítése ezen az oldalon",
       "clock_control": "Idő",
       "edit_topbar": "Az oldal felső sávjának szerkesztése",

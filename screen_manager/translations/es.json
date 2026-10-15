@@ -3344,6 +3344,7 @@
       "include_navigation_hint": "Si se desactiva, los enlaces directos siguen abriendo esta página. Volver aparece en la barra inferior o sustituye a Inicio si la barra está oculta.",
       "show_in_dock": "Mostrar en el Dock",
       "show_in_dock_hint": "El Dock se abre deslizando hacia arriba desde el borde inferior y muestra cada página para ir a ella. Desactivado: esta página no aparece.",
+      "dock_picture": "Vista de la página",
       "home_control": "Mostrar un botón de inicio en esta página",
       "clock_control": "Hora",
       "edit_topbar": "Editar la barra superior de esta página",

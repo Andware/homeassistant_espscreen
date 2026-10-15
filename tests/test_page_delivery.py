@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "screen_manager/app"))
 from core import Grid
 from layout_migrations import migrate_legacy
+import tile_icons
 from page_delivery import Sender, DeliveryError, Refused, Superseded, configuration, bar_value_messages, grids_of, page_message
 
 
@@ -468,6 +469,14 @@ class DockMessageTests(unittest.TestCase):
         page["navigation"]["showInDock"] = False
         self.assertIs(page_message(page, 0, [], initial=True)["dock"], False)
         self.assertNotIn("dock", page_message(page, 0, [], initial=False))
+
+    def test_a_page_icon_travels_as_its_codepoint(self):
+        page = {"id": "0000000000000001", "navigation": {"excludeFromPagination": False},
+                "topbar": {"leading": [], "title": {"source": "screen"}, "trailing": []}, "tiles": []}
+        self.assertNotIn("icon", page_message(page, 0, [], initial=True))
+        page["icon"] = "sofa"
+        self.assertEqual(page_message(page, 0, [], initial=True)["icon"], tile_icons.GLYPHS["sofa"])
+        self.assertNotIn("icon", page_message(page, 0, [], initial=False))
 
 
 if __name__ == "__main__": unittest.main()

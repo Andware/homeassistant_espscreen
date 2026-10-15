@@ -219,6 +219,26 @@ inline void picture(lv_obj_t *parent, int page, int w, int h, const std::array<P
   }
 }
 
+// A page with an icon of its own shows that instead of its picture: the icon in the middle of the same quiet card, the
+// tile icon font where the card has room for it, the top bar's smaller one where it has not.
+inline void icon_picture(lv_obj_t *parent, uint32_t icon, int w, int h, bool here) {
+  auto *glass = block(parent, 0, 0, w, h, std::max(3, w / 14), theme::hex(theme::PAGE));
+  const lv_font_t *font = tile_icon_font();
+  if (!font || lv_font_get_line_height(font) > h * 7 / 10) font = mini_icon_font;
+  auto *glyph = lv_label_create(glass);
+  lv_label_set_text(glyph, tile_icon::utf8(icon).c_str());
+  lv_obj_set_style_text_font(glyph, font, 0);
+  lv_obj_set_style_text_color(glyph, theme::color(here ? theme::ACCENT : theme::SLATE), 0);
+  lv_obj_center(glyph);
+  if (here) {
+    auto *ring = block(glass, 0, 0, w, h, std::max(3, w / 14), theme::hex(theme::ACCENT));
+    lv_obj_add_flag(ring, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_set_style_bg_opa(ring, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(ring, std::max(2, ui::px(2)), 0);
+    lv_obj_set_style_border_color(ring, theme::color(theme::ACCENT), 0);
+  }
+}
+
 inline bool build() {
   drop_leaving();
   root = lv_obj_create(lv_layer_top());
@@ -329,7 +349,9 @@ inline bool build() {
       lv_obj_remove_flag(pic, LV_OBJ_FLAG_SCROLLABLE);
       lv_obj_set_pos(pic, inset, inset);
       lv_obj_set_size(pic, pic_w, pic_h);
-      picture(pic, page, pic_w, pic_h, placement, page == current);
+      const uint32_t icon = static_cast<size_t>(page) < records.size() ? records[page].icon : 0;
+      if (icon) icon_picture(pic, icon, pic_w, pic_h, page == current);
+      else picture(pic, page, pic_w, pic_h, placement, page == current);
       auto *name = lv_label_create(item);
       lv_label_set_text(name, model.title_of(page).c_str());
       lv_label_set_long_mode(name, LV_LABEL_LONG_MODE_DOTS);

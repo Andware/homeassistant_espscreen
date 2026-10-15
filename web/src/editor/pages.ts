@@ -66,6 +66,15 @@ export function setPageInDock(id: string, shown: boolean) {
     else page.navigation.showInDock = false;
   });
 }
+// A page's own icon for the Dock, or "auto" for its picture: the key goes then, so the document stays as it was.
+export function setPageIcon(id: string, icon: string) {
+  return useDocumentStore().editDocument((draft) => {
+    const page = draft.pages.find((item) => item.id === id);
+    if (!page) return;
+    if (icon === "auto" || icon === "none") delete page.icon;
+    else page.icon = icon;
+  });
+}
 // A full copy of a page puts its tiles on the screen twice: a page tile when the firmware takes that (0.2.65), any other
 // entity from 0.16.0, but never a clock with keys, which is on a screen once.
 export function pageCopyable(page: PageTile[] | undefined) {

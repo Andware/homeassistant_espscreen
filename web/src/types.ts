@@ -109,6 +109,8 @@ export type Page = {
     trailing: (HeaderItem & { id: string })[];
   };
   tiles: PageTile[];
+  // The page's own icon by name (a pickable MDI icon), which the Dock shows instead of its picture; left out, the picture.
+  icon?: string;
 };
 export type PageLayout = { title: string; homePageId: string; pages: Page[] };
 export type PageWorkspace = { revision: string; positions: Record<string, { x: number; y: number }> };

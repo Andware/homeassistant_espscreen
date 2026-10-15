@@ -3344,6 +3344,7 @@
       "include_navigation_hint": "Si désactivé, les liens directs ouvrent toujours cette page. Retour apparaît en bas, ou remplace Accueil si la barre est masquée.",
       "show_in_dock": "Afficher dans le Dock",
       "show_in_dock_hint": "Le Dock s'ouvre d'un balayage vers le haut depuis le bord inférieur et montre chaque page pour y aller. Désactivé : cette page n'y figure pas.",
+      "dock_picture": "Aperçu de la page",
       "home_control": "Afficher un bouton d’accueil sur cette page",
       "clock_control": "Heure",
       "edit_topbar": "Modifier la barre supérieure de cette page",
