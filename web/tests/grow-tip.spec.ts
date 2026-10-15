@@ -29,10 +29,19 @@ const view = () => mount(GrowTip, { attachTo: document.body, global: { stubs: ST
 const tile = () => useDocumentStore().layout!.tiles[0];
 const sets = () => [...document.querySelectorAll('.grow-set')];
 
+// It comes when the hand rests after the release, not while it is still sizing.
+async function rest() {
+  expect(document.querySelector('.grow-tip')).toBeNull();
+  vi.advanceTimersByTime(800);
+  await nextTick(); await nextTick();
+}
+beforeEach(() => { vi.useFakeTimers(); return () => vi.useRealTimers(); });
+
 it('lists what the room offers, richest first, previews a choice and keeps a click', async () => {
   const tip = view();
   expect(resizeTile(tile(), 'tall', 'rows')).toBe(true);
-  await nextTick(); await nextTick();
+  await nextTick();
+  await rest();
   expect(sets().map((set) => set.querySelector('.grow-name')!.textContent)).toEqual(['L:position_tilt', 'L:buttons_tilt', 'L:buttons', 'L:position', 'L:tilt', 'No controls']);
   expect(sets()[0].getAttribute('aria-checked')).toBe('true');
   sets()[1].dispatchEvent(new Event('pointerenter'));
@@ -51,7 +60,8 @@ it('lists what the room offers, richest first, previews a choice and keeps a cli
 it("stays away once told not to show again, while the richer default still comes", async () => {
   const tip = view();
   expect(resizeTile(tile(), 'tall', 'rows')).toBe(true);
-  await nextTick(); await nextTick();
+  await nextTick();
+  await rest();
   (document.querySelector('.grow-never') as HTMLElement).click();
   await nextTick(); await nextTick();
   expect(useUiStore().growTips).toBe(false);
@@ -59,6 +69,26 @@ it("stays away once told not to show again, while the richer default still comes
   expect(resizeTile(tile(), 'tall', 'rows')).toBe(true);
   await nextTick(); await nextTick();
   expect(tile().options?.controls).toBe('position_tilt');
+  expect(document.querySelector('.grow-tip')).toBeNull();
+  tip.unmount();
+});
+
+it('stays away when the user moves on before it comes, and goes when the size is undone', async () => {
+  const tip = view();
+  expect(resizeTile(tile(), 'tall', 'rows')).toBe(true);
+  await nextTick();
+  window.dispatchEvent(new Event('pointerdown'));
+  await rest();
+  expect(document.querySelector('.grow-tip')).toBeNull();
+  expect(useUiStore().growTip).toBeNull();
+  expect(tile().options?.controls).toBe('position_tilt');
+  useDocumentStore().undo();
+  expect(resizeTile(tile(), 'tall', 'rows')).toBe(true);
+  await nextTick();
+  await rest();
+  expect(document.querySelector('.grow-tip')).not.toBeNull();
+  useDocumentStore().undo();
+  await nextTick(); await nextTick();
   expect(document.querySelector('.grow-tip')).toBeNull();
   tip.unmount();
 });
