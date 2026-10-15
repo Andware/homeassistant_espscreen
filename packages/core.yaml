@@ -699,6 +699,9 @@ api:
                     #ifdef SD_MOD_VACUUM_CARD
                     features.add("vacuum_card");
                     #endif
+                    // cover_rows (firmware 0.57.0): a cover card lays out what its room holds (cover_tile.h), so ESP
+                    // Screens sends a card one row high its slats and a 1x1 card its control, which it draws when they fit.
+                    features.add("cover_rows");
                     auto sizes = root["tile_sizes"].to<JsonArray>();
                     for (const auto &size : page_protocol::TILE_SIZES)
                       if (size.fits(runtime_tiles::grid.columns, runtime_tiles::grid.rows)) sizes.add(size.name);

@@ -2014,6 +2014,7 @@
         "wide_hint": "Rechts op de dubbelbrede tegel, zoals de rijen in Home Assistant. Tikken op de naam werkt zoals hieronder ingesteld.",
         "needs_firmware": "Het scherm toont directe bediening vanaf firmware 0.2.19; tot die tijd blijft de tegel zoals hij was.",
         "tall_hint": "Kies de bediening in de extra hoogte. Vergroten behoudt je keuze en voegt nooit automatisch bediening toe.",
+        "room_hint": "Het scherm tekent ze waar de tegel er ruimte voor heeft (firmware 0.57.0 of nieuwer): onder de naam op een enkele tegel, ernaast op een dubbelbrede. Waar ze niet passen, ziet de tegel eruit zoals zonder.",
         "tilt": "Lamellenbediening",
         "tilt_hint": "Voegt de ondersteunde lamellenschuif of kantelknoppen toe als er genoeg ruimte is. Gebruik op kleinere tegels de detailweergave. Je keuze voor open/dicht blijft behouden."
       },

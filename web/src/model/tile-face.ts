@@ -50,6 +50,11 @@ export type Face = {
   climateModes: boolean;
   /** A blind with slats, two rows or more: its slats beside its own control. */
   coverExtended: boolean;
+  /** A cover card one row high laid out by its room (firmware 0.57.0, cover_tile.h): its slats on a card of one row, its
+   * control on a card of one cell, where they fit; else the card it is without them. */
+  coverRow: boolean;
+  /** The primary control a cover card lays out beside its slats ('position', 'buttons' or ''). */
+  coverPrimary: string;
   /** A tall card that only opens something: the settings, or a page. */
   tallAction: boolean;
   /** A tall card that only switches: one centred stack. */
@@ -100,6 +105,9 @@ export function tileFace(input: FaceInput): Face {
   const thermostat = domain === "climate" || domain === "humidifier";
   const climateModes = thermostat && chosen === "setpoint_mode" && shape.rows > 1;
   const coverExtended = domain === "cover" && hasCoverTilt(chosen) && shape.rows > 1;
+  const coverRow = domain === "cover" && !full && shape.rows === 1 && options?.inline !== "slider" && ["standard", "cover"].includes(display)
+    && Boolean(chosen) && (hasCoverTilt(chosen) || (shape.columns === 1 && ["position", "buttons"].includes(chosen || "")));
+  const coverPrimaryKind = domain === "cover" ? availableControl(domain, coverPrimary(chosen) === "none" ? null : coverPrimary(chosen), state, a, input.rangeReady) : "";
   const tall = shape.rows > 1 && (!full || coverExtended || climateModes) && ["standard", "cover"].includes(display);
   const goesTo = pageTarget(entity);
   const tallAction = tall && (entity === "screen.settings" || Boolean(goesTo));
@@ -109,7 +117,7 @@ export function tileFace(input: FaceInput): Face {
   const bigKey = tall && !full && input.bigKeys && BIG_KEY_DOMAINS.includes(domain) && options?.inline !== "slider"
     && (!tallControls || tallControls === "toggle" || tallControls === "run");
   const face: Omit<Face, "kind"> = {
-    domain, display, full, wide, tall, thermostat, climateModes, coverExtended, tallAction, tallStack, bigKey, controls, tallControls,
+    domain, display, full, wide, tall, thermostat, climateModes, coverExtended, coverRow, coverPrimary: coverPrimaryKind, tallAction, tallStack, bigKey, controls, tallControls,
     tallKeys: controlKeys(domain, tallControls, state, a),
     panelKeys: controls && !NOT_KEYS.includes(controls) ? controlKeys(domain, controls, state, a) : [],
     modeBar: thermostat && controls === "mode",

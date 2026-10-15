@@ -2014,6 +2014,7 @@
         "wide_hint": "On the right of the double-width tile, like the rows in Home Assistant. Tapping the name works as set below.",
         "needs_firmware": "The screen shows direct control from firmware 0.2.19; until then the tile stays as it was.",
         "tall_hint": "Choose the controls shown in the extra height. Resizing keeps your selection; it never adds controls automatically.",
+        "room_hint": "The screen draws them where the tile has room for them (firmware 0.57.0 or newer): under the name on a single tile, beside it on a double-width one. Where they don't fit, the tile looks as it does without them.",
         "tilt": "Slat tilt",
         "tilt_hint": "Adds the supported slat slider or tilt buttons when there is enough room. On smaller tiles, use the detail view. Your open/close selection stays unchanged."
       },

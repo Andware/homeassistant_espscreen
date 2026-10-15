@@ -2375,6 +2375,7 @@
         "wide_hint": "A destra del riquadro a larghezza doppia, come le righe in Home Assistant. Un tocco sul nome funziona come impostato qui sotto.",
         "needs_firmware": "Lo schermo mostra il controllo diretto a partire dal firmware 0.2.19; fino ad allora il riquadro resta com'era.",
         "tall_hint": "",
+        "room_hint": "Lo schermo li disegna dove il riquadro ha spazio (firmware 0.57.0 o successivo): sotto il nome su un riquadro singolo, accanto su uno a doppia larghezza. Dove non ci stanno, il riquadro resta com'è senza.",
         "tilt": "",
         "tilt_hint": ""
       },

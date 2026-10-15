@@ -9,7 +9,7 @@ import { t } from "../i18n";
 import rules from "./page-rules.json";
 import { isTallSize, isWideSize } from "./sizes";
 import { validateCardOptions } from "./page-validation";
-import { controlOption, drawable, fits, ofType } from "./catalogue";
+import { controlOption, drawable, fits, ofType, roomControls } from "./catalogue";
 import { ACTS_ON_TAP, holdHintKey, SLIDER_DOMAINS, SWITCHES_ON_TAP, TOGGLE_BEFORE } from "./layout";
 import { coverPrimary, hasCoverTilt, withCoverTilt } from "./tall-controls";
 import type { Capability, PageTile, Tile, TileOptions } from "../types";
@@ -236,7 +236,7 @@ export function displayHint(tile: Tile, panel: TilePanel): Hint | null {
 export function tileControls(tile: Tile, panel: TilePanel, inlineKind: string) {
   const size = sizeOfTile(tile);
   return isTallSize(size) && option(tile, "inline", "none") === "slider" ? inlineKind
-    : option(tile, "controls", ["tall", "full"].includes(size) ? "none" : panel.catalogue?.default) as string;
+    : option(tile, "controls", ["tall", "full", "single"].includes(size) ? "none" : panel.catalogue?.default) as string;
 }
 /** The control sets the panel offers: a blind's slats are a switch of their own; room for it on a card of this size (the
  * mode keys and the slats ask a second row) and a screen that draws it for this entity (a range: firmware 0.19.0+), as
@@ -253,7 +253,8 @@ export function controlChoices(tile: Tile, panel: TilePanel, controls: string) {
 /** Whether a blind's slats can go beside its control: on a card two rows high or the whole page, where the blind has slats. */
 export function tiltOffered(tile: Tile, panel: TilePanel, controls: string) {
   const domain = domainOf(tile), size = sizeOfTile(tile), tilt = domain === "cover" && hasCoverTilt(controls);
-  return domain === "cover" && (isTallSize(size) || size === "full")
+  // A screen that lays a cover out by its room (firmware 0.57.0) takes them on a card of one row or one cell as well.
+  return domain === "cover" && (isTallSize(size) || size === "full" || Boolean(controlOption(domain, "tilt")?.room))
     && (tilt || Boolean(panel.caps?.controls.includes("tilt") && choiceOffered(tile, "controls", withCoverTilt(coverPrimary(controls), true), Boolean(panel.catalogue))));
 }
 /** What the panel says of the control: a warning for one Home Assistant does not offer, else where it stands. */
@@ -261,7 +262,8 @@ export function controlHint(tile: Tile, panel: TilePanel, controls: string): Hin
   const c = panel.caps, size = sizeOfTile(tile);
   if (c && controls !== "none" && !c.controls.includes(controls)) return { text: t("editor.tile.controls.not_offered"), warn: true };
   return { text: panel.supports(0, 2, 19)
-    ? t(isTallSize(size) ? "editor.tile.controls.tall_hint" : size === "full" ? "editor.tile.controls.full_hint" : "editor.tile.controls.wide_hint")
+    ? t(roomControls(domainOf(tile)) && !isTallSize(size) && size !== "full" ? "editor.tile.controls.room_hint"
+      : isTallSize(size) ? "editor.tile.controls.tall_hint" : size === "full" ? "editor.tile.controls.full_hint" : "editor.tile.controls.wide_hint")
     : t("editor.tile.controls.needs_firmware"), warn: false };
 }
 

@@ -2375,6 +2375,7 @@
         "wide_hint": "Rechts auf der doppelt breiten Kachel, wie die Zeilen in Home Assistant. Ein Tippen auf den Namen wirkt wie unten eingestellt.",
         "needs_firmware": "Der Bildschirm zeigt die direkte Steuerung ab Firmware 0.2.19; bis dahin bleibt die Kachel, wie sie war.",
         "tall_hint": "",
+        "room_hint": "Der Bildschirm zeigt sie, wo die Kachel Platz dafür hat (Firmware 0.57.0 oder neuer): auf einer einfachen Kachel unter dem Namen, auf einer doppelt breiten daneben. Wo sie nicht passen, sieht die Kachel aus wie ohne sie.",
         "tilt": "",
         "tilt_hint": ""
       },

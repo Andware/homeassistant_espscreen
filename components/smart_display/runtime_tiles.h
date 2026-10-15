@@ -7803,17 +7803,31 @@ inline void draw_mode_bar(Widgets &w,const Tile &t,lv_obj_t *parent,lv_obj_t *&t
     else if(segments[n])lv_obj_add_flag(segments[n],LV_OBJ_FLAG_HIDDEN);
   }
 }
+// The cover cards the cover layout draws (firmware 0.57.0, hello feature cover_rows): any card with its slats chosen,
+// and a card of one cell with a control chosen at all (on large glass a 1x1 holds a bar or a row of keys). The add-on
+// sends a one-row card its slats and a 1x1 its control only to a screen that says cover_rows.
+inline bool cover_row_card(const Tile &t){
+  if(t.domain()!="cover")return false;
+  if(tile_controls::cover_tilt_selected(t))return true;
+  const auto kind=tile_controls::panel_kind(t);
+  return t.column_span()==1&&t.row_span()==1&&!t.full&&(kind=="position"||kind=="buttons");
+}
 inline cover_tile::Layout cover_tile_layout(const Tile &t,tall_tile::Rect body,int touch,int gap,int caption){
   // Capability, not freshness, decides the layout: while HA reconnects the same keys stay, greyed out (ready below).
-  if(!tile_controls::cover_tilt_selected(t))return {};
+  if(!cover_row_card(t))return {};
   const auto card=tile_controls::cover_card(t);std::array<tile_controls::Key,3> keys;
   const auto kind=tile_controls::panel_kind(t);
   const bool position=kind=="position"&&card.position;
+  const bool tilt=tile_controls::cover_tilt_selected(t);
+  // Slats chosen on a cover that reports none (a motor swapped, a group that lost its venetian blind): a card larger than
+  // one cell keeps the card it has without them, as before firmware 0.57.0; a 1x1 still lays out its primary control.
+  const bool one_cell=t.column_span()==1&&t.row_span()==1&&!t.full;
+  if(tilt&&!card.tilt&&!card.tilt_keys&&!one_cell)return {};
   // A blind worked by its position gets its open, stop and close as well where the card has room for them too.
   return cover_tile::layout(body,touch,gap,caption,2*touch,
     position,kind=="buttons"?tile_controls::keys_for(t,keys):0,
-    card.tilt,card.tilt_keys?tile_controls::cover_tilt_keys(t,keys):0,
-    position&&card.keys?tile_controls::cover_keys(t,keys):0);
+    tilt&&card.tilt,tilt&&card.tilt_keys?tile_controls::cover_tilt_keys(t,keys):0,
+    position&&card.keys?tile_controls::cover_keys(t,keys):0,t.row_span()>1||t.full);
 }
 // A cover card whose slats share one row with its primary control (cover_tile::SWAP) shows one of the two: the swap key
 // turns it. By the tile's index, so it stays while the card is drawn again; a new layout starts at the primary.
@@ -7864,11 +7878,12 @@ inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout 
     if(i<2&&!l.swap.empty()&&(i==1)!=swapped)continue;
     const float value=i?t.extra().tilt:t.position;
     if(i<2&&!g.caption.empty()){
-      std::string caption=std::string(tr(i?txt::cover_tilt:txt::cover_position));
-      if(g.slider&&std::isfinite(value)){
-        const auto with_value=caption+" "+screen_text::percent((int)std::lround(value));
-        if(text_width(with_value,w.value_font)<=g.caption.w)caption=with_value;
-      }
+      // The word and the value where both fit, else the word, else the value of a slider, else nothing: never cut.
+      const std::string word=tr(i?txt::cover_tilt:txt::cover_position);
+      const std::string number=g.slider&&std::isfinite(value)?screen_text::percent((int)std::lround(value)):"";
+      std::string caption;
+      for(const auto &c:{number.empty()?std::string():word+" "+number,word,number})
+        if(!c.empty()&&text_width(c,w.value_font)<=g.caption.w){caption=c;break;}
       auto *label=part_label(w,i,w.value_font,g.caption.x,g.caption.y,g.caption.w,LV_TEXT_ALIGN_CENTER,caption);
       set_color(label,LV_STYLE_TEXT_COLOR,theme::color(theme::MUTED));
     }
@@ -7892,7 +7907,7 @@ inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout 
     }
   }
   // The swap key shows what the row turns into: the slats, or the blind again.
-  if(!l.swap.empty())key(13,l.swap,swapped?tile_controls::glyph::SHADE:tile_controls::glyph::SLATS,true);
+  if(!l.swap.empty())key(13,l.swap,swapped?tile_controls::glyph::SHADE:tile_controls::glyph::SLATS,ready);
 }
 // Additional rows extend the existing heading and controls. Compact tiles never
 // enter this path. The selected control kind and its events remain authoritative.
@@ -8019,11 +8034,13 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
   // A card (not a full page) at least twice as wide as high puts its heading at the left and the cover's controls at the right, where
   // that gives them a richer layout than under the heading (a CYD's 2x2: two bars instead of one and its swap key).
   bool beside=false;
-  if(!w.full&&width>=2*height){
+  // Only where the whole name fits the left half: a name cut short is worse than a poorer layout under it.
+  const int side_circle=std::min(w.base_circle,width/6);
+  if(!w.full&&width>=2*height&&text_width(lv_label_get_text(w.title),w.title_font)<=width/2-side_circle-gap){
     const auto side=cover_tile_layout(t,{width/2+gap,0,width-width/2-gap,height},touch,gap,m.state_h);
     if(side.fits&&(!cover.fits||side.tier>cover.tier)){cover=side;beside=true;}
   }
-  if(w.full&&!cover.fits&&!tile_controls::climate_modes_selected(t)){if(w.extra_mode=="cover_tilt")hide_extra(w);return false;}
+  if((w.full||t.row_span()==1)&&!cover.fits&&!tile_controls::climate_modes_selected(t)){if(w.extra_mode=="cover_tilt")hide_extra(w);return false;}
   if(cover.fits){selected=false;m.row_count=0;}
   auto l=tall_tile::layout(m);
   // An unusual override can leave too little physical room for the selection.
@@ -8563,7 +8580,8 @@ inline void render_slot(size_t slot) {
   }else if(t.favorite()&&render_favorite_card(w,t,content_w,content_h)){
     label(w.value,value);
     lap(swipe_profile::GEOMETRY);
-  }else if((taller||(w.full&&(tile_controls::cover_tilt_selected(t)||tile_controls::climate_modes_selected(t))))&&!custom&&!watch&&!graph&&
+  }else if((taller||(w.full&&(tile_controls::cover_tilt_selected(t)||tile_controls::climate_modes_selected(t)))||
+            (!w.full&&t.row_span()==1&&t.inline_control!="slider"&&cover_row_card(t)))&&!custom&&!watch&&!graph&&
      render_tall(w,t,with_panel,content_w,content_h)){
     lap(swipe_profile::GEOMETRY);
   }else if(w.full && !bedside){

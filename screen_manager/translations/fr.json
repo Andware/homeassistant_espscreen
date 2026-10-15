@@ -2375,6 +2375,7 @@
         "wide_hint": "À droite de la tuile double largeur, comme les lignes dans Home Assistant. Toucher le nom agit comme réglé ci-dessous.",
         "needs_firmware": "L'écran affiche la commande directe à partir du firmware 0.2.19 ; d'ici là, la tuile reste comme avant.",
         "tall_hint": "",
+        "room_hint": "L'écran les dessine là où la tuile a la place (firmware 0.57.0 ou plus récent) : sous le nom sur une tuile simple, à côté sur une tuile double largeur. Là où ils ne tiennent pas, la tuile reste telle qu'elle est sans eux.",
         "tilt": "",
         "tilt_hint": ""
       },

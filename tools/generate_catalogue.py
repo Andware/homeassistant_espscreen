@@ -39,7 +39,7 @@ MEMORY = {'bytes', 'extras'}
 MOST_BYTES = 16384
 # The keys of a remote's card (keypad): up, down, left, right and OK always, the rest where the remote has them.
 KEYPAD_KEYS = ('up', 'down', 'left', 'right', 'ok', 'back', 'home', 'play', 'volume_up', 'volume_down', 'mute')
-OPTION = {'needs', 'screen', 'sizes', 'wide', 'rows', 'of', 'one_row', 'fallback', 'range'}
+OPTION = {'needs', 'screen', 'sizes', 'wide', 'rows', 'of', 'one_row', 'fallback', 'range', 'room'}
 NEEDS = {'actions', 'features', 'history', 'attributes', 'unless'}
 SCREEN = {'firmware', 'feature', 'pictures', 'else'}
 
@@ -197,6 +197,12 @@ def normalise(tile, types, translations, facts, commands=None):
                 if value[name] != 'none' and value[name] not in siblings:
                     fail(where, f'{name} names {value[name]}, which is not an option here')
                 out[name] = value[name]
+        # A control the screen lays out by its own room (firmware 0.57.0, cover_tile.h): on a screen that says `room`'s
+        # feature it may stand on a card of any size, one row or one cell included, and the screen draws what fits.
+        if 'room' in value:
+            out['room'] = screen(f'{where} room', value['room'])
+            if 'feature' not in out['room'] or 'else' in out['room']:
+                fail(where, 'room names the feature of the screens that lay this control out by their room, and no else')
         if 'range' in value:
             check_keys(f'{where} range', value['range'], {'when', 'screen'})
             out['range'] = {'when': needs(f'{where} range when', domain, value['range'].get('when')),

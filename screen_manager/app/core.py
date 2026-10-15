@@ -2623,7 +2623,7 @@ def drawn_controls(message, features):
     """The controls a screen draws right for this tile (app 0.4.32), in place of ones it would get wrong: what the entity
     can draw and what the screen's hello says it draws (catalogue.drawn_controls). `features`: the list the screen's
     hello said, None where it is not known (the editor's preview, which runs the newest firmware)."""
-    return catalogue.drawn_controls(message, features)
+    return catalogue.drawn_controls(message, features, span_of)
 
 def encode(message):
     """The message as the firmware parses it: compact JSON, at most 4096 bytes."""

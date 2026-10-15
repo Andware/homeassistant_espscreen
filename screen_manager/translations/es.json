@@ -2375,6 +2375,7 @@
         "wide_hint": "A la derecha del mosaico de doble ancho, como las filas de Home Assistant. Tocar el nombre funciona como se indica más abajo.",
         "needs_firmware": "La pantalla muestra el control directo a partir del firmware 0.2.19; hasta entonces, el mosaico se queda como estaba.",
         "tall_hint": "",
+        "room_hint": "La pantalla los dibuja donde el mosaico tiene sitio (firmware 0.57.0 o posterior): bajo el nombre en un mosaico sencillo, al lado en uno de doble ancho. Donde no caben, el mosaico se ve como sin ellos.",
         "tilt": "",
         "tilt_hint": ""
       },

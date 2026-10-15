@@ -18,6 +18,7 @@ import IconChoices from "./IconChoices.vue";
 import IconPicker from "./IconPicker.vue";
 import TileAnchor from "./TileAnchor.vue";
 import { coverPrimary, hasCoverTilt, withCoverTilt } from "../model/tall-controls";
+import { roomControls } from "../model/catalogue";
 import ChoiceField from "./ChoiceField.vue";
 import CalendarSection from "./inspector/CalendarSection.vue";
 import FavoriteSection from "./inspector/FavoriteSection.vue";
@@ -200,7 +201,9 @@ const crumbs = computed(() => [
   { text: props.tile.entity, mono: true },
 ]);
 const lookShown = computed(() => !goesTo.value && !bedside.value && !key.value && (props.tile.entity !== "screen.settings" || display.value === "live" || domain.value === "sensor"));
-const controlsShown = computed(() => (domain.value !== "screen" && !goesTo.value) || Boolean(catalogue.value && size.value !== "single" && !goesTo.value) || (showSlider.value && !goesTo.value));
+// A card of one cell offers controls only for a type the screen lays out by its room (a cover, firmware 0.57.0).
+const controlsHere = computed(() => Boolean(catalogue.value) && (size.value !== "single" || roomControls(domain.value)));
+const controlsShown = computed(() => (domain.value !== "screen" && !goesTo.value) || (controlsHere.value && !goesTo.value) || (showSlider.value && !goesTo.value));
 // What the pointer rests on is drawn on the tile before it is picked (ChoiceField does the same for its lists).
 const subSample = (kind: string) => kind === "attr" ? `attr:${subAttribute.value || "state"}` : kind === "text" ? `text:${subText.value || t("editor.tile.sub.text_placeholder")}` : kind;
 const controlSample = (key: string) => domain.value === "cover" ? withCoverTilt(key, tiltSelected.value) : key;
@@ -333,7 +336,7 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
       <PropRow v-if="domain === 'lock'" :label="t('editor.tile.guard.label')" icon="check-circle" :hint="t(guard === 'lock_only' ? 'editor.tile.guard.lock_only_hint' : 'editor.tile.guard.confirm_hint')">
         <ChoiceField :choices="guards" :value="guard" :aria-label="t('editor.tile.guard.label')" @pick="(v) => setTileOption(tile, 'guard', v)" />
       </PropRow>
-      <PropRow v-if="catalogue && size !== 'single' && !goesTo" :label="t('editor.tile.controls.label')" icon="tune-variant" :hint="!controlNote.warn ? controlNote.text : undefined">
+      <PropRow v-if="controlsHere && !goesTo" :label="t('editor.tile.controls.label')" icon="tune-variant" :hint="!controlNote.warn ? controlNote.text : undefined">
         <ChoiceField :choices="controlList" :value="primaryControl" :tile="tile" preview-key="controls" :sample="controlSample" :aria-label="t('editor.tile.controls.label')" @pick="pickControl" />
         <template v-if="controlNote.warn" #note><small class="help warn">{{ controlNote.text }}</small></template>
       </PropRow>

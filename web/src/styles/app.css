@@ -449,6 +449,9 @@ a:hover { text-decoration: underline; }
 /* Inside the chip (its own container): the room beside its icon, as range_chip measures it. */
 .tile.wide .ctl.fill .stp .range-chip b { font-size: var(--chip-face, min(var(--face-watch), max(var(--face-text), calc((100cqw - 2 * var(--pill-in)) / var(--chip-ems, 2))))); }
 .tile .ctl { flex: none; display: flex; align-items: center; gap: 4px; color: #1b1b1b; }
+/* A cover laid out by its room (firmware 0.57.0): its controls in the right half of a wide card, under the head of a card
+   of one cell (CoverCell, CoverTilePreview measures what it is given). */
+.tile.wide .ctl.cover-row { flex: none; width: 50%; align-self: stretch; }
 .tile .tog { width: 30px; height: 17px; border-radius: 9px; background: #2196f3; position: relative; }
 .tile .tog::after { content: ""; position: absolute; top: 2px; right: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; }
 .tile .tog.off { background: #c9ccd1; }

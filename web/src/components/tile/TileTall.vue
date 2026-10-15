@@ -32,7 +32,12 @@ const rangeStyle = computed(() => ({ ...card.sliderStyle, "--fill": `${card.fill
       <span class="ic mdi">{{ glyph(card.icon) }}</span>
       <span class="tx"><span class="nm">{{ card.texts.name }}</span><span v-if="card.texts.headLine" class="st" :class="{ off: card.gone }">{{ card.texts.headLine }}</span></span>
     </span>
-    <CoverTilePreview v-if="card.face.coverExtended" :primary="card.face.tallControls" :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}" />
+    <CoverTilePreview v-if="card.face.coverExtended" :primary="card.face.tallControls" :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}">
+      <template #fallback>
+        <span v-if="card.face.tallControls === 'position'" class="cover-range" :style="{ '--position': `${100 - (card.current?.a?.current_position ?? 50)}%` }"></span>
+        <span v-else-if="card.face.tallKeys.length" class="cover-row"><span v-for="(k, i) in card.face.tallKeys" :key="i" class="key mdi" :class="{ disabled: k.disabled }">{{ card.key(k.icon) }}</span></span>
+      </template>
+    </CoverTilePreview>
     <span v-else-if="card.face.thermostat && (card.face.tallControls === 'setpoint' || card.face.tallControls === 'setpoint_mode')" class="tall-setpoint">
       <span class="target"><span class="key mdi">{{ card.key('minus') || '−' }}</span><RangeChip v-if="card.chip" :chip="card.chip" :icon="card.key(card.chip.icon)" /><b v-else>{{ card.texts.setpoint }}</b><span class="key mdi">{{ card.key('plus') || '+' }}</span></span>
       <span class="st">{{ card.texts.now || card.texts.status }}</span>
@@ -64,6 +69,9 @@ const rangeStyle = computed(() => ({ ...card.sliderStyle, "--fill": `${card.fill
 
 <style scoped src="./parts.css"></style>
 <style scoped>
+/* What a cover shows where its slats do not fit (CoverTilePreview's fallback): its position bar, or its keys. */
+.cover-range { position: absolute; left: 0; right: 0; bottom: 0; height: min(40%, 34px); border-radius: 10px; background: linear-gradient(to right, var(--tile-accent) var(--position), var(--tile-circle) var(--position)); }
+.cover-row { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 6px; justify-content: center; }
 .tile.tall.big-key .ic { width: 44cqmin; height: 44cqmin; display: grid; place-items: center; font-size: 24cqmin; padding: 0; }
 .tile.tall.big-key .nm { font-size: clamp(12px, 13cqmin, 26px); font-weight: 500; color: #1b1b1b; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tile.tall.big-key .st { font-size: 10px; }
