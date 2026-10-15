@@ -428,8 +428,8 @@ a:hover { text-decoration: underline; }
 .device.compact .tile:has(> .mini-slider) { padding-block: 4px; gap: 3px; }
 .device.compact .tile .mini-slider { height: 8px; }
 .tile .mini-slider { height: 10px; border-radius: 5px; background: linear-gradient(to right, #ffbf38 60%, #fff1d3 60%); flex: none; width: 100%; }
-/* A control that fills its room is one cell wide, as the screens draw it (runtime_tiles::cell_content_width):
-   a double-width card is two cells, so half its room once the gap between them and both paddings are off. */
+/* A control that fills its room takes the card's right half, as the screens draw it (runtime_tiles::half_content_width):
+   half its room once a gap between two cards and both paddings are off, on a card of two cells or more. */
 .tile.wide { --tile-fill: calc((100% - 26px) / 2); }
 .device.compact .tile.wide { --tile-fill: calc((100% - 22px) / 2); }
 .tile.wide .mini-slider { width: var(--tile-fill); }

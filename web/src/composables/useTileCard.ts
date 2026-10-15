@@ -152,7 +152,7 @@ export function useTileCard(props: TileCardProps) {
   const glassScale = computed(() => Number(canvas.deviceStyle["--glass"]) || 1);
   // A wide card's chip as the glass works it out (ui-scale wideChip): its face and whether its icon fits.
   const wideFit = computed(() => chip.value && face.value.wide
-    ? wideChip(doc.screenShape, doc.documentGrid?.columns ?? doc.screenShape.columns, widestSetpoint(current.value?.a || {})) : null);
+    ? wideChip(doc.screenShape, doc.documentGrid?.columns ?? doc.screenShape.columns, shape.value.columns, widestSetpoint(current.value?.a || {})) : null);
   const sliderStyle = computed(() => ({ background: `linear-gradient(to right, ${palette.value.accent} ${fill.value}%, ${palette.value.track} ${fill.value}%)` }));
   const glassPx = (n: number) => `${(n * glassScale.value).toFixed(2)}px`;
   const watchStyle = computed(() => {

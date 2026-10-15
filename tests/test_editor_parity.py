@@ -127,7 +127,7 @@ def run_ts(body, data, tmp):
     (Path(tmp) / 'data.json').write_text(json.dumps(data))
     script = Path(tmp) / 'parity.ts'
     script.write_text(f'''import {{ readFileSync }} from "node:fs";
-import {{ cardContent, cardHeight, cellContent, modeBar, pillMetrics, tallKeys, uiScale, watchCard, watchPadding, widestSetpoint }} from "{model / 'ui-scale'}";
+import {{ cardContent, cardHeight, halfContent, modeBar, pillMetrics, tallKeys, uiScale, watchCard, watchPadding, widestSetpoint }} from "{model / 'ui-scale'}";
 import {{ barGaps, barLayout, barMetricsFor }} from "{model / 'topbar'}";
 import {{ sizeColumns, sizeFor, sizeRows, sizesOn, spanOf, spanOffered }} from "{model / 'sizes'}";
 import {{ accent, tileActive }} from "{model / 'tile-palette'}";
@@ -266,7 +266,7 @@ int main() {{
 
 
 class Grid(unittest.TestCase):
-    """What LVGL's grid makes of a card (runtime_tiles cell_content_width, base_height), from the WebAssembly build."""
+    """What LVGL's grid makes of a card (runtime_tiles half_content_width, base_height), from the WebAssembly build."""
 
     @classmethod
     def setUpClass(cls):
@@ -294,7 +294,7 @@ class Grid(unittest.TestCase):
             cls.ts = run_ts('''
 console.log(JSON.stringify(DATA.shapes.map((shape: any) => ({
   content: Array.from({ length: shape.columns }, (_, i) => cardContent(shape, shape.columns, i + 1)),
-  last: cardContent(shape, shape.columns, 1, shape.columns - 1), cell: cellContent(shape, shape.columns),
+  last: cardContent(shape, shape.columns, 1, shape.columns - 1), half: shape.columns >= 2 ? halfContent(shape, shape.columns, 2) : null,
   full: modeBar(shape, "full", 400, 4).finger, px: [uiScale(shape).px(44), uiScale(shape).px(84)] }))));''',
                             {'shapes': [s for _, _, s in SHAPES]}, tmp)
 
@@ -308,8 +308,11 @@ console.log(JSON.stringify(DATA.shapes.map((shape: any) => ({
                 self.assertEqual(ts['content'][1] + edges, self.cards[(key, 'wide')][0], f'{key}: cardContent of a wide card')
             full = self.cards[(key, 'full')][0]
             self.assertEqual(ts['content'][-1] + edges, full, f'{key}: cardContent of the whole page')
-            # And the cell a wide card's controls fill (cell_content_width): the grid's own width shared out, rounded down.
-            self.assertEqual(ts['cell'], (full - (columns - 1) * shape['spacing']['gap']) // columns - edges, f'{key}: cellContent')
+            # And the room a wide card's controls fill (half_content_width): its right half, as two cards with the
+            # grid's gap between them, less a card's padding and border.
+            if columns >= 2:
+                wide = self.cards[(key, 'wide')][0]
+                self.assertEqual(ts['half'], (wide - shape['spacing']['gap']) // 2 - edges, f'{key}: halfContent')
 
     # A card over the whole page takes its keys by the height of a cell (layout_panel: panel_metrics_full(w.base_height
     # > 80)), and the editor knows no cell heights: its mockup takes them by the look (modeBar "full"), which is the same

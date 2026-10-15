@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import boardShapes from "../../screen_manager/app/boards.json";
-import { energyFits, pillMetrics, tallKeys, textEms, touchMin, uiScale, widestSetpoint, cardContent, cardHeight, cellContent, modeBar, watchCard, watchPadding, wideChip } from "../src/model/ui-scale";
+import { energyFits, pillMetrics, tallKeys, textEms, touchMin, uiScale, widestSetpoint, cardContent, cardHeight, modeBar, watchCard, watchPadding, wideChip, halfContent } from "../src/model/ui-scale";
 
 describe("the firmware's sizes in the mockup (app 0.4.32)", () => {
   it("scales as ui::px does, from the board's density and look", () => {
@@ -33,10 +33,16 @@ describe("the firmware's sizes in the mockup (app 0.4.32)", () => {
 describe("a card's room as the glass works it out (app 0.4.32)", () => {
   const guition = { width: 480, dpi: 170, look: "standard", fonts: { watch_value: 38, sublabel_big: 21, sublabel: 16, icon_mini: 26 }, spacing: { margin: 16, gap: 12, tile_pad: 12 } };
   const cyd = { width: 320, dpi: 143, look: "compact", fonts: { watch_value: 22, sublabel_big: 14, sublabel: 11, icon_mini: 18 }, spacing: { margin: 9, gap: 6, tile_pad: 8 } };
-  it("gives a wide card's controls one cell and a taller card its whole content (runtime_tiles cell_content_width)", () => {
+  it("gives a wide card's controls its right half and a taller card its whole content (runtime_tiles half_content_width)", () => {
     expect(cardContent(guition, 2, 1)).toBe(192);
     expect(cardContent(guition, 2, 2)).toBe(422);
     expect(cardContent(cyd, 2, 1)).toBe(130);
+    // A card of two cells: its second cell. Of three (GitHub #250): half of it, not the last cell.
+    expect(halfContent(guition, 2, 2)).toBe(192);
+    expect(halfContent(cyd, 2, 2)).toBe(130);
+    const three = { width: 800, dpi: 187, look: "standard", spacing: { margin: 16, gap: 12, tile_pad: 12 } };
+    expect(halfContent(three, 3, 3)).toBe(Math.floor((cardContent(three, 3, 3) + 26 - 12) / 2) - 26);
+    expect(halfContent(three, 3, 3)).toBeGreaterThan(cardContent(three, 3, 1));
   });
   it("fits as many modes as climate_tile::bar_room does", () => {
     expect(modeBar(guition, "row", 192, 5)).toMatchObject({ room: 4, width: 4 * 46 + 8 });
@@ -44,16 +50,16 @@ describe("a card's room as the glass works it out (app 0.4.32)", () => {
     expect(modeBar(guition, "row", 192, 1).room).toBe(0);
   });
   it("draws a wide chip's number as large as it fits alone, and its icon only where that fits too (range_chip)", () => {
-    expect(wideChip(guition, 2, "88°")).toEqual({ face: 38, icon: true });
-    expect(wideChip(cyd, 2, "88°")).toEqual({ face: 22, icon: false });
+    expect(wideChip(guition, 2, 2, "88°")).toEqual({ face: 38, icon: true });
+    expect(wideChip(cyd, 2, 2, "88°")).toEqual({ face: 22, icon: false });
   });
   it("shares the page between its columns as LVGL's grid does, and a wide card's controls the cell rounded down", () => {
-    // 1280 wide in five columns: LVGL gives 242, 242, 241, 242 and 241 pixels; cell_content_width 241 for each.
+    // 1280 wide in five columns: LVGL gives 242, 242, 241, 242 and 241 pixels.
     const big = { width: 1280, dpi: 149, look: "standard", spacing: { margin: 14, gap: 11, tile_pad: 11 } };
     expect([0, 1, 2, 3, 4].map((start) => cardContent(big, 5, 1, start))).toEqual([218, 218, 217, 218, 217]);
     expect(cardContent(big, 5, 5)).toBe(1280 - 28 - 24);
-    expect(cellContent(big, 5)).toBe(217);
-    expect(cellContent(guition, 2)).toBe(cardContent(guition, 2, 1));
+    expect(halfContent(big, 5, 2)).toBe(218);
+    expect(halfContent(guition, 2, 2)).toBe(cardContent(guition, 2, 1));
   });
 });
 

@@ -1,5 +1,9 @@
 ## Unreleased
 
+- **A wide tile's slider takes half the tile (#250).** On a tile three cells wide or more, a player's volume, a
+  brightness or a -/+ took only the last cell at the right end, a short slider where the editor showed half the tile.
+  It now takes the tile's right half on the screen too, as two tiles side by side would. A tile two cells wide stays
+  as it was. The screen needs this firmware.
 - **Editor: a long list of media players scrolls and has a search.** Adding a player to the screensaver opened a menu
   that ran off the window in a home with many players, and the ones below could not be reached. It now opens a search
   field with a list that scrolls, and typing narrows it by name or area. Every other menu of the editor scrolls when it
