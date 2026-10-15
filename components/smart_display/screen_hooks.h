@@ -42,6 +42,19 @@ inline std::vector<std::function<void()>> &touched() {
 inline void run_touched() {
   for (auto &f : touched()) f();
 }
+// A finger came down on something that takes a tap or a drag (plugin_host.cpp, LVGL's press of the input device): at
+// once, before the screen knows whether it becomes a tap, so a click can answer the finger instead of the action.
+inline std::vector<std::function<void()>> &pressed() {
+  static std::vector<std::function<void()>> list;
+  return list;
+}
+// A dragged slider or dial passed a step (screen_input::step_of), at most every STEP_GAP_MS.
+inline std::vector<std::function<void()>> &stepped() {
+  static std::vector<std::function<void()>> list;
+  return list;
+}
+// When no press is heard: the push that wakes a dimmed screen, a calibration (core.yaml sets it at boot).
+inline bool (*presses_quiet)() = nullptr;
 // An alert is about to show, after the settings page closed and before its card is made.
 inline std::vector<std::function<void()>> &alert_show() {
   static std::vector<std::function<void()>> list;

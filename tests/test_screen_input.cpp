@@ -15,6 +15,18 @@ int main() {
   assert(quantize_temperature(-1, 160, 300, 5) == 160);
   assert(quantize_temperature(999, 160, 299, 5) == 299);
   assert(quantize_temperature(201, 160, 300, 0) == 201);
+  // A dragged slider's steps (a plugin's on_step, API 0.11): every 5 % of a long range, every position of a short one,
+  // counted from 0 on a range that reaches below it only for the drawing.
+  assert(screen_input::step_of(0, 0, 100) == 0);
+  assert(screen_input::step_of(4, 0, 100) == 0);
+  assert(screen_input::step_of(5, 0, 100) == 1);
+  assert(screen_input::step_of(100, 0, 100) == 20);
+  assert(screen_input::step_of(-8, -8, 100) == 0);
+  assert(screen_input::step_of(127, 0, 255) == 9);
+  assert(screen_input::step_of(3, 0, 6) == 3);
+  assert(screen_input::step_of(190, 160, 300) == 4);
+  assert(screen_input::step_of(500, 160, 300) == 20);
+  assert(screen_input::step_of(7, 7, 7) == 0);
   // -/+ keys: quick successive taps on the same key all count; bounce within 150 ms does not.
   screen_input::TouchGuard r;
   r.begin(1000); assert(r.accept_repeat(1060, 7)); assert(!r.accept_repeat(1070, 7));  // one contact, one step

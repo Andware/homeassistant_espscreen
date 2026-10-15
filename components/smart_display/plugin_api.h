@@ -49,7 +49,9 @@ namespace tessera {
 // tile lays out, each with an address the app fetches and paints for exactly that place, through the route every
 // picture of the screen takes (tile_picture.h "parts"); ui::text, a label of several lines; and tap_point(), where the
 // finger of a tile's on_tap was.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 10;
+// 0.11: on_press, a finger landing on something that takes a tap, at once; on_step, a dragged slider or dial passing a
+// step.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 11;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -256,6 +258,14 @@ class Plugin {
   // never the repeat of a key that is held. For a click or a buzz, 0.3. It runs inside the touch event: start a sound,
   // never wait for one.
   virtual void on_touch() {}
+  // A finger came down on something that takes a tap or a drag: a tile, a key, a slider, a row of the settings, the
+  // top bar. At once, before the screen knows whether it becomes a tap, a hold or a swipe, so a click answers the finger
+  // (0.11). Not for the push that wakes a dimmed screen, nor between the tiles. Runs inside the touch: start a sound,
+  // never wait for one.
+  virtual void on_press() {}
+  // A dragged slider or dial passed a step: every 5 % of its range, or every position of one with 20 or fewer; at most
+  // one every 35 ms (0.11). For a detent you can hear or feel.
+  virtual void on_step() {}
   // Rows on the screen's settings page. Called once when the interface is up; true when the plugin added some.
   virtual bool settings(SettingsPage &page) { return false; }
   // An answer from the app to tessera::send(): {"re": <the number send returned>, "ok": true, "result": ...} or

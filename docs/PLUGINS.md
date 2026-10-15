@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.10 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.11 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -14,7 +14,7 @@ change a name or a signature while the API settles (0.4 renamed `Plugin::on_tick
 plugins move with it in the same release. Such a minor goes into `PLUGIN_API_BREAKS` (`plugin_manifest.py` and
 `__init__.py`, a test keeps them equal): a plugin written before it does not fit a core after it, and its build says so in
 one sentence instead of a compiler error (`api_fits`; the plugins repository's check uses the same rule). A minor that only
-adds is not listed, so a 0.9 plugin builds on 0.10. A test keeps the number equal in `plugin_api.h`, `__init__.py`,
+adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equal in `plugin_api.h`, `__init__.py`,
 `plugin_manifest.py`, this page and the host probe's manifest.
 
 ## The pieces
@@ -191,7 +191,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | A top bar item | `add_bar_item`, its icon in a `tone` (0.8); `header_bar::Kind::plugin` | `validate_header` type `plugin`, `content` all or icon (wire `o`), sent to a screen whose hello says `plugins` | "From plugins" in Top bar, Add; Show: icon and words, or icon only |
 | Settings rows | `settings(SettingsPage&)`; `settings_screen::plugin_pages` | `Plugins.settings_for`, `set_setting`: the manifest's `settings` (switch, number, select, text, button with its `status`), entities of the screen's own device found in the entity registry (`_setting_entities`) | in the plugin's details on the screen's Plugins tab (`PluginSettings.vue`), with its inputs and parts; Screen settings links there |
 | A question to Home Assistant | `tessera::send`, `on_message` (op `plugin`) | `Plugins.answer`: only `permissions.ha_commands`, logged; an answer the manifest's `answers` maps goes as its fields, the rest as it came; both bounded (`bounded`, 3.2 KB, by bytes) | the commands under "What it may do" |
-| The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`) | | |
+| The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`), `on_press` (0.11: a finger landing on something that takes a tap, at once, through `screen_hooks::pressed()`: LVGL's press of the input device, when the object under the finger or a parent its events bubble to listens for a press, tap or hold; not while the screen is dimmed or calibrating) and `on_step` (0.11: a dragged slider or dial passing a step, `screen_input::step_of`, through `screen_hooks::stepped()`; `plugin_host.cpp` adds the listener to a slider the first time a finger lands on it) | | |
 | A board's own hardware | the plugin's `plugin.yaml` (audio codecs, a relay), its `boards` in the manifest | offered only to the screens of those boards | the Plugins page says which boards |
 
 ## Where a plugin comes from

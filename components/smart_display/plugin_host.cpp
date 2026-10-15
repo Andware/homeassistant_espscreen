@@ -10,6 +10,7 @@
 #include "runtime_tiles.h"
 #include "plugin_host.h"
 #include "plugin_api.h"
+#include "lvgl_private.h"  // an event's filter (lv_event_dsc_t), which LVGL 9 keeps out of lvgl.h
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -971,6 +972,81 @@ void message(const std::string &plugin, JsonObjectConst body) {
     if (plugin == p->plugin_id()) p->on_message(body);
 }
 
+// A finger landing, heard at once (screen_hooks::pressed, a plugin's on_press): LVGL's press of the input device names
+// the object under the finger before any of its own events, and the press counts when that object, or a parent its
+// events bubble up to, listens for a press, a tap or a hold. The page itself listens for a flick only, so a finger
+// between the tiles or in the margin of the glass is not heard. A slider or a dial under the finger then says each
+// step it passes while it is dragged (screen_hooks::stepped, on_step): the screen's own sliders and those of a plugin,
+// with a listener added the first time a finger lands on one, which goes with the slider.
+namespace {
+bool takes_press(lv_obj_t *obj) {
+  for (auto *o = obj; o && lv_obj_get_parent(o); o = lv_obj_get_parent(o)) {
+    for (uint32_t i = 0, n = lv_obj_get_event_count(o); i < n; ++i) {
+      switch (lv_obj_get_event_dsc(o, i)->filter & ~LV_EVENT_PREPROCESS) {
+        case LV_EVENT_ALL: case LV_EVENT_PRESSED: case LV_EVENT_SHORT_CLICKED: case LV_EVENT_CLICKED:
+        case LV_EVENT_LONG_PRESSED: case LV_EVENT_LONG_PRESSED_REPEAT: case LV_EVENT_RELEASED:
+          return true;
+        default: break;
+      }
+    }
+    if (!lv_obj_has_flag(o, LV_OBJ_FLAG_EVENT_BUBBLE)) return false;
+  }
+  return false;
+}
+lv_obj_t *dragged = nullptr;
+int dragged_step = 0;
+uint32_t stepped_at = 0;
+int step_now(lv_obj_t *o) {
+  if (lv_obj_check_type(o, &lv_slider_class))
+    return screen_input::step_of(lv_slider_get_value(o), lv_slider_get_min_value(o), lv_slider_get_max_value(o));
+#if LV_USE_ARC
+  return screen_input::step_of(lv_arc_get_value(o), lv_arc_get_min_value(o), lv_arc_get_max_value(o));
+#else
+  return 0;
+#endif
+}
+bool drags_value(lv_obj_t *o) {
+#if LV_USE_ARC
+  if (lv_obj_check_type(o, &lv_arc_class)) return true;
+#endif
+  return lv_obj_check_type(o, &lv_slider_class);
+}
+void moved_value(lv_event_t *e) {
+  auto *o = lv_event_get_target_obj(e);
+  auto *indev = lv_indev_active();
+  // LVGL sets the value once more as the finger lifts: that is no step of the drag.
+  if (o != dragged || !indev || lv_indev_get_state(indev) != LV_INDEV_STATE_PRESSED) return;
+  const int step = step_now(o);
+  if (step == dragged_step) return;
+  dragged_step = step;
+  const uint32_t now = esphome::millis();
+  if (now - stepped_at < screen_input::STEP_GAP_MS) return;
+  stepped_at = now;
+  for (auto &f : screen_hooks::stepped()) f();
+}
+void landed(lv_event_t *e) {
+  auto *obj = static_cast<lv_obj_t *>(lv_event_get_param(e));
+  dragged = nullptr;
+  if (!obj || (screen_hooks::presses_quiet && screen_hooks::presses_quiet())) return;
+  if (!takes_press(obj)) return;
+  for (auto &f : screen_hooks::pressed()) f();
+  for (auto *o = obj; o && lv_obj_get_parent(o); o = lv_obj_get_parent(o)) {
+    if (!drags_value(o)) continue;
+    bool heard = false;
+    for (uint32_t i = 0, n = lv_obj_get_event_count(o); i < n && !heard; ++i)
+      heard = lv_event_dsc_get_cb(lv_obj_get_event_dsc(o, i)) == moved_value;
+    if (!heard) lv_obj_add_event_cb(o, moved_value, LV_EVENT_VALUE_CHANGED, nullptr);
+    dragged = o;
+    dragged_step = step_now(o);
+    return;
+  }
+}
+void listen_to_presses() {
+  for (auto *indev = lv_indev_get_next(nullptr); indev; indev = lv_indev_get_next(indev))
+    if (lv_indev_get_type(indev) == LV_INDEV_TYPE_POINTER) lv_indev_add_event_cb(indev, landed, LV_EVENT_PRESSED, nullptr);
+}
+}  // namespace
+
 // The plugins' moments start once ESPHome has set up every component, not at on_boot. packages/core.yaml calls ready()
 // in on_boot at priority -100, the setup priority LATE that a plugin with hardware of its own takes as well (a sound, a
 // camera, a microphone), and ESPHome sets up the components of one priority in the order they were registered: the
@@ -987,6 +1063,9 @@ static void start() {
   screen_hooks::cards_closed().push_back([]() { for (auto *p : tessera::plugins()) p->on_cards_closed(); });
   screen_hooks::alert_show().push_back([]() { for (auto *p : tessera::plugins()) p->on_alert(); });
   screen_hooks::touched().push_back([]() { for (auto *p : tessera::plugins()) p->on_touch(); });
+  screen_hooks::pressed().push_back([]() { for (auto *p : tessera::plugins()) p->on_press(); });
+  screen_hooks::stepped().push_back([]() { for (auto *p : tessera::plugins()) p->on_step(); });
+  listen_to_presses();
   screen_hooks::away().push_back([]() { return card_open(); });
   build_settings();
   for (auto *p : tessera::plugins()) p->on_ready();
