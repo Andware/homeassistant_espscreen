@@ -4878,6 +4878,8 @@ inline void media_seek_event(lv_event_t *e){
   lv_area_t area;lv_obj_get_coords(lv_obj_get_parent(media_progress_fill),&area);
   const int along=point.x-area.x1-media_bar_x;
   const uint32_t seconds=media_card::seek_seconds(along,media_bar_width,x.media_duration);
+  // The seek bar is no LVGL slider: its steps (a plugin's click) are said here, every 5 % of the track.
+  if(code==LV_EVENT_PRESSED||code==LV_EVENT_PRESSING)screen_hooks::drag_at(media_progress_fill,screen_input::step_of((int)seconds,0,(int)x.media_duration));
   if(code==LV_EVENT_PRESSED||code==LV_EVENT_PRESSING){media_seeking=true;media_bar_at(seconds,x.media_duration,media_progress_fill,media_elapsed_label,media_bar_width);return;}
   if(code==LV_EVENT_PRESS_LOST){media_seeking=false;media_bar_at(media_elapsed(t),x.media_duration,media_progress_fill,media_elapsed_label,media_bar_width);return;}
   if(code!=LV_EVENT_RELEASED||!media_seeking)return;

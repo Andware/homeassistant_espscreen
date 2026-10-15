@@ -976,7 +976,7 @@ void message(const std::string &plugin, JsonObjectConst body) {
 // the object under the finger before any of its own events, and the press counts when that object, or a parent its
 // events bubble up to, listens for a press, a tap or a hold. The page itself listens for a flick only, so a finger
 // between the tiles or in the margin of the glass is not heard. A slider or a dial under the finger then says each
-// step it passes while it is dragged (screen_hooks::stepped, on_step): the screen's own sliders and those of a plugin,
+// step it passes while it is dragged (screen_hooks::drag_at, on_step): the screen's own sliders and those of a plugin,
 // with a listener added the first time a finger lands on one, which goes with the slider.
 namespace {
 bool takes_press(lv_obj_t *obj) {
@@ -993,9 +993,6 @@ bool takes_press(lv_obj_t *obj) {
   }
   return false;
 }
-lv_obj_t *dragged = nullptr;
-int dragged_step = 0;
-uint32_t stepped_at = 0;
 int step_now(lv_obj_t *o) {
   if (lv_obj_check_type(o, &lv_slider_class))
     return screen_input::step_of(lv_slider_get_value(o), lv_slider_get_min_value(o), lv_slider_get_max_value(o));
@@ -1015,18 +1012,12 @@ void moved_value(lv_event_t *e) {
   auto *o = lv_event_get_target_obj(e);
   auto *indev = lv_indev_active();
   // LVGL sets the value once more as the finger lifts: that is no step of the drag.
-  if (o != dragged || !indev || lv_indev_get_state(indev) != LV_INDEV_STATE_PRESSED) return;
-  const int step = step_now(o);
-  if (step == dragged_step) return;
-  dragged_step = step;
-  const uint32_t now = esphome::millis();
-  if (now - stepped_at < screen_input::STEP_GAP_MS) return;
-  stepped_at = now;
-  for (auto &f : screen_hooks::stepped()) f();
+  if (!indev || lv_indev_get_state(indev) != LV_INDEV_STATE_PRESSED) return;
+  screen_hooks::drag_at(o, step_now(o));
 }
 void landed(lv_event_t *e) {
   auto *obj = static_cast<lv_obj_t *>(lv_event_get_param(e));
-  dragged = nullptr;
+  screen_hooks::drag_begin();
   if (!obj || (screen_hooks::presses_quiet && screen_hooks::presses_quiet())) return;
   if (!takes_press(obj)) return;
   for (auto &f : screen_hooks::pressed()) f();
@@ -1036,8 +1027,6 @@ void landed(lv_event_t *e) {
     for (uint32_t i = 0, n = lv_obj_get_event_count(o); i < n && !heard; ++i)
       heard = lv_event_dsc_get_cb(lv_obj_get_event_dsc(o, i)) == moved_value;
     if (!heard) lv_obj_add_event_cb(o, moved_value, LV_EVENT_VALUE_CHANGED, nullptr);
-    dragged = o;
-    dragged_step = step_now(o);
     return;
   }
 }

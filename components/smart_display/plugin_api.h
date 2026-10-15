@@ -50,7 +50,7 @@ namespace tessera {
 // picture of the screen takes (tile_picture.h "parts"); ui::text, a label of several lines; and tap_point(), where the
 // finger of a tile's on_tap was.
 // 0.11: on_press, a finger landing on something that takes a tap, at once; on_step, a dragged slider or dial passing a
-// step.
+// step; SoundPlayer::add(), a sound after the ones before it, evenly spaced.
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 11;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
@@ -263,8 +263,9 @@ class Plugin {
   // (0.11). Not for the push that wakes a dimmed screen, nor between the tiles. Runs inside the touch: start a sound,
   // never wait for one.
   virtual void on_press() {}
-  // A dragged slider or dial passed a step: every 5 % of its range, or every position of one with 20 or fewer; at most
-  // one every 35 ms (0.11). For a detent you can hear or feel.
+  // A dragged slider, dial or seek bar passed a step: every 5 % of its range, or every position of one with 20 or fewer
+  // (0.11). Once for every step passed, two at most at once, as a detent clicks; not for the jump of a slider to where
+  // the finger lands. For a detent you can hear or feel: SoundPlayer::add() spaces a run of clicks evenly.
   virtual void on_step() {}
   // Rows on the screen's settings page. Called once when the interface is up; true when the plugin added some.
   virtual bool settings(SettingsPage &page) { return false; }
