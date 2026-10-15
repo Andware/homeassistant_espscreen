@@ -21,7 +21,9 @@ const props = defineProps<{ selected: string; automatic: string; autoLabel: stri
 const emit = defineEmits<{ (e: "pick", name: string): void }>();
 const query = ref("");
 const chosen = computed(() => entities.iconNamed(props.selected));
-const currentGlyph = computed(() => (props.selected === "none" ? "" : glyph(chosen.value?.cp || props.automatic)));
+// No automatic icon (a page's own icon in the Dock, whose default is the page's picture) draws no glyph: an empty
+// codepoint would throw and take the whole row with it.
+const currentGlyph = computed(() => { const cp = props.selected === "none" ? "" : chosen.value?.cp || props.automatic; return cp ? glyph(cp) : ""; });
 const currentText = computed(() => (props.selected === "none" ? t("editor.icon.none") : chosen.value?.label || props.autoLabel));
 function show(name: string | null) {
   if (!props.tile?.id) return;

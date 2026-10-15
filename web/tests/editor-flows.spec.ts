@@ -14,7 +14,7 @@ import { useEntitiesStore } from "../src/stores/entities";
 import { useScreenStore } from "../src/stores/screen";
 import { useSessionStore } from "../src/stores/session";
 import { useInventoryStore } from "../src/stores/inventory";
-import { addPage } from "../src/editor/pages";
+import { addPage, setPageIcon, setPageInDock } from "../src/editor/pages";
 import { addTile, liveEntries, placeTile, retargetPageTile, setTileOption } from "../src/editor/tiles";
 import { useDocumentStore } from "../src/stores/document";
 
@@ -106,6 +106,31 @@ describe("the editor", () => {
     doc.endFieldEdit();
     expect(doc.layout!.tiles[0].options?.sub).toBe("text:Sofa");
     expect(doc.undoCount).toBe(1);
+  });
+
+  it("offers Show in Dock and a page's own icon on a screen with the Dock, and none without it", async () => {
+    addPage();
+    const id = doc.document!.pages[1].id;
+    const screen = useInventoryStore().inventory.screens[0];
+    screen.dock = false;
+    let view = mount(PageInspector, { props: { id } });
+    expect(view.find(".dock-check").exists()).toBe(false);
+    expect(view.text()).not.toContain("Picture of the page");
+    view.unmount();
+    screen.dock = true;
+    view = mount(PageInspector, { props: { id } });
+    expect(view.find(".dock-check").exists()).toBe(true);
+    // The icon row, with the page's picture as its default: an empty automatic icon must not take the row with it.
+    expect(view.text()).toContain("Picture of the page");
+    setPageIcon(id, "sofa");
+    expect(doc.document!.pages[1].icon).toBe("sofa");
+    setPageIcon(id, "auto");
+    expect("icon" in doc.document!.pages[1]).toBe(false);
+    setPageInDock(id, false);
+    await nextTick();
+    expect(doc.document!.pages[1].navigation.showInDock).toBe(false);
+    expect(view.text()).not.toContain("Picture of the page");
+    view.unmount();
   });
 
   it("saves a page title without the spaces at its ends, and keeps them while typing (app 0.4.2)", async () => {
