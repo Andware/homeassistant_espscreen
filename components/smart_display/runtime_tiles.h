@@ -1428,6 +1428,7 @@ inline lv_obj_t *captured_slider=nullptr;
 inline bool slider_changed=false;
 inline int slider_held=0;
 inline void slider_event(lv_event_t *e);
+inline int cover_bar_raw(lv_obj_t *slider,bool tilt);
 inline void commit_slider(unsigned i,int raw,bool tilt=false){
   if(i>=model.count || !fresh())return;auto &t=model.tiles[i];if(!t.available() || t.waiting(esphome::millis()))return;
   float value=std::clamp(raw,0,1000)/1000.0f;auto d=t.domain();
@@ -1515,7 +1516,8 @@ inline void slider_event(lv_event_t *e){
     struct GhostEnd{lv_obj_t *slider;~GhostEnd(){ghost_end(slider);}} ghost{slider};
     unsigned index=(uintptr_t)lv_event_get_user_data(e);bool tilt=false;
     // A slider among a card's own parts (the media tile's volume) belongs to the tile the slot shows now.
-    for(auto &w:widgets)if(w.slider==slider || w.control_slider==slider || (w.extra && lv_obj_get_parent(slider)==w.extra)){index=w.index;tilt=w.extra_mode=="cover_tilt"&&w.parts[3]==slider;break;}
+    bool cover_strip=false;
+    for(auto &w:widgets)if(w.slider==slider || w.control_slider==slider || (w.extra && lv_obj_get_parent(slider)==w.extra)){index=w.index;cover_strip=w.extra_mode=="cover_tilt";tilt=cover_strip&&w.parts[3]==slider;break;}
     bool changed=slider_changed;captured_slider=nullptr;slider_changed=false;
     // A finger that landed beside a tile's strip and let go without moving tapped the tile (or held it, sent above):
     // the value LVGL set from that point on release goes back, and the tile's own rules decide what the tap does.
@@ -1537,7 +1539,8 @@ inline void slider_event(lv_event_t *e){
     }
     if(index<model.count&&model.tiles[index].row_span()>1&&!model.tiles[index].full)
       for(const auto &w:widgets)if(w.control_slider==slider&&!tile_controls::panel_available(model.tiles[index]))return;
-    if(changed && screen_input::touch_guard.accept_slider(esphome::millis(),200+index))commit_slider(index,lv_slider_get_value(slider),tilt);
+    if(changed && screen_input::touch_guard.accept_slider(esphome::millis(),200+index))
+      commit_slider(index,cover_strip?cover_bar_raw(slider,tilt):lv_slider_get_value(slider),tilt);
   }
 }
 inline void show_detail(unsigned index);
@@ -2426,18 +2429,28 @@ inline void cover_slider_event(lv_event_t *e){
   const auto call=tile_controls::cover_position_action(t,lv_slider_get_value(slider),tilt);
   if(call.valid())action(call.service,t.entity,call.key,call.value);
 }
+// The slats behind a tilt slider's handle, at the angle the slider stands at (cover_tile::slats): drawn by the slider
+// itself just before its handle, so they turn with every value it takes, a finger's or Home Assistant's, and cost no
+// objects of their own.
+inline void cover_slats_draw(lv_event_t *e){
+  auto *slider=lv_event_get_target_obj(e);
+  lv_area_t a;lv_obj_get_coords(slider,&a);
+  const float tilt=std::clamp(lv_slider_get_value(slider)/10.0f,0.0f,100.0f);
+  const auto s=cover_tile::slats(lv_area_get_width(&a),lv_area_get_height(&a),tilt,ui::mm(3),std::max(3,ui::mm(1)+1));
+  lv_draw_line_dsc_t d;lv_draw_line_dsc_init(&d);
+  d.color=lv_color_hex(cover_slats());d.width=s.width;d.round_start=d.round_end=1;
+  for(int i=0;i<s.count;++i){
+    const auto &l=s.slat[i];
+    d.p1={(lv_value_precise_t)std::lround(a.x1+l.x1),(lv_value_precise_t)std::lround(a.y1+l.y1)};
+    d.p2={(lv_value_precise_t)std::lround(a.x1+l.x2),(lv_value_precise_t)std::lround(a.y1+l.y2)};
+    lv_draw_line(lv_event_get_layer(e),&d);
+  }
+}
 // One slider. The position fills from the top by how far the cover is closed; the tilt has no fill and its
-// handle moves over slats drawn behind it, thicker towards the closed end as in Home Assistant.
+// handle moves over the slats, drawn at their angle (firmware 0.57.0).
 inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback=nullptr,void *user=nullptr){
   int radius=std::max(8,w/7),handle_h=std::max(4,w/18),handle_w=tilt?w*3/5:w*2/5,inset=std::max(6,w/9);
-  if(tilt){
-    auto *slats=detail_shape(parent,x,y,w,h,cover_track(),radius);
-    const int count=10,pitch=(h-2*radius/2)/count;
-    for(int i=0;i<count;++i){
-      int thick=std::max(2,pitch*(20+60*i/(count-1))/100);
-      detail_shape(slats,inset,radius/2+i*pitch+(pitch-thick)/2,w-2*inset,thick,cover_slats(),thick/2);
-    }
-  }
+  if(tilt)detail_shape(parent,x,y,w,h,cover_track(),radius);
   auto *slider=lv_slider_create(parent);lv_obj_remove_style_all(slider);
   lv_obj_set_pos(slider,x,y);lv_obj_set_size(slider,w,h);lv_slider_set_orientation(slider,LV_SLIDER_ORIENTATION_VERTICAL);
   lv_obj_set_style_radius(slider,radius,LV_PART_MAIN);lv_obj_set_style_radius(slider,radius,LV_PART_INDICATOR);
@@ -2457,6 +2470,7 @@ inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float val
     int margin=1000*(inset+handle_h)/std::max(1,h-2*(inset+handle_h));
     lv_slider_set_range(slider,-margin,1000+margin);
     lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):500,LV_ANIM_OFF);
+    lv_obj_add_event_cb(slider,cover_slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,nullptr);
   }else{
     lv_obj_set_style_pad_top(slider,inset+handle_h-w/2,LV_PART_KNOB);lv_obj_set_style_pad_bottom(slider,1-inset-w/2,LV_PART_KNOB);
     // Reversed, the fill hangs from the top; the stub past 0 holds the handle of a cover that is fully open.
@@ -2473,6 +2487,48 @@ inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float val
   if(detail_action_count<32)detail_actions[detail_action_count++]=slider;
   }
   return slider;
+}
+inline void slider_handle(lv_obj_t *slider,int width,int height);
+// The same two lying across a card one bar high (firmware 0.57.0), as Home Assistant's cover-position and
+// cover-tilt-position tile features: the position fills from the left by how far the cover is open, with the white
+// handle of every tile bar (slider_handle); the tilt keeps its slats and its accent handle. A lying position slider holds
+// the open share, so its value is turned around before it goes out (cover_bar_raw).
+inline lv_obj_t *cover_bar(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback,void *user){
+  const int radius=h>20?h*12/42:LV_RADIUS_CIRCLE,handle=std::max(4,h/9),inset=std::max(4,h/6);
+  if(tilt)detail_shape(parent,x,y,w,h,cover_track(),radius);
+  auto *slider=lv_slider_create(parent);lv_obj_remove_style_all(slider);
+  lv_obj_set_pos(slider,x,y);lv_obj_set_size(slider,w,h);lv_slider_set_orientation(slider,LV_SLIDER_ORIENTATION_HORIZONTAL);
+  lv_obj_set_style_bg_color(slider,lv_color_hex(cover_track()),LV_PART_MAIN);lv_obj_set_style_bg_opa(slider,tilt?LV_OPA_TRANSP:LV_OPA_COVER,LV_PART_MAIN);
+  lv_obj_set_style_bg_color(slider,lv_color_hex(COVER_ACCENT),LV_PART_INDICATOR);lv_obj_set_style_bg_opa(slider,tilt?LV_OPA_TRANSP:LV_OPA_COVER,LV_PART_INDICATOR);
+  lv_obj_set_style_opa(slider,LV_OPA_50,LV_STATE_DISABLED);
+  if(tilt){
+    lv_obj_set_style_radius(slider,radius,LV_PART_MAIN);
+    lv_obj_set_style_bg_color(slider,lv_color_hex(COVER_ACCENT),LV_PART_KNOB);lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
+    lv_obj_set_style_radius(slider,LV_RADIUS_CIRCLE,LV_PART_KNOB);
+    // LVGL's knob is a square as high as the bar; the pads make it an upright handle a third of the bar's height.
+    const int across=-(h-2*handle)/2,along=-(h-h*3/5)/2;
+    lv_obj_set_style_pad_left(slider,across,LV_PART_KNOB);lv_obj_set_style_pad_right(slider,across,LV_PART_KNOB);
+    lv_obj_set_style_pad_top(slider,along,LV_PART_KNOB);lv_obj_set_style_pad_bottom(slider,along,LV_PART_KNOB);
+    const int margin=1000*(inset+handle)/std::max(1,w-2*(inset+handle));
+    lv_slider_set_range(slider,-margin,1000+margin);
+    lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):500,LV_ANIM_OFF);
+    lv_obj_add_event_cb(slider,cover_slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,nullptr);
+  }else{
+    lv_obj_set_style_radius(slider,2,LV_PART_KNOB);lv_obj_add_style(slider,theme::style(theme::Paint::knob),LV_PART_KNOB);
+    lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
+    slider_handle(slider,w,h);
+    lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):0,LV_ANIM_OFF);
+  }
+  overlay_card::touchable(slider,h);
+  lv_obj_remove_flag(slider,LV_OBJ_FLAG_GESTURE_BUBBLE);lv_obj_set_ext_click_area(slider,0);
+  lv_obj_add_event_cb(slider,callback,LV_EVENT_ALL,user);
+  return slider;
+}
+// What a cover slider's value means for cover_position_action: a lying position bar holds the open share, every
+// other the closed share (or the tilt).
+inline int cover_bar_raw(lv_obj_t *slider,bool tilt){
+  const int raw=lv_slider_get_value(slider);
+  return !tilt&&lv_obj_get_width(slider)>lv_obj_get_height(slider)?1000-std::clamp(raw,0,1000):raw;
 }
 // A row of pill keys with an icon each, as the climate card's modes. A key that cannot move the cover further
 // is drawn disabled and left out of the keys the card enables again once Home Assistant answers.
@@ -7667,21 +7723,6 @@ inline void render_media_full(Widgets &w,const Tile &t,bool big,int content_w,in
   if(volume)media_volume_row(w.extra,&w.parts[11],at(l.minus),at(l.volume),at(l.plus),t,big,usable,(void*)(uintptr_t)w.index,false,key_font);
   show(11,volume);show(12,volume);show(13,volume);
 }
-// Both overlay and tile use the same feature-filtered cover commands. Slot
-// ownership is resolved on every tap; stale/offline/waiting entities stay inert.
-inline void cover_tile_key_event(lv_event_t *e){
-  const unsigned tag=(uintptr_t)lv_event_get_user_data(e),slot=tag/8,part=tag%8;
-  if(slot>=widgets.size()||part>=6)return;
-  const auto &w=widgets[slot];if(w.index>=model.count||w.extra_mode!="cover_tilt")return;
-  const auto &t=model.tiles[w.index];
-  if(!enabled||!fresh()||!t.available()||t.waiting(esphome::millis())||!tile_controls::cover_tilt_selected(t))return;
-  std::array<tile_controls::Key,3> keys;
-  const unsigned count=part>=3?tile_controls::cover_tilt_keys(t,keys):tile_controls::keys_for(t,keys);
-  if(part%3>=count||keys[part%3].disabled)return;
-  if(!screen_input::touch_guard.accept(esphome::millis(),600+tag))return;
-  const auto call=tile_controls::key_action(t,keys[part%3].command);
-  if(!call.service.empty())action(call.service,t.entity,call.key,call.value);
-}
 // A thermostat's mode bar (firmware 0.3.3): under its -/+ on a card of "Temperature and mode" (the tall card's parts
 // 2 and 4..9) and on its own as the panel of "Mode" (the panel's pill and segments, firmware 0.19.0). One bar, one
 // drawing, one press: a segment says its place in the bar, and the bar's modes are climate_bar_keys for the room it
@@ -7767,48 +7808,91 @@ inline cover_tile::Layout cover_tile_layout(const Tile &t,tall_tile::Rect body,i
   if(!tile_controls::cover_tilt_selected(t))return {};
   const auto card=tile_controls::cover_card(t);std::array<tile_controls::Key,3> keys;
   const auto kind=tile_controls::panel_kind(t);
+  const bool position=kind=="position"&&card.position;
+  // A blind worked by its position gets its open, stop and close as well where the card has room for them too.
   return cover_tile::layout(body,touch,gap,caption,2*touch,
-    kind=="position"&&card.position,kind=="buttons"?tile_controls::keys_for(t,keys):0,
-    card.tilt,card.tilt_keys?tile_controls::cover_tilt_keys(t,keys):0);
+    position,kind=="buttons"?tile_controls::keys_for(t,keys):0,
+    card.tilt,card.tilt_keys?tile_controls::cover_tilt_keys(t,keys):0,
+    position&&card.keys?tile_controls::cover_keys(t,keys):0);
+}
+// A cover card whose slats share one row with its primary control (cover_tile::SWAP) shows one of the two: the swap key
+// turns it. By the tile's index, so it stays while the card is drawn again; a new layout starts at the primary.
+inline std::array<uint8_t,TILES_MAX> cover_swapped{};
+inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout &l,int width,int height);
+// Both overlay and tile use the same feature-filtered cover commands. Slot ownership is resolved on every tap;
+// stale/offline/waiting entities stay inert. A cover card's keys: tag slot*16 + group*3 + key (group 0 the primary, 1 the slats, 2 open/stop/close beside the
+// sliders), slot*16 + 15 the swap key.
+inline void cover_tile_key_event(lv_event_t *e){
+  const unsigned tag=(uintptr_t)lv_event_get_user_data(e),slot=tag/16,part=tag%16;
+  if(slot>=widgets.size()||(part>=9&&part!=15))return;
+  auto &w=widgets[slot];if(w.index>=model.count||w.extra_mode!="cover_tilt")return;
+  const auto &t=model.tiles[w.index];
+  if(part==15){
+    if(!enabled||!screen_input::touch_guard.accept(esphome::millis(),600+tag))return;
+    cover_swapped[w.index]^=1;w.cached_active=-1;refresh_tile(w.index);return;
+  }
+  if(!enabled||!fresh()||!t.available()||t.waiting(esphome::millis())||!tile_controls::cover_tilt_selected(t))return;
+  std::array<tile_controls::Key,3> keys;
+  const unsigned group=part/3,count=group==1?tile_controls::cover_tilt_keys(t,keys):group==2?tile_controls::cover_keys(t,keys):tile_controls::keys_for(t,keys);
+  if(part%3>=count||keys[part%3].disabled)return;
+  if(!screen_input::touch_guard.accept(esphome::millis(),600+tag))return;
+  const auto call=tile_controls::key_action(t,keys[part%3].command);
+  if(!call.service.empty())action(call.service,t.entity,call.key,call.value);
 }
 inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout &l,int width,int height){
   hide_panel(w);
-  // Rebuild only when structure, physical size or theme changes, never for live
-  // position updates (which must not interrupt an active drag).
+  const unsigned index=w.index<TILES_MAX?w.index:0;
+  if(l.swap.empty())cover_swapped[index]=0;
+  const bool swapped=cover_swapped[index];
+  // Rebuild only when structure, physical size, theme or the swap changes, never for live position updates (which
+  // must not interrupt an active drag).
   const int signature=(int)t.supported+(tile_controls::panel_kind(t)=="position"?256:0)+
-    (tile_controls::panel_kind(t)=="buttons"?512:0)+(theme::dark?1024:0);
+    (tile_controls::panel_kind(t)=="buttons"?512:0)+(theme::dark?1024:0)+(swapped?2048:0)+(int)l.tier*4096;
   if(w.extra_mode=="cover_tilt"&&(w.hand_cx!=width||w.hand_cy!=height||w.hand_width!=signature))end_extra(w);
   begin_extra(w,"cover_tilt",width,height);w.hand_cx=width;w.hand_cy=height;w.hand_width=signature;
-  const int slot=&w-widgets.data(),gap=ui::px(ui::large()?8:4),touch=std::max(ui::touch_min(),ui::px(ui::large()?48:34));
+  const int slot=&w-widgets.data(),gap=ui::px(ui::large()?8:4);
   const bool ready=fresh()&&t.available()&&!t.waiting(esphome::millis());
-  for(int i=0;i<2;++i){
+  const lv_font_t *icons=mini_icon_font?mini_icon_font:w.icon_font;
+  auto key=[&](int part,const tall_tile::Rect &r,const char *glyph,bool on){
+    w.parts[part]=media_key(w.extra,w.parts[part],{r.x,r.y,r.w,r.h},glyph,icons,false,false,on,cover_tile_key_event,(void*)(uintptr_t)(slot*16+(part==13?15:part-4)));
+    lv_obj_set_ext_click_area(w.parts[part],0);
+    set_color(w.parts[part],LV_STYLE_BG_COLOR,lv_color_hex(cover_track()));
+    set_color(lv_obj_get_child(w.parts[part],0),LV_STYLE_TEXT_COLOR,lv_color_hex(COVER_ACCENT));
+  };
+  for(int i=0;i<3;++i){
     const auto &g=l.groups[i];if(g.area.empty())continue;
+    if(i<2&&!l.swap.empty()&&(i==1)!=swapped)continue;
     const float value=i?t.extra().tilt:t.position;
-    std::string caption=std::string(tr(i?txt::cover_tilt:txt::cover_position));
-    if(g.slider&&std::isfinite(value)){
-      const auto with_value=caption+" "+screen_text::percent((int)std::lround(value));
-      if(text_width(with_value,w.value_font)<=g.caption.w)caption=with_value;
+    if(i<2&&!g.caption.empty()){
+      std::string caption=std::string(tr(i?txt::cover_tilt:txt::cover_position));
+      if(g.slider&&std::isfinite(value)){
+        const auto with_value=caption+" "+screen_text::percent((int)std::lround(value));
+        if(text_width(with_value,w.value_font)<=g.caption.w)caption=with_value;
+      }
+      auto *label=part_label(w,i,w.value_font,g.caption.x,g.caption.y,g.caption.w,LV_TEXT_ALIGN_CENTER,caption);
+      set_color(label,LV_STYLE_TEXT_COLOR,theme::color(theme::MUTED));
     }
-    auto *label=part_label(w,i,w.value_font,g.caption.x,g.caption.y,g.caption.w,LV_TEXT_ALIGN_CENTER,caption);
-    set_color(label,LV_STYLE_TEXT_COLOR,theme::color(theme::MUTED));
     if(g.slider){
       auto *&slider=w.parts[2+i];
-      if(!slider)slider=cover_slider(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr);
-      if(captured_slider!=slider)lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround((i?value:100-value)*10):500,LV_ANIM_OFF);
+      if(!slider)slider=g.lying?cover_bar(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr)
+                               :cover_slider(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr);
+      if(captured_slider!=slider)lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround((i||g.lying?value:100-value)*10):(i?500:0),LV_ANIM_OFF);
       if(ready)lv_obj_remove_state(slider,LV_STATE_DISABLED);else lv_obj_add_state(slider,LV_STATE_DISABLED);
     }else{
       std::array<tile_controls::Key,3> keys;
-      const unsigned count=i?tile_controls::cover_tilt_keys(t,keys):tile_controls::keys_for(t,keys);
+      const unsigned count=i==1?tile_controls::cover_tilt_keys(t,keys):i==2?tile_controls::cover_keys(t,keys):tile_controls::keys_for(t,keys);
+      if(!count)continue;
+      // In a row the keys share its width; in a stack they share its height, each as high as the stack allows.
+      const int along=g.horizontal?(g.control.w-(int)(count-1)*gap)/(int)count:g.control.w;
+      const int across=g.horizontal?g.control.h:(g.control.h-(int)(count-1)*gap)/(int)count;
       for(unsigned n=0;n<count;++n){
-        const int part=4+i*3+n;const auto &k=keys[n];
-        media_card::Rect r{g.control.x+(g.horizontal?(int)n*(touch+gap):(g.control.w-touch)/2),g.control.y+(g.horizontal?0:(int)n*(touch+gap)),touch,touch};
-        w.parts[part]=media_key(w.extra,w.parts[part],r,k.icon,mini_icon_font?mini_icon_font:w.icon_font,false,false,ready&&!k.disabled,cover_tile_key_event,(void*)(uintptr_t)(slot*8+i*3+n));
-        lv_obj_set_ext_click_area(w.parts[part],0);
-        set_color(w.parts[part],LV_STYLE_BG_COLOR,lv_color_hex(cover_track()));
-        set_color(lv_obj_get_child(w.parts[part],0),LV_STYLE_TEXT_COLOR,lv_color_hex(COVER_ACCENT));
+        const tall_tile::Rect r{g.control.x+(g.horizontal?(int)n*(along+gap):0),g.control.y+(g.horizontal?0:(int)n*(across+gap)),along,across};
+        key(4+i*3+n,r,keys[n].icon,ready&&!keys[n].disabled);
       }
     }
   }
+  // The swap key shows what the row turns into: the slats, or the blind again.
+  if(!l.swap.empty())key(13,l.swap,swapped?tile_controls::glyph::SHADE:tile_controls::glyph::SLATS,true);
 }
 // Additional rows extend the existing heading and controls. Compact tiles never
 // enter this path. The selected control kind and its events remain authoritative.
@@ -7931,7 +8015,14 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
     (int)lv_font_get_line_height(w.value_font),w.base_circle,gap,ui::touch_min(),ui::control_max_width(),{touch+2,0},selected?1:0};
   auto cover_metrics=m;cover_metrics.row_count=0;
   const auto cover_base=tall_tile::layout(cover_metrics);
-  const auto cover=cover_tile_layout(t,cover_base.body,touch,gap,m.state_h);
+  auto cover=cover_tile_layout(t,cover_base.body,touch,gap,m.state_h);
+  // A card (not a full page) at least twice as wide as high puts its heading at the left and the cover's controls at the right, where
+  // that gives them a richer layout than under the heading (a CYD's 2x2: two bars instead of one and its swap key).
+  bool beside=false;
+  if(!w.full&&width>=2*height){
+    const auto side=cover_tile_layout(t,{width/2+gap,0,width-width/2-gap,height},touch,gap,m.state_h);
+    if(side.fits&&(!cover.fits||side.tier>cover.tier)){cover=side;beside=true;}
+  }
   if(w.full&&!cover.fits&&!tile_controls::climate_modes_selected(t)){if(w.extra_mode=="cover_tilt")hide_extra(w);return false;}
   if(cover.fits){selected=false;m.row_count=0;}
   auto l=tall_tile::layout(m);
@@ -7986,6 +8077,17 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
   set_font(w.value,w.value_font);set_text_align(w.value,LV_TEXT_ALIGN_LEFT);
   lv_obj_set_pos(w.value,tx,y+m.name_h);lv_obj_set_size(w.value,tw,m.state_h);set_hidden(w.value,!l.state);
   tile_picture_place(w,t,circle,0,(l.header.h-circle)/2);
+  if(cover.fits&&beside){
+    // The heading stands in the left half, its circle, name and state centred on the card's height.
+    const int half=width/2,lines=m.name_h+m.state_h,ty=(height-lines)/2;
+    int c=std::min(w.base_circle,half/3);
+    const lv_font_t *font=heading_icon(w,c,height,half);
+    lv_obj_set_size(w.circle,c,c);lv_obj_set_pos(w.circle,0,(height-c)/2);
+    set_font(w.icon,font);center_icon(w.icon);
+    lv_obj_set_pos(w.title,c+gap,ty);lv_obj_set_size(w.title,std::max(1,half-c-gap),m.name_h);
+    lv_obj_set_pos(w.value,c+gap,ty+m.name_h);lv_obj_set_size(w.value,std::max(1,half-c-gap),m.state_h);set_hidden(w.value,false);
+    tile_picture_place(w,t,c,0,(height-c)/2);
+  }
   if(cover.fits){render_cover_tile(w,t,cover,width,height);return true;}
   bool panel=selected&&layout_panel(w,t,large,width,height);
   if(!panel)hide_panel(w);
