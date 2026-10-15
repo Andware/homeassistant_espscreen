@@ -12559,6 +12559,14 @@ inline bool starts_on_control(int x, int y) {
 #endif
 #undef SMART_DISPLAY_MODULE_SITE
 namespace runtime_tiles {
+// The page dots of the tile pages' bar: a key that opens the Dock on a screen with the module, nothing without it.
+inline void page_dots_open(lv_obj_t *number) {
+#ifdef SD_MOD_DOCK
+  dock::dots_open(number);
+#else
+  (void) number;
+#endif
+}
 namespace touch_input {
 
 // The edge swipe of every board, in the touchscreen's own coordinates: where a touch starts, where it goes, and when
@@ -12630,8 +12638,8 @@ inline void edge_move(int x, int y) {
 #ifdef SD_MOD_DOCK
     // Full: up from the bottom opens the dock, over whatever is open, once the pages are there to show.
     if (navigation_ready() && dock::show(true, edge_start_y, sy, edge_pressed_ms)) {
+      // No glow: the drawer under the finger is the answer, and a haze fading under it would draw its area anew.
       ESP_LOGI("touch", "edge swipe up: dock");
-      swipe_glow(Edge::bottom);
       return;
     }
 #endif

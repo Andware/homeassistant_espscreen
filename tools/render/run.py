@@ -424,6 +424,15 @@ class Run:
         await asyncio.sleep(0.5)
         if (await self.render('_dock-dragged', keep=False)).tobytes() != before.tobytes():
             self.failures.append('dock: page 1 looks different after the drawer was dragged away')
+        # A tap on the page dots in the middle of the page bar opens it too; a tap above it closes it again.
+        start = len(self.lines)
+        await self.finger([(width // 2, height - 12), (width // 2, height - 12)], rest=0.1)
+        await self.until(lambda l: 'page dots: dock' in l, 6, 'a tap on the page dots never opened the dock', start)
+        await asyncio.sleep(0.8)
+        await self.finger([(width // 2, 4), (width // 2, 4)], rest=0.1)
+        await asyncio.sleep(0.5)
+        if (await self.render('_dock-dots', keep=False)).tobytes() != before.tobytes():
+            self.failures.append('dock: page 1 looks different after the Dock opened from the dots closed again')
         # Up once more over the open Dock goes home: from page 2, the Dock opens and a second swipe up lands on page 1.
         await self.call('render_page', page=1)
         await self.page_done(1)
