@@ -2174,7 +2174,17 @@
       "now": "teraz",
       "minutes": "{n} min",
       "live": "Edytor rysuje go z danych wtyczki; ekran rysuje go sam i odlicza czas według własnego zegara.",
-      "entity": "Encja"
+      "entity": "Encja",
+      "add": "Dodaj",
+      "change": "Wybierz inny",
+      "find": "Znajdź…",
+      "search": "Szukaj…",
+      "search_more": "Wpisz co najmniej dwie litery",
+      "none_found": "Nic nie znaleziono",
+      "remove": "Usuń {name}",
+      "type": "Wpisz i naciśnij Enter",
+      "full": "Ekran nie przyjmie więcej dla tego kafelka: jego opcje są pełne.",
+      "count": "{n} z {max}"
     },
     "memory": {
       "label": "Pamięć na kafelki",

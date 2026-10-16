@@ -11,6 +11,7 @@
 #include "plugin_host.h"
 #include "plugin_api.h"
 #include "touch_feedback_lvgl.h"
+#include "plugin_action.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -231,6 +232,54 @@ std::string fill(const char *text, const char *name, const std::string &value) {
 bool action(const char *service, const std::string &entity, const char *key, const std::string &value) {
   if (!service || !rt::entity_id(entity) || entity.rfind("screen.", 0) == 0) return false;
   return rt::action(service, entity, key ? key : "", value);
+}
+
+// An action with fields of any JSON type (0.12): each field as plugin_action.h writes it for Home Assistant, through
+// the screen's own route as a tap's action goes (the screen must be allowed to perform actions).
+bool action(const char *service, const std::string &entity, JsonVariantConst fields) {
+  static const char *const TAG = "plugin_action";
+  if (!service || !plugin_action::service_name(service) || !fields.is<JsonObjectConst>()) {
+    ESP_LOGW(TAG, "Not sent: %s needs a service as domain.action and its fields as an object", service ? service : "");
+    return false;
+  }
+  if (!entity.empty() && (!rt::entity_id(entity) || entity.rfind("screen.", 0) == 0)) return false;
+  std::vector<plugin_action::Field> list;
+  for (JsonPairConst pair : fields.as<JsonObjectConst>()) {
+    plugin_action::Field field{pair.key().c_str(), pair.value().is<const char *>(), ""};
+    if (field.text) field.value = pair.value().as<const char *>();
+    else serializeJson(pair.value(), field.value);
+    list.push_back(std::move(field));
+  }
+  plugin_action::Encoded encoded;
+  const char *why = "";
+  if (!plugin_action::encode(entity, list, encoded, &why)) {
+    ESP_LOGW(TAG, "Not sent: %s %s", service, why);
+    return false;
+  }
+  if (!rt::fresh()) return false;
+  esphome::api::HomeassistantActionRequest request;
+  request.service = esphome::StringRef(service);
+  request.data.init(encoded.data.size());
+  for (const auto &pair : encoded.data) {
+    esphome::api::HomeassistantServiceMap entry;
+    entry.key = esphome::StringRef(pair.first);
+    entry.value = esphome::StringRef(pair.second);
+    request.data.push_back(entry);
+  }
+  request.data_template.init(encoded.templates.size());
+  for (const auto &pair : encoded.templates) {
+    esphome::api::HomeassistantServiceMap entry;
+    entry.key = esphome::StringRef(pair.first);
+    entry.value = esphome::StringRef(pair.second);
+    request.data_template.push_back(entry);
+  }
+  // With an entity its tiles wait for the answer as for a tap; without one (the fields name their own target, or
+  // there is none) nobody waits.
+  if (entity.empty()) esphome::api::global_api_server->send_homeassistant_action(request);
+  else rt::send_action(request, entity, true);
+  ESP_LOGI(TAG, "Sent service=%s entity=%s (%u values)", service, entity.c_str(),
+           (unsigned) (encoded.data.size() + encoded.templates.size()));
+  return true;
 }
 
 bool open_card(const char *plugin_id, const char *card, const std::string &entity, int tile, const std::string &title) {
@@ -678,6 +727,8 @@ struct OpenCard {
   lv_obj_t *backdrop = nullptr, *root = nullptr;
 };
 static OpenCard *shown = nullptr;
+// The touch guard's keys of a card's spots (card_tap), apart from the tiles' (rt::TILE_TOUCH) and the keys'.
+constexpr int CARD_TOUCH = 300000;
 // A card may close itself, or open another in its place, from any call the host makes into it (tessera::close_card,
 // tessera::open_card in its open, on_state, on_tick, on_theme or on_back). A card that closes while such a call is under
 // way leaves the glass at once and waits here until the outermost call returns, so neither the card's own code nor
@@ -734,6 +785,25 @@ static void card_state(OpenCard &open, bool force) {
 }
 
 bool card_open() { return shown != nullptr; }
+
+// A tap on the open card's room (Card::on_tap, 0.12). The guard is a tile's (rt::allowed: the finger did not move, was
+// long enough, and no bounce), with the spot as its key: a cell of 8 mm, so a bounce on one row is one tap and the next
+// row right after it is its own. Where the finger let go must be on the room, as for a tile (LVGL clicks an object
+// wherever a finger that pressed it lets go when the board sets no limit to a finger's drift).
+static void card_tap(lv_event_t *event) {
+  auto *room = static_cast<lv_obj_t *>(lv_event_get_current_target(event));
+  lv_point_t at{-1, -1};
+  if (!rt::finger_at(at)) at = {-1, -1};
+  lv_area_t area;
+  lv_obj_get_coords(room, &area);
+  const bool known = at.x >= 0 && at.y >= 0;
+  if (known && (at.x < area.x1 || at.x > area.x2 || at.y < area.y1 || at.y > area.y2)) return;
+  const int cell = std::max(1, ::ui::mm(8));
+  const int spot = known ? ((at.y - area.y1) / cell) * 64 + (at.x - area.x1) / cell : 0;
+  if (!shown || !rt::allowed(esphome::millis(), CARD_TOUCH + spot, "plugin card")) return;
+  tapped = known ? tessera::Point{at.x - area.x1, at.y - area.y1} : tessera::Point{-1, -1};
+  call(shown, [](tessera::Card &card) { card.on_tap(); });
+}
 
 void close_card() {
   if (!shown) return;
@@ -805,6 +875,9 @@ bool open_card(const std::string &key, const std::string &entity, int tile, cons
   lv_obj_remove_flag(area, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_pos(area, pad, top);
   lv_obj_set_size(area, std::max(1, width - 2 * pad), std::max(1, height - top - pad));
+  // A tap on the room goes to the card (0.12), through the guard every tile's tap passes.
+  lv_obj_add_flag(area, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(area, card_tap, LV_EVENT_SHORT_CLICKED, nullptr);
   shown = open;
   tessera::CardContext context{area, std::max(1, width - 2 * pad), std::max(1, height - top - pad), open->entity.c_str(),
                                tile};

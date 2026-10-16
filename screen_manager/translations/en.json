@@ -3707,7 +3707,17 @@
       "now": "now",
       "minutes": "{n} min",
       "live": "The editor draws it from the plugin's own data; the screen draws it itself and counts down on its own clock.",
-      "entity": "Entity"
+      "entity": "Entity",
+      "add": "Add",
+      "change": "Choose another",
+      "find": "Find…",
+      "search": "Search…",
+      "search_more": "Type two letters or more",
+      "none_found": "Nothing found",
+      "remove": "Remove {name}",
+      "type": "Type and press Enter",
+      "full": "The screen takes no more for this tile: its options are full.",
+      "count": "{n} of {max}"
     },
     "build": {
       "plugins": "Building with its plugins",

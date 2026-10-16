@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.11 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.12 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -40,8 +40,10 @@ adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equ
    the protocol and the layout check see it, that is `entity: "plugin:ov_departures.next"` with `options.plugin`.
    `core.entity_id()` is unchanged (commands and events use it); `core.plugin_tile()` is the second kind a layout takes.
 2. **The layout check** keeps only the shape of a plugin tile: its size, colour, icon, `tap` (auto or none) and at most
-   twelve options of its own, each a short text, a number or true/false. A saved layout never becomes unreadable
-   because a plugin left a screen.
+   twelve options of its own, each a short text, a number, true/false, a pick or a list (0.12, "Values of JSON" below),
+   together at most 1280 bytes of JSON (`core.plugin_options`, the editor's `pluginOptionsShape`). Whether a value fits
+   its option is the manifest's (`plugin_manifest.option_value`, in `Plugins.values_of`). A saved layout never becomes
+   unreadable because a plugin left a screen.
 3. **The price** of a plugin tile is its manifest's `memory` (`core.PLUGIN_MEMORY`, filled by `plugins.Plugins`), plus
    the tile and its extras on a board without PSRAM. The screen counts the same (`plugin_host::bytes`, from the same
    manifest through `register_plugin`). A tile of a plugin the app does not know costs `PLUGIN_PLACEHOLDER_BYTES` (64),
@@ -53,7 +55,8 @@ adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equ
 5. **The state message** of a plugin tile (`Plugins.tile_message`) has `state: "ok"`, no attributes, `o.plugin` (its
    options with the manifest's defaults) and `x`: the mapped answer of its fetch and, for a tile of an entity
    (`Plugins.entity_part`), the entity's state, name, the attributes the manifest names and the `fields` it takes out
-   of them. `x` stays under 2.6 KB (`X_BUDGET`). Bytes decide, not a count: a text is cut at 48 bytes, and lists are
+   of them. `x` gets what the 4 KB message leaves after the rest of it, the tile's options included, and at most 2.6 KB
+   (`X_BUDGET`): about 2 KB beside options that take their whole 1280 bytes. Bytes decide, not a count: a text is cut at 48 bytes, and lists are
    shortened, all to the same length from the end, only when together they do not fit. Two days of 96 prices fit
    whole. A list of objects never goes as it is: `fields` with `as: numbers` turns `raw_today[*].value` into one list
    of numbers.
@@ -63,7 +66,7 @@ adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equ
    the look did. The once-a-second gate in `tick()` calls `on_tick` for every plugin card on the glass, and a short tap
    goes to `on_tap` through the same guard as every tile's. `hide_extra` (the card shows something else), `end_extra` and `release_kept` delete the object.
 7. **In the editor** a plugin tile is drawn from its data when its manifest has a `preview`: the add-on fills in the
-   first rows (`GET api/plugins/<id>/preview/<tile>`, `Plugins.preview`) and the mockup counts down to a moment on the
+   first rows (`POST api/plugins/<id>/preview/<tile>` with the options as they are kept, `Plugins.preview`) and the mockup counts down to a moment on the
    editor's clock, so a page in the editor looks like the glass. Without a preview it shows the icon, the name and the
    manifest's `example`. The editor loads the plugins as soon as they are on, so a page with a plugin tile knows its
    type before the Plugins page was opened.
@@ -112,6 +115,29 @@ adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equ
 sends them. The rules (named hosts only, public addresses only, checked again at connect time by `PublicResolver`, no
 redirects, 64 KB, 10 s, JSON, every 30 s at most, secrets never logged) are in `plugin_fetch.py` and the plugins
 repository's `docs/FETCH.md`.
+
+## Values of JSON (0.12)
+
+A plugin's value may be a list or an object wherever a value travels: an option, a fetch, an action. One mechanism,
+typed end to end, within the 4 KB message.
+
+| Part | What | Where |
+|---|---|---|
+| An option of several values | `multiple: N` (2 to 16) on a text or a choice: a list in the order the person put them. A text list keeps texts; a choice keeps picks, `{value, label}`, the label being the words the person saw, since a list from a fetch may be gone or other later. | `plugin_manifest.check_option`, `option_value`, `keeps_picks`; `core.plugin_options`; `PluginListOption.vue`, `model/plugins.ts` (`picksOf`, `listValue`) |
+| A choice found by searching | `search: true` on a choice with `options_from`: what the person types reaches its fetch as `{search}` (from two characters, 300 ms after the last key). One pick, or a list with `multiple`. Its answers stay ten minutes (`SEARCH_EVERY`), the editor keeps the last twelve. | `Plugins.choices`, `POST api/plugins/<id>/choices/<fetch>` with `{options, search, screen}`; `UiPicker` with `remote` |
+| A fetch once per value | `each: <list option>`: one ask per value, `{<option>}` in the URL that value, each a question of its own shared as every other. The map runs per answer (`{each: value}` or `{each: label}` as a field), then `sort` and `limit` over all of them together; a map of one object gives one item per value. A value whose ask failed is left out and makes the list `stale`; the tile waits only when none has an answer. | `plugin_manifest.check_fetch`, `Plugins.asks`, `tile_data`, `refresh_data`, `plugin_fetch.apply_each` |
+| A list in one ask | `{name\|,}` joins a list option's values, each percent-encoded in a URL, by the separator after the bar (1 to 3 characters). A list in a plain `{name}` is refused by the check. | `FETCH_PLACEHOLDER`, `plugin_fetch.fill` |
+| One word per value | A fetch gets every value as one word: `true`/`false`, a whole number without `.0`, a pick as its value (`plugin_fetch.word_of`). The editor sends options as JSON, never in a query string, so `3` stays a number and a toggle one word. | `words_of` |
+| An action of several fields | `tessera::action(service, entity, fields)`: a JSON object of up to 16 fields, together 1 KB. Texts go in the action's `data` as they are; every other value in `data_template` as the Python literal Home Assistant's ESPHome integration reads back into its type (`helpers/template`, `_parse_result`), with a brace in a text written `\x7b`/`\x7d` so nothing a plugin sends is ever a template. Through the screen's own route, as a tap's: the entity's tiles wait for the answer; `entity` "" for an action whose fields name their own target. | `plugin_action.h` (pure, `tests/test_plugin_action.cpp`), `plugin_host.cpp`; the render harness checks what Home Assistant gets |
+
+The options of a tile go to the screen with its data in one message, so the options of a tile together take at most
+1280 bytes (`pm.OPTIONS_BYTES`, `core.PLUGIN_OPTIONS_BYTES`, `PLUGIN_OPTIONS_BYTES` in the editor, a test keeps them
+equal) and the data gets what is left (`Plugins.tile_message`). The editor refuses a value that would not fit, with a
+line under the list, instead of the delivery being refused later.
+
+An app older than 0.12 does not know `multiple`, `search` or `each` and leaves such a plugin out of its list, as every
+newer manifest field. A layout with a list option that such an app reads is kept as it is, and refused only when it is
+saved there. Every value kept before 0.12 is still valid.
 
 ## Rules a change keeps
 
@@ -179,8 +205,9 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | Part | Firmware | Add-on | Editor |
 |---|---|---|---|
 | A tile, with data from a fetch | `Tile`, `add_tile` | `Plugins.tile_message`, `plugin_fetch.py` | library, inspector, `preview` drawn from the data |
+| Values of JSON (0.12) | `TileContext::options` holds lists and picks; `tessera::action` with a JSON object | `multiple`, `search`, `each`, `{name\|,}`; above | `PluginListOption.vue` |
 | A tile of an entity | `TileContext.entity`, `tessera::action` | the manifest's `domains`, `attributes` and `fields`; `Plugins.entity_part` (state, name, named attributes, fields), `related_entities`; `has_attributes` through `Plugins.entities_with` | entity picker of those domains, also ones Tessera draws no tile for; with `has_attributes` only the entities that have them, and always the one chosen (`offeredEntities`) |
-| A card | `Card`, `add_card`, `open_card`; closed by `hide_detail` | nothing | nothing |
+| A card | `Card`, `add_card`, `open_card`; closed by `hide_detail`; `on_tap` (0.12): a short tap on its room through the tiles' guard (`rt::allowed`), keyed by an 8 mm spot so a bounce on one row is one tap and the next row its own, with `tap_point()` in the room's pixels (`card_tap`) | nothing | nothing |
 | A tap action | `add_tap_action`; `event()` runs a tile's `plugin:` tap | `validate_layout` takes a `plugin:` tap | the tile inspector's tap choices |
 | Pictures on a tile (0.10) | `ui::picture` makes a place (a block in `theme::TRACK`) on the card in a call of the tile, `ui::set_picture` names its address and fit, `ui::pictures` says whether the board shows any. The places are the parts of one picture (`tile_picture::Part`, `set_parts`): `tile_ask` hands a plugin card to `plugin_host::picture_ask`, which measures them on the card; the question goes as every tile picture's, with `src` and `fit`; the atlas lands in the store under the tile's key, and `tile_picture_place` hands it to `plugin_host::picture_place`, which lays each place its piece (`lv_image_set_offset`, as the library's covers). The store counts a place's image as a card that draws (`picture_draws`, `picture_let_go`). A board without pictures has the API and no places. | `server.answer_plugin_pictures`: the tile is a plugin tile of the layout, its manifest gives it `pictures`, every address passes `plugin_pictures.allowed` (a host of `permissions.network`, or Home Assistant's own pictures for a tile of an entity); `Pictures.fetch` keeps each by address; `tile_art.encode` paints the frames (fit `fill` or `within`) and a still link serves the BMP | `PluginTile.pictures`; the mockup draws no picture |
 | A label of several lines (0.10) | `ui::text`: a label of the plugin's height, wrapped, ending in dots | nothing | nothing |

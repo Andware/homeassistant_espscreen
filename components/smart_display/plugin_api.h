@@ -52,7 +52,11 @@ namespace tessera {
 // 0.11: on_press, a finger landing on something that takes a tap, at once; on_step(Step), a value under the finger
 // stepping (a dragged slider, dial or seek bar, a held key); SoundPlayer::add(), a sound after the ones before it, evenly
 // spaced.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 11;
+// 0.12: values of JSON: an option that keeps several values (`multiple`: a list of texts, or of picks {value, label}), a
+// choice found by searching (`search`, a pick), a fetch that asks once per value of a list and puts the answers together
+// (`each`, `{name|,}` to join a list in one ask), and action() with fields of any JSON type. Card::on_tap, a tap on a
+// card's room, with tap_point() in the card's own pixels.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 12;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -71,7 +75,11 @@ struct TileContext {
   const char *name;          // the name given to the tile in the editor, "" for none (copy it)
   const char *entity;        // its Home Assistant entity (plugin_entity), "" for none (copy it)
   int tile;                  // its index in the layout, for tessera::open_card from on_tap
-  JsonObjectConst options;   // the tile's options as the editor set them (the manifest's `options`); gone after create()
+  // The tile's options as the editor set them (the manifest's `options`, its defaults filled in); gone after create().
+  // A text, number or toggle is that value, a choice its value. A list option (0.12, `multiple`) is an array: of texts,
+  // or for a choice of picks, {"value": "...", "label": "..."} with the words the person saw in the list; a choice found
+  // by searching (`search`) without `multiple` is one pick (or "" while none is chosen).
+  JsonObjectConst options;
 };
 
 // Memory for what a plugin keeps (0.10). The memory inside the chip is small and Wi-Fi needs it; a board with PSRAM has
@@ -111,7 +119,7 @@ class Tile : public InPsram {
   virtual void on_tick(uint32_t epoch) {}
   // The screen went light or dark: set the colours again (theme roles have another value now).
   virtual void on_theme() {}
-  // A tap on the card that the touch filter let through.
+  // A tap on the tile that the touch filter let through (tap_point() says where).
   virtual void on_tap() {}
 };
 
@@ -139,6 +147,12 @@ class Card : public InPsram {
   virtual void on_theme() {}
   // Back was pressed: true keeps the card open (it went back a step of its own), false lets it close.
   virtual bool on_back() { return false; }
+  // A tap on the card's room (CardContext::parent) that the touch filter let through (0.12): a finger that moved or
+  // was too short never comes, a bounce on the same spot within 600 ms is one tap, a tap on another spot is its own.
+  // tap_point() says where, in the card's own pixels, so a list knows its row. The objects of tessera::ui take no taps,
+  // so a tap on them comes here; an LVGL object of the plugin's own that is clickable takes the tap itself. Back is
+  // on_back, never this. The card may close itself or open another from here.
+  virtual void on_tap() {}
 };
 
 // A tap action on a tile of Home Assistant's own (a thermostat that opens the plugin's schedule): what it was tapped on.
@@ -348,7 +362,8 @@ bool open_card(const char *plugin_id, const char *card, const std::string &entit
 void close_card();
 // Where the finger of a tile's on_tap was (0.10), in the pixels of the tile's drawing area (TileContext::parent: 0,0
 // its top left, width and height as create() got them), so a tile with a list or a row of posters knows which one was
-// tapped. Valid during on_tap; -1,-1 when the screen could not say.
+// tapped; or of a card's on_tap (0.12), in the pixels of its room (CardContext::parent). Valid during on_tap; -1,-1
+// when the screen could not say.
 struct Point {
   int x = -1, y = -1;
 };
@@ -366,6 +381,16 @@ void refresh();
 // what it does before adding it; the screen does not check that list (code built into the firmware can do what the
 // firmware can), the manifest is the plugin's own word. False when it was not sent.
 bool action(const char *service, const std::string &entity, const char *key = nullptr, const std::string &value = "");
+// The same with fields of any JSON type (0.12), a JSON object of up to 16 fields, together at most 1 KB:
+//   JsonDocument d;
+//   d["media_id"] = title; d["media_type"] = "album"; d["artist"] = artist;
+//   tessera::action("music_assistant.play_media", player, d);
+// A text arrives as the text ("1989" stays a text), a number as a number, true and false as themselves, a list or an
+// object whole, and nothing in it is ever run as a template. `entity` is the action's entity_id, whose tiles wait for
+// the answer as for a tap; "" when the fields name their own target (an "entity_id" list of several speakers, an
+// area_id) or the action has none. False when it was not sent: no object, a field name that is not a-z, 0-9 and _,
+// entity_id given twice, too many or too much (the log says which).
+bool action(const char *service, const std::string &entity, JsonVariantConst fields);
 
 namespace ui {
 // Sizes: a physical size in millimetres of glass, or a size of the reference look in this board's pixels.

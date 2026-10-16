@@ -1098,6 +1098,10 @@ PLUGIN_TILE = re.compile(r'^plugin:([a-z][a-z0-9_]{0,31})\.([a-z][a-z0-9_]{0,31}
 PLUGIN_TILE_OPTIONS = {'size', 'background', 'icon', 'tap', 'plugin', 'plugin_entity'}
 PLUGIN_OPTION_MAX = 12
 PLUGIN_TEXT_MAX = 64
+# A list option's values (plugin API 0.12), and what a tile's options take together as JSON (plugin_manifest's
+# MAX_MULTIPLE and OPTIONS_BYTES, the editor's PLUGIN_OPTIONS_BYTES; a test keeps them equal).
+PLUGIN_LIST_MAX = 16
+PLUGIN_OPTIONS_BYTES = 1280
 # What a tile of a plugin the screen does not have costs (plugin_host::PLACEHOLDER_BYTES in the firmware).
 PLUGIN_PLACEHOLDER_BYTES = 64
 # What each plugin tile type the app knows costs, from its manifest's `memory` (plugins.Plugins keeps it up to date).
@@ -1117,21 +1121,39 @@ def plugin_entity(value):
         and not value.startswith(('screen.', 'plugin'))
 
 
+def _plugin_text(value, empty=True):
+    return isinstance(value, str) and (empty or value != '') and len(value) <= PLUGIN_TEXT_MAX
+
+
+def _plugin_pick(value):
+    """A pick of a list of choices (plugin API 0.12): {value, label}, both short texts, the value never empty."""
+    return isinstance(value, dict) and set(value) <= {'value', 'label'} and _plugin_text(value.get('value'), False) \
+        and _plugin_text(value.get('label', ''))
+
+
 def plugin_options(value):
-    """A plugin tile's own options in their stored shape: at most 12, each a short text, a number or true/false."""
+    """A plugin tile's own options in their stored shape: at most 12, each a short text, a number, true/false, a pick
+    {value, label}, or a list of up to 16 texts or picks (plugin API 0.12), together at most PLUGIN_OPTIONS_BYTES of
+    JSON. Whether a value fits its option is the manifest's (plugin_manifest.option_value)."""
     if not isinstance(value, dict) or len(value) > PLUGIN_OPTION_MAX:
         return False
     for key, item in value.items():
         if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]{0,31}', key):
             return False
-        if isinstance(item, str):
+        if isinstance(item, list):
+            if len(item) > PLUGIN_LIST_MAX or not all(_plugin_text(v, False) or _plugin_pick(v) for v in item):
+                return False
+        elif isinstance(item, dict):
+            if not _plugin_pick(item):
+                return False
+        elif isinstance(item, str):
             if len(item) > PLUGIN_TEXT_MAX:
                 return False
         elif isinstance(item, bool) or (isinstance(item, (int, float)) and math.isfinite(item)):
             continue
         else:
             return False
-    return True
+    return len(json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode()) <= PLUGIN_OPTIONS_BYTES
 
 
 def entity_id(value):

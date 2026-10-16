@@ -686,7 +686,9 @@ class Run:
         # The probe's own lines carry its tag; nothing else on the log is read as a moment of the plugin.
         probe = lambda line, text: '[probe:' in line and text in line
         said = lambda start, text: sum(probe(line, text) for line in self.lines[start:])
-        tiles = [dict(entity='plugin:host_probe.probe', name='Probe', slot=0, options={'plugin': {'word': 'Hello'}}),
+        # Lists (plugin API 0.12): texts, and picks of a choice with the words the person saw.
+        lists = {'words': ['a', 'b'], 'picks': [{'value': '1', 'label': 'One'}, {'value': '3', 'label': 'Three'}]}
+        tiles = [dict(entity='plugin:host_probe.probe', name='Probe', slot=0, options={'plugin': {'word': 'Hello', **lists}}),
                  dict(entity='sensor.hall', name='Hall', slot=1, options={'tap': 'plugin:host_probe.open'}),
                  dict(entity='plugin:host_probe.probe', name='Second', slot=grid.slots, options={'plugin': {'word': 'Two'}})]
         record = send_layout.migrate_legacy(dict(title='Plugins', tiles=tiles), grid)
@@ -713,6 +715,7 @@ class Run:
         await self.page_done(0)
         # The life of the tile on page 1: made with its options, fed, ticked, in that order.
         await self.until(lambda l: probe(l, 'tile=0 create') and 'word=[Hello]' in l, 10, 'tile 0 created', start)
+        await self.until(lambda l: probe(l, 'tile=0 lists words=[a,b] picks=[1:One,3:Three]'), 10, 'the list options', start)
         await self.until(lambda l: probe(l, 'tile=0 state n=1'), 10, 'tile 0 fed', start)
         await self.until(lambda l: probe(l, 'tile=0 tick'), 10, 'tile 0 ticked', start)
         order = [next(k for k, word in enumerate(('create', 'state', 'tick')) if f'tile=0 {word}' in l)
@@ -861,8 +864,34 @@ class Run:
         # and on_touch; the plugin opens its card.
         start = len(self.lines)
         tile = (await self.navigation_state())['tile']
+        since = len(calls)
         await self.tap(*tile)
         tapped = await self.until(lambda l: probe(l, 'tile=0 tap'), 10, 'on_tap', start)
+        # The action of several fields (plugin API 0.12) as Home Assistant's ESPHome integration gets it: the texts in
+        # `data` as they are, the rest in `data_template` as literals Home Assistant reads back into their types, and
+        # none of it a template, though two texts hold Jinja.
+        await self.until(lambda l: probe(l, 'tile=0 action sent=1 refused=1'), 10, 'the action of several fields', start)
+        for _ in range(20):
+            played = [c for c in calls[since:] if c.service == 'music_assistant.play_media']
+            if played:
+                break
+            await asyncio.sleep(0.25)
+        assert len(played) == 1, f'the action of several fields reached Home Assistant {len(played)} times'
+        data, rendered = dict(played[0].data), dict(played[0].data_template)
+        assert data == {'entity_id': 'media_player.probe', 'media_id': '1989', 'media_type': 'album',
+                        'artist': "{{ states('lock.door') }}"}, f'the texts of the action: {data}'
+        def home_assistant_reads(text):
+            # helpers/template: a template only with {{, {% or {#; else the text read as a Python literal (_parse_result).
+            import ast
+            assert not any(mark in text for mark in ('{{', '{%', '{#')), f'{text} would run as a template'
+            try:
+                return ast.literal_eval(text)
+            except (ValueError, SyntaxError):
+                return text
+        read = {key: home_assistant_reads(text) for key, text in rendered.items()}
+        assert read == {'volume': 0.4, 'radio_mode': False, 'ids': ['a', '{% b %}'], 'extra': {'none': None}}, \
+            f'Home Assistant reads the values of the action as {read} (from {rendered})'
+        self.warnings.append(f'action of several fields: {len(data)} texts and {len(rendered)} values, typed as sent')
         # Where the finger was (plugin API 0.10): in the tile's own pixels, so within its drawing area.
         made = next(l for l in self.lines if probe(l, 'tile=0 create'))
         tw, th = (int(v) for v in re.search(r'create (\d+)x(\d+)', made).groups())
@@ -874,6 +903,21 @@ class Run:
         await self.until(lambda l: probe(l, 'card open') and 'tile=0' in l, 10, 'the card opened', start)
         await self.until(lambda l: probe(l, 'card tick'), 10, 'the card ticked', start)
         await self.render('plugin-card')
+        # A tap on the card's room (plugin API 0.12): on_tap through the touch filter, where in the card's own pixels;
+        # a tap on another spot right after it counts too (a list's next row), the same spot again is a bounce.
+        room = await self.until(lambda l: probe(l, 'card room '), 10, 'where the card\'s room lies', start)
+        x1, y1, x2, y2 = (int(n) for n in room.rsplit(' ', 1)[1].split(','))
+        start = len(self.lines)
+        await self.tap((x1 + x2) // 2, (y1 + y2) // 2)
+        await self.tap((x1 + x2) // 2, y1 + (y2 - y1) // 4)
+        await asyncio.sleep(1.0)
+        taps = [re.search(r'card tap at=(-?\d+),(-?\d+)', l) for l in self.lines[start:] if probe(l, 'card tap at=')]
+        assert len(taps) == 2, f'the card heard {len(taps)} taps of two on two spots'
+        for tap in taps:
+            cx, cy = int(tap.group(1)), int(tap.group(2))
+            if not (0 <= cx <= x2 - x1 and 0 <= cy <= y2 - y1):
+                self.failures.append(f'the card\'s tap point {cx},{cy} is not within its room {x2 - x1}x{y2 - y1}')
+        self.warnings.append(f'card taps: {[(t.group(1), t.group(2)) for t in taps]} in a room of {x2 - x1}x{y2 - y1}')
         start = len(self.lines)
         await self.call('render_close_cards')
         await self.until(lambda l: probe(l, 'card destroy'), 10, 'the card closed', start)

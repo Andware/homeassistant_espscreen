@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **Plugins can keep lists and send richer actions (plugin API 0.12).** A plugin tile's option can now hold several
+  values: several artists, stops or calendars, each added from a list or found by typing a few letters, in the order you
+  put them and dragged into another. The plugin asks its web service once per value and shows one list, newest first if
+  it likes, and on a tap it can send Home Assistant an action with several fields of any kind (a text, a number, a list),
+  such as playing an album through Music Assistant. Plugins written for an older API keep working as they are.
 - **A tile that grows shows more controls.** Drag a tile larger and it now gets the controls that fit its new size:
   a blind shows its position and its slats, a thermostat its temperature and mode keys, a light its brightness. A tip
   beside the tile lists every set that fits, so you can keep that one, pick another or choose none, and pointing at

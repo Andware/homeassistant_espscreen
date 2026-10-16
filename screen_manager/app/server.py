@@ -4804,11 +4804,20 @@ def create_app(manager, development=False):
             return web.json_response(manager.plugins.set_secret(request.match_info['plugin'], request.match_info['input'],
                                                                 data.get('value')))
 
-        # `_screen`: the screen the inspector shows (no option id starts with _), whose own plugin of that id answers.
+        # The tile's options as they are kept (plugin API 0.12: typed, a list as a list), in a body so no type is lost on
+        # the way; `screen`: the screen the inspector shows, whose own plugin of that id answers; `search`: what the
+        # person typed in a searched list.
+        async def plugin_body(request):
+            data = await request.json()
+            if not isinstance(data, dict) or not isinstance(data.get('options', {}), dict):
+                raise ValueError(t('addon.errors.plugins.request'))
+            screen = data.get('screen')
+            return data.get('options') or {}, screen if isinstance(screen, str) and screen else None, data
+
         async def plugins_choices(request):
-            values = {key: value for key, value in request.query.items() if key not in ('language', '_screen')}
-            return web.json_response(await manager.plugins.choices(request.match_info['plugin'], request.match_info['fetch'], values,
-                                                                   request.query.get('_screen')))
+            options, screen, data = await plugin_body(request)
+            return web.json_response(await manager.plugins.choices(request.match_info['plugin'], request.match_info['fetch'],
+                                                                   options, screen, data.get('search') or ''))
 
         async def plugins_plan(request):
             return web.json_response(manager.plugins.plan(request.match_info['inbox'], await request.json(),
@@ -4825,15 +4834,16 @@ def create_app(manager, development=False):
         app.router.add_post('/api/screens/{inbox}/plugins', plugins_apply)
         app.router.add_get('/api/screens/{inbox}/plugins/file', plugins_file)
         app.router.add_put('/api/plugins/{plugin}/secrets/{input}', plugins_secret)
-        app.router.add_get('/api/plugins/{plugin}/choices/{fetch}', plugins_choices)
+        app.router.add_post('/api/plugins/{plugin}/choices/{fetch}', plugins_choices)
         app.router.add_post('/api/screens/{inbox}/plugins/plan', plugins_plan)
         app.router.add_put('/api/plugins/{plugin}/like', plugins_like)
 
         async def plugins_preview(request):
-            options = {key: value for key, value in request.query.items() if key not in ('language', '_screen')}
+            options, screen, data = await plugin_body(request)
+            entity = data.get('entity') if isinstance(data.get('entity'), str) else None
             return web.json_response(await manager.plugins.preview(request.match_info['plugin'], request.match_info['tile'], options,
-                                                                   request.query.get('_screen')))
-        app.router.add_get('/api/plugins/{plugin}/preview/{tile}', plugins_preview)
+                                                                   screen, entity))
+        app.router.add_post('/api/plugins/{plugin}/preview/{tile}', plugins_preview)
 
         async def plugins_image(request):
             # A plugin's picture for the Plugins page (store.png), served by the app: the editor shows no picture of

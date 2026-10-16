@@ -3707,7 +3707,17 @@
       "now": "nu",
       "minutes": "{n} min",
       "live": "De editor tekent hem met de eigen data van de plugin; het scherm tekent hem zelf en telt af op zijn eigen klok.",
-      "entity": "Entiteit"
+      "entity": "Entiteit",
+      "add": "Toevoegen",
+      "change": "Kies een andere",
+      "find": "Zoeken…",
+      "search": "Zoeken…",
+      "search_more": "Typ twee letters of meer",
+      "none_found": "Niets gevonden",
+      "remove": "{name} weghalen",
+      "type": "Typ en druk op Enter",
+      "full": "Het scherm neemt niet meer aan voor deze tegel: de opties zijn vol.",
+      "count": "{n} van {max}"
     },
     "build": {
       "plugins": "Bouwt met zijn plugins",
