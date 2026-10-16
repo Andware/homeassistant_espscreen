@@ -81,6 +81,8 @@ const standStyle = computed(() => ({ background: `linear-gradient(to top, ${card
 .vol-stand { position: absolute; top: 8px; bottom: 8px; right: 9px; width: clamp(22px, 18cqh, 36px); border-radius: 10px; }
 .vol-stand::after { content: ''; position: absolute; left: 25%; right: 25%; height: 3px; bottom: clamp(4px, var(--fill), calc(100% - 6px)); background: white; border-radius: 2px; }
 .tile.tall:has(> .vol-stand) > :not(.vol-stand, .tall-art, .remove, .resize-handle) { margin-right: calc(clamp(22px, 18cqh, 36px) + 8px); }
+/* Beside it the keys start at the left, under the track and the name (runtime_tiles render_tall). */
+.tile.tall:has(> .vol-stand) > .ctl { justify-content: flex-start; }
 </style>
 <style scoped>
 /* What a cover shows where its slats do not fit (CoverTilePreview's fallback): its position bar, or its keys. */
