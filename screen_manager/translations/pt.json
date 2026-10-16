@@ -3755,6 +3755,12 @@
       "copy": "Copiar",
       "hint": "{copy} copia os mosaicos com todas as definições. Escolha uma página ou uma célula, aqui ou noutro ecrã, e prima {paste}.",
       "remove": "Remover mosaico | Remover {n} mosaicos"
+    },
+    "menu": {
+      "cut": "Cortar",
+      "move_to": "Mover para a página",
+      "add_here": "Adicionar um mosaico aqui",
+      "paste_here": "Colar aqui"
     }
   }
 }

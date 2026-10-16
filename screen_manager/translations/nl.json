@@ -3755,6 +3755,12 @@
       "copy": "Kopiëren",
       "hint": "{copy} kopieert de tegels met al hun instellingen. Kies een pagina of een cel, hier of op een ander scherm, en druk op {paste}.",
       "remove": "Tegel verwijderen | {n} tegels verwijderen"
+    },
+    "menu": {
+      "cut": "Knippen",
+      "move_to": "Verplaatsen naar pagina",
+      "add_here": "Hier een tegel toevoegen",
+      "paste_here": "Hier plakken"
     }
   }
 }

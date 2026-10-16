@@ -3755,6 +3755,12 @@
       "copy": "Kopiuj",
       "hint": "{copy} kopiuje kafelki ze wszystkimi ustawieniami. Wybierz stronę lub komórkę, tutaj lub na innym ekranie, i naciśnij {paste}.",
       "remove": "Usuń kafelek | Usuń {n} kafelki | Usuń {n} kafelków"
+    },
+    "menu": {
+      "cut": "Wytnij",
+      "move_to": "Przenieś na stronę",
+      "add_here": "Dodaj tu kafelek",
+      "paste_here": "Wklej tutaj"
     }
   }
 }

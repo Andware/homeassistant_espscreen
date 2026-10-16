@@ -8,8 +8,6 @@ import { computed, ref, watch } from "vue";
 import { t } from "../i18n";
 import { domainInfo, entriesOf, inlineControlKind, pageTarget } from "../model/layout";
 import { glyph } from "../model/topbar";
-import { titleOf } from "../model/pages";
-import { copyChosen, shortcut } from "../editor/clipboard";
 import PluginTileInspector from "./PluginTileInspector.vue";
 import TileEntityFix from "./TileEntityFix.vue";
 import type { Tile } from "../types";
@@ -35,7 +33,6 @@ import SwitchRow from "./ui/SwitchRow.vue";
 import UiSelect from "./ui/UiSelect.vue";
 import UiMenu from "./ui/UiMenu.vue";
 import UiMenuItem from "./ui/UiMenuItem.vue";
-import UiMenuSeparator from "./ui/UiMenuSeparator.vue";
 import rules from "../model/page-rules.json";
 import { precisionOffered } from "../model/display-precision";
 import { controlChoices, controlHint, displayChoices, displayHint, goesToChoices, goesToHint, offeredChoices, sliderOffered, subChoices,
@@ -46,7 +43,8 @@ import { useEntitiesStore } from "../stores/entities";
 import { usePluginsStore } from "../stores/plugins";
 import { useScreenStore } from "../stores/screen";
 import { useInventoryStore } from "../stores/inventory";
-import { moveTileToPage, removeTile, retargetPageTile, setTileOption, tilePanel } from "../editor/tiles";
+import { moveTileAndFollow, otherPages, removeTile, retargetPageTile, setTileOption, tilePanel } from "../editor/tiles";
+import TileMenuItems from "./TileMenuItems.vue";
 import { useDocumentStore } from "../stores/document";
 import { useInspectorStore } from "../stores/inspector";
 
@@ -66,12 +64,7 @@ const props = defineProps<{ tile: Tile }>();
 // Another tile opens its own inspector (Drawer keys it by the tile), so these start closed for every tile.
 const more = ref(false);
 // The tile goes to the first free cell of another page, and the sheet follows it there.
-function moveTile(page: number) {
-  const id = doc.document?.pages[page]?.id;
-  if (moveTileToPage(props.tile, page) && id) doc.selectedPageId = id;
-}
-const otherPages = computed(() => (doc.document?.pages || []).map((page, index) => ({ index, name: titleOf(doc.document!, page) || t("editor.page.label", { page: index + 1 }) }))
-  .filter((page) => page.index !== pageOf(props.tile.slot)));
+const pagesBesides = computed(() => otherPages(props.tile));
 const domain = computed(() => props.tile.entity.split(".")[0]);
 // A plugin's tile (design) has an inspector of its own, built from the plugin's manifest.
 const pluginTile = computed(() => Boolean(plugins.pluginTileOf(props.tile.entity)));
@@ -188,10 +181,6 @@ const sliderWarn = computed(() => inline.value === "slider" && caps.value && !ca
 const backgrounds = computed(() => Object.entries(inv.inventory.backgrounds || {}));
 const fromHA = computed(() => Boolean(inv.entityOf(props.tile.entity)?.icon));
 const showIcon = computed(() => Boolean(inv.inventory.icons) && (domain.value !== "screen" || goesTo.value > 0) && !["forecast", "sunpath"].includes(display.value));
-function inspect() {
-  // This tile's own data: its entity may be on several tiles (firmware 0.16.0+).
-  insp.inspector = { kind: "inspect", entity: props.tile.entity, slot: props.tile.slot, key: props.tile.key };
-}
 // The way up in the head: the page the tile stands on opens that page's settings.
 const pageId = computed(() => doc.document?.pages.find((page) => page.tiles.some((item) => item.id === (holder.value || props.tile).id))?.id);
 const crumbs = computed(() => [
@@ -228,12 +217,8 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
     <template #actions>
       <UiMenu width="220px">
         <template #trigger><button type="button" class="icon-btn" id="tile-more" :aria-label="t('editor.screen_view.more')"><Icon name="dots-horizontal" /></button></template>
-        <UiMenuItem id="tile-rename" icon="pencil-outline" @select="insp.renameTile(tile)">{{ t("editor.naming.rename") }}</UiMenuItem>
-        <UiMenuItem v-if="domain !== 'screen'" icon="database-search-outline" @select="inspect">{{ t("editor.common.read_current_data") }}</UiMenuItem>
-        <UiMenuItem v-if="domain !== 'screen'" icon="pencil-outline" @select="insp.entityPickerOpen = true">{{ t("editor.broken.change") }}</UiMenuItem>
-        <UiMenuItem id="tile-copy" icon="content-copy" :hint="shortcut('C')" @select="copyChosen">{{ t("editor.selection.copy") }}</UiMenuItem>
-        <UiMenuSeparator />
-        <UiMenuItem icon="delete-outline" danger hint="⌫" @select="removeTile(tile)">{{ t("editor.common.remove") }}</UiMenuItem>
+        <!-- The same items as the right mouse button on the card (docs/PAGES.md, "Menus"). -->
+        <TileMenuItems :tile="tile" />
       </UiMenu>
     </template>
   </InspectorHead>
@@ -368,9 +353,9 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
         <span><b>{{ t("editor.phone.more_settings") }}</b><small>{{ t("editor.phone.more_settings_hint") }}</small></span><Icon name="chevron-right" />
       </button>
       <div class="phone-tile-actions">
-        <UiMenu v-if="!key && !bedside && otherPages.length" width="240px">
+        <UiMenu v-if="pagesBesides.length" width="240px">
           <template #trigger><button type="button" class="btn"><Icon name="arrow-right" />{{ t("editor.phone.move") }}</button></template>
-          <UiMenuItem v-for="page in otherPages" :key="page.index" icon="view-column-outline" @select="moveTile(page.index)">{{ page.name }}</UiMenuItem>
+          <UiMenuItem v-for="page in pagesBesides" :key="page.index" icon="view-column-outline" @select="moveTileAndFollow(tile, page.index)">{{ page.name }}</UiMenuItem>
         </UiMenu>
         <button type="button" class="btn danger-soft" @click="removeTile(tile)"><Icon name="delete-outline" />{{ t("editor.common.remove") }}</button>
       </div>

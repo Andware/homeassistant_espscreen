@@ -45,6 +45,27 @@ Reka has a part for what you need (Combobox, Popover, Tooltip, Dialog, Tabs, Sli
 Size and place, Controls, Icon and color) and a page's in three (Title, Navigation, Top bar). The icons of the
 editor's own controls are Material Design Icons, listed in `web/src/model/ui-icons.json`.
 
+### Menus
+
+Everything you do to a thing as a whole, as opposed to its settings, is in one menu, and that menu is the same in two
+places: behind the thing's ··· and on the right mouse button on it (`UiContextMenu`). Its items live in one component,
+so the two never differ: `TileMenuItems` for a tile, `PageMenuItems` for a page. A new action goes in that component
+and shows in both places. The mockup holds one menu per page (`DevicePage`), which shows the items of what is under
+the pointer, so a page of many tiles carries one menu, not one per card.
+
+- The right mouse button chooses the thing first, as a file manager does: a tile that isn't chosen opens in the
+  inspector, and a right click on one of several chosen tiles keeps them all and offers what works on all of them
+  (copy, cut, remove).
+- What a thing gets: a tile, the tiles chosen together, an empty cell (add a tile there, or paste there), the page
+  anywhere else on it, the top bar's items in the bar at the head of its inspector, and the screensaver clock's row.
+- The order is always the same: what changes the thing (rename, its entity, its data), then where it stands (move to
+  a page), then the clipboard, and Remove last in red, with a line between the groups. A key that does the same
+  shows on the right (`⌘C`, `⌫`).
+- A menu holds actions, never settings: a choice with a value (size, colour, display) stays in the inspector, and a
+  tile's size stays with the handles on its card.
+- The right mouse button is the mouse's alone. A finger held on a tile or a bar item drags it, so on a touch screen
+  the ··· is the way to the menu.
+
 ## Home and detail pages
 
 Choose any page as Home. Home controls, automatic return and return on standby use that destination. Existing Home settings and entity identifiers stay compatible. The **Back to Home** setting (internally still named "Back to page 1") returns to the configured Home page, and so do the home button in the top bar (the Tessera logo) and a swipe up from the bottom edge; existing entity names and IDs are retained so automations keep working.

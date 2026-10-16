@@ -3755,6 +3755,12 @@
       "copy": "Copia",
       "hint": "{copy} copia i riquadri con tutte le loro impostazioni. Scegli una pagina o una cella, qui o su un altro schermo, e premi {paste}.",
       "remove": "Rimuovi riquadro | Rimuovi {n} riquadri"
+    },
+    "menu": {
+      "cut": "Taglia",
+      "move_to": "Sposta nella pagina",
+      "add_here": "Aggiungi un riquadro qui",
+      "paste_here": "Incolla qui"
     }
   }
 }

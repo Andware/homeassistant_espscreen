@@ -59,6 +59,11 @@
   right in the bar to move it, or pull it out of the bar to take it off, as an icon out of a menu bar; a right click on an
   item takes it off as well. The screensaver clock's row of entities works the same way. Many items go on more lines, and an item the screen leaves out for want of room is
   dashed in orange. Copying the bar to other pages is in the menu behind the three dots.
+- **A right click in the editor.** On a tile it opens the tile and shows the same menu as the ··· in its settings:
+  rename, show another entity, read its data, move it to another page, copy, cut and remove. On tiles chosen together
+  it copies, cuts or removes them all, on an empty cell it adds a tile there or pastes there, and anywhere else on a
+  page it shows the page's own menu. A finger held on a tile still drags it; on a touch screen the ··· is the way to
+  the menu.
 - **A page's settings start from the page.** A small page at the head shows its top bar, its tiles and, on a board with
   the Dock, its place in the Dock: tap the Dock for how the page stands there, or the top bar to set that up, and a
   back button takes you to the page again. Escape goes one step back at a time, and the settings have room between

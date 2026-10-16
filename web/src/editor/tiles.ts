@@ -152,6 +152,20 @@ export function moveTileToPage(tile: Tile, page: number) {
   if (!moved) toast(t("editor.layout.no_room", { page: page + 1 }));
   return moved;
 }
+/** The pages a tile can be moved to, by name: every page but its own. None for a key, which stands on its clock's page. */
+export function otherPages(tile: Tile) {
+  const doc = useDocumentStore(), { pageOf } = doc.editorLayout;
+  if (tile.in !== undefined || tile.entity === "screen.nightstand" || !doc.document) return [];
+  return doc.document.pages.map((page, index) => ({ index, name: pages.titleOf(doc.document!, page) || t("editor.page.label", { page: index + 1 }) }))
+    .filter((page) => page.index !== pageOf(tile.slot));
+}
+/** Moves a tile to the first free cell of another page, and the editor goes there with it. */
+export function moveTileAndFollow(tile: Tile, page: number) {
+  const doc = useDocumentStore(), id = doc.document?.pages[page]?.id;
+  const moved = moveTileToPage(tile, page);
+  if (moved && id) doc.selectedPageId = id;
+  return moved;
+}
 
 // ---- Sizes ----
 /** The sizes the screen takes on the draft's grid: one given its grid with the layout (firmware 0.53.0+) every size of
