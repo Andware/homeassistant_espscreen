@@ -2176,7 +2176,17 @@
       "now": "maintenant",
       "minutes": "{n} min",
       "live": "L'éditeur la dessine avec les données du plugin ; l'écran la dessine lui-même et décompte avec sa propre horloge.",
-      "entity": "Entité"
+      "entity": "Entité",
+      "add": "Ajouter",
+      "change": "Choisir un autre",
+      "find": "Rechercher…",
+      "search": "Rechercher…",
+      "search_more": "Tapez au moins deux lettres",
+      "none_found": "Aucun résultat",
+      "remove": "Retirer {name}",
+      "type": "Tapez puis Entrée",
+      "full": "L'écran n'en prend pas plus pour cette tuile : ses options sont pleines.",
+      "count": "{n} sur {max}"
     },
     "memory": {
       "label": "Mémoire pour les tuiles",

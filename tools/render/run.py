@@ -686,7 +686,9 @@ class Run:
         # The probe's own lines carry its tag; nothing else on the log is read as a moment of the plugin.
         probe = lambda line, text: '[probe:' in line and text in line
         said = lambda start, text: sum(probe(line, text) for line in self.lines[start:])
-        tiles = [dict(entity='plugin:host_probe.probe', name='Probe', slot=0, options={'plugin': {'word': 'Hello'}}),
+        # Lists (plugin API 0.12): texts, and picks of a choice with the words the person saw.
+        lists = {'words': ['a', 'b'], 'picks': [{'value': '1', 'label': 'One'}, {'value': '3', 'label': 'Three'}]}
+        tiles = [dict(entity='plugin:host_probe.probe', name='Probe', slot=0, options={'plugin': {'word': 'Hello', **lists}}),
                  dict(entity='sensor.hall', name='Hall', slot=1, options={'tap': 'plugin:host_probe.open'}),
                  dict(entity='plugin:host_probe.probe', name='Second', slot=grid.slots, options={'plugin': {'word': 'Two'}})]
         record = send_layout.migrate_legacy(dict(title='Plugins', tiles=tiles), grid)
@@ -713,6 +715,7 @@ class Run:
         await self.page_done(0)
         # The life of the tile on page 1: made with its options, fed, ticked, in that order.
         await self.until(lambda l: probe(l, 'tile=0 create') and 'word=[Hello]' in l, 10, 'tile 0 created', start)
+        await self.until(lambda l: probe(l, 'tile=0 lists words=[a,b] picks=[1:One,3:Three]'), 10, 'the list options', start)
         await self.until(lambda l: probe(l, 'tile=0 state n=1'), 10, 'tile 0 fed', start)
         await self.until(lambda l: probe(l, 'tile=0 tick'), 10, 'tile 0 ticked', start)
         order = [next(k for k, word in enumerate(('create', 'state', 'tick')) if f'tile=0 {word}' in l)
@@ -861,8 +864,34 @@ class Run:
         # and on_touch; the plugin opens its card.
         start = len(self.lines)
         tile = (await self.navigation_state())['tile']
+        since = len(calls)
         await self.tap(*tile)
         tapped = await self.until(lambda l: probe(l, 'tile=0 tap'), 10, 'on_tap', start)
+        # The action of several fields (plugin API 0.12) as Home Assistant's ESPHome integration gets it: the texts in
+        # `data` as they are, the rest in `data_template` as literals Home Assistant reads back into their types, and
+        # none of it a template, though two texts hold Jinja.
+        await self.until(lambda l: probe(l, 'tile=0 action sent=1 refused=1'), 10, 'the action of several fields', start)
+        for _ in range(20):
+            played = [c for c in calls[since:] if c.service == 'music_assistant.play_media']
+            if played:
+                break
+            await asyncio.sleep(0.25)
+        assert len(played) == 1, f'the action of several fields reached Home Assistant {len(played)} times'
+        data, rendered = dict(played[0].data), dict(played[0].data_template)
+        assert data == {'entity_id': 'media_player.probe', 'media_id': '1989', 'media_type': 'album',
+                        'artist': "{{ states('lock.door') }}"}, f'the texts of the action: {data}'
+        def home_assistant_reads(text):
+            # helpers/template: a template only with {{, {% or {#; else the text read as a Python literal (_parse_result).
+            import ast
+            assert not any(mark in text for mark in ('{{', '{%', '{#')), f'{text} would run as a template'
+            try:
+                return ast.literal_eval(text)
+            except (ValueError, SyntaxError):
+                return text
+        read = {key: home_assistant_reads(text) for key, text in rendered.items()}
+        assert read == {'volume': 0.4, 'radio_mode': False, 'ids': ['a', '{% b %}'], 'extra': {'none': None}}, \
+            f'Home Assistant reads the values of the action as {read} (from {rendered})'
+        self.warnings.append(f'action of several fields: {len(data)} texts and {len(rendered)} values, typed as sent')
         # Where the finger was (plugin API 0.10): in the tile's own pixels, so within its drawing area.
         made = next(l for l in self.lines if probe(l, 'tile=0 create'))
         tw, th = (int(v) for v in re.search(r'create (\d+)x(\d+)', made).groups())
@@ -873,13 +902,72 @@ class Run:
         await self.until(lambda l: probe(l, 'touch'), 10, 'on_touch', start)
         await self.until(lambda l: probe(l, 'card open') and 'tile=0' in l, 10, 'the card opened', start)
         await self.until(lambda l: probe(l, 'card tick'), 10, 'the card ticked', start)
+        # Pictures on the card (plugin API 0.13): its place asks for its picture as a plugin tile's do, marked as a
+        # card's (`card`, `for`), the harness answers as the app does ("pcard"), and the piece lands on the place. A board
+        # without pictures lays the card out without the place and asks for nothing.
+        kept = os.environ.get('KEPT_PAGES_HOST') == '1'
+        card_shows = await self.until(lambda l: probe(l, 'card pictures='), 10, 'whether the card shows pictures', start)
+        async def card_picture(since, of):
+            for _ in range(24):
+                asked = [c for c in calls[since:] if c.service == 'esphome.screen_camera' and dict(c.data).get('card') == '1']
+                if asked:
+                    break
+                await asyncio.sleep(0.5)
+            assert asked, 'the card did not ask for its picture'
+            data = dict(asked[-1].data)
+            assert data.get('tiles') == 'plugin:host_probe.detail' and data.get('for') == of, f'the card asked as {data}'
+            question = plugin_pictures.parse(data, self.canvas)
+            assert question and question.card and question.sources == ['https://image.tmdb.org/t/p/w342/probe-card.jpg'], \
+                f'the card asked for {data}'
+            raw = porch(400, 400)
+            body = tile_art.layers([raw], question.ground, question.atlas, question.styles(), compact=True)
+            url = self.pictures.url(f'{self.item.key}-card-{since}.bmp', body)
+            await self.send({'v': 1, 'op': 'camera', 't': 'pcard', 'e': data['tiles'], 'u': url, 'view': int(data['view'])})
+        if 'pictures=0' in card_shows:
+            await asyncio.sleep(2)
+            asked = [c for c in calls[since:] if c.service == 'esphome.screen_camera' and dict(c.data).get('card') == '1']
+            assert not asked, f'a board without pictures asked for the card\'s picture: {asked}'
+            self.warnings.append('card pictures: none on this board (pictures=0), no question asked')
+        else:
+            await card_picture(since, '')
+            await self.until(lambda l: 'card plugin:host_probe.detail: its pictures are shown' in l, 10, 'the card\'s picture shown', start)
+            await asyncio.sleep(0.8)
+            shot = await self.render('plugin-card-picture')
+            at = await self.until(lambda l: probe(l, 'card place '), 10, 'where the card\'s place lies', start)
+            x1, y1, x2, y2 = (int(n) for n in at.rsplit(' ', 1)[1].split(','))
+            colours = shot.convert('RGB').crop((x1 + 2, y1 + 2, x2 - 1, y2 - 1)).getcolors(1 << 16) or []
+            assert len(colours) > 12, f'the card\'s place shows {len(colours)} colours at {x1},{y1}-{x2},{y2}, not its picture'
+            if kept:
+                stored = await self.until(lambda l: 'store:' in l and 'pcard' in l, 10, 'the card\'s picture in the store', start)
+                self.warnings.append(f'card picture kept: {stored.split("store:", 1)[1].strip()[:80]}')
+            self.warnings.append('card pictures: asked once, answered as pcard, shown on its place')
         await self.render('plugin-card')
+        # A tap on the card's room (plugin API 0.12): on_tap through the touch filter, where in the card's own pixels;
+        # a tap on another spot right after it counts too (a list's next row), the same spot again is a bounce.
+        room = await self.until(lambda l: probe(l, 'card room '), 10, 'where the card\'s room lies', start)
+        x1, y1, x2, y2 = (int(n) for n in room.rsplit(' ', 1)[1].split(','))
+        start = len(self.lines)
+        await self.tap((x1 + x2) // 2, (y1 + y2) // 2)
+        await self.tap((x1 + x2) // 2, y1 + (y2 - y1) // 4)
+        await asyncio.sleep(1.0)
+        taps = [re.search(r'card tap at=(-?\d+),(-?\d+)', l) for l in self.lines[start:] if probe(l, 'card tap at=')]
+        assert len(taps) == 2, f'the card heard {len(taps)} taps of two on two spots'
+        for tap in taps:
+            cx, cy = int(tap.group(1)), int(tap.group(2))
+            if not (0 <= cx <= x2 - x1 and 0 <= cy <= y2 - y1):
+                self.failures.append(f'the card\'s tap point {cx},{cy} is not within its room {x2 - x1}x{y2 - y1}')
+        self.warnings.append(f'card taps: {[(t.group(1), t.group(2)) for t in taps]} in a room of {x2 - x1}x{y2 - y1}')
         start = len(self.lines)
         await self.call('render_close_cards')
         await self.until(lambda l: probe(l, 'card destroy'), 10, 'the card closed', start)
         await self.until(lambda l: probe(l, 'cards_closed'), 10, 'on_cards_closed', start)
+        # The card's picture leaves the store with the card (plugin API 0.13).
+        if kept and 'pictures=1' in card_shows:
+            gone = await self.until(lambda l: 'store:' in l and 'pcard' not in l, 10, 'the card\'s picture freed', start)
+            self.warnings.append(f'card closed, store: {gone.split("store:", 1)[1].strip()[:80]}')
         # The tap action on the sensor tile: a short tap runs the plugin's action with the tile's entity.
         start = len(self.lines)
+        since_action = len(calls)
         await self.call('render_tile_center', index=sensor)
         line = await self.until(lambda l: f'tile_center index={sensor}' in l, 5, 'the sensor tile', start)
         x, y = (int(v) for v in re.search(r'x=(-?\d+) y=(-?\d+)', line).groups())
@@ -887,8 +975,17 @@ class Run:
         await self.tap(x, y)
         await self.until(lambda l: probe(l, 'tap_action entity=[sensor.hall]'), 10, 'the tap action', start)
         await self.until(lambda l: probe(l, 'card open') and 'entity=[sensor.hall]' in l, 10, 'the action opened the card', start)
+        # Opened again, for an entity this time: it asks again, naming it (the app lets it show that entity's pictures).
+        if 'pictures=1' in card_shows:
+            await card_picture(since_action, 'sensor.hall')
+            await self.until(lambda l: 'card plugin:host_probe.detail: its pictures are shown' in l, 10, 'the card\'s picture shown again', start)
+            if kept:
+                await self.until(lambda l: 'store:' in l and 'pcard' in l, 10, 'the card\'s picture in the store again', start)
+                start = len(self.lines)
         await self.call('render_close_cards')
         await self.until(lambda l: probe(l, 'card destroy'), 10, 'the card closed again', start)
+        if kept and 'pictures=1' in card_shows:
+            await self.until(lambda l: 'store:' in l and 'pcard' not in l, 10, 'the card\'s picture freed again', start)
         # Page 2 and back: the tile there lives, and the one on page 1 ticks again afterwards; on a board without
         # PSRAM the card is made anew, on one with it the kept card simply shows again.
         start = len(self.lines)

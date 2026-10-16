@@ -1,9 +1,13 @@
 /** The cards built into a screen, with no Home Assistant entity of their own (core.py BUILTIN, the page tiles aside). */
 export type BuiltinName = "clock" | "nightstand" | "settings" | "map" | "energy";
 export const BUILTIN_CARDS: string[] = ["screen.clock", "screen.nightstand", "screen.settings", "screen.map", "screen.energy"];
+// A plugin tile's option as it is kept (plugin API 0.12): a text, number or toggle; a pick of a list found by searching,
+// {value, label} with the words the person saw; or a list of texts or picks (the add-on's core.plugin_options).
+export type PluginPick = { value: string; label: string };
+export type PluginValue = string | number | boolean | PluginPick | (string | PluginPick)[];
 export type TileOptions = {
   // A plugin tile's own options (design): what its manifest lets the inspector set.
-  plugin?: Record<string, string | number | boolean>;
+  plugin?: Record<string, PluginValue>;
   // The entity a plugin tile belongs to, when its manifest names a domain (`entity`).
   plugin_entity?: string;
   display?: string;
@@ -82,7 +86,7 @@ export type PageTile = {
   id: string;
   content: { kind: "entity"; entityId: string } | { kind: "builtin"; name: BuiltinName } | { kind: "navigation"; target: PageTarget }
     // A plugin's tile type (design, docs: the plugins proposal): its options are the plugin's own, checked against its manifest.
-    | { kind: "plugin"; plugin: string; tile: string; entityId?: string; options?: Record<string, string | number | boolean> };
+    | { kind: "plugin"; plugin: string; tile: string; entityId?: string; options?: Record<string, PluginValue> };
   // A footprint is a rectangle. The renderer's capabilities decide which
   // rectangles it supports; the page's grid is never user-overridable.
   placement: { row: number; column: number; columns: number; rows: number };

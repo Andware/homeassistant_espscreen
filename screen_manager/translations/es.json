@@ -2176,7 +2176,17 @@
       "now": "ahora",
       "minutes": "{n} min",
       "live": "El editor la dibuja con los datos del plugin; la pantalla la dibuja ella misma y cuenta atrás con su propio reloj.",
-      "entity": "Entidad"
+      "entity": "Entidad",
+      "add": "Añadir",
+      "change": "Elegir otro",
+      "find": "Buscar…",
+      "search": "Buscar…",
+      "search_more": "Escribe dos letras o más",
+      "none_found": "No se encontró nada",
+      "remove": "Quitar {name}",
+      "type": "Escribe y pulsa Intro",
+      "full": "La pantalla no admite más para este mosaico: sus opciones están llenas.",
+      "count": "{n} de {max}"
     },
     "memory": {
       "label": "Memoria para mosaicos",

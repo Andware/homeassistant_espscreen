@@ -3480,7 +3480,8 @@ class Manager:
 
     async def answer_plugin_pictures(self, inbox, screen, request):
         """The pictures of a plugin tile's places (plugin API 0.10, plugin_pictures): the tile must be a plugin tile of
-        the screen's layout whose manifest gives it places, and every address one the manifest allows. The answer is a
+        the screen's layout whose manifest gives it places, and every address one the manifest allows. A card's (0.13)
+        is a card of a plugin the screen runs whose manifest gives it places. The answer is a
         link to one picture of all its frames, as a camera tile gets; an empty link says there is none now (the screen
         asks again later, each time after a longer while)."""
         if not screen or not screen.get('online') or not camera_feed.can_show_live(screen):
@@ -3490,19 +3491,30 @@ class Manager:
         action = self.transport(inbox, screen) if question else None
         if not action:
             return
-        answer = {'v': 1, 'op': 'camera', 't': 'live', 'e': question.entity, 'u': ''}
         placed = self.layouts.get(inbox, {}).get('tiles', [])
-        if not (question.index < len(placed) and placed[question.index]['entity'] == question.entity):
-            LOG.info('Pictures for %s: not tile %d of %s', question.entity, question.index, screen['name'])
-            return
-        entry = self.plugins.known(question.plugin, inbox)
-        kind = entry.tile(question.tile) if entry else None
-        problem = plugin_pictures.refused(question, entry.manifest if entry else None, kind)
+        of_entity = None
+        if question.card:
+            # A card over the page (plugin API 0.13): of a plugin this screen runs, answered as "pcard". Home
+            # Assistant's own pictures only for a card shown for an entity of the screen's layout.
+            answer = {'v': 1, 'op': 'camera', 't': 'pcard', 'e': question.entity, 'u': ''}
+            entry = self.plugins.known(question.plugin, inbox) if self.plugins.store.get(inbox, question.plugin) else None
+            kind = entry.card(question.tile) if entry else None
+            of_entity = bool(question.of) and any(question.of in (tile['entity'], (tile.get('options') or {}).get('plugin_entity'))
+                                                  for tile in placed)
+        else:
+            answer = {'v': 1, 'op': 'camera', 't': 'live', 'e': question.entity, 'u': ''}
+            if not (question.index < len(placed) and placed[question.index]['entity'] == question.entity):
+                LOG.info('Pictures for %s: not tile %d of %s', question.entity, question.index, screen['name'])
+                return
+            entry = self.plugins.known(question.plugin, inbox)
+            kind = entry.tile(question.tile) if entry else None
+        problem = plugin_pictures.refused(question, entry.manifest if entry else None, kind, of_entity)
         if problem:
             LOG.info('Pictures for %s on %s refused: %s', question.entity, screen['name'], problem)
             await self.send_auxiliary(inbox, answer, action, request)
             return
-        raws = await asyncio.gather(*(self.plugins.pictures.fetch(url, entry.manifest, kind) for url in question.sources))
+        raws = await asyncio.gather(*(self.plugins.pictures.fetch(url, entry.manifest, kind, of_entity)
+                                      for url in question.sources))
         base = await camera_feed.base_url(self.ha.request)
         if not base:
             LOG.warning('Plugin pictures: no address for this app on the LAN; set SCREEN_CAMERA_URL')
@@ -4806,11 +4818,20 @@ def create_app(manager, development=False):
             return web.json_response(manager.plugins.set_secret(request.match_info['plugin'], request.match_info['input'],
                                                                 data.get('value')))
 
-        # `_screen`: the screen the inspector shows (no option id starts with _), whose own plugin of that id answers.
+        # The tile's options as they are kept (plugin API 0.12: typed, a list as a list), in a body so no type is lost on
+        # the way; `screen`: the screen the inspector shows, whose own plugin of that id answers; `search`: what the
+        # person typed in a searched list.
+        async def plugin_body(request):
+            data = await request.json()
+            if not isinstance(data, dict) or not isinstance(data.get('options', {}), dict):
+                raise ValueError(t('addon.errors.plugins.request'))
+            screen = data.get('screen')
+            return data.get('options') or {}, screen if isinstance(screen, str) and screen else None, data
+
         async def plugins_choices(request):
-            values = {key: value for key, value in request.query.items() if key not in ('language', '_screen')}
-            return web.json_response(await manager.plugins.choices(request.match_info['plugin'], request.match_info['fetch'], values,
-                                                                   request.query.get('_screen')))
+            options, screen, data = await plugin_body(request)
+            return web.json_response(await manager.plugins.choices(request.match_info['plugin'], request.match_info['fetch'],
+                                                                   options, screen, data.get('search') or ''))
 
         async def plugins_plan(request):
             return web.json_response(manager.plugins.plan(request.match_info['inbox'], await request.json(),
@@ -4827,15 +4848,16 @@ def create_app(manager, development=False):
         app.router.add_post('/api/screens/{inbox}/plugins', plugins_apply)
         app.router.add_get('/api/screens/{inbox}/plugins/file', plugins_file)
         app.router.add_put('/api/plugins/{plugin}/secrets/{input}', plugins_secret)
-        app.router.add_get('/api/plugins/{plugin}/choices/{fetch}', plugins_choices)
+        app.router.add_post('/api/plugins/{plugin}/choices/{fetch}', plugins_choices)
         app.router.add_post('/api/screens/{inbox}/plugins/plan', plugins_plan)
         app.router.add_put('/api/plugins/{plugin}/like', plugins_like)
 
         async def plugins_preview(request):
-            options = {key: value for key, value in request.query.items() if key not in ('language', '_screen')}
+            options, screen, data = await plugin_body(request)
+            entity = data.get('entity') if isinstance(data.get('entity'), str) else None
             return web.json_response(await manager.plugins.preview(request.match_info['plugin'], request.match_info['tile'], options,
-                                                                   request.query.get('_screen')))
-        app.router.add_get('/api/plugins/{plugin}/preview/{tile}', plugins_preview)
+                                                                   screen, entity))
+        app.router.add_post('/api/plugins/{plugin}/preview/{tile}', plugins_preview)
 
         async def plugins_image(request):
             # A plugin's picture for the Plugins page (store.png), served by the app: the editor shows no picture of

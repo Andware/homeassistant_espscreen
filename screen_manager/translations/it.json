@@ -2176,7 +2176,17 @@
       "now": "ora",
       "minutes": "{n} min",
       "live": "L'editor la disegna con i dati del plugin; lo schermo la disegna da sé e fa il conto alla rovescia con il proprio orologio.",
-      "entity": "Entità"
+      "entity": "Entità",
+      "add": "Aggiungi",
+      "change": "Scegline un altro",
+      "find": "Cerca…",
+      "search": "Cerca…",
+      "search_more": "Scrivi almeno due lettere",
+      "none_found": "Nessun risultato",
+      "remove": "Rimuovi {name}",
+      "type": "Scrivi e premi Invio",
+      "full": "Lo schermo non accetta altro per questo riquadro: le sue opzioni sono piene.",
+      "count": "{n} di {max}"
     },
     "memory": {
       "label": "Memoria per i riquadri",

@@ -1,5 +1,14 @@
 ## Unreleased
 
+- **A plugin's card can show pictures (plugin API 0.13).** The card a plugin opens over the page, such as the details
+  of an album or a film, can now show its cover or poster large, the same way the plugin's tile shows them. It comes
+  as quickly as the cover on Tessera's own media card, and it is freed again when the card closes. Screens without the
+  memory for pictures, such as the CYD, show the card without them.
+- **Plugins can keep lists and send richer actions (plugin API 0.12).** A plugin tile's option can now hold several
+  values: several artists, stops or calendars, each added from a list or found by typing a few letters, in the order you
+  put them and dragged into another. The plugin asks its web service once per value and shows one list, newest first if
+  it likes, and on a tap it can send Home Assistant an action with several fields of any kind (a text, a number, a list),
+  such as playing an album through Music Assistant. Plugins written for an older API keep working as they are.
 - **A screen update that a plugin stops says which plugin.** When a plugin doesn't build with the new firmware, the
   screen's update no longer ends in "Build or install failed" alone: it names the plugin and, when a newer version is
   on offer, asks you to update that plugin first and then the screen.

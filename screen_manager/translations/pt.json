@@ -2176,7 +2176,17 @@
       "now": "agora",
       "minutes": "{n} min",
       "live": "O editor desenha-o com os dados do plugin; o ecrã desenha-o sozinho e faz a contagem decrescente com o seu próprio relógio.",
-      "entity": "Entidade"
+      "entity": "Entidade",
+      "add": "Adicionar",
+      "change": "Escolher outro",
+      "find": "Procurar…",
+      "search": "Pesquisar…",
+      "search_more": "Escreva duas letras ou mais",
+      "none_found": "Nada encontrado",
+      "remove": "Remover {name}",
+      "type": "Escreva e prima Enter",
+      "full": "O ecrã não aceita mais para este mosaico: as opções estão cheias.",
+      "count": "{n} de {max}"
     },
     "memory": {
       "label": "Memória para mosaicos",

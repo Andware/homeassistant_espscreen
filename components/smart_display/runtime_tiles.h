@@ -10768,7 +10768,7 @@ inline bool picture_shown(const lv_image_dsc_t *image) {
   on(media_detail_picture);
   on(camera_picture);
   on(alert_picture);
-  if (media_library::draws(image)) shown = true;
+  if (media_library::draws(image) || plugin_host::card_draws(image)) shown = true;
 #ifdef SD_MOD_VACUUM_CARD
   if (vacuum_card::draws(image)) shown = true;
 #endif
@@ -10784,7 +10784,8 @@ inline bool picture_away(const lv_image_dsc_t *image) {
 #if LV_USE_IMAGE
   const auto drawn = [&](Widgets &w) { return draws(w.picture, image) || (w.extra_mode == "media" && draws(w.parts[MEDIA_PICTURE], image)) || plugin_host::picture_draws(w, image); };
   for (auto &w : widgets) if (drawn(w)) return false;
-  if (draws(media_detail_picture, image) || draws(camera_picture, image) || draws(alert_picture, image) || media_library::draws(image))
+  if (draws(media_detail_picture, image) || draws(camera_picture, image) || draws(alert_picture, image) || media_library::draws(image) ||
+      plugin_host::card_draws(image))
     return false;
 #ifdef SD_MOD_VACUUM_CARD
   if (vacuum_card::draws(image)) return false;
@@ -11979,6 +11980,8 @@ inline void camera_answer(const std::string &view, const std::string &entity, co
     media_library::art_answer(entity, url);
   } else if (view == "live") {  // a tile's own picture (tile_picture.h), found by its question's number
     tile_picture_answer(number, url, now);
+  } else if (view == "pcard") {  // the pictures of a plugin's card over the page (plugin API 0.13)
+    plugin_host::card_picture_answer(entity, url, number);
   } else if (url.empty()) {  // announced before its alert
     alert_announced = entity;
     alert_announced_at = now;
@@ -12110,6 +12113,7 @@ inline void slot_letgo(picture_loader::Slot slot) {
   if (camera_picture) { lv_image_set_src(camera_picture, nullptr); }
 #endif
   media_library::art_forget_download();
+  plugin_host::card_letgo(camera_full.source ? camera_full.source() : nullptr);
 }
 // A download ended (picture_fetch, any slot; packages/features/camera.yaml): the picture goes into the store under its
 // key, a 304 keeps the copy there as it is, and its owner shows it. Without room in the store the owner draws the
@@ -12300,6 +12304,7 @@ inline void pictures_round() {
   picture_loader::Want library;
   if (media_library::picture_want(library)) loader.want(owners::LIBRARY, std::move(library));
   card_picture_wants();
+  plugin_host::card_picture_want();
   // Never under a finger, and not between two quick page turns (camera_view::settled): a download that starts then is
   // for a page on its way past. Asking the app is an event and goes at once.
   auto *input = lv_indev_get_next(nullptr);

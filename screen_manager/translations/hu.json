@@ -2176,7 +2176,17 @@
       "now": "most",
       "minutes": "{n} perc",
       "live": "A szerkesztő a bővítmény saját adataiból rajzolja meg; a képernyő maga rajzolja, és a saját órája szerint számol vissza.",
-      "entity": "Entitás"
+      "entity": "Entitás",
+      "add": "Hozzáadás",
+      "change": "Másik választása",
+      "find": "Keresés…",
+      "search": "Keresés…",
+      "search_more": "Írj be legalább két betűt",
+      "none_found": "Nincs találat",
+      "remove": "{name} eltávolítása",
+      "type": "Írd be, majd Enter",
+      "full": "A kijelző nem fogad többet ehhez a csempéhez: a beállításai megteltek.",
+      "count": "{n} / {max}"
     },
     "memory": {
       "label": "Memória a csempéknek",
