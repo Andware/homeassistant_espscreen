@@ -64,6 +64,10 @@ from `tests/fixtures/overrides/` on its board, and applies the flash budget to e
   board, it builds the sample of four in `tools/profiles.py` `SAMPLE` instead (the CYD and the Guition always, and two
   that differ in chip, flash or glass). `--affected --every-board` builds them all.
 - `--sample` builds the sample directly, and `--board <key>` (repeatable) one board.
+- Whenever the Guition is among the boards built, the plugin host goes with it: `check-plugin.yaml` is the Guition's
+  entry with the host probe plugin (`tests/fixtures/plugins/host_probe`) in it, built the way the app builds a screen
+  with plugins. A change to the plugin API that no plugin builds against any more (a signature, a name) fails here,
+  on the add-on's ESPHome, before a release instead of on a screen.
 - On an ESPHome older than the add-on's (the packages' `min_version`), a change that reaches every board builds one
   board, `MIN_VERSION_SAMPLE` in `tools/profiles.py` (the CYD), plus a board for each changed file the CYD doesn't
   build (`tools/affected_boards.py --older-sample`). What an older ESPHome refuses is a newer option or API in the

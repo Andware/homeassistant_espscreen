@@ -1910,7 +1910,7 @@
         "network_none": "Nie łączy się z niczym poza Home Assistant",
         "read": "Odczytuje te encje z Home Assistant"
       },
-      "warning": "Wtyczka działa na Twoim ekranie z pełnym dostępem do niego, także do jego Wi-Fi i akcji, które ekran może wykonywać w Home Assistant. Dodawaj tylko wtyczki od autorów, którym ufasz, albo najpierw przeczytaj kod.",
+      "warning": "Wtyczka działa na Twoim ekranie z pełnym dostępem do niego, także do jego Wi-Fi i akcji, które ekran może wykonywać w Home Assistant, a jej kompilacja działa w tej aplikacji, gdzie ma dostęp do Twojej konfiguracji Home Assistant. Dodawaj tylko wtyczki od autorów, którym ufasz, albo najpierw przeczytaj kod.",
       "room": {
         "title": "Miejsce na {screen}",
         "small": "{kb} KB więcej: firmware zajmie {after} zamiast {before} swojego miejsca.",

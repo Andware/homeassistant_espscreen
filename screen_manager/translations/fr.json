@@ -1910,7 +1910,7 @@
         "network_none": "Ne se connecte à rien en dehors de Home Assistant",
         "read": "Lit ces entités dans Home Assistant"
       },
-      "warning": "Un plugin s'exécute sur votre écran avec un accès complet à celui-ci, y compris à son Wi-Fi et aux actions qu'il peut effectuer dans Home Assistant. N'ajoutez que des plugins d'auteurs en qui vous avez confiance, ou lisez d'abord le code.",
+      "warning": "Un plugin s'exécute sur votre écran avec un accès complet à celui-ci, y compris à son Wi-Fi et aux actions qu'il peut effectuer dans Home Assistant, et sa compilation s'exécute dans cette application, où il peut accéder à votre configuration Home Assistant. N'ajoutez que des plugins d'auteurs en qui vous avez confiance, ou lisez d'abord le code.",
       "room": {
         "title": "Place sur {screen}",
         "small": "{kb} Ko de plus : le firmware passe de {before} à {after} de son emplacement.",

@@ -1481,6 +1481,8 @@ class Manager:
                 if self._pairing_trouble != type(error).__name__:
                     LOG.info('Adding new screens to Home Assistant waits (%s)', type(error).__name__)
                 self._pairing_trouble = type(error).__name__
+            except Exception:   # a slip in one round never ends the app: every loop under main()'s gather keeps going
+                LOG.exception('Adding new screens to Home Assistant failed this round')
 
     def layout_sensors(self, screen):
         """The layout sensors this app published for a screen (publish_layouts), so they go with it.
@@ -1835,6 +1837,8 @@ class Manager:
                 await self.answer_options(request)
             except (ClientError, ConnectionError, TimeoutError, OSError, ValueError) as error:
                 LOG.info('No options for %s (%s)', request.get('entity') if isinstance(request, dict) else '?', type(error).__name__)
+            except Exception:   # one screen's request never ends the app
+                LOG.exception('No options for %s', request.get('entity') if isinstance(request, dict) else '?')
 
     async def plugin_loop(self):
         """Answer the plugins on the screens (docs/PLUGINS.md): a Home Assistant command their manifest names."""
@@ -3962,7 +3966,10 @@ def create_app(manager, development=False):
             return web.json_response({'error': t('addon.errors.ha_unreachable')}, status=503)
         except web.HTTPRequestEntityTooLarge:
             return web.json_response({'error': t('addon.errors.too_large')}, status=413)
-        except (TypeError, KeyError):
+        except (TypeError, KeyError) as error:
+            # Input the handler could not read, or a slip of the app's own that looks just like it: the page gets the
+            # one sentence either way, and the log the traceback, so a bug is not taken for bad input.
+            LOG.warning('%s %s: %s (%s)', request.method, request.path, type(error).__name__, error, exc_info=True)
             return web.json_response({'error': t('addon.errors.invalid_input')}, status=400)
         if response.prepared:
             return response  # streamed (SSE) responses set their headers before prepare()

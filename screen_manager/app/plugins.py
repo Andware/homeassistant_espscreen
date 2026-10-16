@@ -8,8 +8,12 @@ Where plugins come from:
 - **a folder** in Home Assistant's config, `tessera-plugins/<id>/` beside the `esphome/` folder: a plugin someone is
   making. Every build takes what the folder holds now; the app shows it as a test and offers no updates.
 
-The app never runs a plugin's code. It reads the manifest (plugin_manifest.py), writes the screen's plugins file so
+The app itself runs no plugin code: it reads the manifest (plugin_manifest.py), writes the screen's plugins file so
 ESPHome builds the plugin into that screen, and carries out the plugin's fetches with its own rules (plugin_fetch.py).
+ESPHome does run a plugin's Python, its component's `__init__.py`, while it builds the screen, in this app's container
+(docs/PLUGINS.md, "Where a plugin's code runs"): the build gets the environment the build tools read and nothing of the
+app's own (firmware.build_environment), and the plugins repository holds a listed plugin's Python to what a component
+needs (its tools/check.py).
 """
 import asyncio
 import json

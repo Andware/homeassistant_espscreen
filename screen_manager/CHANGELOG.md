@@ -1,5 +1,17 @@
 ## Unreleased
 
+- **A plugin's build no longer sees the app's own keys.** ESPHome runs a plugin's component while it builds a screen,
+  inside this app. That build now gets only the environment the compilers read, never the token the app holds for Home
+  Assistant or anything else of the app's own. The warning before you add a plugin now says where its code runs: on the
+  screen, and its build in this app. The plugins repository checks a listed plugin's Python at every release it takes:
+  ESPHome and a little of the standard library, files beside itself, nothing of the computer it is built on, and no
+  secret or include of the screen's in its YAML.
+- **The app comes back by itself, when you let it.** Turn on **Watchdog** on the app's Info page in Home Assistant:
+  Home Assistant then starts Tessera again when it stops unexpectedly, and from this version also when it stops
+  answering. A slip while the app adds new screens to Home Assistant or answers a picker on a screen is logged and the
+  app goes on, instead of ending. A request the app could not read says so in the log as well, with where it went
+  wrong, so a bug is not taken for bad input.
+
 - **New clock faces for the screensaver.** On screens with 8 MB of flash or more, the screensaver's clock can now be
   Glass (a dial that is the glass itself, with ticks along its edge), Classic (a round watch dial with the day, the
   date, the temperature and your entities beside or under it) or Bauhaus (the whole glass a grid of colourful shapes
