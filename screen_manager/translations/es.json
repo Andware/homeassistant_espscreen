@@ -950,6 +950,8 @@
       "offline": "La pantalla estaba sin conexión; se volverá a intentar la próxima vez.",
       "unknown_target": "Perfil o dirección IP desconocidos; actualiza esta pantalla a mano.",
       "build_failed": "Error al compilar o instalar; consulta el registro en Firmware y USB.",
+      "plugin_update_needed": "{name} no se compila con este firmware. Actualiza el plugin {name} a {version} en la página Plugins y luego vuelve a actualizar la pantalla.",
+      "plugin_failed": "{name} {version} no se compila con este firmware y aún no hay una versión más nueva. Quita el plugin {name} en la página Plugins para actualizar la pantalla sin él; el registro está en Firmware & USB.",
       "build_memory": "No hay memoria suficiente para compilar el firmware: deben estar libres unos {need} y hay {free}. Detén unos complementos un rato o dale más memoria a la máquina; consulta Firmware y USB.",
       "build_memory_limit": "No hay memoria suficiente para compilar el firmware, ni con un compilador a la vez. Detén unos complementos un rato o dale más memoria a la máquina; consulta Firmware y USB.",
       "no_report": "La pantalla no ha vuelto a comunicarse con el firmware {version}; revisa la pantalla.",

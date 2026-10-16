@@ -950,6 +950,8 @@
       "offline": "O ecrã estava offline; vai tentar novamente da próxima vez.",
       "unknown_target": "Perfil ou endereço IP desconhecido; atualize este ecrã manualmente.",
       "build_failed": "A compilação ou a instalação falhou; consulte o registo em Firmware e USB.",
+      "plugin_update_needed": "{name} não compila com este firmware. Atualiza o plugin {name} para {version} na página Plugins e depois atualiza o ecrã de novo.",
+      "plugin_failed": "{name} {version} não compila com este firmware e ainda não há uma versão mais recente. Remove o plugin {name} na página Plugins para atualizar o ecrã sem ele; o registo está em Firmware & USB.",
       "build_memory": "Memória insuficiente para compilar o firmware: têm de estar livres cerca de {need} e estão {free}. Para alguns complementos por um tempo ou dá mais memória à máquina; consulta Firmware e USB.",
       "build_memory_limit": "Memória insuficiente para compilar o firmware, também com um compilador de cada vez. Para alguns complementos por um tempo ou dá mais memória à máquina; consulta Firmware e USB.",
       "no_report": "O ecrã não voltou a comunicar com o firmware {version}; verifique o ecrã.",

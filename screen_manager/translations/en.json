@@ -950,6 +950,8 @@
       "offline": "Screen was offline; will retry next time.",
       "unknown_target": "Profile or IP address unknown; update this screen manually.",
       "build_failed": "Build or install failed; see the log under Firmware & USB.",
+      "plugin_update_needed": "{name} doesn't build with this firmware. Update the plugin {name} to {version} on the Plugins page, then update the screen again.",
+      "plugin_failed": "{name} {version} doesn't build with this firmware, and no newer version is on offer yet. Remove the plugin {name} on the Plugins page to update the screen without it; see the log under Firmware & USB.",
       "build_memory": "Not enough memory to build the firmware: about {need} must be free and {free} is. Stop a few add-ons for a while or give the machine more memory; see Firmware & USB.",
       "build_memory_limit": "Not enough memory to build the firmware, also with one compiler at a time. Stop a few add-ons for a while or give the machine more memory; see Firmware & USB.",
       "no_report": "Screen didn't report back with firmware {version}; check the screen.",

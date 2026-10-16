@@ -950,6 +950,8 @@
       "offline": "A kijelző offline volt; legközelebb újrapróbáljuk.",
       "unknown_target": "A profil vagy az IP-cím ismeretlen; frissítsd ezt a kijelzőt kézzel.",
       "build_failed": "A fordítás vagy a telepítés sikertelen; nézd meg a naplót a Firmware és USB alatt.",
+      "plugin_update_needed": "A(z) {name} nem fordítható ezzel a firmware-rel. Frissítsd a(z) {name} bővítményt {version} verzióra a Plugins oldalon, majd frissítsd újra a kijelzőt.",
+      "plugin_failed": "A(z) {name} {version} nem fordítható ezzel a firmware-rel, és még nincs újabb verzió. Távolítsd el a(z) {name} bővítményt a Plugins oldalon, hogy nélküle frissíthesd a kijelzőt; a napló a Firmware & USB alatt van.",
       "build_memory": "Nincs elég memória a firmware fordításához: körülbelül {need} kell szabadon, és {free} van. Állíts le néhány kiegészítőt egy időre, vagy adj több memóriát a gépnek; lásd Firmware és USB.",
       "build_memory_limit": "Nincs elég memória a firmware fordításához, egy fordítóval sem. Állíts le néhány kiegészítőt egy időre, vagy adj több memóriát a gépnek; lásd Firmware és USB.",
       "no_report": "A kijelző nem jelentkezett vissza a(z) {version} firmware-rel; ellenőrizd a kijelzőt.",

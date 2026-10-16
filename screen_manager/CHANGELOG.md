@@ -1,5 +1,8 @@
 ## Unreleased
 
+- **A screen update that a plugin stops says which plugin.** When a plugin doesn't build with the new firmware, the
+  screen's update no longer ends in "Build or install failed" alone: it names the plugin and, when a newer version is
+  on offer, asks you to update that plugin first and then the screen.
 - **A Valetudo robot's map shows as a map.** A robot running Valetudo hands Home Assistant a placeholder that asks to
   install a Lovelace card, with the real map hidden inside it, so the vacuum card and a camera tile showed that
   placeholder. The app now reads the map out of it and draws the rooms, walls, path, zones, charger and robot, once

@@ -109,6 +109,16 @@ def build_reason(logs):
     return (errors or lines)[-1][:200]
 
 
+# A compiler error in a file of an external component: `../src/esphome/components/tap_sound/tap_sound.h:19:8: error: ...`.
+COMPONENT_ERROR = re.compile(r'components/([a-z0-9_]+)/[^\s:]+:\d+(?::\d+)?:\s*(?:fatal\s+)?error:')
+
+
+def failed_components(logs):
+    """The components a build's compiler errors lie in, Tessera's own left out."""
+    found = {match.group(1) for line in logs or [] for match in [COMPONENT_ERROR.search(str(line))] if match}
+    return found - {'smart_display', 'flash_layout'}
+
+
 def version_tuple(text):
     return tuple(int(n) for n in re.findall(r'\d+', str(text or ''))[:3])
 
@@ -1307,6 +1317,25 @@ class Plugins:
         if rewrite:
             self._know_tiles()
             self.rewrite_sidecar(inbox)
+
+    def blame(self, inbox, logs):
+        """The plugin of this screen a failed build stopped on: a compiler error in one of its components, which are
+        named after it (`tap_sound`, `tap_sound_player`). {'id', 'name', 'version', 'update'}, with `update` the version
+        on offer when it is another than the one built, or None when no plugin of this screen is to blame."""
+        broken = failed_components(logs)
+        for record in self.store.of(inbox) if broken else []:
+            plugin = record.get('id') or ''
+            if not any(name == plugin or name.startswith(plugin + '_') for name in broken):
+                continue
+            entry, source = self.known(plugin, inbox), record.get('source', 'index')
+            # The same newer release the editor offers (hasUpdate in web/src/stores/plugins.ts): a test of a branch by
+            # its commit, a release by its version; a folder is built as it is.
+            offer = None if source == 'folder' else (self.links if source in ('link', 'branch') else self.index).get(plugin)
+            newer = offer and (offer.ref != record.get('ref') if source == 'branch' else offer.version != record.get('version'))
+            update = offer.version if newer else None
+            return {'id': plugin, 'name': entry.text('name') if entry else plugin, 'version': record.get('version'),
+                    'update': update}
+        return None
 
     def file_for(self, inbox):
         screen = self.manager.screen(inbox)

@@ -950,6 +950,8 @@
       "offline": "Bildschirm war offline; neuer Versuch beim nächsten Mal.",
       "unknown_target": "Profil oder IP-Adresse unbekannt; aktualisiere diesen Bildschirm von Hand.",
       "build_failed": "Erstellen oder Installieren fehlgeschlagen; siehe Protokoll unter Firmware & USB.",
+      "plugin_update_needed": "{name} lässt sich mit dieser Firmware nicht bauen. Aktualisiere das Plugin {name} auf der Seite Plugins auf {version} und aktualisiere dann den Bildschirm erneut.",
+      "plugin_failed": "{name} {version} lässt sich mit dieser Firmware nicht bauen, und es gibt noch keine neuere Version. Entferne das Plugin {name} auf der Seite Plugins, um den Bildschirm ohne es zu aktualisieren; das Protokoll steht unter Firmware & USB.",
       "build_memory": "Zu wenig Speicher, um die Firmware zu erstellen: etwa {need} müssen frei sein, frei sind {free}. Halte ein paar Add-ons vorübergehend an oder gib der Maschine mehr Speicher; siehe Firmware & USB.",
       "build_memory_limit": "Zu wenig Speicher, um die Firmware zu erstellen, auch mit einem Compiler gleichzeitig. Halte ein paar Add-ons vorübergehend an oder gib der Maschine mehr Speicher; siehe Firmware & USB.",
       "no_report": "Bildschirm hat sich nicht mit Firmware {version} zurückgemeldet; prüfe den Bildschirm.",

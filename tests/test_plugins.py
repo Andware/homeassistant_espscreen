@@ -738,6 +738,31 @@ class EntityTile(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(wrong, {'wait': 'wrong_entity'})
 
 
+class BlamedBuilds(unittest.TestCase):
+    """A screen's update that stops on a plugin's code says which plugin, and its update when one is on offer."""
+
+    def test_compiler_error_in_a_plugin_names_it(self):
+        import plugins as plugin_service
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        service = plugin_service.Plugins(type('Manager', (), {'page_senders': {}})(), Path(tmp.name) / 'data',
+                                         Path(tmp.name) / 'esphome')
+        logs = ["../src/esphome/components/smart_display/page_bar.h:169:36: warning: '%d' directive output may be truncated",
+                "../src/esphome/components/tap_sound/tap_sound.h:19:8: error: 'void esphome::tap_sound::TapSound::on_step()'"
+                " marked 'override', but does not override",
+                'ninja: build stopped: subcommand failed.', 'ESPHome compile failed; see the log.']
+        self.assertEqual(plugin_service.failed_components(logs), {'tap_sound'})
+        self.assertIsNone(service.blame('tablet', logs))   # not a plugin of this screen
+        service.store.put('tablet', {'id': 'tap_sound', 'version': '0.2.0', 'source': 'index', 'ref': 'a' * 40})
+        self.assertEqual(service.blame('tablet', logs),
+                         {'id': 'tap_sound', 'name': 'tap_sound', 'version': '0.2.0', 'update': None})
+        service.index['tap_sound'] = type('Entry', (), {'version': '0.2.1', 'ref': 'b' * 40, 'text': lambda self, key: 'Tap sound'})()
+        self.assertEqual(service.blame('tablet', logs), {'id': 'tap_sound', 'name': 'Tap sound', 'version': '0.2.0', 'update': '0.2.1'})
+        # An error in Tessera's own code, or none at all, blames no plugin.
+        self.assertIsNone(service.blame('tablet', [logs[0].replace('warning', 'error'), logs[-1]]))
+        self.assertIsNone(service.blame('tablet', ['Succeeded: install']))
+
+
 class Questions(unittest.IsolatedAsyncioTestCase):
     """A plugin asks Home Assistant something through the app: only what its manifest names, the answer bounded."""
 

@@ -950,6 +950,8 @@
       "offline": "Lo schermo era offline; nuovo tentativo la prossima volta.",
       "unknown_target": "Profilo o indirizzo IP sconosciuto; aggiorna questo schermo manualmente.",
       "build_failed": "Compilazione o installazione non riuscita; vedi il registro in Firmware e USB.",
+      "plugin_update_needed": "{name} non si compila con questo firmware. Aggiorna il plugin {name} a {version} nella pagina Plugins, poi aggiorna di nuovo lo schermo.",
+      "plugin_failed": "{name} {version} non si compila con questo firmware e non c'è ancora una versione più recente. Rimuovi il plugin {name} nella pagina Plugins per aggiornare lo schermo senza; il log è in Firmware & USB.",
       "build_memory": "Memoria insufficiente per compilare il firmware: devono essere liberi circa {need} e ce ne sono {free}. Ferma qualche componente aggiuntivo per un po' o dai più memoria alla macchina; vedi Firmware e USB.",
       "build_memory_limit": "Memoria insufficiente per compilare il firmware, anche con un compilatore alla volta. Ferma qualche componente aggiuntivo per un po' o dai più memoria alla macchina; vedi Firmware e USB.",
       "no_report": "Lo schermo non si è ripresentato con il firmware {version}; controlla lo schermo.",

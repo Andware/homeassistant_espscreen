@@ -950,6 +950,8 @@
       "offline": "Scherm was offline; volgende keer opnieuw.",
       "unknown_target": "Profiel of IP-adres onbekend; werk dit scherm handmatig bij.",
       "build_failed": "Bouwen of installeren mislukt; bekijk het log onder Firmware & USB.",
+      "plugin_update_needed": "{name} bouwt niet met deze firmware. Werk de plugin {name} bij naar {version} op de pagina Plugins en werk het scherm daarna opnieuw bij.",
+      "plugin_failed": "{name} {version} bouwt niet met deze firmware en er is nog geen nieuwere versie. Verwijder de plugin {name} op de pagina Plugins om het scherm zonder die plugin bij te werken; het log staat onder Firmware & USB.",
       "build_memory": "Te weinig geheugen om de firmware te bouwen: er moet ongeveer {need} vrij zijn en dat is {free}. Stop een paar add-ons tijdelijk of geef de machine meer geheugen; zie Firmware & USB.",
       "build_memory_limit": "Te weinig geheugen om de firmware te bouwen, ook met één compiler tegelijk. Stop een paar add-ons tijdelijk of geef de machine meer geheugen; zie Firmware & USB.",
       "no_report": "Scherm meldde zich niet met firmware {version}; controleer het scherm.",

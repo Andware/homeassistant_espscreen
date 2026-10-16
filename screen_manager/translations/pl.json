@@ -950,6 +950,8 @@
       "offline": "Ekran był offline; kolejna próba następnym razem.",
       "unknown_target": "Nieznany profil lub adres IP; zaktualizuj ten ekran ręcznie.",
       "build_failed": "Kompilacja lub instalacja nieudana; zobacz log w sekcji „Firmware i USB”.",
+      "plugin_update_needed": "{name} nie kompiluje się z tym firmware. Zaktualizuj wtyczkę {name} do {version} na stronie Plugins, a potem ponownie zaktualizuj ekran.",
+      "plugin_failed": "{name} {version} nie kompiluje się z tym firmware i nie ma jeszcze nowszej wersji. Usuń wtyczkę {name} na stronie Plugins, aby zaktualizować ekran bez niej; dziennik jest w Firmware & USB.",
       "build_memory": "Za mało pamięci, aby skompilować firmware: wolne musi być około {need}, a jest {free}. Zatrzymaj na chwilę kilka dodatków albo daj maszynie więcej pamięci; zobacz „Firmware i USB”.",
       "build_memory_limit": "Za mało pamięci, aby skompilować firmware, także z jednym kompilatorem naraz. Zatrzymaj na chwilę kilka dodatków albo daj maszynie więcej pamięci; zobacz „Firmware i USB”.",
       "no_report": "Ekran nie zgłosił się z firmware {version}; sprawdź ekran.",
