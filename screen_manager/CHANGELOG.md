@@ -1,5 +1,9 @@
 ## Unreleased
 
+- **A Valetudo robot's map shows as a map.** A robot running Valetudo hands Home Assistant a placeholder that asks to
+  install a Lovelace card, with the real map hidden inside it, so the vacuum card and a camera tile showed that
+  placeholder. The app now reads the map out of it and draws the rooms, walls, path, zones, charger and robot, once
+  for every map the robot sends.
 - **A tile that grows shows more controls.** Drag a tile larger and it now gets the controls that fit its new size:
   a blind shows its position and its slats, a thermostat its temperature and mode keys, a light its brightness. A tip
   beside the tile lists every set that fits, so you can keep that one, pick another or choose none, and pointing at
