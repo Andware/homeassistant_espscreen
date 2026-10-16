@@ -1066,22 +1066,23 @@ class Run:
                 shots.append((label, name))
         # Dark mode, the pair on the first two sizes.
         dark = [(f'{size} dark', size) for size in sizes[:2]]
-        states = {f'media_player.player_{i}': player() for i in range(len(dark))}
-        tiles = [dict(entity=f'media_player.player_{i}', name='Living room', slot=i * grid.slots, options={'size': size, 'controls': 'volume_playback', 'icon': 'speaker'})
-                 for i, (_, size) in enumerate(dark)]
-        record = send_layout.migrate_legacy(dict(title='Music', tiles=tiles), grid)
-        values = [send_layout.state_message(index, tile, states, send_layout.extras(tile, states)) for index, tile in enumerate(send_layout.compile_tiles(record['layout'], grid))]
-        await self.sender.synchronize(self.inbox.object_id, record, region, values, [[{'k': 'clock'}] for _ in record['layout']['pages']])
-        self.client.switch_command(self.dark_switch.key, True)
-        await asyncio.sleep(1.5)
-        for page, (label, _) in enumerate(dark):
-            await self.call('render_page', page=page)
-            await self.page_done(page)
-            name = 'media-' + label.replace(' ', '-')
-            await self.render(name)
-            shots.append((label, name))
-        self.client.switch_command(self.dark_switch.key, False)
-        await asyncio.sleep(1.0)
+        if dark:
+            states = {f'media_player.player_{i}': player() for i in range(len(dark))}
+            tiles = [dict(entity=f'media_player.player_{i}', name='Living room', slot=i * grid.slots, options={'size': size, 'controls': 'volume_playback', 'icon': 'speaker'})
+                     for i, (_, size) in enumerate(dark)]
+            record = send_layout.migrate_legacy(dict(title='Music', tiles=tiles), grid)
+            values = [send_layout.state_message(index, tile, states, send_layout.extras(tile, states)) for index, tile in enumerate(send_layout.compile_tiles(record['layout'], grid))]
+            await self.sender.synchronize(self.inbox.object_id, record, region, values, [[{'k': 'clock'}] for _ in record['layout']['pages']])
+            self.client.switch_command(self.dark_switch.key, True)
+            await asyncio.sleep(1.5)
+            for page, (label, _) in enumerate(dark):
+                await self.call('render_page', page=page)
+                await self.page_done(page)
+                name = 'media-' + label.replace(' ', '-')
+                await self.render(name)
+                shots.append((label, name))
+            self.client.switch_command(self.dark_switch.key, False)
+            await asyncio.sleep(1.0)
         # One sheet of them all, four across, each with its label.
         images = [(label, Image.open(self.out / f'{name}.png').convert('RGB')) for label, name in shots]
         w, h = images[0][1].size

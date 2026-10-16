@@ -12,7 +12,11 @@
 - **A media player shows its volume and its playback keys together.** On a tile two rows high or larger, a player can
   now have both: the volume slider above previous, play/pause and next, as Home Assistant stacks them. Pick "Volume and
   previous, play/pause, next" under Controls, or drag a player's tile larger and it is suggested. A screen gets it after
-  its next update; until then it shows the playback keys.
+  its next update; until then it shows the playback keys. On a tile wider than high the volume stands at the right,
+  the whole height of the tile, with the keys at the left under the track.
+- **A large player tile reads from across the room.** When a media player takes a big tile, on a 7- or 10-inch screen
+  for example, the track's title now takes the largest text the screen has, its artist grows with it, and the keys and
+  the volume grow up to half again their size. Smaller tiles look as they did.
 - **The vacuum card shows the map, the rooms and the routines.** On every board with 8 MB of flash or more, a robot
   vacuum's card now shows its map, cleaned up and in the screen's own colours, with its state and battery above it.
   Tap rooms in the order you want and Start cleans just those (Home Assistant's clean by area), its own routines run
