@@ -3765,6 +3765,12 @@
       "copy": "Másolás",
       "hint": "A(z) {copy} minden beállításukkal együtt másolja a csempéket. Válassz egy oldalt vagy cellát, itt vagy egy másik képernyőn, és nyomd meg a(z) {paste} billentyűt.",
       "remove": "Csempe eltávolítása | {n} csempe eltávolítása"
+    },
+    "menu": {
+      "cut": "Kivágás",
+      "move_to": "Áthelyezés oldalra",
+      "add_here": "Csempe hozzáadása ide",
+      "paste_here": "Beillesztés ide"
     }
   }
 }

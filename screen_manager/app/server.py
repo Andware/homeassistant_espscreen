@@ -39,6 +39,7 @@ import map_card
 import energy_flow
 import plugin_pictures
 import map_tiles
+import valetudo_map
 import tile_icons
 from updates import Updater
 import core
@@ -674,7 +675,8 @@ class HomeAssistant:
                 raw += chunk
                 if len(raw) > camera_feed.MAX_SNAPSHOT_BYTES:
                     raise ValueError('image too large')
-            return bytes(raw)
+        # A Valetudo robot's map camera hands out a placeholder with the map inside: the app draws that map, once per map.
+        return await valetudo_map.prepared(bytes(raw))
 
     def media_picture(self, entity):
         """The address of a media player's cover as its state carries it right now (core.media_cover: Home Assistant's

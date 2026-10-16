@@ -5944,6 +5944,9 @@ inline void slider_handle(lv_obj_t *slider, int width, int height) {
   int stub = slider_stub(height), below = width > stub ? 1000 * stub / (width - stub) : 0;
   if (lv_slider_get_min_value(slider) != -below || lv_slider_get_max_value(slider) != 1000) lv_slider_set_range(slider, -below, 1000);
 }
+// A player's keys and volume on a taller card grow with it, up to half again the look's finger key, so a player that
+// takes a large card's height reads and plays from across the room (the same key on a 4-inch cell and a 10-inch column).
+inline int media_tall_key(int base,int height){return std::clamp(height/6,base,base*3/2);}
 // The same handle on a standing slider (a player's volume at the right of its card): the fill rises from the bottom,
 // the white bar lies across it an eighth of the slider's width under the end of the fill.
 inline void slider_handle_standing(lv_obj_t *slider, int width, int height) {
@@ -7322,6 +7325,7 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
   PanelMetrics m=w.full?panel_metrics_full(std::max(content_w,content_h)>=ui::mm(56)):panel_metrics(large);
   if(taller){
     m.key_h=std::max(ui::touch_min(),ui::px(large?48:34));m.key_w=m.key_h;
+    if(t.domain()=="media_player"){m.key_h=media_tall_key(m.key_h,content_h);m.key_w=m.key_h;}
     m.pill_w=std::min(content_w,ui::control_max_width());m.pill_key=m.key_h;
     m.slider_h=m.key_h;m.toggle_h=m.key_h;m.ext=0;
     if(mode=="toggle"){
@@ -8078,17 +8082,19 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
   const int touch=std::max(ui::touch_min(),ui::px(large?48:34));
   tall_tile::Metrics m{width,height,(int)lv_font_get_line_height(w.title_font),
     (int)lv_font_get_line_height(w.value_font),w.base_circle,gap,ui::touch_min(),ui::control_max_width(),{touch+2,0},selected?1:0};
+  const int media_key=t.domain()=="media_player"?media_tall_key(touch,height):touch;
+  if(media_key!=touch)m.row_heights={media_key+2,0};
   // A player's volume beside its keys: on a card wider than high it stands at the right, the whole height of the card,
   // and the heading, the track and the keys share the rest; on a narrower card it lies over the keys as a second row.
   // Without the room for either, its keys alone.
   // `standing` the volume's height at the card's right, -1 no room for the volume: the keys alone.
   const int whole_w=width;int standing=0;
   if(selected&&!w.full&&tile_controls::media_volume_selected(t)&&(t.supported&tile_controls::feature::MEDIA_VOLUME_SET)){
-    const int lane=touch,inner=width-lane-gap;
+    const int lane=media_key,inner=width-lane-gap;
     auto beside=m;beside.width=inner;
-    if(width*4>=height*5&&inner>=3*touch+2*gap&&tall_tile::layout(beside).fits){m=beside;standing=height;width=inner;}
+    if(width*4>=height*5&&inner>=3*media_key+2*gap&&tall_tile::layout(beside).fits){m=beside;standing=height;width=inner;}
     else{
-      auto both=m;both.row_heights={touch+2,touch+2};both.row_count=2;
+      auto both=m;both.row_heights={media_key+2,media_key+2};both.row_count=2;
       if(tall_tile::layout(both).fits)m=both;else standing=-1;
     }
   }
@@ -8178,6 +8184,9 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
     const int top=l.rows[0].y,room=(l.count>1?l.rows[1].bottom():l.rows[0].bottom())-top;
     if(pw>width||ph>room){hide_panel(w);panel=false;}
     else lv_obj_set_pos(w.panel,(width-pw)/2,top+(room-ph)/2);
+    // Beside a standing volume the keys start at the card's left, under the track and the name: one left edge for the
+    // card's words and keys, the volume its counterweight at the right (centred in the room left, they looked off).
+    if(panel&&standing>0)lv_obj_set_x(w.panel,0);
   }
   const auto d=t.domain();
   begin_extra(w,"tall",whole_w,height);
@@ -8272,14 +8281,27 @@ inline bool render_tall(Widgets &w,const Tile &t,bool selected,int width,int hei
   if(d=="media_player"){
     const auto &x=t.extra();
     const std::string title=fresh()&&t.available()&&media_card::has_track(t.state)?x.media_title:std::string();
-    const lv_font_t *font=room_label?lv_obj_get_style_text_font(room_label,LV_PART_MAIN):w.title_font;
-    if(lv_font_get_line_height(font)>body.h)font=w.title_font;
-    const int fh=lv_font_get_line_height(font);
     const std::string artist=media_card::subtitle(x.media_artist,x.media_album);
-    const bool secondary=!artist.empty()&&body.h>=fh+m.state_h+gap/2;
-    int y=body.y+std::max(0,(body.h-fh-(secondary?m.state_h+gap/2:0))/2);
+    // The largest step of the board's text fonts that fits (docs/RESPONSIVE.md, "One set of fonts"): on a large card
+    // the track in the large value's face with its artist in the top bar's, then the page headline over the small text,
+    // then the tile's name. The large face only where the whole title fits the width (a marquee that size reads badly)
+    // and leaves its artist line room; the artist gives way before the title steps down.
+    const lv_font_t *headline=room_label?lv_obj_get_style_text_font(room_label,LV_PART_MAIN):w.title_font;
+    struct Step{const lv_font_t *title,*artist;bool whole;};
+    const Step steps[]={{watch_value_font,control_font?control_font:w.value_font,true},{headline,w.value_font,false},{w.title_font,w.value_font,false}};
+    const lv_font_t *font=w.title_font,*small=w.value_font;bool secondary=false;
+    for(const auto &step:steps){
+      if(!step.title||!face_covers(step.title,title))continue;
+      const int th=lv_font_get_line_height(step.title),ah=lv_font_get_line_height(step.artist);
+      if(th>body.h||(step.whole&&(title.empty()||text_width(title,step.title)>width)))continue;
+      const bool both=!artist.empty()&&body.h>=th+ah+gap/2;
+      if(step.whole&&!artist.empty()&&!both)continue;
+      font=step.title;small=step.artist;secondary=both;break;
+    }
+    const int fh=lv_font_get_line_height(font),ah=lv_font_get_line_height(small);
+    int y=body.y+std::max(0,(body.h-fh-(secondary?ah+gap/2:0))/2);
     if(text(0,title,font,{0,y,width,fh},LV_TEXT_ALIGN_LEFT))drop_repeat(title);
-    if(secondary)text(1,artist,w.value_font,{0,y+fh+gap/2,width,m.state_h},LV_TEXT_ALIGN_LEFT);
+    if(secondary)text(1,artist,small,{0,y+fh+gap/2,width,ah},LV_TEXT_ALIGN_LEFT);
   }else if((d=="climate"||d=="humidifier")&&std::isfinite(t.current)){
     const auto *font=watch_value_font&&lv_font_get_line_height(watch_value_font)<=body.h?watch_value_font:w.value_font;
     text(0,tile_controls::reading_text(t,t.current),font,{0,body.y+std::max(0,(body.h-static_cast<int>(lv_font_get_line_height(font)))/2),width,body.h},LV_TEXT_ALIGN_CENTER);

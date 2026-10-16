@@ -5,6 +5,10 @@
   put them and dragged into another. The plugin asks its web service once per value and shows one list, newest first if
   it likes, and on a tap it can send Home Assistant an action with several fields of any kind (a text, a number, a list),
   such as playing an album through Music Assistant. Plugins written for an older API keep working as they are.
+- **A Valetudo robot's map shows as a map.** A robot running Valetudo hands Home Assistant a placeholder that asks to
+  install a Lovelace card, with the real map hidden inside it, so the vacuum card and a camera tile showed that
+  placeholder. The app now reads the map out of it and draws the rooms, walls, path, zones, charger and robot, once
+  for every map the robot sends.
 - **A tile that grows shows more controls.** Drag a tile larger and it now gets the controls that fit its new size:
   a blind shows its position and its slats, a thermostat its temperature and mode keys, a light its brightness. A tip
   beside the tile lists every set that fits, so you can keep that one, pick another or choose none, and pointing at
@@ -13,7 +17,11 @@
 - **A media player shows its volume and its playback keys together.** On a tile two rows high or larger, a player can
   now have both: the volume slider above previous, play/pause and next, as Home Assistant stacks them. Pick "Volume and
   previous, play/pause, next" under Controls, or drag a player's tile larger and it is suggested. A screen gets it after
-  its next update; until then it shows the playback keys.
+  its next update; until then it shows the playback keys. On a tile wider than high the volume stands at the right,
+  the whole height of the tile, with the keys at the left under the track.
+- **A large player tile reads from across the room.** When a media player takes a big tile, on a 7- or 10-inch screen
+  for example, the track's title now takes the largest text the screen has, its artist grows with it, and the keys and
+  the volume grow up to half again their size. Smaller tiles look as they did.
 - **The vacuum card shows the map, the rooms and the routines.** On every board with 8 MB of flash or more, a robot
   vacuum's card now shows its map, cleaned up and in the screen's own colours, with its state and battery above it.
   Tap rooms in the order you want and Start cleans just those (Home Assistant's clean by area), its own routines run
@@ -60,6 +68,11 @@
   right in the bar to move it, or pull it out of the bar to take it off, as an icon out of a menu bar; a right click on an
   item takes it off as well. The screensaver clock's row of entities works the same way. Many items go on more lines, and an item the screen leaves out for want of room is
   dashed in orange. Copying the bar to other pages is in the menu behind the three dots.
+- **A right click in the editor.** On a tile it opens the tile and shows the same menu as the ··· in its settings:
+  rename, show another entity, read its data, move it to another page, copy, cut and remove. On tiles chosen together
+  it copies, cuts or removes them all, on an empty cell it adds a tile there or pastes there, and anywhere else on a
+  page it shows the page's own menu. A finger held on a tile still drags it; on a touch screen the ··· is the way to
+  the menu.
 - **A page's settings start from the page.** A small page at the head shows its top bar, its tiles and, on a board with
   the Dock, its place in the Dock: tap the Dock for how the page stands there, or the top bar to set that up, and a
   back button takes you to the page again. Escape goes one step back at a time, and the settings have room between

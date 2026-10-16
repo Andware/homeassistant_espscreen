@@ -3765,6 +3765,12 @@
       "copy": "Copier",
       "hint": "{copy} copie les tuiles avec tous leurs réglages. Choisissez une page ou une case, ici ou sur un autre écran, et appuyez sur {paste}.",
       "remove": "Retirer la tuile | Retirer {n} tuiles"
+    },
+    "menu": {
+      "cut": "Couper",
+      "move_to": "Déplacer vers la page",
+      "add_here": "Ajouter une tuile ici",
+      "paste_here": "Coller ici"
     }
   }
 }

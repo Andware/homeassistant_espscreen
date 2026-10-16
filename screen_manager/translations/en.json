@@ -3765,6 +3765,12 @@
       "copy": "Copy",
       "hint": "{copy} copies the tiles with every setting. Choose a page or a cell, here or on another screen, and press {paste}.",
       "remove": "Remove tile | Remove {n} tiles"
+    },
+    "menu": {
+      "cut": "Cut",
+      "move_to": "Move to page",
+      "add_here": "Add a tile here",
+      "paste_here": "Paste here"
     }
   }
 }

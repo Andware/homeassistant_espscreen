@@ -3765,6 +3765,12 @@
       "copy": "Kopieren",
       "hint": "{copy} kopiert die Kacheln mit allen Einstellungen. Wähle eine Seite oder ein Feld, hier oder auf einem anderen Bildschirm, und drücke {paste}.",
       "remove": "Kachel entfernen | {n} Kacheln entfernen"
+    },
+    "menu": {
+      "cut": "Ausschneiden",
+      "move_to": "Auf Seite verschieben",
+      "add_here": "Hier eine Kachel hinzufügen",
+      "paste_here": "Hier einfügen"
     }
   }
 }
