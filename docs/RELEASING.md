@@ -130,7 +130,9 @@ does the steps that can go wrong by hand, and refuses when something is missing.
    `tools/release.py publish --notes <file> --yes`: it checks that HEAD is pushed, green in CI and the commit the
    candidate was made of, then fast-forwards main to it, tags it `screens-vX.Y.Z`, makes the GitHub release, removes
    the candidate, and on dev names the app "(dev)" again in a commit it pushes to dev. Without `--yes` it says what it
-   would do.
+   would do. Right after: when the plugins repository's dev has plugins that waited for this release (a newer plugin
+   API), merge its dev into its main and build its index there (its AGENTS.md, "Branches"), so every app offers them
+   the same day; before the release they would not fit any screen of main.
 7. **After.** Point the test screens back at main. Users find the update in the App store and update Tessera Screen
    Manager; for new screen features they use **Update** on the screen in Tessera (or the nightly round), and ESPHome
    Device Builder's Install, Wirelessly, on the existing device works too: the updated app points every screen's YAML

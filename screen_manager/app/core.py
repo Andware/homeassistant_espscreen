@@ -2589,9 +2589,10 @@ def state_message(index, tile, states, extra=None, precision=None, entry=None, u
     for key in keys:
         value = attrs.get(key)
         if isinstance(value, bool):
-            # assumed_state only matters to a lock's keys (firmware 0.5.0+) and a player's power keys (firmware
-            # 0.39.0, both as Home Assistant's dialog has them); anywhere else it is bytes for nothing.
-            if key in BOOL_ATTRS and (key != 'assumed_state' or tile['entity'].startswith(('lock.', 'media_player.'))):
+            # assumed_state only matters to a lock's keys (firmware 0.5.0+), a player's power keys (firmware 0.39.0)
+            # and a cover's open and close (firmware 0.57.0), all as Home Assistant's dialog has them; anywhere else it
+            # is bytes for nothing.
+            if key in BOOL_ATTRS and (key != 'assumed_state' or tile['entity'].startswith(('lock.', 'media_player.', 'cover.'))):
                 bounded[key] = value
             continue
         if value is None:
@@ -2623,7 +2624,7 @@ def drawn_controls(message, features):
     """The controls a screen draws right for this tile (app 0.4.32), in place of ones it would get wrong: what the entity
     can draw and what the screen's hello says it draws (catalogue.drawn_controls). `features`: the list the screen's
     hello said, None where it is not known (the editor's preview, which runs the newest firmware)."""
-    return catalogue.drawn_controls(message, features)
+    return catalogue.drawn_controls(message, features, span_of)
 
 def encode(message):
     """The message as the firmware parses it: compact JSON, at most 4096 bytes."""

@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.10 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.11 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -14,7 +14,7 @@ change a name or a signature while the API settles (0.4 renamed `Plugin::on_tick
 plugins move with it in the same release. Such a minor goes into `PLUGIN_API_BREAKS` (`plugin_manifest.py` and
 `__init__.py`, a test keeps them equal): a plugin written before it does not fit a core after it, and its build says so in
 one sentence instead of a compiler error (`api_fits`; the plugins repository's check uses the same rule). A minor that only
-adds is not listed, so a 0.9 plugin builds on 0.10. A test keeps the number equal in `plugin_api.h`, `__init__.py`,
+adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equal in `plugin_api.h`, `__init__.py`,
 `plugin_manifest.py`, this page and the host probe's manifest.
 
 ## The pieces
@@ -187,17 +187,46 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | Where a tap was (0.10) | `tessera::tap_point()`: the finger of the tile's `on_tap` in the tile's own pixels (`finger_at` in the tile's touch handler, made relative to the extra layer by `plugin_host::tap`) | nothing | nothing |
 | The large digits (0.9) | `Font::DIGITS` is `setpoint_digits`, a font every board has, so it costs no flash; `ui::covers()` says whether a value has only its characters (`face_covers`) | nothing | nothing |
 | Tones for a block (0.9) | `Tone::GOOD` (Home Assistant's green) beside ACCENT, BUSY and ALERT; `ui::set_fill` gives a block (a bar, a dot) a tone's colour, `ui::tone_color` the colour itself; one `tone_color` in `plugin_host.cpp` for the bar, labels and blocks | nothing | nothing |
-| A sound of its own (0.8) | `plugin_sound.h` (`tessera::Sound`, `SoundPlayer` on `ts_speaker`); `smart_display.sound()` builds a WAV in | nothing: a plugin that needs the feature `speaker` | nothing |
+| A sound of its own (0.8) | `plugin_sound.h` (`tessera::Sound`, `SoundPlayer` on `ts_speaker`; `add()`, 0.11, plays a sound after the ones before it, each followed by silence to its span, so the speaker spaces a run of clicks evenly); `smart_display.sound()` builds a WAV in | nothing: a plugin that needs the feature `speaker` | nothing |
 | A top bar item | `add_bar_item`, its icon in a `tone` (0.8); `header_bar::Kind::plugin` | `validate_header` type `plugin`, `content` all or icon (wire `o`), sent to a screen whose hello says `plugins` | "From plugins" in Top bar, Add; Show: icon and words, or icon only |
 | Settings rows | `settings(SettingsPage&)`; `settings_screen::plugin_pages` | `Plugins.settings_for`, `set_setting`: the manifest's `settings` (switch, number, select, text, button with its `status`), entities of the screen's own device found in the entity registry (`_setting_entities`) | in the plugin's details on the screen's Plugins tab (`PluginSettings.vue`), with its inputs and parts; Screen settings links there |
 | A question to Home Assistant | `tessera::send`, `on_message` (op `plugin`) | `Plugins.answer`: only `permissions.ha_commands`, logged; an answer the manifest's `answers` maps goes as its fields, the rest as it came; both bounded (`bounded`, 3.2 KB, by bytes) | the commands under "What it may do" |
-| The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`) | | |
+| The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`), `on_press` and `on_step(Step)` (0.11, "Touch feedback" below) | | |
 | A board's own hardware | the plugin's `plugin.yaml` (audio codecs, a relay), its `boards` in the manifest | offered only to the screens of those boards | the Plugins page says which boards |
+
+## Touch feedback
+
+A click or a buzz that answers a finger comes at the moment the finger does something, not with the action that follows.
+`touch_feedback.h` says those moments and nothing else; a plugin listens (`on_press`, `on_step(Step)`, plugin API 0.11)
+and makes the sound or the buzz. The core never plays anything itself.
+
+| Moment | When | Said by |
+|---|---|---|
+| A press | A finger lands on something that takes it: the object under it, or a parent its events bubble up to, listens for a press, a tap or a hold (a tile, a key, a slider, a row of the settings, the top bar, a plugin's card). Not between the tiles, not for the push that wakes a dimmed screen, not in a calibration (`touch_feedback::quiet`, set in `packages/core.yaml`). | `touch_feedback_lvgl.h`, from LVGL's press of the input device, for every object |
+| A step of a drag | A value under the finger passes a step: every 5 % of its range, every position of a range of 20 or fewer. Once per step, two at most for one move; the first value after a landing only marks the start, so a slider that jumps to the finger is no run. `Step.edge` when it reached either end. | `touch_feedback_lvgl.h` for every `lv_slider` and `lv_arc` (a listener goes onto it when a finger first lands on it); `touch_feedback::moved()` for any other |
+| A step of a held key | A key held down steps once more. | `touch_feedback::step(direction)` where the key steps |
+
+So a new control needs at most one line, by what it is:
+
+- **An LVGL slider or arc**, anywhere, of the core or of a plugin: nothing. Its range is its own (the core's sliders run
+  per mille, a range reaching below 0 to draw a round end counts from 0, a reversed one the other way round).
+- **A control dragged by hand** that is no LVGL slider (the player's seek bar, `media_seek_event`): call
+  `touch_feedback::moved(object, value, low, high)` on the press and on every move, with the value it shows.
+- **A key that repeats while held** (`climate_hold`, the -/+ of a tile's control panel): call
+  `touch_feedback::step(direction)` where it actually steps, not on every repeat LVGL sends.
+
+`touch_feedback.h` is free of LVGL (`tests/test_touch_feedback.cpp`); `touch_feedback_lvgl.h` is included by
+`plugin_host.cpp` alone and starts listening when the first plugin starts, so a screen without plugins has none of it.
+`on_touch` (0.3) stays what it was: the tap the touch filter took, as the finger lets go.
 
 ## Where a plugin comes from
 
 - **The index** (`tessera-plugins/index.json`): Tessera's own plugins (label Tessera) and entries of `community/`
-  (label Community), each pinned to a commit, read when the editor opens and at most every ten minutes (ETag). An id
+  (label Community), each pinned to a commit, read when the editor opens and at most every ten minutes (ETag). The
+  plugins repository has two branches, as this one has: main for every app, dev for the dev app
+  (`Plugins.index_branches`, falling back on main while dev has no index). A plugin that needs what only this dev
+  firmware has (a newer plugin API) waits on its dev, where the dev app installs and updates it the ordinary way, and
+  goes to its main with the release that brings that firmware ("The release" in docs/RELEASING.md, step 6). An id
   belongs to the repository that first published it (`claims` in the index; a move goes through `transfers.yaml`).
 - **A link** (`POST api/plugins/link`): the newest release of any GitHub repository (Community, or Tessera for a
   repository of MaxGramser); a branch to test (Test); a repository without a release, which becomes a test of its default

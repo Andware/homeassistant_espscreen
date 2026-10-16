@@ -364,13 +364,14 @@ std::string receive(const std::string &payload) {
       // "live" (app 0.2.91+): a page's pictures, asked per tile (tile_picture.h); `e` names the tile's entity.
       // "lib" (app 0.4.42+, firmware 0.24.0+): the covers of a page of a player's library, one picture.
       // "saver" (app 0.4.48, firmware 0.29.0+): the screensaver's picture of the whole glass, as a full view's.
-      if (view == "live" ? !valid_entity_list(entity) : !valid_entity(entity) || (view != "full" && view != "alert" && view != "cover" && view != "lib" && view != "saver")) return false;
+      // "vmap" (module vacuum): a vacuum card's map, cleaned up by the app (vacuum_map.py).
+      if (view == "live" ? !valid_entity_list(entity) : !valid_entity(entity) || (view != "full" && view != "alert" && view != "cover" && view != "lib" && view != "saver" && view != "vmap")) return false;
       if (!url.empty() && url.rfind("http://", 0) != 0) return false;
       // Every answer but an alert's carries the number of its question; one to an older question is dropped. A tile's
       // picture is the answer to that tile's last question (tile_picture::Questions).
       const uint32_t number = root["view"].is<unsigned>() ? root["view"].as<unsigned>() : 0;
       const bool current = view == "live" ? tile_questions.answered(number) >= 0
-                           : number == (view == "cover" ? cover_view_id : view == "lib" ? library_art_view_id : camera_view_id);
+                           : number == (view == "cover" ? cover_view_id : view == "lib" ? library_art_view_id : view == "vmap" ? vacuum_map_view_id : camera_view_id);
       if (view != "alert" && (!root["view"].is<unsigned>() || !current)) {
         ESP_LOGD("picture", "answer %u (%s) to an older question: dropped", (unsigned) number, view.c_str());
         result = "Synced"; return true;
@@ -986,6 +987,22 @@ std::string receive(const std::string &payload) {
       if (!(lamp.high > lamp.low)) lamp.low = lamp.high = 0;
       next.lamps.push_back(std::move(lamp));
     }
+    // A cover group's covers (firmware 0.57.0, app's cover_groups.py): what its page shows, in Home Assistant's order.
+#ifdef SD_MOD_COVER_GROUPS
+    if (tile.domain() == "cover" && extra["covers"].is<JsonArray>()) for (JsonVariant c : extra["covers"].as<JsonArray>()) {
+      if (next.blinds.size() == MAX_LAMPS) break;
+      Blind blind; blind.entity = string(c["e"], 120);
+      if (!valid_entity(blind.entity) || blind.entity.rfind("cover.", 0) != 0) continue;
+      blind.name = string(c["n"], 32);
+      blind.state = string(c["s"], 16);
+      blind.device_class = string(c["dc"], 16);
+      blind.unavailable = (c["u"] | 0) == 1;
+      blind.supported = c["f"] | 0u;
+      blind.position = number(c["p"]);
+      blind.tilt = number(c["t"]);
+      next.blinds.push_back(std::move(blind));
+    }
+#endif
     if (!std::isfinite(tile.battery)) tile.battery = number(extra["bat"]);
     next.charging = extra["chg"].is<int>() && extra["chg"].as<int>() == 1;
     next.room = string(extra["room"], 32);
@@ -1076,6 +1093,44 @@ std::string receive(const std::string &payload) {
       }
       next.calendar = std::move(d);
     }
+#ifdef SD_MOD_VACUUM_CARD
+    // A vacuum's card of the module (module_vacuum_card.h, vacuum_model.h, app vacuum_card.py): its map and its mark, the areas
+    // linked to its segments with their icons and floors, its routines, and why it stopped or how far it is.
+    if (tile.domain() == "vacuum" && extra["vc"].is<JsonObject>()) {
+      JsonVariant c = extra["vc"];
+      auto d = std::make_shared<vacuum_model::Data>();
+      if (c["map"].is<JsonObject>()) {
+        d->map_entity = string(c["map"]["e"], 120);
+        if (!valid_entity(d->map_entity)) d->map_entity.clear();
+        d->map_mark = string(c["map"]["m"], 40);
+      }
+      if (c["floors"].is<JsonArray>()) for (JsonVariant f : c["floors"].as<JsonArray>()) {
+        if (d->floors.size() == vacuum_model::MAX_FLOORS) break;
+        d->floors.push_back(string(f, 24));
+      }
+      if (c["rooms"].is<JsonArray>()) for (JsonVariant r : c["rooms"].as<JsonArray>()) {
+        if (d->rooms.size() == vacuum_model::MAX_ROOMS) break;
+        vacuum_model::Room room;
+        room.area = string(r[0], 40);
+        if (!vacuum_model::area_id(room.area)) continue;
+        room.name = string(r[1], 24);
+        room.icon = tile_icon::codepoint(string(r[2], 8));
+        room.floor = (uint8_t) std::clamp(r[3] | 0, 0, (int) vacuum_model::MAX_FLOORS - 1);
+        if (room.floor >= d->floors.size() && d->floors.size() > 1) room.floor = 0;
+        d->rooms.push_back(std::move(room));
+      }
+      d->unmapped = c["unmapped"].is<int>() && c["unmapped"].as<int>() == 1;
+      if (c["rt"].is<JsonArray>()) for (JsonVariant r : c["rt"].as<JsonArray>()) {
+        if (d->routines.size() == vacuum_model::MAX_ROUTINES) break;
+        vacuum_model::Routine routine{string(r[0], 120), string(r[1], 32)};
+        if (routine.entity.rfind("button.", 0) == 0 && valid_entity(routine.entity)) d->routines.push_back(std::move(routine));
+      }
+      d->error = string(c["err"], 48);
+      d->progress = c["pg"].is<int>() ? std::clamp(c["pg"].as<int>(), 0, 100) : -1;
+      d->area = c["ar"].is<float>() ? c["ar"].as<float>() : NAN;
+      next.vacuum = std::move(d);
+    }
+#endif
     // An alarm panel (app 0.3.8+, firmware 0.3.3+): how it takes codes, who changed it, and a delay's end.
     if (tile.domain() == "alarm_control_panel") {
       next.code_format = string(a["code_format"], 8);

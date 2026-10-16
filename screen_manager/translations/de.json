@@ -242,7 +242,16 @@
       "resume": "Fortsetzen",
       "start_cleaning": "Reinigung starten",
       "clean": "Reinigen",
-      "dock": "Station"
+      "dock": "Station",
+      "stop": "Stopp",
+      "by_room": "Nach Bereich",
+      "routines": "Routinen",
+      "suction_water": "Saugen & Wischen",
+      "pick_rooms": "Einen oder mehrere Bereiche wählen",
+      "order_hint": "Nicht jeder Roboter hält diese Reihenfolge ein",
+      "no_rooms": "Keine Bereiche zugeordnet",
+      "no_rooms_how": "Ordne die Segmente in Home Assistant Bereichen zu, in den Einstellungen des Saugers.",
+      "routines_note": "In der App des Roboters erstellt"
     },
     "cover": {
       "position": "Position",
@@ -383,7 +392,8 @@
         "cleaning": "Reinigt",
         "paused": "Pausiert",
         "returning": "Rückkehr zur Ladestation",
-        "idle": "Leerlauf"
+        "idle": "Leerlauf",
+        "error": "Fehler"
       },
       "weather": {
         "sunny": "Sonnig",
@@ -1001,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Lautstärke und Stumm",
-          "playback": "Zurück, Wiedergabe/Pause, Weiter"
+          "playback": "Zurück, Wiedergabe/Pause, Weiter",
+          "volume_playback": "Lautstärke und Zurück, Wiedergabe/Pause, Weiter"
         },
         "number": {
           "stepper": "Wert − / +",
@@ -2364,7 +2375,8 @@
         "full_hint": "Am unteren Rand der ganzseitigen Kachel; ein Tippen woanders wirkt wie unten eingestellt.",
         "wide_hint": "Rechts auf der doppelt breiten Kachel, wie die Zeilen in Home Assistant. Ein Tippen auf den Namen wirkt wie unten eingestellt.",
         "needs_firmware": "Der Bildschirm zeigt die direkte Steuerung ab Firmware 0.2.19; bis dahin bleibt die Kachel, wie sie war.",
-        "tall_hint": "",
+        "tall_hint": "Wähle die Steuerung für die zusätzliche Höhe. Eine Kachel, die wächst, schlägt die umfangreichste passende Auswahl vor; deine eigene Wahl bleibt.",
+        "room_hint": "Der Bildschirm zeigt sie, wo die Kachel Platz dafür hat (Firmware 0.57.0 oder neuer): auf einer einfachen Kachel unter dem Namen, auf einer doppelt breiten daneben. Wo sie nicht passen, sieht die Kachel aus wie ohne sie.",
         "tilt": "",
         "tilt_hint": ""
       },
@@ -2604,7 +2616,16 @@
           "blue-grey": "Blaugrau"
         }
       },
-      "anchor_hint": "Klicke auf das Symbol, um ein anderes zu wählen, oder auf den Namen, um die Kachel umzubenennen"
+      "anchor_hint": "Klicke auf das Symbol, um ein anderes zu wählen, oder auf den Namen, um die Kachel umzubenennen",
+      "grow": {
+        "title": "Platz für mehr Steuerung",
+        "applied": "Bei {columns} × {rows} passt mehr Steuerung. Wähle, was diese Kachel zeigt; ändern kannst du es später unter Steuerung.",
+        "offered": "Bei {columns} × {rows} hat diese Kachel Platz hierfür. Wähle, was sie zeigt; ändern kannst du es später unter Steuerung.",
+        "suggested": "Vorschlag",
+        "none": "Keine Steuerung",
+        "never": "Nicht mehr anzeigen",
+        "done": "Fertig"
+      }
     },
     "precision": {
       "label": "Anzeigegenauigkeit",

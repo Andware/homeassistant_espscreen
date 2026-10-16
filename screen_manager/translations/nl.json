@@ -242,7 +242,16 @@
       "resume": "Hervatten",
       "start_cleaning": "Schoonmaken starten",
       "clean": "Schoonmaken",
-      "dock": "Dock"
+      "dock": "Dock",
+      "stop": "Stoppen",
+      "by_room": "Per ruimte",
+      "routines": "Routines",
+      "suction_water": "Zuigen & dweilen",
+      "pick_rooms": "Kies een of meer ruimtes",
+      "order_hint": "Niet elke robot houdt deze volgorde aan",
+      "no_rooms": "Geen ruimtes gekoppeld",
+      "no_rooms_how": "Koppel ze in Home Assistant, bij de instellingen van de stofzuiger.",
+      "routines_note": "Gemaakt in de app van de robot"
     },
     "cover": {
       "position": "Positie",
@@ -382,7 +391,8 @@
         "cleaning": "Schoonmaken",
         "paused": "Gepauzeerd",
         "returning": "Terugkeren naar dock",
-        "idle": "Inactief"
+        "idle": "Inactief",
+        "error": "Fout"
       },
       "weather": {
         "sunny": "Zonnig",
@@ -1001,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Volume en dempen",
-          "playback": "Vorige, play/pauze, volgende"
+          "playback": "Vorige, play/pauze, volgende",
+          "volume_playback": "Volume en vorige, play/pauze, volgende"
         },
         "number": {
           "stepper": "Waarde − / +",
@@ -2003,7 +2014,8 @@
         "full_hint": "Onderaan de paginavullende tegel; een tik ergens anders werkt zoals hieronder ingesteld.",
         "wide_hint": "Rechts op de dubbelbrede tegel, zoals de rijen in Home Assistant. Tikken op de naam werkt zoals hieronder ingesteld.",
         "needs_firmware": "Het scherm toont directe bediening vanaf firmware 0.2.19; tot die tijd blijft de tegel zoals hij was.",
-        "tall_hint": "Kies de bediening in de extra hoogte. Vergroten behoudt je keuze en voegt nooit automatisch bediening toe.",
+        "tall_hint": "Kies de bediening in de extra hoogte. Een tegel die groter wordt stelt de rijkste set voor die past; je eigen keuze blijft staan.",
+        "room_hint": "Het scherm tekent ze waar de tegel er ruimte voor heeft (firmware 0.57.0 of nieuwer): onder de naam op een enkele tegel, ernaast op een dubbelbrede. Waar ze niet passen, ziet de tegel eruit zoals zonder.",
         "tilt": "Lamellenbediening",
         "tilt_hint": "Voegt de ondersteunde lamellenschuif of kantelknoppen toe als er genoeg ruimte is. Gebruik op kleinere tegels de detailweergave. Je keuze voor open/dicht blijft behouden."
       },
@@ -2243,7 +2255,16 @@
           "blue-grey": "Blauwgrijs"
         }
       },
-      "anchor_hint": "Klik op het icoon om een ander te kiezen, of op de naam om de tegel een andere naam te geven"
+      "anchor_hint": "Klik op het icoon om een ander te kiezen, of op de naam om de tegel een andere naam te geven",
+      "grow": {
+        "title": "Ruimte voor meer bediening",
+        "applied": "Op {columns} × {rows} past meer bediening. Kies wat deze tegel laat zien; later aanpassen kan bij Bediening.",
+        "offered": "Op {columns} × {rows} past dit op deze tegel. Kies wat hij laat zien; later aanpassen kan bij Bediening.",
+        "suggested": "Voorgesteld",
+        "none": "Geen bediening",
+        "never": "Niet meer tonen",
+        "done": "Klaar"
+      }
     },
     "precision": {
       "label": "Precisie weergeven",

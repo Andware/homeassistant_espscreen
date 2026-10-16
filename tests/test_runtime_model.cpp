@@ -49,6 +49,9 @@ static void test_domains_and_sizes() {
     never.state = "unavailable"; assert(!never.available());
   }
   { runtime_tiles::Tile lamp; lamp.entity = "light.lamp"; lamp.received = true; lamp.state = "unknown"; assert(!lamp.available()); }
+  // An awning without feedback (Home Assistant's is_closed None) is unknown and keeps its keys; unavailable does not.
+  { runtime_tiles::Tile awning; awning.entity = "cover.awning"; awning.received = true; awning.state = "unknown"; assert(awning.available());
+    awning.state = "unavailable"; assert(!awning.available()); }
   { runtime_tiles::Tile waiting; waiting.entity = "scene.evening"; waiting.state = "unknown"; assert(!waiting.available()); }
   m.tiles[4].received = m.tiles[5].received = true;
   m.tiles[4].state = "home"; assert(m.tiles[4].active());

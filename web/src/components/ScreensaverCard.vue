@@ -53,7 +53,7 @@ function open(e: MouseEvent, kind: SaverKind) {
           :class="{ off: !screensaver.isOn(kind), opened: opened(kind), dragging: steps.drag.value.active && steps.drag.value.index === i, still: !pictures }"
           @pointerdown="steps.down($event, i)" @click="open($event, kind)" @keydown.enter.self.prevent="insp.openSaverStep(kind)" @keydown="steps.key($event, i)">
           <span class="saver-av" aria-hidden="true">
-            <span class="mdi">{{ glyph(SAVER_ICONS[kind]) }}</span>
+            <span class="mdi saver-glyph">{{ glyph(SAVER_ICONS[kind]) }}</span>
             <Icon v-if="pictures" name="drag-vertical" class="saver-grip" />
           </span>
           <span class="saver-tx">
@@ -82,10 +82,11 @@ function open(e: MouseEvent, kind: SaverKind) {
 .saver-row.dragging { background: var(--accent-soft); cursor: grabbing; position: relative; z-index: 1; box-shadow: 0 6px 18px rgba(20, 24, 40, 0.14); }
 .saver-av { position: relative; width: 28px; height: 28px; border-radius: 8px; background: var(--seg); color: var(--ink-2); display: grid; place-items: center; flex: none; font-size: 16px; }
 .saver-av > * { grid-area: 1 / 1; transition: opacity 0.12s; }
-/* The row's icon gives way to a grip under the pointer: the row drags by it, or anywhere, without a column for it. */
+/* The row's icon gives way to a grip under the pointer: the row drags by it, or anywhere, without a column for it. The
+   grip is an editor icon, an .mdi itself, so only the row's own glyph hides. */
 .saver-grip { opacity: 0; font-size: 17px; color: var(--muted); }
 @media (hover: hover) {
-  .saver-row:not(.still):hover .saver-av .mdi { opacity: 0; }
+  .saver-row:not(.still):hover .saver-glyph { opacity: 0; }
   .saver-row:not(.still):hover .saver-grip { opacity: 1; }
 }
 .saver-tx { flex: 1; min-width: 0; display: grid; gap: 1px; }

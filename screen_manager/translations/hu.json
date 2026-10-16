@@ -242,7 +242,16 @@
       "resume": "Folytatás",
       "start_cleaning": "Takarítás indítása",
       "clean": "Takarítás",
-      "dock": "Dokkoló"
+      "dock": "Dokkoló",
+      "stop": "Leállítás",
+      "by_room": "Terület szerint",
+      "routines": "Rutinok",
+      "suction_water": "Szívás és felmosás",
+      "pick_rooms": "Válassz egy vagy több területet",
+      "order_hint": "Nem minden robot tartja ezt a sorrendet",
+      "no_rooms": "Nincs hozzárendelt terület",
+      "no_rooms_how": "Rendeld a szegmenseket területekhez a Home Assistantban, a porszívó beállításainál.",
+      "routines_note": "A robot saját alkalmazásában készült"
     },
     "cover": {
       "position": "Pozíció",
@@ -383,7 +392,8 @@
         "cleaning": "Takarítás",
         "paused": "Szünetel",
         "returning": "Dokkolás folyamatban",
-        "idle": "Tétlen"
+        "idle": "Tétlen",
+        "error": "Hiba"
       },
       "weather": {
         "sunny": "Napos",
@@ -1001,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Hangerő és némítás",
-          "playback": "Előző, lejátszás/szünet, következő"
+          "playback": "Előző, lejátszás/szünet, következő",
+          "volume_playback": "Hangerő és előző, lejátszás/szünet, következő"
         },
         "number": {
           "stepper": "Érték − / +",
@@ -2364,7 +2375,8 @@
         "full_hint": "Az egész oldalas csempe alján; bárhol máshol a koppintás az alábbi beállítás szerint működik.",
         "wide_hint": "A dupla széles csempe jobb oldalán, mint a Home Assistant soraiban. A névre koppintás az alábbi beállítás szerint működik.",
         "needs_firmware": "A kijelző a 0.2.19-es firmware-től mutatja a közvetlen vezérlést; addig a csempe változatlan marad.",
-        "tall_hint": "Válaszd ki, milyen vezérlők jelenjenek meg a többletmagasságban. Átméretezéskor a választásod megmarad; vezérlőt sosem ad hozzá automatikusan.",
+        "tall_hint": "Válaszd ki a vezérlőket az extra magassághoz. A növekvő csempe a legbővebb elférő készletet javasolja; a saját választásod megmarad.",
+        "room_hint": "A kijelző ott rajzolja ki őket, ahol a csempén van hely (0.57.0-s vagy újabb firmware): egyes csempén a név alatt, dupla szélesen mellette. Ahol nem férnek el, a csempe úgy néz ki, mint nélkülük.",
         "tilt": "Lamella dőlése",
         "tilt_hint": "Ha van elég hely, hozzáadja a támogatott lamellacsúszkát vagy dőlésgombokat. Kisebb csempéken használd a részletes nézetet. A nyitás/zárás választásod változatlan marad."
       },
@@ -2604,7 +2616,16 @@
           "blue-grey": "Kékesszürke"
         }
       },
-      "anchor_hint": "Kattints az ikonra egy másik választásához, vagy a névre a csempe átnevezéséhez"
+      "anchor_hint": "Kattints az ikonra egy másik választásához, vagy a névre a csempe átnevezéséhez",
+      "grow": {
+        "title": "Hely több vezérlőnek",
+        "applied": "{columns} × {rows} méretben több vezérlő fér el. Válaszd ki, mit mutasson a csempe; később a Vezérlők alatt módosíthatod.",
+        "offered": "{columns} × {rows} méretben ezeknek van hely a csempén. Válaszd ki, mit mutasson; később a Vezérlők alatt módosíthatod.",
+        "suggested": "Javasolt",
+        "none": "Nincs vezérlő",
+        "never": "Ne mutasd újra",
+        "done": "Kész"
+      }
     },
     "precision": {
       "label": "Pontosság",

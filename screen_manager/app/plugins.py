@@ -35,7 +35,7 @@ from plugin_store import PluginSecrets, PluginStore
 
 LOG = logging.getLogger('plugins')
 
-INDEX_URL = 'https://raw.githubusercontent.com/MaxGramser/tessera-plugins/main/index.json'
+INDEX_URL = 'https://raw.githubusercontent.com/MaxGramser/tessera-plugins/{branch}/index.json'
 # How many people like each plugin: the website counts the likes, the plugins repository copies the counts every hour, so
 # reading them is a request to GitHub like the index's, never to the website (plugin_likes.py sends a like).
 LIKES_URL = 'https://raw.githubusercontent.com/MaxGramser/tessera-plugins/main/likes.json'
@@ -260,7 +260,8 @@ class Plugins:
         # The pictures of plugin tiles (plugin API 0.10), through the fetcher's session, or Home Assistant's own.
         self.pictures = plugin_pictures.Pictures(self.fetcher, lambda path: self.manager.ha.entity_picture(path))
         self.index = {}             # id -> Entry, from index.json
-        self.index_state = {'at': None, 'error': None, 'etag': None, 'checked': 0.0, 'blocked': [], 'featured': []}
+        self.index_state = {'at': None, 'error': None, 'etag': None, 'branch': None, 'checked': 0.0, 'blocked': [],
+                            'featured': []}
         # likes.json: how many like each plugin; `fresh`: the website's own answer to a like from this app, which counts
         # until likes.json has caught up (it is copied once an hour).
         self.likes = {'counts': {}, 'etag': None, 'checked': 0.0, 'fresh': {}}
@@ -286,6 +287,7 @@ class Plugins:
         except (OSError, ValueError):
             return
         self._take_index(cached.get('index') or {}, cached.get('etag'), cached.get('at'))
+        self.index_state['branch'] = cached.get('branch')
 
     def _take_index(self, index, etag=None, at=None):
         if not isinstance(index, dict) or index.get('format') != INDEX_FORMAT:
@@ -315,6 +317,14 @@ class Plugins:
         if newly:
             self.drop_blocked()
 
+    @staticmethod
+    def index_branches():
+        """The branches of the plugins repository whose index.json this app reads, the first that has one. The plugins
+        repository has a dev branch as Tessera has (its AGENTS.md, "Branches"): a plugin that needs what only Tessera's
+        dev firmware has waits there for Tessera's next release. The dev app reads it, so such a plugin is installed and
+        updated the way every plugin is; it falls back on main while dev has no index. Every other app reads main."""
+        return ('dev', 'main') if core.channel() == 'dev' else ('main',)
+
     async def refresh_index(self, force=False):
         """index.json again when it is older than INDEX_TTL (or `force`), with its ETag; the last one stays offline."""
         if not force and time.monotonic() - self.index_state['checked'] < INDEX_TTL and self.index_state['at']:
@@ -325,13 +335,20 @@ class Plugins:
             if self.http is None or self.http.closed:
                 self.http = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15),
                                                   headers={'User-Agent': self.fetcher.user_agent})
-            headers = {'If-None-Match': self.index_state['etag']} if self.index_state['etag'] and not force else {}
-            async with self.http.get(INDEX_URL, headers=headers) as response:
-                if response.status == 304:
-                    return
-                response.raise_for_status()
-                index = json.loads(await read_whole(response, INDEX_MAX))
-                etag = response.headers.get('ETag')
+            index = None
+            for branch in self.index_branches():
+                same = self.index_state.get('branch') == branch
+                headers = {'If-None-Match': self.index_state['etag']} if self.index_state['etag'] and same and not force else {}
+                async with self.http.get(INDEX_URL.format(branch=branch), headers=headers) as response:
+                    if response.status == 304:
+                        return
+                    if response.status == 404 and branch != self.index_branches()[-1]:
+                        continue
+                    response.raise_for_status()
+                    index = json.loads(await read_whole(response, INDEX_MAX))
+                    etag = response.headers.get('ETag')
+                    self.index_state['branch'] = branch
+                    break
         except Exception as error:
             self.index_state['error'] = type(error).__name__
             LOG.info('Plugin index not read (%s)', error)
@@ -340,7 +357,8 @@ class Plugins:
         self._take_index(index, etag, at)
         try:
             self.data.mkdir(parents=True, exist_ok=True)
-            self._index_file().write_text(json.dumps({'index': index, 'etag': etag, 'at': at}))
+            self._index_file().write_text(json.dumps({'index': index, 'etag': etag, 'at': at,
+                                                      'branch': self.index_state['branch']}))
         except OSError as error:
             LOG.warning('Plugin index not kept (%s)', error)
 

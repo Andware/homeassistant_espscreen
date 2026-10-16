@@ -28,6 +28,7 @@ Home Assistant entity belongs in a board file. docs/README.md lists every doc an
 | change how a screen joins Home Assistant | docs/EASY_SETUP.md, chapter 3 | `screen_manager/app/ha_pairing.py`, Home Assistant's esphome config flow |
 | change a colour | docs/THEME.md | `components/smart_display/theme.h` |
 | change how pages are kept or prepared | docs/KEPT_PAGES.md, docs/PAGES.md | `kept_pages.h`, `page_protocol.h` |
+| make a control click or buzz as a finger presses or drags it | docs/PLUGINS.md, "Touch feedback" | `touch_feedback.h`, `touch_feedback_lvgl.h` |
 | make a control show its change before Home Assistant confirms it | docs/OPTIMISTIC.md | `optimistic.h`, `wish()` in `runtime_tiles.h` |
 | make a card follow a change without being built again | docs/CARD_PARTS.md | `card_bind()`, `card_shaped()` in `runtime_tiles.h` |
 | change what a plugin can do, or how plugins reach a screen | docs/PLUGINS.md, then the tessera-plugins repository's docs | `plugin_api.h`, `plugin_host.cpp`, `screen_manager/app/plugins.py`, `plugin_manifest.py` |

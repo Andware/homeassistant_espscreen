@@ -242,7 +242,16 @@
       "resume": "Reprendre",
       "start_cleaning": "Démarrer le nettoyage",
       "clean": "Nettoyer",
-      "dock": "Base"
+      "dock": "Base",
+      "stop": "Arrêter",
+      "by_room": "Par zone",
+      "routines": "Routines",
+      "suction_water": "Aspiration & lavage",
+      "pick_rooms": "Choisissez une ou plusieurs zones",
+      "order_hint": "Tous les robots ne respectent pas cet ordre",
+      "no_rooms": "Aucune zone associée",
+      "no_rooms_how": "Associez les segments aux zones dans Home Assistant, dans les réglages de l'aspirateur.",
+      "routines_note": "Créées dans l'app du robot"
     },
     "cover": {
       "position": "Position",
@@ -383,7 +392,8 @@
         "cleaning": "Nettoyage",
         "paused": "En pause",
         "returning": "Retour à la station d'accueil",
-        "idle": "Inactif"
+        "idle": "Inactif",
+        "error": "Erreur"
       },
       "weather": {
         "sunny": "Ensoleillé",
@@ -1001,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Volume et sourdine",
-          "playback": "Précédent, lecture/pause, suivant"
+          "playback": "Précédent, lecture/pause, suivant",
+          "volume_playback": "Volume et précédent, lecture/pause, suivant"
         },
         "number": {
           "stepper": "Valeur − / +",
@@ -2364,7 +2375,8 @@
         "full_hint": "En bas de la tuile pleine page ; toucher ailleurs agit comme réglé ci-dessous.",
         "wide_hint": "À droite de la tuile double largeur, comme les lignes dans Home Assistant. Toucher le nom agit comme réglé ci-dessous.",
         "needs_firmware": "L'écran affiche la commande directe à partir du firmware 0.2.19 ; d'ici là, la tuile reste comme avant.",
-        "tall_hint": "",
+        "tall_hint": "Choisissez les commandes affichées dans la hauteur supplémentaire. Une tuile qui grandit suggère l’ensemble le plus complet qui tient ; votre choix reste tel quel.",
+        "room_hint": "L'écran les dessine là où la tuile a la place (firmware 0.57.0 ou plus récent) : sous le nom sur une tuile simple, à côté sur une tuile double largeur. Là où ils ne tiennent pas, la tuile reste telle qu'elle est sans eux.",
         "tilt": "",
         "tilt_hint": ""
       },
@@ -2604,7 +2616,16 @@
           "blue-grey": "Gris bleu"
         }
       },
-      "anchor_hint": "Cliquez sur l'icône pour en choisir une autre, ou sur le nom pour renommer la tuile"
+      "anchor_hint": "Cliquez sur l'icône pour en choisir une autre, ou sur le nom pour renommer la tuile",
+      "grow": {
+        "title": "De la place pour plus de commandes",
+        "applied": "En {columns} × {rows}, plus de commandes tiennent. Choisissez ce que cette tuile affiche ; modifiable plus tard sous Commandes.",
+        "offered": "En {columns} × {rows}, cette tuile a de la place pour ceci. Choisissez ce qu’elle affiche ; modifiable plus tard sous Commandes.",
+        "suggested": "Suggéré",
+        "none": "Aucune commande",
+        "never": "Ne plus afficher",
+        "done": "Terminé"
+      }
     },
     "precision": {
       "label": "Précision d'affichage",

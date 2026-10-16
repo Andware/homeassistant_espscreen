@@ -242,7 +242,16 @@
       "resume": "Wznów",
       "start_cleaning": "Rozpocznij sprzątanie",
       "clean": "Sprzątaj",
-      "dock": "Stacja"
+      "dock": "Stacja",
+      "stop": "Zatrzymaj",
+      "by_room": "Według obszaru",
+      "routines": "Rutyny",
+      "suction_water": "Odkurzanie i mycie",
+      "pick_rooms": "Wybierz jeden lub więcej obszarów",
+      "order_hint": "Nie każdy robot zachowuje tę kolejność",
+      "no_rooms": "Brak przypisanych obszarów",
+      "no_rooms_how": "Przypisz segmenty do obszarów w Home Assistant, w ustawieniach odkurzacza.",
+      "routines_note": "Utworzone w aplikacji robota"
     },
     "cover": {
       "position": "Pozycja",
@@ -383,7 +392,8 @@
         "cleaning": "sprzątanie",
         "paused": "wstrzymano",
         "returning": "wraca do stacji dokującej",
-        "idle": "brak aktywności"
+        "idle": "brak aktywności",
+        "error": "Błąd"
       },
       "weather": {
         "sunny": "słonecznie",
@@ -1001,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Głośność i wyciszenie",
-          "playback": "Poprzedni, odtwórz/pauza, następny"
+          "playback": "Poprzedni, odtwórz/pauza, następny",
+          "volume_playback": "Głośność i poprzedni, odtwórz/pauza, następny"
         },
         "number": {
           "stepper": "Wartość − / +",
@@ -2364,7 +2375,8 @@
         "full_hint": "Na dole kafelka na całą stronę; dotknięcie w innym miejscu działa zgodnie z ustawieniem poniżej.",
         "wide_hint": "Po prawej stronie kafelka podwójnej szerokości, jak w wierszach encji w Home Assistant. Dotknięcie nazwy działa zgodnie z ustawieniem poniżej.",
         "needs_firmware": "Ekran pokazuje bezpośrednie sterowanie od wersji firmware 0.2.19; do tego czasu kafelek pozostaje bez zmian.",
-        "tall_hint": "",
+        "tall_hint": "Wybierz sterowanie w dodatkowej wysokości. Kafelek, który rośnie, proponuje najbogatszy pasujący zestaw; twój wybór zostaje.",
+        "room_hint": "Ekran rysuje je tam, gdzie kafelek ma na nie miejsce (firmware 0.57.0 lub nowszy): pod nazwą na pojedynczym kafelku, obok niej na podwójnej szerokości. Gdzie się nie mieszczą, kafelek wygląda jak bez nich.",
         "tilt": "",
         "tilt_hint": ""
       },
@@ -2604,7 +2616,16 @@
           "blue-grey": "Niebieskoszary"
         }
       },
-      "anchor_hint": "Kliknij ikonę, aby wybrać inną, lub nazwę, aby zmienić nazwę kafelka"
+      "anchor_hint": "Kliknij ikonę, aby wybrać inną, lub nazwę, aby zmienić nazwę kafelka",
+      "grow": {
+        "title": "Miejsce na więcej sterowania",
+        "applied": "Przy {columns} × {rows} mieści się więcej sterowania. Wybierz, co pokazuje ten kafelek; zmienisz to później w Sterowaniu.",
+        "offered": "Przy {columns} × {rows} ten kafelek ma miejsce na to. Wybierz, co pokazuje; zmienisz to później w Sterowaniu.",
+        "suggested": "Sugerowane",
+        "none": "Bez sterowania",
+        "never": "Nie pokazuj ponownie",
+        "done": "Gotowe"
+      }
     },
     "precision": {
       "label": "Precyzja",

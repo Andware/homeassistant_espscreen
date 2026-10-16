@@ -242,7 +242,16 @@
       "resume": "Reanudar",
       "start_cleaning": "Iniciar limpieza",
       "clean": "Limpiar",
-      "dock": "Base"
+      "dock": "Base",
+      "stop": "Detener",
+      "by_room": "Por área",
+      "routines": "Rutinas",
+      "suction_water": "Aspirado y fregado",
+      "pick_rooms": "Elige una o más áreas",
+      "order_hint": "No todos los robots respetan este orden",
+      "no_rooms": "Ninguna área asignada",
+      "no_rooms_how": "Asigna los segmentos a áreas en Home Assistant, en los ajustes de la aspiradora.",
+      "routines_note": "Creadas en la app del robot"
     },
     "cover": {
       "position": "Posición",
@@ -383,7 +392,8 @@
         "cleaning": "Limpiando",
         "paused": "En pausa",
         "returning": "Volviendo a la base",
-        "idle": "Inactivo"
+        "idle": "Inactivo",
+        "error": "Error"
       },
       "weather": {
         "sunny": "Soleado",
@@ -1001,7 +1011,8 @@
         },
         "media_player": {
           "volume": "Volumen y silenciar",
-          "playback": "Anterior, reproducir/pausa, siguiente"
+          "playback": "Anterior, reproducir/pausa, siguiente",
+          "volume_playback": "Volumen y anterior, reproducir/pausa, siguiente"
         },
         "number": {
           "stepper": "Valor − / +",
@@ -2364,7 +2375,8 @@
         "full_hint": "En la parte inferior del mosaico de página completa; un toque en cualquier otro sitio funciona como se indica más abajo.",
         "wide_hint": "A la derecha del mosaico de doble ancho, como las filas de Home Assistant. Tocar el nombre funciona como se indica más abajo.",
         "needs_firmware": "La pantalla muestra el control directo a partir del firmware 0.2.19; hasta entonces, el mosaico se queda como estaba.",
-        "tall_hint": "",
+        "tall_hint": "Elige los controles de la altura extra. Un mosaico que crece sugiere el conjunto más completo que cabe; tu elección se mantiene.",
+        "room_hint": "La pantalla los dibuja donde el mosaico tiene sitio (firmware 0.57.0 o posterior): bajo el nombre en un mosaico sencillo, al lado en uno de doble ancho. Donde no caben, el mosaico se ve como sin ellos.",
         "tilt": "",
         "tilt_hint": ""
       },
@@ -2604,7 +2616,16 @@
           "blue-grey": "Gris azulado"
         }
       },
-      "anchor_hint": "Haz clic en el icono para elegir otro, o en el nombre para cambiar el nombre del mosaico"
+      "anchor_hint": "Haz clic en el icono para elegir otro, o en el nombre para cambiar el nombre del mosaico",
+      "grow": {
+        "title": "Espacio para más controles",
+        "applied": "Con {columns} × {rows} caben más controles. Elige lo que muestra este mosaico; puedes cambiarlo después en Controles.",
+        "offered": "Con {columns} × {rows} este mosaico tiene espacio para esto. Elige lo que muestra; puedes cambiarlo después en Controles.",
+        "suggested": "Sugerido",
+        "none": "Sin controles",
+        "never": "No volver a mostrar",
+        "done": "Listo"
+      }
     },
     "precision": {
       "label": "Precisión de visualización",

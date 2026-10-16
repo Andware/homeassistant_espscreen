@@ -10,6 +10,7 @@
 #include "runtime_tiles.h"
 #include "plugin_host.h"
 #include "plugin_api.h"
+#include "touch_feedback_lvgl.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -987,6 +988,13 @@ static void start() {
   screen_hooks::cards_closed().push_back([]() { for (auto *p : tessera::plugins()) p->on_cards_closed(); });
   screen_hooks::alert_show().push_back([]() { for (auto *p : tessera::plugins()) p->on_alert(); });
   screen_hooks::touched().push_back([]() { for (auto *p : tessera::plugins()) p->on_touch(); });
+  // Feedback the moment a finger lands or a value under it steps (touch_feedback.h), heard by the plugins only.
+  touch_feedback::pressed().push_back([]() { for (auto *p : tessera::plugins()) p->on_press(); });
+  touch_feedback::stepped().push_back([](const touch_feedback::Step &s) {
+    const tessera::Step step{s.direction, s.edge};
+    for (auto *p : tessera::plugins()) p->on_step(step);
+  });
+  touch_feedback::lvgl::listen();
   screen_hooks::away().push_back([]() { return card_open(); });
   build_settings();
   for (auto *p : tessera::plugins()) p->on_ready();
