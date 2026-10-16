@@ -228,8 +228,18 @@ inline bool pictures_awake() { return awake() || saver_pictures; }
 // What ESP Screen Manager says the screensaver shows (op "saver", screen_saver.py): "media", "camera", "clock" or ""
 // for none, with the player's or camera's name and, for a player, its title, artist and album, its picture's mark and
 // the cover's colour (the picture is made again when either changes). Where the track is, is no part of it.
+// The clock's face (module clock_faces, app `cf`): the digital clock every screen has, or Glass, Classic or Bauhaus on
+// a screen with the module. Its numerals (Glass: 0, 4 or 12), its seconds hand, and its look: dark, light or the screen's.
+struct SaverFace {
+  enum Kind : uint8_t { DIGITAL, GLASS, CLASSIC, BAUHAUS };
+  enum Look : uint8_t { DARK, LIGHT, FOLLOW };
+  uint8_t kind = DIGITAL, numerals = 4, look = DARK;
+  bool seconds = true;
+  bool operator==(const SaverFace &o) const { return kind == o.kind && numerals == o.numerals && look == o.look && seconds == o.seconds; }
+};
 struct SaverChoice {
   std::string kind, entity, name, title, artist, album, picture, ground;
+  SaverFace face;
   std::string weather;  // the clock's outside temperature, ready to draw (firmware 0.31.0+, app 0.4.52)
   // The clock's row of entities, the temperature first (firmware 0.50.0+, app 0.4.81): an icon and a text each.
   std::vector<header_bar::Item> row;
@@ -240,7 +250,7 @@ struct SaverChoice {
   bool operator==(const SaverChoice &o) const {
     return kind == o.kind && entity == o.entity && name == o.name && title == o.title && artist == o.artist &&
            album == o.album && picture == o.picture && ground == o.ground && weather == o.weather && row == o.row &&
-           state == o.state && features == o.features && muted == o.muted;
+           state == o.state && features == o.features && muted == o.muted && face == o.face;
   }
 };
 inline SaverChoice saver_next, saver_now;  // the app's latest word, and what the glass shows
@@ -12388,12 +12398,22 @@ inline void saver_row_draw(const std::vector<header_bar::Item> &row, const espho
   }
 }
 
+#ifdef SD_MOD_CLOCK_FACES
+// The clock's faces of the module (module_clock_faces.cpp, a compilation unit of its own).
+}  // namespace runtime_tiles
+#include "module_clock_faces.h"
+namespace runtime_tiles {
+#endif
 // The clock: the time in the bedside clock's digits where they fit, else the largest digit step that does, and the date
 // under it in the card heading's font, white on black whatever the look. In 12 hours AM or PM stands after the time, and
 // the outside temperature the app sends stands small in the middle at the bottom (firmware 0.31.0+).
 inline void saver_clock_draw() {
   const int width = overlay_card::screen_width(), height = overlay_card::screen_height();
   const auto now = now_time ? now_time() : esphome::ESPTime{};
+#ifdef SD_MOD_CLOCK_FACES
+  // A face of the module in the place of the digital clock, with the same row of entities (Classic shows it).
+  if (saver_next.face.kind != SaverFace::DIGITAL) { clock_faces::draw(saver_root, saver_next.face, now, saver_next.row, saver_next.weather); return; }
+#endif
   const std::string time = time_text(now), date = date_text(now), ampm = am_pm(now);
   const std::string &degrees = saver_next.weather;
   const auto &entities = saver_next.row;
@@ -12592,6 +12612,9 @@ inline void saver_keys_draw() {
 
 inline void saver_hide() {
   saver_follow_due = false;
+#ifdef SD_MOD_CLOCK_FACES
+  clock_faces::forget();
+#endif
   if (saver_root) lv_obj_delete(saver_root);
   saver_root = nullptr;
   if (saver_camera) camera_close();
@@ -12697,6 +12720,10 @@ inline void saver_tick(uint32_t now) {
   }
   // Gone under it (a new layout, an alert that closed the camera): drawn again.
   if (saver_lit && !saver_root && !saver_camera && saver_wanted()) saver_show();
+#ifdef SD_MOD_CLOCK_FACES
+  // A face's seconds hand, one step a second.
+  else if (saver_root && now_time) clock_faces::tick(now_time());
+#endif
 }
 
 // ---------------------------------------------------------------------------------------------------------

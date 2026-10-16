@@ -151,8 +151,11 @@ export type UpdateInfo = {
 export type SaverKind = "media" | "camera" | "clock";
 // `weather` (app 0.4.52): the temperature under the clock, "auto" for Home Assistant's first weather entity, "" for none.
 // `more` (app 0.4.54): the players the music step tries after `media`, in their order.
-export type ScreensaverChoice = { show: boolean; media: string; camera: string; order: SaverKind[]; off: SaverKind[]; weather?: string; more?: string[]; items?: HeaderItem[] };
-export type ScreensaverView = ScreensaverChoice & { ready: boolean; pictures: boolean; standby: boolean };
+// `face` and the rest (module clock_faces): the clock's face, Glass's numerals, the seconds hand and the face's look.
+export type ScreensaverChoice = { show: boolean; media: string; camera: string; order: SaverKind[]; off: SaverKind[]; weather?: string; more?: string[]; items?: HeaderItem[];
+  face?: "digital" | "glass" | "classic" | "bauhaus"; numerals?: number; seconds?: boolean; look?: "dark" | "light" | "auto" };
+// `faces`: the screen's board has the clock's faces (docs/MODULES.md).
+export type ScreensaverView = ScreensaverChoice & { ready: boolean; pictures: boolean; standby: boolean; faces?: boolean };
 export type SettingsView = { owner: string; keys: string[]; values: Record<string, any>; unavailable: string[]; rotations?: number[]; switches?: string[]; calibrate?: boolean };
 // The two ways a screen can hang (app 0.2.107), chosen when it is built: lying down or standing up. A board's own
 // numbers for each way come from boards.json, which the add-on serves with the firmware status.

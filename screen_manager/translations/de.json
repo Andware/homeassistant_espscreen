@@ -2874,7 +2874,23 @@
         "clock_part": "Uhrzeit, Datum und Temperatur",
         "row_hint": "Tippe eine Entität in der Zeile an, um sie einzustellen. Ziehe sie nach links oder rechts, um sie zu verschieben, oder aus der Zeile, um sie zu entfernen.",
         "player_search": "Player suchen",
-        "player_none": "Kein Player gefunden"
+        "player_none": "Kein Player gefunden",
+        "face": "Zifferblatt",
+        "faces": {
+          "digital": "Digital",
+          "glass": "Glas",
+          "classic": "Klassisch",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Aussehen",
+        "look_dark": "Dunkel",
+        "look_light": "Hell",
+        "look_auto": "Wie der Bildschirm",
+        "numerals": "Ziffern",
+        "numerals_none": "Keine",
+        "seconds": "Sekundenzeiger",
+        "face_alone_hint": "Dieses Zifferblatt zeigt nur die Uhrzeit. Temperatur und Entitäten stehen auf Klassisch und Digital.",
+        "face_moves_hint": "Das Zifferblatt verschiebt sich jede Minute ein wenig, und Bauhaus malt alle zehn Minuten ein neues Bild, damit nichts lange auf denselben Pixeln steht."
       },
       "plugins": {
         "title": "Plugins",

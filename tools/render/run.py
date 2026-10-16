@@ -2300,6 +2300,14 @@ class Run:
         row = [{'k': 'text', 't': '21°'}, {'k': 'text', 't': 'Open'}, {'k': 'text', 'i': 'F0335', 't': ''},
                {'k': 'text', 'i': 'F140B', 't': '412 W'}, {'k': 'ago', 'i': 'F0D91', 'e': int(MOMENT.timestamp()) - 300}]
         steps = [('clock', {'k': 'clock'}), ('clock-row', {'k': 'clock', 'w': '21°', 'wi': row})]
+        # The clock's faces (module clock_faces) on a board of the full tier, as the app sends them (screen_saver.face).
+        if 'clock_faces' in json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board].get('modules', ()):
+            steps += [('face-glass', {'k': 'clock', 'cf': {'f': 'glass', 'n': 4, 's': 1, 'l': 'dark'}}),
+                      ('face-glass-light', {'k': 'clock', 'cf': {'f': 'glass', 'n': 12, 's': 1, 'l': 'light'}}),
+                      ('face-classic', {'k': 'clock', 'w': '21°', 'wi': row, 'cf': {'f': 'classic', 'n': 4, 's': 1, 'l': 'dark'}}),
+                      ('face-classic-light', {'k': 'clock', 'w': '21°', 'wi': row, 'cf': {'f': 'classic', 'n': 4, 's': 0, 'l': 'light'}}),
+                      ('face-bauhaus', {'k': 'clock', 'cf': {'f': 'bauhaus', 'n': 4, 's': 1, 'l': 'light'}}),
+                      ('face-bauhaus-dark', {'k': 'clock', 'cf': {'f': 'bauhaus', 'n': 4, 's': 1, 'l': 'dark'}})]
         if pictured:
             steps = [('media', {'k': 'media', 'e': 'media_player.living_room', 'n': 'Living room', 't': 'Evening Drive',
                                 'x': {'artist': 'Nova Coast', 'album': 'Low Sun', 'pic': 'c0ffee1234', 'g': ground}}),

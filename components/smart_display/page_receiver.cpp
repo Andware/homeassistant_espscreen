@@ -443,6 +443,19 @@ std::string receive(const std::string &payload) {
         }
         next.row = std::move(row);
       }
+#ifdef SD_MOD_CLOCK_FACES
+      // The clock's face (module clock_faces, app `cf`): which one, its numerals, its seconds hand and its look. A face
+      // this firmware does not know leaves the digital clock.
+      if (next.kind == "clock" && root["cf"].is<JsonObject>()) {
+        auto cf = root["cf"];
+        const std::string face = string(cf["f"], 12), look = string(cf["l"], 8);
+        next.face.kind = face == "glass" ? SaverFace::GLASS : face == "classic" ? SaverFace::CLASSIC : face == "bauhaus" ? SaverFace::BAUHAUS : SaverFace::DIGITAL;
+        const int numerals = cf["n"].is<int>() ? cf["n"].as<int>() : 4;
+        next.face.numerals = numerals == 0 || numerals == 12 ? numerals : 4;
+        next.face.seconds = !cf["s"].is<int>() || cf["s"].as<int>() != 0;
+        next.face.look = look == "light" ? SaverFace::LIGHT : look == "auto" ? SaverFace::FOLLOW : SaverFace::DARK;
+      }
+#endif
       saver_receive(next);
       result = model.ready() ? "Synced" : "Loading tiles";
       return true;

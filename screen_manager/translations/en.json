@@ -2503,7 +2503,23 @@
         "item_hint": "Black and white on the screensaver, whatever the colour of the entity.",
         "items_add_title": "Add to the clock",
         "clock_part": "Time, date and temperature",
-        "row_hint": "Tap an entity in the row to set it up. Drag it left or right to move it, or off the row to remove it."
+        "row_hint": "Tap an entity in the row to set it up. Drag it left or right to move it, or off the row to remove it.",
+        "face": "Face",
+        "faces": {
+          "digital": "Digital",
+          "glass": "Glass",
+          "classic": "Classic",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Look",
+        "look_dark": "Dark",
+        "look_light": "Light",
+        "look_auto": "Screen's",
+        "numerals": "Numbers",
+        "numerals_none": "None",
+        "seconds": "Seconds hand",
+        "face_alone_hint": "This face shows the time alone. The temperature and the entities show on Classic and Digital.",
+        "face_moves_hint": "The face moves a little every minute, and Bauhaus paints a new picture every ten minutes, so nothing stays on the same pixels for long."
       },
       "plugins": {
         "title": "Plugins",

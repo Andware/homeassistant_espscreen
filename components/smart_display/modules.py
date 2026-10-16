@@ -23,6 +23,8 @@ MODULES = {
     "vacuum_card": {"min_tier": "full", "define": "SD_MOD_VACUUM_CARD"},
     # A cover group's page, a card per cover, behind a key on its card; lite keeps the cover card alone.
     "cover_groups": {"min_tier": "full", "define": "SD_MOD_COVER_GROUPS"},
+    # The screensaver's clock faces beside the digital clock: Glass, Classic and Bauhaus; lite keeps the digital clock.
+    "clock_faces": {"min_tier": "full", "define": "SD_MOD_CLOCK_FACES"},
 }
 
 

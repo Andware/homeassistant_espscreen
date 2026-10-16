@@ -2874,7 +2874,23 @@
         "clock_part": "Heure, date et température",
         "row_hint": "Touchez une entité de la rangée pour la régler. Faites-la glisser à gauche ou à droite pour la déplacer, ou hors de la rangée pour la retirer.",
         "player_search": "Rechercher des lecteurs",
-        "player_none": "Aucun lecteur ne correspond"
+        "player_none": "Aucun lecteur ne correspond",
+        "face": "Cadran",
+        "faces": {
+          "digital": "Numérique",
+          "glass": "Verre",
+          "classic": "Classique",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Apparence",
+        "look_dark": "Sombre",
+        "look_light": "Clair",
+        "look_auto": "Comme l'écran",
+        "numerals": "Chiffres",
+        "numerals_none": "Aucun",
+        "seconds": "Trotteuse",
+        "face_alone_hint": "Ce cadran n'affiche que l'heure. La température et les entités s'affichent sur Classique et Numérique.",
+        "face_moves_hint": "Le cadran se décale un peu chaque minute et Bauhaus peint une nouvelle image toutes les dix minutes, pour que rien ne reste longtemps sur les mêmes pixels."
       },
       "plugins": {
         "title": "Plugins",

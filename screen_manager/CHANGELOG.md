@@ -1,5 +1,12 @@
 ## Unreleased
 
+- **New clock faces for the screensaver.** On screens with 8 MB of flash or more, the screensaver's clock can now be
+  Glass (a dial that is the glass itself, with ticks along its edge), Classic (a round watch dial with the day, the
+  date, the temperature and your entities beside or under it) or Bauhaus (the whole glass a grid of colourful shapes
+  with a round clock). Pick one under Screensaver, Clock, each shown as a small picture of your own screen, and choose
+  its look (dark, light or the screen's own), the numbers on Glass and the seconds hand. Every face fills the glass on
+  any screen shape, and none stands still: Glass and Classic shift a fraction every minute, and Bauhaus paints a new
+  picture every ten minutes, so nothing marks the glass. The CYD and the other 4 MB screens keep the digital clock.
 - **A plugin's card can show pictures (plugin API 0.13).** The card a plugin opens over the page, such as the details
   of an album or a film, can now show its cover or poster large, the same way the plugin's tile shows them. It comes
   as quickly as the cover on Tessera's own media card, and it is freed again when the card closes. Screens without the

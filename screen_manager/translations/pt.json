@@ -2874,7 +2874,23 @@
         "clock_part": "Hora, data e temperatura",
         "row_hint": "Toque numa entidade da fila para a configurar. Arraste-a para a esquerda ou direita para a mover, ou para fora da fila para a remover.",
         "player_search": "Procurar leitores",
-        "player_none": "Nenhum leitor corresponde"
+        "player_none": "Nenhum leitor corresponde",
+        "face": "Mostrador",
+        "faces": {
+          "digital": "Digital",
+          "glass": "Vidro",
+          "classic": "Clássico",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Aspeto",
+        "look_dark": "Escuro",
+        "look_light": "Claro",
+        "look_auto": "Como o ecrã",
+        "numerals": "Números",
+        "numerals_none": "Nenhum",
+        "seconds": "Ponteiro dos segundos",
+        "face_alone_hint": "Este mostrador mostra só a hora. A temperatura e as entidades aparecem no Clássico e no Digital.",
+        "face_moves_hint": "O mostrador desloca-se um pouco a cada minuto e o Bauhaus pinta uma imagem nova a cada dez minutos, para que nada fique muito tempo nos mesmos píxeis."
       },
       "plugins": {
         "title": "Plugins",

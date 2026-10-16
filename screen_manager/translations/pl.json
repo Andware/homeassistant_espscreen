@@ -2874,7 +2874,23 @@
         "clock_part": "Godzina, data i temperatura",
         "row_hint": "Dotknij encji w rzędzie, aby ją ustawić. Przeciągnij ją w lewo lub w prawo, aby ją przenieść, albo poza rząd, aby ją usunąć.",
         "player_search": "Szukaj odtwarzaczy",
-        "player_none": "Brak pasującego odtwarzacza"
+        "player_none": "Brak pasującego odtwarzacza",
+        "face": "Tarcza",
+        "faces": {
+          "digital": "Cyfrowa",
+          "glass": "Szkło",
+          "classic": "Klasyczna",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Wygląd",
+        "look_dark": "Ciemny",
+        "look_light": "Jasny",
+        "look_auto": "Jak ekran",
+        "numerals": "Cyfry",
+        "numerals_none": "Brak",
+        "seconds": "Wskazówka sekundowa",
+        "face_alone_hint": "Ta tarcza pokazuje tylko godzinę. Temperatura i encje są na tarczach Klasyczna i Cyfrowa.",
+        "face_moves_hint": "Tarcza co minutę lekko się przesuwa, a Bauhaus co dziesięć minut maluje nowy obraz, więc nic nie zostaje długo na tych samych pikselach."
       },
       "plugins": {
         "title": "Wtyczki",

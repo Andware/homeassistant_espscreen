@@ -14,7 +14,10 @@ import BarStrip, { type StripFace } from "./BarStrip.vue";
 import EntityItemPicker from "./EntityItemPicker.vue";
 import IconChoices from "./IconChoices.vue";
 import IconPicker from "./IconPicker.vue";
+import SaverFace from "./SaverFace.vue";
 import SaverGlass from "./SaverGlass.vue";
+import { SAVER_FACES, twelveFits, type SaverFaceKind } from "../model/clock-faces";
+import { useUiStore } from "../stores/ui";
 import Segmented from "./Segmented.vue";
 import Icon from "./ui/Icon.vue";
 import InspectorHead from "./ui/InspectorHead.vue";
@@ -70,6 +73,24 @@ const iconChoosing = computed(() => Boolean(insp.iconPickerOpen && item.value &&
 // top bar knows has no place there.
 const plain = (it: HeaderItem): HeaderItem => ({ ...entityItem(it.entity!), content: it.content === "icon" ? "icon" : "state", icon: it.icon || "auto" });
 const taken = (it: HeaderItem) => screensaver.saverItems.some((other) => other.entity === it.entity);
+
+// ---- The clock's faces (module clock_faces): the face, its look, Glass's numerals and the seconds hand.
+const ui = useUiStore();
+const at = computed(() => new Date(ui.now));
+const faceKind = computed(() => screensaver.face);
+const analog = computed(() => faceKind.value !== "digital");
+const faceChoices = computed(() => SAVER_FACES.map((kind) => ({ kind, label: T(`faces.${kind}`) })));
+const looks2 = computed<[string, string][]>(() => [["dark", T("look_dark")], ["light", T("look_light")], ["auto", T("look_auto")]]);
+// Twelve numerals bunch on long glass, so there only none and four.
+const numeralChoices = computed<[number, string][]>(() => [[0, T("numerals_none")], [4, "4"],
+  ...(twelveFits(screensaver.glassSize.width, screensaver.glassSize.height) ? [[12, "12"] as [number, string]] : [])]);
+const numerals = computed(() => {
+  const n = screensaver.saver?.numerals ?? 4;
+  return n === 12 && !twelveFits(screensaver.glassSize.width, screensaver.glassSize.height) ? 4 : n;
+});
+const pickFace = (kind: SaverFaceKind) => screensaver.changeSaver({ face: kind });
+// Glass and Bauhaus show the face alone; the temperature and the entities stand on Classic and the digital clock.
+const withRow = computed(() => faceKind.value === "digital" || faceKind.value === "classic");
 
 // The clock's place among the steps, as its own drawer had it.
 const place = computed(() => screensaver.savedOrder.indexOf("clock"));
@@ -130,11 +151,34 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
       <!-- The clock itself: whether it is used, how it looks on the glass, and the temperature beside its entities. -->
       <template v-else>
         <SwitchRow :label="T('on')" :model-value="screensaver.isOn('clock')" @update:model-value="(on: boolean) => screensaver.toggleStep('clock', on)" />
+        <PropRow v-if="screensaver.facesHere" :label="T('face')" icon="clock-outline" stack>
+          <div class="face-picks" id="saver-faces" role="radiogroup" :aria-label="T('face')">
+            <button v-for="c in faceChoices" :key="c.kind" type="button" role="radio" class="face-pick" :data-face="c.kind"
+              :aria-checked="faceKind === c.kind ? 'true' : 'false'" @click="pickFace(c.kind)">
+              <span class="face-thumb" :style="{ aspectRatio: screensaver.glassRatio }">
+                <span v-if="c.kind === 'digital'" class="face-digital">{{ screensaver.clockPreview.time }}</span>
+                <SaverFace v-else :kind="c.kind" :dark="screensaver.faceDark" :numerals="numerals" :seconds="false"
+                  :width="screensaver.glassSize.width" :height="screensaver.glassSize.height" :at="at" />
+              </span>
+              <span class="face-name">{{ c.label }}</span>
+            </button>
+          </div>
+        </PropRow>
         <SaverGlass :height="150" />
-        <PropRow :label="T('temperature')" stack>
+        <template v-if="analog">
+          <PropRow :label="T('look')" icon="theme-light-dark" stack>
+            <Segmented :choices="looks2" :value="screensaver.saver.look ?? 'dark'" @pick="(v: 'dark' | 'light' | 'auto') => screensaver.changeSaver({ look: v })" />
+          </PropRow>
+          <PropRow v-if="faceKind === 'glass'" :label="T('numerals')" icon="format-list-bulleted" stack>
+            <Segmented :choices="numeralChoices" :value="numerals" @pick="(v: number) => screensaver.changeSaver({ numerals: Number(v) })" />
+          </PropRow>
+          <SwitchRow :label="T('seconds')" :model-value="screensaver.saver.seconds ?? true" @update:model-value="(on: boolean) => screensaver.changeSaver({ seconds: on })" />
+        </template>
+        <PropRow v-if="withRow" :label="T('temperature')" stack>
           <UiSelect id="saver-weather" :model-value="screensaver.saver.weather ?? 'auto'" :options="screensaver.weatherChoices" @update:model-value="(value: string) => screensaver.changeSaver({ weather: value })" />
         </PropRow>
-        <small class="help">{{ T("row_hint") }}</small>
+        <small class="help">{{ withRow ? T("row_hint") : T("face_alone_hint") }}</small>
+        <small v-if="analog" class="help">{{ T("face_moves_hint") }}</small>
       </template>
     </div>
   </div>
@@ -154,3 +198,14 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
     </div>
   </div>
 </template>
+
+<style scoped>
+.face-picks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.face-pick { display: grid; gap: 6px; justify-items: center; padding: 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink-2); font: inherit; font-size: 12px; cursor: pointer; }
+.face-pick[aria-checked="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); color: var(--ink); }
+.face-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.face-thumb { display: grid; place-items: center; width: 100%; max-height: 72px; border-radius: 4px; overflow: hidden; background: #000; }
+.face-digital { color: #fff; font-size: 13px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.face-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+</style>

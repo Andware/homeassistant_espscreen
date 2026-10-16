@@ -2874,7 +2874,23 @@
         "clock_part": "Hora, fecha y temperatura",
         "row_hint": "Toca una entidad de la fila para configurarla. Arrástrala a izquierda o derecha para moverla, o fuera de la fila para quitarla.",
         "player_search": "Buscar reproductores",
-        "player_none": "Ningún reproductor coincide"
+        "player_none": "Ningún reproductor coincide",
+        "face": "Esfera",
+        "faces": {
+          "digital": "Digital",
+          "glass": "Cristal",
+          "classic": "Clásica",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Aspecto",
+        "look_dark": "Oscuro",
+        "look_light": "Claro",
+        "look_auto": "Como la pantalla",
+        "numerals": "Números",
+        "numerals_none": "Ninguno",
+        "seconds": "Segundero",
+        "face_alone_hint": "Esta esfera solo muestra la hora. La temperatura y las entidades aparecen en Clásica y Digital.",
+        "face_moves_hint": "La esfera se desplaza un poco cada minuto y Bauhaus pinta una imagen nueva cada diez minutos, para que nada se quede mucho tiempo en los mismos píxeles."
       },
       "plugins": {
         "title": "Plugins",

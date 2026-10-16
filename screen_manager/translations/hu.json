@@ -2874,7 +2874,23 @@
         "clock_part": "Idő, dátum és hőmérséklet",
         "row_hint": "Koppints egy entitásra a sorban a beállításához. Húzd balra vagy jobbra az áthelyezéshez, vagy ki a sorból az eltávolításhoz.",
         "player_search": "Lejátszók keresése",
-        "player_none": "Nincs ilyen lejátszó"
+        "player_none": "Nincs ilyen lejátszó",
+        "face": "Számlap",
+        "faces": {
+          "digital": "Digitális",
+          "glass": "Üveg",
+          "classic": "Klasszikus",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Megjelenés",
+        "look_dark": "Sötét",
+        "look_light": "Világos",
+        "look_auto": "Mint a képernyő",
+        "numerals": "Számok",
+        "numerals_none": "Nincs",
+        "seconds": "Másodpercmutató",
+        "face_alone_hint": "Ez a számlap csak az időt mutatja. A hőmérséklet és az entitások a Klasszikus és a Digitális számlapon látszanak.",
+        "face_moves_hint": "A számlap percenként kicsit elmozdul, a Bauhaus pedig tízpercenként új képet fest, így semmi sem marad sokáig ugyanazokon a pixeleken."
       },
       "plugins": {
         "title": "Bővítmények",

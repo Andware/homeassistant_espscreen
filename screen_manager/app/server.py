@@ -3208,9 +3208,11 @@ class Manager:
         row = screen_saver.ITEMS_FEATURE in (getattr(sender, 'features', None) or ())
         # A player whose cover could not be fetched gives way to the next step (GitHub #229).
         broken = {entity for entity in screen_saver.players(choice) if self.camera.cover_broken(entity)}
+        # A face other than the digital clock, for a screen whose hello says it draws them (module clock_faces).
+        faces = screen_saver.FACES_FEATURE in (getattr(sender, 'features', None) or ())
         return screen_saver.message(choice, self.ha.states, pictures, short, media_extras, self.player_ground, keys,
                                     held=self.saver_shown.get(screen.get('id'), ''), bar=self.saver_item if row else None,
-                                    broken=broken)
+                                    broken=broken, faces=faces)
 
     def saver_item(self, item):
         """One of the clock's entity items as the top bar sends it (header_bar.entity_item)."""
@@ -4035,7 +4037,9 @@ def create_app(manager, development=False):
             # draws pictures (else the clock alone) and whether it goes into standby at all.
             screen['screensaver'] = {**manager.savers.get(screen.get('device_id')),
                                      'ready': (manager.firmware_version(screen['id'], screen) or (0, 0, 0)) >= SCREENSAVER_MIN_FIRMWARE,
-                                     'pictures': bool(camera_feed.box(screen, 'full')), 'standby': can_standby(screen)}
+                                     'pictures': bool(camera_feed.box(screen, 'full')), 'standby': can_standby(screen),
+                                     # The clock's faces where the board has their module (docs/MODULES.md).
+                                     'faces': has_module(screen, screen_saver.MODULE)}
             # The delivery and our own word for a screen that reports nothing, in the editor's language (app 0.2.90).
             status = manager.status.get(screen['id'])
             word = PAGE_DELIVERY_WORDS.get(status) if isinstance(status, str) else None

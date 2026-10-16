@@ -2874,7 +2874,23 @@
         "clock_part": "Ora, data e temperatura",
         "row_hint": "Tocca un'entità della riga per impostarla. Trascinala a sinistra o a destra per spostarla, o fuori dalla riga per rimuoverla.",
         "player_search": "Cerca lettori",
-        "player_none": "Nessun lettore corrisponde"
+        "player_none": "Nessun lettore corrisponde",
+        "face": "Quadrante",
+        "faces": {
+          "digital": "Digitale",
+          "glass": "Vetro",
+          "classic": "Classico",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Aspetto",
+        "look_dark": "Scuro",
+        "look_light": "Chiaro",
+        "look_auto": "Come lo schermo",
+        "numerals": "Numeri",
+        "numerals_none": "Nessuno",
+        "seconds": "Lancetta dei secondi",
+        "face_alone_hint": "Questo quadrante mostra solo l'ora. La temperatura e le entità compaiono su Classico e Digitale.",
+        "face_moves_hint": "Il quadrante si sposta un poco ogni minuto e Bauhaus dipinge un'immagine nuova ogni dieci minuti, così niente resta a lungo sugli stessi pixel."
       },
       "plugins": {
         "title": "Plugin",

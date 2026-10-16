@@ -62,7 +62,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -368,7 +369,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -582,7 +584,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -707,7 +710,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -830,7 +834,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -955,7 +960,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1080,7 +1086,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1205,7 +1212,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1330,7 +1338,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1453,7 +1462,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1586,7 +1596,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1709,7 +1720,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1842,7 +1854,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -1955,7 +1968,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2058,7 +2072,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2181,7 +2196,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2304,7 +2320,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2427,7 +2444,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2550,7 +2568,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2684,7 +2703,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -2815,7 +2835,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3121,7 +3142,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3335,7 +3357,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3460,7 +3483,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3583,7 +3607,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3708,7 +3733,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3833,7 +3859,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -3958,7 +3985,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -4083,7 +4111,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -4206,7 +4235,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -4337,7 +4367,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -4643,7 +4674,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -4857,7 +4889,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -4982,7 +5015,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5105,7 +5139,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5230,7 +5265,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5355,7 +5391,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5480,7 +5517,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5605,7 +5643,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5728,7 +5767,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5861,7 +5901,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -5984,7 +6025,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6117,7 +6159,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6230,7 +6273,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6333,7 +6377,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6456,7 +6501,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6579,7 +6625,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6702,7 +6749,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6825,7 +6873,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -6959,7 +7008,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7092,7 +7142,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7215,7 +7266,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7348,7 +7400,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7461,7 +7514,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7564,7 +7618,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7687,7 +7742,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7810,7 +7866,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -7933,7 +7990,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -8056,7 +8114,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {
@@ -8190,7 +8249,8 @@
   "modules": [
    "dock",
    "vacuum_card",
-   "cover_groups"
+   "cover_groups",
+   "clock_faces"
   ],
   "orientations": {
    "landscape": {

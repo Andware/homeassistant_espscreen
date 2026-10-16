@@ -5,6 +5,7 @@ import { defineStore } from "pinia";
 import { computed } from "vue";
 import { t } from "../i18n";
 import { clockSample } from "../model/clock";
+import type { SaverFaceKind } from "../model/clock-faces";
 import { moved } from "../model/reorder";
 import { itemKey } from "../model/topbar";
 import type { HeaderItem, SaverKind, ScreensaverChoice } from "../types";
@@ -127,7 +128,10 @@ export const useScreensaverStore = defineStore("screensaver", () => {
     }
     const weather = saver.value?.weather ?? "auto";
     const first = weather === "auto" ? t(key("summary.temperature")) : weather ? entities.entityName(weather) : t(key("summary.time_date"));
-    return { text: [first, ...saverItems.value.map((item) => topbar.topbarLabel(item))].join(", ") };
+    // Glass and Bauhaus show the face alone; Classic and the digital clock the temperature and the entities too.
+    if (face.value === "glass" || face.value === "bauhaus") return { text: t(key(`faces.${face.value}`)) };
+    const named = face.value === "classic" ? [t(key("faces.classic"))] : [];
+    return { text: [...named, first, ...saverItems.value.map((item) => topbar.topbarLabel(item))].join(", ") };
   }
 
   // The clock as the glass draws it, for the small preview: the time, the date and the bottom line.
@@ -141,6 +145,20 @@ export const useScreensaverStore = defineStore("screensaver", () => {
     const shape = scr.currentScreen?.shape as { width?: number; height?: number } | undefined;
     return shape?.width && shape?.height ? `${shape.width} / ${shape.height}` : "16 / 10";
   });
+  // ---- The clock's faces (module clock_faces): only where the board has them, and the digital clock everywhere else.
+  const facesHere = computed(() => Boolean(saver.value?.faces));
+  const face = computed<SaverFaceKind>(() => (facesHere.value && saver.value?.face) || "digital");
+  const glassSize = computed(() => {
+    const shape = scr.currentScreen?.shape as { width?: number; height?: number } | undefined;
+    return { width: shape?.width || 800, height: shape?.height || 480 };
+  });
+  // The face's own look: dark, light, or the screen's Dark mode.
+  const faceDark = computed(() => {
+    const look = saver.value?.look || "dark";
+    if (look !== "auto") return look === "dark";
+    const dark = settings.settingValues().dark_mode;
+    return dark === true || dark === 1;
+  });
   const clockPreview = computed(() => {
     const clock = clockSample(ui.now, region.clock24, region.screenLanguage);
     const degrees = weatherSource.value ? entities.liveOf(weatherSource.value)?.a?.temperature : undefined;
@@ -153,6 +171,7 @@ export const useScreensaverStore = defineStore("screensaver", () => {
 
   return {
     saver, saverReady, standbyOn, savedOrder, players, cameraChoices, weatherChoices, saverItems, weatherSource, glassRatio, clockPreview,
+    facesHere, face, glassSize, faceDark,
     // What the card and the drawers read as they draw (stores/lookup.ts).
     ...lookups({ isOn, stepsShown, entityPlace, entitiesOf, summary }),
     changeSaver, toggleStep, moveStep, setPlayers, addPlayer, removePlayer, setSaverItems,

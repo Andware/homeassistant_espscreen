@@ -53,6 +53,10 @@ the add-on and the editor offer a module's options only on boards that have it.
   `group_page.h`), behind a key on the group's cover card where a light group's lamps key stands (docs/RESPONSIVE.md,
   "A cover's controls by its room"). Its screens say `group_covers` in their hello and ESP Screens sends them the
   group's covers (`covers`, `cover_groups.py`); lite keeps the cover card alone.
+- **clock_faces** (full): the screensaver's clock faces Glass, Classic and Bauhaus beside the digital clock
+  (docs/SCREENSAVER.md, "Clock faces", `module_clock_faces.h`, included by `runtime_tiles.h` before `saver_clock_draw`).
+  Its screens say `clock_faces` in their hello and ESP Screens sends them the face (`cf`); the editor offers faces only
+  where `boards.json` lists the module, and lite keeps the digital clock.
 - **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
   wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.
   The drawer rides on the finger that opens it: its top stays under the finger until it lets go, and then a flick, or

@@ -2503,7 +2503,23 @@
         "item_hint": "Zwart-wit op de screensaver, welke kleur de entiteit ook heeft.",
         "items_add_title": "Aan de klok toevoegen",
         "clock_part": "Tijd, datum en temperatuur",
-        "row_hint": "Tik een entiteit in de rij om haar in te stellen. Sleep haar naar links of rechts om haar te verplaatsen, of uit de rij om haar te verwijderen."
+        "row_hint": "Tik een entiteit in de rij om haar in te stellen. Sleep haar naar links of rechts om haar te verplaatsen, of uit de rij om haar te verwijderen.",
+        "face": "Wijzerplaat",
+        "faces": {
+          "digital": "Digitaal",
+          "glass": "Glas",
+          "classic": "Klassiek",
+          "bauhaus": "Bauhaus"
+        },
+        "look": "Uiterlijk",
+        "look_dark": "Donker",
+        "look_light": "Licht",
+        "look_auto": "Als het scherm",
+        "numerals": "Cijfers",
+        "numerals_none": "Geen",
+        "seconds": "Secondewijzer",
+        "face_alone_hint": "Deze wijzerplaat toont alleen de tijd. De temperatuur en de entiteiten staan op Klassiek en Digitaal.",
+        "face_moves_hint": "De wijzerplaat schuift elke minuut een fractie op en Bauhaus schildert elke tien minuten een nieuw beeld, zodat niets lang op dezelfde pixels staat."
       },
       "plugins": {
         "title": "Plugins",

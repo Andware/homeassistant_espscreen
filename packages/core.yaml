@@ -694,6 +694,11 @@ api:
                     // bar_cards (firmware 0.56.0): an entity's item in the top bar opens its tile's card (hold_card), so ESP
                     // Screens names that tile in the item (`d`) and sends a tile without a cell for an entity on no tile.
                     features.add("bar_cards");
+                    // clock_faces (module clock_faces, tier full): the screensaver's clock draws Glass, Classic and Bauhaus,
+                    // so ESP Screens sends the face chosen for it (`cf` of the op "saver").
+                    #ifdef SD_MOD_CLOCK_FACES
+                    features.add("clock_faces");
+                    #endif
                     // vacuum_card (module vacuum, tier full): the vacuum card draws its map, rooms and routines, so ESP
                     // Screens sends them (the `vc` block, screen_manager/app/vacuum_card.py).
                     #ifdef SD_MOD_VACUUM_CARD
