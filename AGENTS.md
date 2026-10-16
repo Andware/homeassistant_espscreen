@@ -149,7 +149,8 @@ Two branches, and the difference between them is the most important rule in this
   whether it is a release or work to test on the bench, before anything goes near main.
 - **The release**, about once a week: `tools/release.py` with docs/RELEASING.md, "The release", step by step. It counts
   everything since the last release as one: one app version, one CHANGELOG section, one firmware number, tested as an
-  upgrade from main on the bench, and then main moves to that exact commit with its tag and GitHub release.
+  upgrade from main on the bench, and then main moves to that exact commit with its tag and GitHub release. The
+  plugins repository goes along in the same `publish`: its dev to its main, its index checked against the release.
 - **A hotfix** is for something broken for users now: a screen that doesn't start, an add-on that doesn't start, data
   that is lost. Branch from main (`hotfix-<what>`), fix it, release it alone with the same steps, then merge main into
   dev.
