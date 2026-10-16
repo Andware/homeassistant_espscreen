@@ -2366,7 +2366,7 @@
         "left_title": "Titel en Home-knop",
         "left_hint": "Linkerkant · in te stellen bij {page}",
         "place": "Item {place} van {count}",
-        "hint": "Tik een item in de balk om het in te stellen. Sleep het naar links of rechts om het te verplaatsen.",
+        "hint": "Tik een item in de balk om het in te stellen. Sleep het naar links of rechts om het te verplaatsen, of uit de balk om het te verwijderen.",
         "copy": "Deze balk naar andere pagina's kopiëren",
         "copy_hint": "De items, of de hele balk met de titel",
         "page_settings": "Instellingen van {page}"
@@ -2480,7 +2480,7 @@
         "item_hint": "Zwart-wit op de screensaver, welke kleur de entiteit ook heeft.",
         "items_add_title": "Aan de klok toevoegen",
         "clock_part": "Tijd, datum en temperatuur",
-        "row_hint": "Tik een entiteit in de rij om haar in te stellen. Sleep haar naar links of rechts om haar te verplaatsen."
+        "row_hint": "Tik een entiteit in de rij om haar in te stellen. Sleep haar naar links of rechts om haar te verplaatsen, of uit de rij om haar te verwijderen."
       },
       "plugins": {
         "title": "Plugins",

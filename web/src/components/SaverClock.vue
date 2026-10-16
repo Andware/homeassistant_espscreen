@@ -78,9 +78,10 @@ const crumbs = computed(() => [
   ...(screensaver.saver?.pictures ? [{ text: T("place", { n: place.value + 1, count: screensaver.savedOrder.length }) }] : []),
 ]);
 
-// An entity pressed in the row and moved left or right takes the place it is over (composables/useSortableRows.ts).
+// An entity pressed in the row and moved left or right takes the place it is over (composables/useSortableRows.ts); let
+// go off the row, it is taken off.
 const sort = useSortableRows<HeaderItem>({ rows: ".bar-strip .strip-item[data-index]", items: () => screensaver.saverItems, commit: (list) => screensaver.setSaverItems(list),
-  axis: "x", onMove: (from, to) => { if (props.index === from) insp.openSaverItem(to); } });
+  axis: "x", onMove: (from, to) => { if (props.index === from) insp.openSaverItem(to); }, away: { from: "#saver-strip", remove: (i) => screensaver.removeSaverItem(i) } });
 const drag = sort.drag;
 function move(step: number) { if (screensaver.moveSaverItem(props.index, props.index + step)) insp.openSaverItem(props.index + step); }
 </script>
@@ -91,9 +92,9 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
     <!-- The clock's row stays at the head while what is under it scrolls. -->
     <div class="bar-anchor">
       <BarStrip id="saver-strip" saver :items="items" :selected="selected" :overflow="new Set()" :title="stripTitle" :home="false"
-        :full="items.length >= SAVER_ITEMS_MAX" :max="SAVER_ITEMS_MAX" :dragging="drag.active ? drag.index : -1" :face="face"
+        :full="items.length >= SAVER_ITEMS_MAX" :max="SAVER_ITEMS_MAX" :dragging="drag.active ? drag.index : -1" :leaving="drag.away" :face="face"
         :label="T('items_title')" :left-title="T('clock_part')" :add-title="T('items_add')" add-id="screensaver-add-item"
-        @select="choose" @press="(e, i) => sort.down(e, i)" />
+        @select="choose" @press="(e, i) => sort.down(e, i)" @remove="screensaver.removeSaverItem" />
       <!-- What is chosen in the row, named once. -->
       <div class="bar-cap" id="saver-live">
         <span class="bar-cap-av">

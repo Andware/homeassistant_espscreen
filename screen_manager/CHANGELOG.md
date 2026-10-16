@@ -15,7 +15,8 @@
 - **The top bar's settings start from the bar itself.** At the head of its settings the editor draws the top bar as the
   screen does: the title on the left, every item, and a + to add one. Tap a part and only its settings show under it;
   the bar stays in view and shows each change on the item at once, also while you pick an icon. Drag an item left or
-  right in the bar to move it. Many items go on more lines, and an item the screen leaves out for want of room is
+  right in the bar to move it, or pull it out of the bar to take it off, as an icon out of a menu bar; a right click on an
+  item takes it off as well. The screensaver clock's row of entities works the same way. Many items go on more lines, and an item the screen leaves out for want of room is
   dashed in orange. Copying the bar to other pages is in the menu behind the three dots.
 - **A page's settings start from the page.** A small page at the head shows its top bar, its tiles and, on a board with
   the Dock, its place in the Dock: tap the Dock for how the page stands there, or the top bar to set that up, and a

@@ -2727,7 +2727,7 @@
         "left_title": "Titolo e pulsante Home",
         "left_hint": "Lato sinistro · si imposta in {page}",
         "place": "Elemento {place} di {count}",
-        "hint": "Tocca un elemento della barra per impostarlo. Trascinalo a sinistra o a destra per spostarlo.",
+        "hint": "Tocca un elemento della barra per impostarlo. Trascinalo a sinistra o a destra per spostarlo, o fuori dalla barra per rimuoverlo.",
         "copy": "Copia questa barra su altre pagine",
         "copy_hint": "I suoi elementi, o tutta la barra con il titolo",
         "page_settings": "Impostazioni di {page}"
@@ -2839,7 +2839,7 @@
         "item_hint": "In bianco e nero sul salvaschermo, qualunque sia il colore dell'entità.",
         "items_add_title": "Aggiungi all'orologio",
         "clock_part": "Ora, data e temperatura",
-        "row_hint": "Tocca un'entità della riga per impostarla. Trascinala a sinistra o a destra per spostarla.",
+        "row_hint": "Tocca un'entità della riga per impostarla. Trascinala a sinistra o a destra per spostarla, o fuori dalla riga per rimuoverla.",
         "player_search": "Cerca lettori",
         "player_none": "Nessun lettore corrisponde"
       },

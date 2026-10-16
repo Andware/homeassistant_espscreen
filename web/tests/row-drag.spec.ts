@@ -13,6 +13,7 @@ import { useScreenStore } from "../src/stores/screen";
 import { useInventoryStore } from "../src/stores/inventory";
 import { useDocumentStore } from "../src/stores/document";
 import { useInspectorStore } from "../src/stores/inspector";
+import { useUiStore } from "../src/stores/ui";
 
 let insp: ReturnType<typeof useInspectorStore>;
 beforeEach(() => { insp = useInspectorStore(); });
@@ -66,11 +67,7 @@ describe("a top bar's items dragged into another order", () => {
     loadLayout({ title: "Living", tiles: [], header: { items: [{ type: "clock" }, { type: "date" }, { type: "analog" }] } } as any);
     insp.openBar(0);
     const drawer = mount(TopbarInspector, { props: { index: 0 }, attachTo: document.body });
-    // The items stand side by side in the bar (app 0.4.89).
-    drawer.findAll(".bar-strip .strip-item[data-index]").forEach((slot, i) => {
-      slot.element.getBoundingClientRect = () => ({ left: i * 60, width: 60, right: i * 60 + 60, top: 0, bottom: 34, height: 34 }) as DOMRect;
-    });
-    const at = (x: number, type: string) => Object.assign(new Event(type, { bubbles: true, cancelable: true }), { pointerId: 1, pointerType: "mouse", button: 0, clientX: x, clientY: 10 });
+    placeItems(drawer);
     drawer.find(".bar-strip .strip-item[data-index='0']").element.dispatchEvent(at(10, "pointerdown"));
     document.dispatchEvent(at(70, "pointermove"));
     expect(insp.inspector).toEqual({ kind: "bar", index: 1 });
@@ -80,4 +77,33 @@ describe("a top bar's items dragged into another order", () => {
     await drawer.find(".bar-strip .strip-item[data-index='0']").trigger("click");
     expect(insp.inspector).toEqual({ kind: "bar", index: 1 });
   });
+
+  it("takes an item off when it is let go off the bar, as an icon out of a menu bar, with undo", async () => {
+    loadLayout({ title: "Living", tiles: [], header: { items: [{ type: "clock" }, { type: "date" }, { type: "analog" }] } } as any);
+    insp.openBar(1);
+    const drawer = mount(TopbarInspector, { props: { index: 1 }, attachTo: document.body });
+    placeItems(drawer);
+    drawer.find(".bar-strip .strip-item[data-index='1']").element.dispatchEvent(at(70, "pointerdown"));
+    // Past the next item first, then well under the bar: the first move is undone, the item is pulled off.
+    document.dispatchEvent(at(130, "pointermove"));
+    document.dispatchEvent(at(130, "pointermove", 120));
+    await drawer.vm.$nextTick();
+    expect(drawer.find(".strip-item.leaving").exists()).toBe(true);
+    document.dispatchEvent(at(130, "pointerup", 120));
+    const ui = useUiStore();
+    expect(doc.document!.pages[0].topbar.trailing.map((item) => item.type)).toEqual(["clock", "analog"]);
+    // The bar stays open on its left side, and Undo puts the item back in its place.
+    expect(insp.inspector).toEqual({ kind: "bar", index: -1 });
+    ui.notice!.action!.run();
+    expect(doc.document!.pages[0].topbar.trailing.map((item) => item.type)).toEqual(["clock", "date", "analog"]);
+  });
 });
+
+// The items stand side by side in the bar (app 0.4.89), the bar around them.
+function placeItems(drawer: ReturnType<typeof mount>) {
+  drawer.findAll(".bar-strip .strip-item[data-index]").forEach((slot, i) => {
+    slot.element.getBoundingClientRect = () => ({ left: i * 60, width: 60, right: i * 60 + 60, top: 0, bottom: 34, height: 34 }) as DOMRect;
+  });
+  drawer.find("#topbar-chips").element.getBoundingClientRect = () => ({ left: 0, width: 240, right: 240, top: 0, bottom: 34, height: 34 }) as DOMRect;
+}
+const at = (x: number, type: string, y = 10) => Object.assign(new Event(type, { bubbles: true, cancelable: true }), { pointerId: 1, pointerType: "mouse", button: 0, clientX: x, clientY: y });

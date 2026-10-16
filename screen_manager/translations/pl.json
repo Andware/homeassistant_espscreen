@@ -2727,7 +2727,7 @@
         "left_title": "Tytuł i przycisk Home",
         "left_hint": "Lewa strona · ustawiana w: {page}",
         "place": "Element {place} z {count}",
-        "hint": "Dotknij elementu na pasku, aby go ustawić. Przeciągnij w lewo lub w prawo, aby go przenieść.",
+        "hint": "Dotknij elementu na pasku, aby go ustawić. Przeciągnij w lewo lub w prawo, aby go przenieść, albo poza pasek, aby go usunąć.",
         "copy": "Kopiuj ten pasek na inne strony",
         "copy_hint": "Jego elementy albo cały pasek z tytułem",
         "page_settings": "Ustawienia: {page}"
@@ -2839,7 +2839,7 @@
         "item_hint": "Czarno-biało na wygaszaczu, niezależnie od koloru encji.",
         "items_add_title": "Dodaj do zegara",
         "clock_part": "Godzina, data i temperatura",
-        "row_hint": "Dotknij encji w rzędzie, aby ją ustawić. Przeciągnij ją w lewo lub w prawo, aby ją przenieść.",
+        "row_hint": "Dotknij encji w rzędzie, aby ją ustawić. Przeciągnij ją w lewo lub w prawo, aby ją przenieść, albo poza rząd, aby ją usunąć.",
         "player_search": "Szukaj odtwarzaczy",
         "player_none": "Brak pasującego odtwarzacza"
       },

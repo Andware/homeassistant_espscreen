@@ -2727,7 +2727,7 @@
         "left_title": "Cím és Kezdőlap gomb",
         "left_hint": "Bal oldal · itt állítható: {page}",
         "place": "{place}. elem / {count}",
-        "hint": "Koppints egy elemre a sávban a beállításához. Húzd balra vagy jobbra az áthelyezéshez.",
+        "hint": "Koppints egy elemre a sávban a beállításához. Húzd balra vagy jobbra az áthelyezéshez, vagy ki a sávból az eltávolításhoz.",
         "copy": "Sáv másolása más oldalakra",
         "copy_hint": "Az elemei, vagy az egész sáv a címmel",
         "page_settings": "{page} beállításai"
@@ -2839,7 +2839,7 @@
         "item_hint": "Fekete-fehéren a képernyőkímélőn, az entitás színétől függetlenül.",
         "items_add_title": "Hozzáadás az órához",
         "clock_part": "Idő, dátum és hőmérséklet",
-        "row_hint": "Koppints egy entitásra a sorban a beállításához. Húzd balra vagy jobbra az áthelyezéshez.",
+        "row_hint": "Koppints egy entitásra a sorban a beállításához. Húzd balra vagy jobbra az áthelyezéshez, vagy ki a sorból az eltávolításhoz.",
         "player_search": "Lejátszók keresése",
         "player_none": "Nincs ilyen lejátszó"
       },

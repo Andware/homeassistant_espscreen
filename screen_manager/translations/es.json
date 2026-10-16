@@ -2727,7 +2727,7 @@
         "left_title": "Título y botón de inicio",
         "left_hint": "Lado izquierdo · se ajusta en {page}",
         "place": "Elemento {place} de {count}",
-        "hint": "Toca un elemento de la barra para configurarlo. Arrástralo a izquierda o derecha para moverlo.",
+        "hint": "Toca un elemento de la barra para configurarlo. Arrástralo a izquierda o derecha para moverlo, o fuera de la barra para quitarlo.",
         "copy": "Copiar esta barra a otras páginas",
         "copy_hint": "Sus elementos, o la barra entera con su título",
         "page_settings": "Ajustes de {page}"
@@ -2839,7 +2839,7 @@
         "item_hint": "En blanco y negro en el salvapantallas, sea cual sea el color de la entidad.",
         "items_add_title": "Añadir al reloj",
         "clock_part": "Hora, fecha y temperatura",
-        "row_hint": "Toca una entidad de la fila para configurarla. Arrástrala a izquierda o derecha para moverla.",
+        "row_hint": "Toca una entidad de la fila para configurarla. Arrástrala a izquierda o derecha para moverla, o fuera de la fila para quitarla.",
         "player_search": "Buscar reproductores",
         "player_none": "Ningún reproductor coincide"
       },

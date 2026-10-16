@@ -2727,7 +2727,7 @@
         "left_title": "Título e botão Início",
         "left_hint": "Lado esquerdo · define-se em {page}",
         "place": "Item {place} de {count}",
-        "hint": "Toque num item da barra para o configurar. Arraste-o para a esquerda ou direita para o mover.",
+        "hint": "Toque num item da barra para o configurar. Arraste-o para a esquerda ou direita para o mover, ou para fora da barra para o remover.",
         "copy": "Copiar esta barra para outras páginas",
         "copy_hint": "Os seus itens, ou a barra inteira com o título",
         "page_settings": "Definições de {page}"
@@ -2839,7 +2839,7 @@
         "item_hint": "A preto e branco no protetor de ecrã, seja qual for a cor da entidade.",
         "items_add_title": "Adicionar ao relógio",
         "clock_part": "Hora, data e temperatura",
-        "row_hint": "Toque numa entidade da fila para a configurar. Arraste-a para a esquerda ou direita para a mover.",
+        "row_hint": "Toque numa entidade da fila para a configurar. Arraste-a para a esquerda ou direita para a mover, ou para fora da fila para a remover.",
         "player_search": "Procurar leitores",
         "player_none": "Nenhum leitor corresponde"
       },

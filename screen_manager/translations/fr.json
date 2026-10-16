@@ -2727,7 +2727,7 @@
         "left_title": "Titre et bouton Accueil",
         "left_hint": "Côté gauche · se règle dans {page}",
         "place": "Élément {place} sur {count}",
-        "hint": "Touchez un élément de la barre pour le régler. Faites-le glisser à gauche ou à droite pour le déplacer.",
+        "hint": "Touchez un élément de la barre pour le régler. Faites-le glisser à gauche ou à droite pour le déplacer, ou hors de la barre pour le retirer.",
         "copy": "Copier cette barre vers d'autres pages",
         "copy_hint": "Ses éléments, ou toute la barre avec son titre",
         "page_settings": "Réglages de {page}"
@@ -2839,7 +2839,7 @@
         "item_hint": "Noir et blanc sur l'économiseur d'écran, quelle que soit la couleur de l'entité.",
         "items_add_title": "Ajouter à l'horloge",
         "clock_part": "Heure, date et température",
-        "row_hint": "Touchez une entité de la rangée pour la régler. Faites-la glisser à gauche ou à droite pour la déplacer.",
+        "row_hint": "Touchez une entité de la rangée pour la régler. Faites-la glisser à gauche ou à droite pour la déplacer, ou hors de la rangée pour la retirer.",
         "player_search": "Rechercher des lecteurs",
         "player_none": "Aucun lecteur ne correspond"
       },

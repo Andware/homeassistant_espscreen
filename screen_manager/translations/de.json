@@ -2727,7 +2727,7 @@
         "left_title": "Titel und Home-Taste",
         "left_hint": "Linke Seite · einstellbar in {page}",
         "place": "Element {place} von {count}",
-        "hint": "Tippe ein Element in der Leiste an, um es einzustellen. Ziehe es nach links oder rechts, um es zu verschieben.",
+        "hint": "Tippe ein Element in der Leiste an, um es einzustellen. Ziehe es nach links oder rechts, um es zu verschieben, oder aus der Leiste, um es zu entfernen.",
         "copy": "Diese Leiste auf andere Seiten kopieren",
         "copy_hint": "Ihre Elemente oder die ganze Leiste mit Titel",
         "page_settings": "Einstellungen von {page}"
@@ -2839,7 +2839,7 @@
         "item_hint": "Schwarzweiß auf dem Bildschirmschoner, egal welche Farbe die Entität hat.",
         "items_add_title": "Zur Uhr hinzufügen",
         "clock_part": "Uhrzeit, Datum und Temperatur",
-        "row_hint": "Tippe eine Entität in der Zeile an, um sie einzustellen. Ziehe sie nach links oder rechts, um sie zu verschieben.",
+        "row_hint": "Tippe eine Entität in der Zeile an, um sie einzustellen. Ziehe sie nach links oder rechts, um sie zu verschieben, oder aus der Zeile, um sie zu entfernen.",
         "player_search": "Player suchen",
         "player_none": "Kein Player gefunden"
       },

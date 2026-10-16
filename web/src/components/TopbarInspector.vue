@@ -115,10 +115,11 @@ const itemGlyph = computed(() => (item.value ? topbar.topbarGlyph(item.value) : 
 const itemName = computed(() => (item.value ? (item.value.type === "entity" ? entities.entityName(item.value.entity!) : topbar.topbarLabel(item.value)) : ""));
 
 // An item pressed in the bar and moved left or right takes the place it is over, mouse and touch (touch after a short
-// hold); the inspector stays on it, and a finished drag is not a click (composables/useSortableRows.ts). The drawer that
+// hold); the inspector stays on it, and a finished drag is not a click (composables/useSortableRows.ts). Let go off the
+// bar, it is taken off. The drawer that
 // closes while an item is held (another tile chosen, Escape) lets go of the page, without a change.
 const sort = useSortableRows<HeaderItem>({ rows: ".bar-strip .strip-item[data-index]", items: () => topbar.topbarItems(), commit: (list) => topbar.setTopbarItems(list),
-  axis: "x", onMove: (from, to) => { if (props.index === from) insp.openBar(to); } });
+  axis: "x", onMove: (from, to) => { if (props.index === from) insp.openBar(to); }, away: { from: "#topbar-chips", remove: (i) => topbar.removeTopbarItem(i) } });
 const drag = sort.drag;
 function move(step: number) { if (topbar.moveTopbarItem(props.index, props.index + step)) insp.openBar(props.index + step); }
 </script>
@@ -139,8 +140,8 @@ function move(step: number) { if (topbar.moveTopbarItem(props.index, props.index
     <div class="bar-anchor">
       <div v-if="!scr.pageReady" class="notice warn"><Icon name="alert-circle-outline" /><span class="notice-text">{{ t('editor.pages.shared_bar') }}</span></div>
       <BarStrip id="topbar-chips" :items="items" :selected="copying ? '' : selected" :overflow="overflow" :title="pageTitleShown(page) || region.screenText('editor.mockup.home')"
-        :home="topbar.homeKeyShown(page)" :full="items.length >= scr.topbarMax" :max="scr.topbarMax" :dragging="drag.active ? drag.index : -1"
-        @select="choose" @press="(e, i) => sort.down(e, i)" />
+        :home="topbar.homeKeyShown(page)" :full="items.length >= scr.topbarMax" :max="scr.topbarMax" :dragging="drag.active ? drag.index : -1" :leaving="drag.away"
+        @select="choose" @press="(e, i) => sort.down(e, i)" @remove="topbar.removeTopbarItem" />
       <small v-if="overflow.size > 0 || !supported" id="topbar-hint" class="help warn">{{ supported ? t("editor.topbar.hint.overflow") : t("editor.topbar.hint.needs_firmware", { version: needed }) }}</small>
       <!-- What is chosen in the bar, named once. -->
       <div class="bar-cap" id="topbar-live">

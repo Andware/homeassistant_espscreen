@@ -145,6 +145,8 @@ export const useTopbarStore = defineStore("topbar", () => {
     full: () => t("editor.topbar.full", scr.topbarMax), already: () => t("editor.topbar.already"),
     removed: (name) => t("editor.topbar.removed", { name }),
     added: (item) => { topbarAdded.value = { key: itemKey(item), time: Date.now() }; },
+    // An item taken off in the bar's drawer leaves the bar open on its left side, so the next one comes off as easily.
+    back: () => insp.openBar(-1),
   });
 
   // ---- The entity items as the screen will show them (stores/entities.ts topbarPreviews) ----
