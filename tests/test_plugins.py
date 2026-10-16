@@ -1729,3 +1729,53 @@ class JsonValues(unittest.IsolatedAsyncioTestCase):
                               ensure_ascii=False, separators=(',', ':')).encode())
         self.assertLessEqual(size, page_delivery.MAX_MESSAGE)
         self.assertGreater(len(message['x']['items']), 10)
+
+
+class CardPictures(unittest.TestCase):
+    """Pictures on a plugin's card over the page (plugin API 0.13): the manifest's `pictures` of a card, the card's
+    question, and where its pictures may come from."""
+
+    def checked(self, **card):
+        data = manifest(api='0.13', cards=[{'id': 'release', 'name': 'tile', **card}])
+        return pm.check(data, ENGLISH)
+
+    def question(self, **changes):
+        request = {'tiles': 'plugin:bus.release', 'idx': '0', 'card': '1', 'for': '', 'bg': '202020', 'dark': '0',
+                   'atlas': '[[300,0,160,160,8,0]]', 'src': '["https://api.example.org/cover.jpg"]', 'fit': '["cover"]'}
+        request.update(changes)
+        return plugin_pictures.parse(request, (480, 480))
+
+    def test_a_card_may_have_places(self):
+        self.assertEqual(self.checked(pictures=1)['cards'][0]['pictures'], 1)
+        self.assertEqual(self.checked()['cards'][0]['pictures'], 0)           # none without the field, as before
+        for wrong in (9, -1, 1.5, 'one'):
+            with self.subTest(wrong), self.assertRaises(pm.ManifestError):
+                self.checked(pictures=wrong)
+
+    def test_the_question_names_the_card_and_what_it_shows(self):
+        q = self.question()
+        self.assertEqual((q.card, q.plugin, q.tile, q.index, q.of), (True, 'bus', 'release', None, ''))
+        self.assertEqual(self.question(**{'for': 'media_player.kitchen'}).of, 'media_player.kitchen')
+        self.assertEqual(self.question(idx='').index, None)                    # a card has no index of its own
+        for bad in ({'for': 'screen.clock'}, {'for': 'not an entity'}, {'tiles': 'media_player.kitchen'}):
+            self.assertIsNone(self.question(**bad), bad)
+        tile = plugin_pictures.parse({'tiles': 'plugin:bus.next', 'idx': '3', 'bg': '202020', 'atlas': '[[0,0,60,90,6,0]]',
+                                      'src': '["https://api.example.org/a.jpg"]'}, (480, 480))
+        self.assertFalse(tile.card)   # a tile's question as before
+
+    def test_where_a_cards_picture_may_come_from(self):
+        checked = self.checked(pictures=1)
+        card = checked['cards'][0]
+        self.assertEqual(plugin_pictures.allowed('https://api.example.org/cover.jpg', checked, card, False), 'network')
+        self.assertIsNone(plugin_pictures.allowed('https://image.tmdb.org/cover.jpg', checked, card, False))
+        # Home Assistant's own pictures only for a card shown for an entity of the layout.
+        self.assertIsNone(plugin_pictures.allowed('/api/image_proxy/media_player.kitchen', checked, card, False))
+        self.assertEqual(plugin_pictures.allowed('/api/image_proxy/media_player.kitchen', checked, card, True), 'home_assistant')
+        self.assertIsNone(plugin_pictures.allowed('https://api.example.org/cover.jpg', checked, self.checked()['cards'][0], False))
+        q = self.question()
+        self.assertIsNone(plugin_pictures.refused(q, checked, card, False))
+        self.assertIn('no pictures', plugin_pictures.refused(q, self.checked(), self.checked()['cards'][0], False))
+        self.assertIn('no such card', plugin_pictures.refused(q, checked, None, False))
+        self.assertIn('allows 1', plugin_pictures.refused(self.question(atlas='[[0,0,60,60,0,0],[100,0,60,60,0,0]]',
+                                                                        src='["https://api.example.org/a.jpg","https://api.example.org/b.jpg"]',
+                                                                        fit='["cover","cover"]'), checked, card, False))

@@ -1,5 +1,9 @@
 ## Unreleased
 
+- **A plugin's card can show pictures (plugin API 0.13).** The card a plugin opens over the page, such as the details
+  of an album or a film, can now show its cover or poster large, the same way the plugin's tile shows them. It comes
+  as quickly as the cover on Tessera's own media card, and it is freed again when the card closes. Screens without the
+  memory for pictures, such as the CYD, show the card without them.
 - **Plugins can keep lists and send richer actions (plugin API 0.12).** A plugin tile's option can now hold several
   values: several artists, stops or calendars, each added from a list or found by typing a few letters, in the order you
   put them and dragged into another. The plugin asks its web service once per value and shows one list, newest first if

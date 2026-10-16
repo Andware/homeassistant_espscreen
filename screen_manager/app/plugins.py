@@ -218,6 +218,9 @@ class Entry:
     def fetch(self, fetch_id):
         return next((fetch for fetch in self.manifest['fetch'] if fetch['id'] == fetch_id), None)
 
+    def card(self, card_id):
+        return next((card for card in self.manifest['cards'] if card['id'] == card_id), None)
+
     def link(self):
         """The plugin's folder on GitHub, at its commit."""
         if not self.repo:

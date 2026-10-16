@@ -902,6 +902,45 @@ class Run:
         await self.until(lambda l: probe(l, 'touch'), 10, 'on_touch', start)
         await self.until(lambda l: probe(l, 'card open') and 'tile=0' in l, 10, 'the card opened', start)
         await self.until(lambda l: probe(l, 'card tick'), 10, 'the card ticked', start)
+        # Pictures on the card (plugin API 0.13): its place asks for its picture as a plugin tile's do, marked as a
+        # card's (`card`, `for`), the harness answers as the app does ("pcard"), and the piece lands on the place. A board
+        # without pictures lays the card out without the place and asks for nothing.
+        kept = os.environ.get('KEPT_PAGES_HOST') == '1'
+        card_shows = await self.until(lambda l: probe(l, 'card pictures='), 10, 'whether the card shows pictures', start)
+        async def card_picture(since, of):
+            for _ in range(24):
+                asked = [c for c in calls[since:] if c.service == 'esphome.screen_camera' and dict(c.data).get('card') == '1']
+                if asked:
+                    break
+                await asyncio.sleep(0.5)
+            assert asked, 'the card did not ask for its picture'
+            data = dict(asked[-1].data)
+            assert data.get('tiles') == 'plugin:host_probe.detail' and data.get('for') == of, f'the card asked as {data}'
+            question = plugin_pictures.parse(data, self.canvas)
+            assert question and question.card and question.sources == ['https://image.tmdb.org/t/p/w342/probe-card.jpg'], \
+                f'the card asked for {data}'
+            raw = porch(400, 400)
+            body = tile_art.layers([raw], question.ground, question.atlas, question.styles(), compact=True)
+            url = self.pictures.url(f'{self.item.key}-card-{since}.bmp', body)
+            await self.send({'v': 1, 'op': 'camera', 't': 'pcard', 'e': data['tiles'], 'u': url, 'view': int(data['view'])})
+        if 'pictures=0' in card_shows:
+            await asyncio.sleep(2)
+            asked = [c for c in calls[since:] if c.service == 'esphome.screen_camera' and dict(c.data).get('card') == '1']
+            assert not asked, f'a board without pictures asked for the card\'s picture: {asked}'
+            self.warnings.append('card pictures: none on this board (pictures=0), no question asked')
+        else:
+            await card_picture(since, '')
+            await self.until(lambda l: 'card plugin:host_probe.detail: its pictures are shown' in l, 10, 'the card\'s picture shown', start)
+            await asyncio.sleep(0.8)
+            shot = await self.render('plugin-card-picture')
+            at = await self.until(lambda l: probe(l, 'card place '), 10, 'where the card\'s place lies', start)
+            x1, y1, x2, y2 = (int(n) for n in at.rsplit(' ', 1)[1].split(','))
+            colours = shot.convert('RGB').crop((x1 + 2, y1 + 2, x2 - 1, y2 - 1)).getcolors(1 << 16) or []
+            assert len(colours) > 12, f'the card\'s place shows {len(colours)} colours at {x1},{y1}-{x2},{y2}, not its picture'
+            if kept:
+                stored = await self.until(lambda l: 'store:' in l and 'pcard' in l, 10, 'the card\'s picture in the store', start)
+                self.warnings.append(f'card picture kept: {stored.split("store:", 1)[1].strip()[:80]}')
+            self.warnings.append('card pictures: asked once, answered as pcard, shown on its place')
         await self.render('plugin-card')
         # A tap on the card's room (plugin API 0.12): on_tap through the touch filter, where in the card's own pixels;
         # a tap on another spot right after it counts too (a list's next row), the same spot again is a bounce.
@@ -922,8 +961,13 @@ class Run:
         await self.call('render_close_cards')
         await self.until(lambda l: probe(l, 'card destroy'), 10, 'the card closed', start)
         await self.until(lambda l: probe(l, 'cards_closed'), 10, 'on_cards_closed', start)
+        # The card's picture leaves the store with the card (plugin API 0.13).
+        if kept and 'pictures=1' in card_shows:
+            gone = await self.until(lambda l: 'store:' in l and 'pcard' not in l, 10, 'the card\'s picture freed', start)
+            self.warnings.append(f'card closed, store: {gone.split("store:", 1)[1].strip()[:80]}')
         # The tap action on the sensor tile: a short tap runs the plugin's action with the tile's entity.
         start = len(self.lines)
+        since_action = len(calls)
         await self.call('render_tile_center', index=sensor)
         line = await self.until(lambda l: f'tile_center index={sensor}' in l, 5, 'the sensor tile', start)
         x, y = (int(v) for v in re.search(r'x=(-?\d+) y=(-?\d+)', line).groups())
@@ -931,8 +975,17 @@ class Run:
         await self.tap(x, y)
         await self.until(lambda l: probe(l, 'tap_action entity=[sensor.hall]'), 10, 'the tap action', start)
         await self.until(lambda l: probe(l, 'card open') and 'entity=[sensor.hall]' in l, 10, 'the action opened the card', start)
+        # Opened again, for an entity this time: it asks again, naming it (the app lets it show that entity's pictures).
+        if 'pictures=1' in card_shows:
+            await card_picture(since_action, 'sensor.hall')
+            await self.until(lambda l: 'card plugin:host_probe.detail: its pictures are shown' in l, 10, 'the card\'s picture shown again', start)
+            if kept:
+                await self.until(lambda l: 'store:' in l and 'pcard' in l, 10, 'the card\'s picture in the store again', start)
+                start = len(self.lines)
         await self.call('render_close_cards')
         await self.until(lambda l: probe(l, 'card destroy'), 10, 'the card closed again', start)
+        if kept and 'pictures=1' in card_shows:
+            await self.until(lambda l: 'store:' in l and 'pcard' not in l, 10, 'the card\'s picture freed again', start)
         # Page 2 and back: the tile there lives, and the one on page 1 ticks again afterwards; on a board without
         # PSRAM the card is made anew, on one with it the kept card simply shows again.
         start = len(self.lines)

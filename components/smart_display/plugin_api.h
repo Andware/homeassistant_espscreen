@@ -56,7 +56,9 @@ namespace tessera {
 // choice found by searching (`search`, a pick), a fetch that asks once per value of a list and puts the answers together
 // (`each`, `{name|,}` to join a list in one ask), and action() with fields of any JSON type. Card::on_tap, a tap on a
 // card's room, with tap_point() in the card's own pixels.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 12;
+// 0.13: pictures on a card over the page: ui::picture and ui::set_picture in a card's calls as in a tile's, and the
+// manifest's `pictures` of a card.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 13;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -427,7 +429,7 @@ std::string icon(uint32_t codepoint);
 // (lv_obj_set_size); for a description, a sentence, a title that may take two lines. ui::set_text and the rest apply.
 lv_obj_t *text(lv_obj_t *parent, Font font, theme::Role role = theme::INK);
 
-// ---- Pictures on a tile (0.10) ----
+// ---- Pictures on a tile (0.10) and on a card (0.13) ----
 // A tile lays out places for pictures and names an address for each; the core does the rest, the way every picture
 // of the screen comes: the card asks the app for all its places as one picture (an atlas of their frames, one
 // download, one entry in the picture store), the app fetches each address once, cuts or fits it to its place, and the
@@ -435,12 +437,17 @@ lv_obj_t *text(lv_obj_t *parent, Font font, theme::Role role = theme::INK);
 // store when the tile does. An address is on a host the plugin's manifest names under permissions.network, or a
 // picture of Home Assistant's own for a tile of an entity (its entity_picture: /api/image/serve/..., /api/image_proxy/...,
 // /local/...); the app fetches nothing else. The manifest's `pictures` of the tile says how many places it has at most.
+// A card (0.13) does the same in its room (CardContext::parent): its places, made in open(), come as one picture while it
+// is open, the way Tessera's own media card shows its cover, and leave the store when it closes. The manifest's
+// `pictures` of the card says how many it has; Home Assistant's own pictures only for a card opened for an entity. The
+// same address as on a tile (the cover the tile shows) is a picture the app has already: it only paints it larger.
 // Whether this screen shows pictures at all: a board without the memory for them (the CYD, the Waveshare 3.5-inch,
 // the Hosyond 4-inch) shows none, and a tile lays itself out without the places, as it does without a picture.
 bool pictures();
 // A place for a picture in `parent`, sized and placed by the plugin as any object (lv_obj_set_size, lv_obj_set_pos):
 // a soft block (theme::TRACK) until its picture is there. Its corners are a key's; a radius of the plugin's own
-// (lv_obj_set_style_radius) is taken over by the picture. Call it in create(), as every object.
+// (lv_obj_set_style_radius) is taken over by the picture. Call it in create() of a tile or open() of a card, as every
+// object.
 lv_obj_t *picture(lv_obj_t *parent);
 // The picture a place shows, by its address, COVER or CONTAIN (Fit). The same address again does nothing (call it on
 // every on_state for free); another address asks the app again; "" takes the picture away and shows the block. A
@@ -453,7 +460,7 @@ void set_picture(lv_obj_t *place, const std::string &url, Fit fit, Turn turn, bo
 // Slide every place of the tile `dx` pixels sideways over `ms` (0.10), and keep them there until the tile's next
 // picture is here: then they are back where the tile laid them out, with it, in the same frame. Call it beside the
 // set_picture calls of a change (a cover flow that turns), so the change shows which way it goes while the next picture
-// comes. Call it in a call of the tile (on_tap, on_tick).
+// comes. Call it in a call of the tile or the card (on_tap, on_tick).
 void slide_pictures(int dx, uint32_t ms = 300);
 }  // namespace ui
 

@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 # The plugin API this core offers (components/smart_display/plugin_api.h, PLUGIN_API_MAJOR/MINOR; a test keeps them
 # equal). A plugin names the API it was written for; it builds on every core with the same major and at least its minor.
 # Something new raises the minor; a plugin builds on the same major from its own minor up. Only a break raises the major.
-PLUGIN_API = (0, 12)
+PLUGIN_API = (0, 13)
 # Major 0 is the time before that promise: a minor may still change a name or a signature. The minors that did are
 # listed here (and in __init__.py's PLUGIN_API_BREAKS; a test keeps them equal), so a plugin written before one is told
 # so in one sentence instead of failing in the compiler. 0.4: Plugin::on_tick became on_interval.
@@ -841,11 +841,13 @@ def check(manifest, english=None, strict=True):
     cards = []
     for i, item in enumerate(_list(manifest.get('cards'), 'cards', 8)):
         where = f'cards[{i}]'
-        item = _object(item, where, {'id', 'name', 'wide'}, ('id', 'name'))
+        item = _object(item, where, {'id', 'name', 'wide', 'pictures'}, ('id', 'name'))
         if 'wide' in item and not isinstance(item['wide'], bool):
             raise ManifestError(f'{where}.wide', 'true or false')
+        # Places for pictures on the card over the page (0.13), as a tile's: how many at most.
         cards.append({'id': _id(item['id'], f'{where}.id'), 'name': _text_key(item['name'], f'{where}.name', keys),
-                      'wide': bool(item.get('wide', False))})
+                      'wide': bool(item.get('wide', False)),
+                      'pictures': _number(item.get('pictures', 0), f'{where}.pictures', 0, MAX_PICTURES, whole=True)})
     _unique(cards, 'cards')
     out['cards'] = cards
     taps = []

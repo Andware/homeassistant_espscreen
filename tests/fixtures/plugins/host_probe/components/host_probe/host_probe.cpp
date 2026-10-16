@@ -148,11 +148,26 @@ class ProbeCard : public tessera::Card {
     foot_ = ui::label(c.parent, Font::BODY_LARGE, theme::INK);
     ui::set_text(foot_, "Foot");
     lv_obj_align(foot_, LV_ALIGN_BOTTOM_MID, 0, 0);
-    // Where the card's room lies on the glass, so the harness taps it (0.12).
+    // A place for a picture on the card (0.13), a square of a third of the room at its top right, with an address of
+    // its own; a board without pictures lays out without it.
+    const bool pictures = ui::pictures();
+    ESP_LOGI(TAG, "card pictures=%d", (int) pictures);
+    if (pictures) {
+      const int side = std::max(ui::px(24), std::min(c.width, c.height) / 3);
+      cover_ = ui::picture(c.parent);
+      lv_obj_set_size(cover_, side, side);
+      lv_obj_set_pos(cover_, c.width - side, 0);
+      ui::set_picture(cover_, "https://image.tmdb.org/t/p/w342/probe-card.jpg");
+    }
+    // Where the card's room lies on the glass, so the harness taps it (0.12), and where its place is (0.13).
     lv_obj_update_layout(c.parent);
     lv_area_t a;
     lv_obj_get_coords(c.parent, &a);
     ESP_LOGI(TAG, "card room %d,%d,%d,%d", (int) a.x1, (int) a.y1, (int) a.x2, (int) a.y2);
+    if (cover_) {
+      lv_obj_get_coords(cover_, &a);
+      ESP_LOGI(TAG, "card place %d,%d,%d,%d", (int) a.x1, (int) a.y1, (int) a.x2, (int) a.y2);
+    }
   }
   // A tap on the card's room (0.12), where in its own pixels.
   void on_tap() override {
@@ -165,7 +180,7 @@ class ProbeCard : public tessera::Card {
   bool on_back() override { ESP_LOGI(TAG, "card back"); return false; }
 
  private:
-  lv_obj_t *words_{}, *foot_{};
+  lv_obj_t *words_{}, *foot_{}, *cover_{};
 };
 
 // A card that closes itself, or opens another card in its place, from inside one of its own calls, as the harness's
