@@ -16,7 +16,9 @@
   builds, New screen and Firmware & USB. The server builds with the same ESPHome version as the app (it installs that
   version once, beside its own), plugins from a folder go along, and the installing, the bridge on 4 MB boards and the
   download stay as they were. The card shows whether the server is there and what it builds, every build says where it
-  runs, and when the server is off, away or cannot build it, the build simply runs here as before and says why.
+  runs, and when the server is off, away or cannot build it, the build simply runs here as before and says why. A
+  build takes the screen's own YAML and secrets (its Wi-Fi password and keys) along to the server, encrypted to the
+  key you paired, and to no other computer.
 
 - **A cover shows that it is on its way.** A blind, curtain or garage door sent somewhere no longer jumps back to
   where it was while it moves: from the tap on, its tile and card show where it goes and say Opening or Closing, the

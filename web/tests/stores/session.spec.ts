@@ -48,6 +48,21 @@ describe("the address (router.ts)", () => {
     expect([router.currentRoute.value.path, useScreenStore().selected]).toEqual(["/", null]);
     stop();
   });
+  it("keeps the address while Home Assistant is not connected yet, and opens the screen once it is", async () => {
+    const { router } = await import("../../src/router");
+    const { flushPromises } = await import("@vue/test-utils");
+    // Right after the add-on starts, the inventory answers before Home Assistant's registry is here: no screens.
+    api({ inventory: { connected: false, screens: [], entities: [] } });
+    await router.push("/screens/hall");
+    const session = useSessionStore();
+    const stop = session.start();
+    await flushPromises();
+    expect([router.currentRoute.value.path, useScreenStore().selected]).toEqual(["/screens/hall", null]);
+    useInventoryStore().inventory = inventory(screen("hall"));
+    await flushPromises();
+    expect(useScreenStore().selected).toBe("hall");
+    stop();
+  });
 });
 
 describe("opening a screen", () => {

@@ -54,14 +54,16 @@ export const useSessionStore = defineStore("session", () => {
   onScopeDispose(unguard);
   // What the address says is open, once the inventory has been read (inv.loaded: it can say whether the screen exists,
   // and the token every write needs is there): a reload on a screen, a link to one, Back to the overview. A screen the
-  // inventory does not have sends the address home.
+  // inventory does not have sends the address home, but only once Home Assistant is connected (inv.connected): the
+  // screens are Home Assistant's registry, and right after the add-on starts the inventory answers before that registry
+  // is here, with no screens at all. A kept address waits for it instead of being overwritten.
   function followAddress() {
     const { name, params } = router.currentRoute.value;
     if (name === "screen") {
       const id = String(params.id || "");
       if (id === scr.selected || !inv.loaded) return;
       if (inv.inventory.screens.some((s) => s.id === id)) open(id);
-      else void router.replace("/");
+      else if (inv.connected) void router.replace("/");
     } else if (name === "home" && scr.selected) {
       open(null);
     }
@@ -174,7 +176,7 @@ export const useSessionStore = defineStore("session", () => {
     const stops = [ui.start(), region.start(), settings.start(), plugins.start(), startDrag(),
       inv.start({ busy: () => builds.anyBuilding }), doc.start(), drafts.start(), topbar.start(), followBuilds(),
       // The screen the address names, as soon as the inventory can say it exists, and again on every change of either.
-      watch(() => [router.currentRoute.value.name, router.currentRoute.value.params.id, inv.loaded,
+      watch(() => [router.currentRoute.value.name, router.currentRoute.value.params.id, inv.loaded, inv.connected,
         inv.inventory.screens.map((s) => s.id).join(" ")], followAddress, { immediate: true })];
     running = () => { running = null; for (const stop of stops.reverse()) stop(); };
     return running;
