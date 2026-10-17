@@ -801,6 +801,11 @@ class Plugins:
                        # Places for pictures on the tile (0.10), shown only where the screen has the memory for them.
                        'pictures': tile['pictures']}
                       for tile in manifest['tiles']],
+            # Its screensavers (plugin API 0.14): a face of a step or a step of its own, for the Screensaver card.
+            'savers': [{'id': saver['id'], 'name': words(saver['name']), 'icon': glyph(saver['icon']), 'step': saver['step'],
+                        'pictures': saver['pictures'], 'taps': saver['taps'], 'domains': saver['domains'],
+                        'options': [option(o) for o in saver['options']], 'example': words(saver.get('example'))}
+                       for saver in manifest.get('savers') or ()],
             'settings': [{'key': s['key'], 'label': words(s['label'])} for s in manifest['settings']],
             'cards': [{'id': c['id'], 'name': words(c['name'])} for c in manifest['cards']],
             'tap_actions': [{'id': a['id'], 'label': words(a['label']), 'domains': a['domains']} for a in manifest['tap_actions']],
