@@ -4,7 +4,7 @@
 // reach up into it, so none of them needs another one that needs it back: the inventory does not know about the draft, the
 // builds or the settings, the session tells each of them.
 import { defineStore } from "pinia";
-import { onScopeDispose, ref, watch } from "vue";
+import { onScopeDispose, watch } from "vue";
 import { send } from "../api";
 import { t } from "../i18n";
 import { askConfirm } from "../composables/useConfirm";
@@ -52,15 +52,16 @@ export const useSessionStore = defineStore("session", () => {
     return yes;
   });
   onScopeDispose(unguard);
-  // What the address says is open, once the inventory can say whether it exists: a reload on a screen, a link to one, Back
-  // to the overview. A screen the inventory does not have sends the address home.
+  // What the address says is open, once the inventory has been read (inv.loaded: it can say whether the screen exists,
+  // and the token every write needs is there): a reload on a screen, a link to one, Back to the overview. A screen the
+  // inventory does not have sends the address home.
   function followAddress() {
     const { name, params } = router.currentRoute.value;
     if (name === "screen") {
       const id = String(params.id || "");
-      if (id === scr.selected) return;
+      if (id === scr.selected || !inv.loaded) return;
       if (inv.inventory.screens.some((s) => s.id === id)) open(id);
-      else if (hasInventory.value) void router.replace("/");
+      else void router.replace("/");
     } else if (name === "home" && scr.selected) {
       open(null);
     }
@@ -154,9 +155,7 @@ export const useSessionStore = defineStore("session", () => {
   // What follows from it, in this order: a build the add-on now names is no longer only asked for, a setting the screen
   // reported back takes over from the change made here, and the open screen's draft is read again when the add-on has a
   // newer one (or a conflict is said when this page has unsaved changes).
-  const hasInventory = ref(false);
   function arrived() {
-    hasInventory.value = true;
     builds.prune();
     if (scr.selected) { settings.settleSettings(); doc.reconcile(); }
   }
@@ -175,7 +174,7 @@ export const useSessionStore = defineStore("session", () => {
     const stops = [ui.start(), region.start(), settings.start(), plugins.start(), startDrag(),
       inv.start({ busy: () => builds.anyBuilding }), doc.start(), drafts.start(), topbar.start(), followBuilds(),
       // The screen the address names, as soon as the inventory can say it exists, and again on every change of either.
-      watch(() => [router.currentRoute.value.name, router.currentRoute.value.params.id, hasInventory.value,
+      watch(() => [router.currentRoute.value.name, router.currentRoute.value.params.id, inv.loaded,
         inv.inventory.screens.map((s) => s.id).join(" ")], followAddress, { immediate: true })];
     running = () => { running = null; for (const stop of stops.reverse()) stop(); };
     return running;
