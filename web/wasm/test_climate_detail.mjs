@@ -38,18 +38,20 @@ for (const shape of SHAPES) {
 
   const all = objects();
   const labels = all.filter((o) => o.type === 'label');
-  const status = labels.find((o) => /Now/.test(o.text ?? ''));
+  // The card's own labels: on large glass the page stays under the card, its tile's labels first in the tree.
+  const status = labels.findLast((o) => /Now/.test(o.text ?? ''));
   if (!status) {  // glass with no room for the line puts the state under the number instead
     assert.ok(labels.some((o) => /Heat/.test(o.text ?? '')), `${shape.key}: the state somewhere (${labels.map((o) => o.text).join(' | ')})`);
     console.log(`  ${shape.key}: the state under the number`);
     continue;
   }
-  const number = labels.find((o) => o.text === '70°');
+  const number = labels.findLast((o) => o.text === '70°');
   assert.ok(number, `${shape.key}: the setpoint drawn`);
   // The setpoint card: the smallest object that holds the number and both its keys, wider than the number alone.
   const holds = (o) => o.type !== 'label' && o.x1 <= number.x1 && o.x2 >= number.x2 && o.y1 <= number.y1 && o.y2 >= number.y2;
   const area = (o) => (o.x2 - o.x1) * (o.y2 - o.y1);
-  const card = all.filter((o) => holds(o) && o.x2 - o.x1 >= 2 * (number.x2 - number.x1) && o.x2 - o.x1 < shape.width - 4)
+  // The number's label may be as wide as its row; its text is what the card is wider than.
+  const card = all.filter((o) => holds(o) && o.x2 - o.x1 >= 2 * (number.text_width ?? number.x2 - number.x1) && o.x2 - o.x1 < shape.width - 4)
     .sort((a, b) => area(a) - area(b))[0];
   assert.ok(card, `${shape.key}: the setpoint card found`);
   const air = card.y1 - status.y2;

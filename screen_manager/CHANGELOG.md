@@ -1,4 +1,4 @@
-## Unreleased
+## 0.4.89 (firmware 0.57.0)
 
 - **A thermostat's state line no longer runs into its card.** On screens with dense glass (the Waveshare P4 and
   the Tab5) a thermostat with many modes and a fan row drew "Heat · Now ..." against the top of the card with its
@@ -185,7 +185,8 @@
   also asks how the page stands in the Dock: its picture, an icon, or hidden.
 - **Swipe between pages is on for a new screen.** A screen set up from now on can swipe through its pages, open the
   settings from the top edge and open the Dock from the bottom edge without turning anything on first. A screen you
-  already have keeps the setting it has.
+  already have keeps the setting it has once any of its settings was ever changed on it; one whose settings were never
+  touched swipes too after this update. Turn it off under the screen's Settings, Swipe between pages.
 - **A wide tile's slider lines up with the tiles above it (#250).** On a tile three cells wide or more, a player's
   volume, a brightness or a -/+ took only the last cell at the right end, a short slider where the editor showed half
   the tile. The first cell now keeps the name, as on a tile of one cell, and the control fills every cell after it, on
