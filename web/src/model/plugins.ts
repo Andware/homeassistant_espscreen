@@ -52,10 +52,10 @@ export function offeredEntities<T extends { id: string }>(all: T[], tile: Pick<P
 }
 export type PluginSource = "index" | "link" | "branch" | "folder";
 export type PluginLabel = "tessera" | "community" | "test";
-// What a plugin adds, read by the add-on from its manifest (plugin_manifest.plugin_type): tiles to put on a page, something
-// for the whole screen, or a board's hardware. The Plugins page's tabs.
-export type PluginType = "tiles" | "functions" | "hardware";
-export const PLUGIN_TYPES: PluginType[] = ["tiles", "functions", "hardware"];
+// What a plugin adds, read by the add-on from its manifest (plugin_manifest.plugin_type): tiles to put on a page,
+// screensavers (plugin API 0.14), something for the whole screen, or a board's hardware. The Plugins page's tabs.
+export type PluginType = "tiles" | "screensavers" | "functions" | "hardware";
+export const PLUGIN_TYPES: PluginType[] = ["tiles", "screensavers", "functions", "hardware"];
 // What a plugin is about, in its maker's word (plugin_manifest.TOPICS): the chips under the tabs.
 export const PLUGIN_TOPICS = ["time", "weather", "calendar", "home", "energy", "travel", "money", "sports", "news", "media",
   "photos", "fun", "voice", "tech"] as const;

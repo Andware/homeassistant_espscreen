@@ -3654,12 +3654,14 @@
       },
       "tabs": {
         "tiles": "Tiles",
+        "screensavers": "Screensavers",
         "functions": "Functions",
         "hardware": "Hardware",
         "in_use": "In use"
       },
       "types": {
         "tiles": "Tiles",
+        "screensavers": "Screensaver",
         "functions": "Function",
         "hardware": "Hardware"
       },
@@ -3688,6 +3690,7 @@
       },
       "none_in_tab": {
         "tiles": "No plugins with tiles yet.",
+        "screensavers": "No screensaver plugins yet.",
         "functions": "No plugins for the whole screen yet.",
         "hardware": "No hardware plugins yet."
       },

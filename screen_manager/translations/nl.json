@@ -3654,12 +3654,14 @@
       },
       "tabs": {
         "tiles": "Tegels",
+        "screensavers": "Screensavers",
         "functions": "Functies",
         "hardware": "Hardware",
         "in_use": "In gebruik"
       },
       "types": {
         "tiles": "Tegels",
+        "screensavers": "Screensaver",
         "functions": "Functie",
         "hardware": "Hardware"
       },
@@ -3688,6 +3690,7 @@
       },
       "none_in_tab": {
         "tiles": "Nog geen plugins met tegels.",
+        "screensavers": "Nog geen screensaver-plugins.",
         "functions": "Nog geen plugins voor het hele scherm.",
         "hardware": "Nog geen hardware-plugins."
       },

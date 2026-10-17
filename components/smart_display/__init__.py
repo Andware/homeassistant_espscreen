@@ -228,6 +228,9 @@ async def register_plugin(var, component_file):
     for saver in manifest.get("savers") or []:
         if saver.get("moves") is True:
             cg.add(var.set_moves(str(saver["id"])))
+        # Parts that take taps only on a saver whose manifest says so (`taps: true`), as the editor tells the person.
+        if saver.get("taps") is True:
+            cg.add(var.set_taps(str(saver["id"])))
     language = (CORE.config.get("smart_display") or {}).get(CONF_LANGUAGE, "en")
     for key, text in sorted(plugin_texts(folder, language).items()):
         cg.add(var.set_text(key, text))

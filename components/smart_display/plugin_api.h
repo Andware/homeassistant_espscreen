@@ -61,7 +61,8 @@ namespace tessera {
 // 0.14: screensavers (docs/PLUGINS.md "A screensaver"): add_saver, a Saver drawn over the whole glass in standby, as a
 // face of a step of the screensaver (the clock, the music, the photos) or as a step of its own; ui::takes_taps, a part of
 // it a finger may tap without waking the screen; "saver:picture", the step's own picture for a place; and wish(), a
-// value a finger changed, shown at once and squared with Home Assistant as every control of the screen does.
+// value a finger changed, shown at once and squared with Home Assistant as every control of the screen does; drift(),
+// the slow circle against burn-in, for a saver that moves only some of its parts.
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 14;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
@@ -378,6 +379,12 @@ class Plugin {
     for (const char *id : moving_) if (saver == id) return true;
     return false;
   }
+  // A screensaver of the manifest's `taps: true` (0.14): its parts may take taps (ui::takes_taps).
+  void set_taps(const char *saver) { tapping_.push_back(saver); }
+  bool taps(const std::string &saver) const {
+    for (const char *id : tapping_) if (saver == id) return true;
+    return false;
+  }
   // A text of the plugin's own, "" when it has none by that key.
   const char *text(const char *key) const;
   // What one tile of this type costs of the layout memory (the manifest's `memory`), 1024 when it was not set.
@@ -386,7 +393,7 @@ class Plugin {
  private:
   std::vector<std::pair<const char *, const char *>> texts_;
   std::vector<std::pair<const char *, uint16_t>> memory_;
-  std::vector<const char *> moving_;
+  std::vector<const char *> moving_, tapping_;
   const char *id_ = "", *version_ = "";
 };
 
@@ -436,6 +443,10 @@ struct Point {
   int x = -1, y = -1;
 };
 Point tap_point();
+// Where Tessera's slow circle against burn-in stands this minute (0.14): an offset of at most a millimetre, another every
+// minute of the day ({0, 0} without a clock). A screensaver of `moves: true` that moves only some of its parts uses it, as
+// a clock over a photo that fills the glass: the photo stays put, the clock walks the circle.
+Point drift(uint32_t epoch);
 // Ask the app something on this plugin's behalf: a Home Assistant command its manifest names under
 // permissions.ha_commands, such as {"ask": "call_service:calendar.get_events", "data": {"entity_id": "calendar.waste",
 // "duration": {"days": 28}}}. Returns the number the answer carries as "re" (0 when it could not be sent: no app, or a

@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Csempék",
+        "screensavers": "Képernyővédők",
         "functions": "Funkciók",
         "hardware": "Hardver",
         "in_use": "Használatban"
       },
       "types": {
         "tiles": "Csempék",
+        "screensavers": "Képernyővédő",
         "functions": "Funkció",
         "hardware": "Hardver"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Még nincs csempés bővítmény.",
+        "screensavers": "Még nincs képernyővédő plugin.",
         "functions": "Még nincs bővítmény az egész kijelzőhöz.",
         "hardware": "Még nincs hardverbővítmény."
       },

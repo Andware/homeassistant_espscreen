@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Mosaicos",
+        "screensavers": "Salvapantallas",
         "functions": "Funciones",
         "hardware": "Hardware",
         "in_use": "En uso"
       },
       "types": {
         "tiles": "Mosaicos",
+        "screensavers": "Salvapantallas",
         "functions": "Función",
         "hardware": "Hardware"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Aún no hay plugins con mosaicos.",
+        "screensavers": "Todavía no hay plugins de salvapantallas.",
         "functions": "Aún no hay plugins para toda la pantalla.",
         "hardware": "Aún no hay plugins de hardware."
       },

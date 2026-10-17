@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Mosaicos",
+        "screensavers": "Proteções de ecrã",
         "functions": "Funções",
         "hardware": "Hardware",
         "in_use": "Em uso"
       },
       "types": {
         "tiles": "Mosaicos",
+        "screensavers": "Proteção de ecrã",
         "functions": "Função",
         "hardware": "Hardware"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Ainda não há plugins com mosaicos.",
+        "screensavers": "Ainda não há plugins de proteção de ecrã.",
         "functions": "Ainda não há plugins para o ecrã inteiro.",
         "hardware": "Ainda não há plugins de hardware."
       },

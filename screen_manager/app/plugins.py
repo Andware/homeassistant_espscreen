@@ -1751,6 +1751,12 @@ class Plugins:
                 steps[key] = self.saver_step(inbox, key, *kinds[key], setting, states)
         return {'faces': {key: kind['step'] for key, (_, kind) in kinds.items()}, 'steps': steps}
 
+    def saver_values(self, inbox, key, options):
+        """A plugin saver's options with its manifest's defaults, as a tile's (values_of); as they are for one this screen
+        does not have."""
+        entry, kind = self.saver_kinds(inbox).get(key, (None, None))
+        return self.values_of(entry, kind, options) if kind else dict(options or {})
+
     def saver_step(self, inbox, key, entry, kind, setting, states):
         """What a plugin's step of its own draws from (its fetch's answer and its entity, as a tile's `x`), or None
         while the step has nothing to show by its manifest's `when`."""

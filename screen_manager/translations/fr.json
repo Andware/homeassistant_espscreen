@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Tuiles",
+        "screensavers": "Écrans de veille",
         "functions": "Fonctions",
         "hardware": "Matériel",
         "in_use": "Utilisés"
       },
       "types": {
         "tiles": "Tuiles",
+        "screensavers": "Écran de veille",
         "functions": "Fonction",
         "hardware": "Matériel"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Pas encore de plugins avec des tuiles.",
+        "screensavers": "Pas encore de plugins d'écran de veille.",
         "functions": "Pas encore de plugins pour tout l'écran.",
         "hardware": "Pas encore de plugins matériels."
       },

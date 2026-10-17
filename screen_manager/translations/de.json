@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Kacheln",
+        "screensavers": "Bildschirmschoner",
         "functions": "Funktionen",
         "hardware": "Hardware",
         "in_use": "In Gebrauch"
       },
       "types": {
         "tiles": "Kacheln",
+        "screensavers": "Bildschirmschoner",
         "functions": "Funktion",
         "hardware": "Hardware"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Noch keine Plugins mit Kacheln.",
+        "screensavers": "Noch keine Bildschirmschoner-Plugins.",
         "functions": "Noch keine Plugins für den ganzen Bildschirm.",
         "hardware": "Noch keine Hardware-Plugins."
       },

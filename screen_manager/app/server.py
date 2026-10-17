@@ -3255,9 +3255,13 @@ class Manager:
             photos = self.photos.state(screen.get('id'), choice['photos']) if wanted else {'ready': False}
             if not wanted:
                 self.photos.forget(screen.get('id'))
-        return screen_saver.message(choice, self.ha.states, pictures, short, media_extras, self.player_ground, keys,
-                                    held=self.saver_shown.get(screen.get('id'), ''), bar=self.saver_item if row else None,
-                                    broken=broken, faces=faces, photos=photos, plugins=self.saver_plugins(screen, choice))
+        message = screen_saver.message(choice, self.ha.states, pictures, short, media_extras, self.player_ground, keys,
+                                       held=self.saver_shown.get(screen.get('id'), ''), bar=self.saver_item if row else None,
+                                       broken=broken, faces=faces, photos=photos, plugins=self.saver_plugins(screen, choice))
+        # A plugin's face or step gets its options with the manifest's defaults, as a plugin tile does (plugin API 0.14).
+        if 'pf' in message and core.plugins_enabled():
+            message['pf']['o'] = self.plugins.saver_values(screen.get('id'), message['pf']['p'], message['pf']['o'])
+        return message
 
     def saver_plugins(self, screen, choice):
         """The plugins' faces and steps a screen's screensaver may show (plugin API 0.14), or None for a screen without

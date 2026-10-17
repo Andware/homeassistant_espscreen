@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Riquadri",
+        "screensavers": "Salvaschermi",
         "functions": "Funzioni",
         "hardware": "Hardware",
         "in_use": "In uso"
       },
       "types": {
         "tiles": "Riquadri",
+        "screensavers": "Salvaschermo",
         "functions": "Funzione",
         "hardware": "Hardware"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Ancora nessun plugin con riquadri.",
+        "screensavers": "Ancora nessun plugin salvaschermo.",
         "functions": "Ancora nessun plugin per tutto lo schermo.",
         "hardware": "Ancora nessun plugin hardware."
       },

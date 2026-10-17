@@ -333,6 +333,13 @@ void close_card() { plugin_host::close_card(); }
 
 Point tap_point() { return plugin_host::tapped; }
 
+Point drift(uint32_t when) {
+  if (!when) return {0, 0};
+  const LocalTime t = local_time(when);
+  const auto at = saver_view::drift(t.hour * 60 + t.minute, ::ui::mm(1));
+  return {at.x, at.y};
+}
+
 uint32_t send(const Plugin *plugin, JsonObjectConst request) {
   static uint32_t next = 0;
   if (!plugin || rt::inbox.empty() || !esphome::api::global_api_server) return 0;
@@ -1585,6 +1592,12 @@ void takes_taps(lv_obj_t *part) {
   if (!part) return;
   if (!saver_open || plugin_host::placing != &saver_open->places) {
     ESP_LOGW("plugins", "ui::takes_taps outside a call of a screensaver: the part takes no tap");
+    return;
+  }
+  bool taps = false;
+  for (const auto &type : tessera::saver_types()) if (type.key == saver_open->key) taps = type.plugin->taps(type.id);
+  if (!taps) {
+    ESP_LOGW("plugins", "ui::takes_taps on %s, whose manifest has no `taps: true`: the part takes no tap", saver_open->key.c_str());
     return;
   }
   static uintptr_t spots = 0;

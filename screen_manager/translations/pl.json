@@ -2065,12 +2065,14 @@
       },
       "tabs": {
         "tiles": "Kafelki",
+        "screensavers": "Wygaszacze",
         "functions": "Funkcje",
         "hardware": "Sprzęt",
         "in_use": "W użyciu"
       },
       "types": {
         "tiles": "Kafelki",
+        "screensavers": "Wygaszacz",
         "functions": "Funkcja",
         "hardware": "Sprzęt"
       },
@@ -2099,6 +2101,7 @@
       },
       "none_in_tab": {
         "tiles": "Nie ma jeszcze wtyczek z kafelkami.",
+        "screensavers": "Nie ma jeszcze wtyczek wygaszacza.",
         "functions": "Nie ma jeszcze wtyczek dla całego ekranu.",
         "hardware": "Nie ma jeszcze wtyczek sprzętowych."
       },
