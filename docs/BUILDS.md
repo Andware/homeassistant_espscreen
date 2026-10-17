@@ -118,6 +118,10 @@ A build runs here, as without a build server, and its log and the page say why, 
 - the link drops during the build, the server does not take the build, cannot install the ESPHome version, or the
   firmware does not come back.
 
+When the log says the server could not install ESPHome, the build server's own log says why. On an Intel Mac, a
+package of ESPHome 2026.9 has no ready-made build and needs Rust to be compiled there
+(github.com/esphome/esphome/issues/20286): install Rust on that computer, or use another one as the build server.
+
 A build that fails on the server itself (a compile error) fails: the same YAML fails here too, after a much longer
 wait. Its log is the server's.
 
