@@ -3181,6 +3181,7 @@ inline climate_card::Metrics climate_metrics(bool large){
   m.small_number_w=text_width("-88.8°",small_number);
   m.caption_h=lv_font_get_line_height(small);
   m.text_h=lv_font_get_line_height(text);
+  m.status_h=m.text_h;  // the state line is written in the text font: on dense glass taller than the default 25 px
   m.icon_h=icons?lv_font_get_line_height(icons):m.text_h;
   const auto bar=detail_bar::metrics();
   m.bar=bar.key;m.bar_x=bar.x;m.bar_y=bar.y;

@@ -1,5 +1,8 @@
 ## Unreleased
 
+- **A thermostat's state line no longer runs into its card.** On screens with dense glass (the Waveshare P4 and
+  the Tab5) a thermostat with many modes and a fan row drew "Heat · Now ..." against the top of the card with its
+  - and + keys. The line now gets the room its text needs.
 - **A screen whose Override YAML was deleted builds again.** ESPHome Device Builder lists a screen's Override YAML
   (`<name>.local.yaml`) as a device of its own, and deleting that entry there left the screen's YAML including a file
   that was gone, so every update stopped with "file not found". The app now writes the missing file again, empty, when

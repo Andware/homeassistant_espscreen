@@ -213,6 +213,7 @@ firmware_preview() {
   PREVIEW_WIDTH=720 PREVIEW_HEIGHT=720 PREVIEW_DPI=254 node web/wasm/test_runtime.mjs || return 1
   PREVIEW_WIDTH=800 PREVIEW_HEIGHT=480 PREVIEW_COLUMNS=3 node web/wasm/test_runtime.mjs || return 1
   node web/wasm/test_weather_detail.mjs || return 1
+  node web/wasm/test_climate_detail.mjs || return 1
   # The grid a layout brings (firmware 0.53.0+): begin changes it, a card per cell, a grid it does not take refused.
   node web/wasm/test_grid.mjs || return 1
   # The firmware's own Settings page in the preview: hold, Extras, a write only with Taps control devices, Back.
