@@ -69,6 +69,16 @@ int main() {
   assert(slats_card.tilt_keys && !slats_card.tilt && !slats_card.position);
   assert(cover_tilt_keys(slats, keys) == 2 && keys[0].disabled && !keys[1].disabled);
   assert(cover_card_status(slats) == "Open");
+  // A blind open at 50 (tilt_open): at 100 it is closed the other way, so open stays and close is the end stop; at 50
+  // open is the end stop; in between both keys go.
+  slats.tilt_middle = true;
+  assert(cover_tilt_keys(slats, keys) == 2 && !keys[0].disabled && keys[1].disabled);
+  slats.edit_extra().tilt = 50;
+  assert(cover_tilt_keys(slats, keys) == 2 && keys[0].disabled && !keys[1].disabled);
+  slats.edit_extra().tilt = 30;
+  assert(cover_tilt_keys(slats, keys) == 2 && !keys[0].disabled && !keys[1].disabled);
+  slats.edit_extra().tilt = 0;
+  assert(cover_tilt_keys(slats, keys) == 2 && !keys[0].disabled && keys[1].disabled);
   // Features not reported yet: the card offers the three keys, a tile's key row stays empty as before.
   Tile unknown = make("cover.new", "unknown", 0);
   CoverCard unknown_card = cover_card(unknown);

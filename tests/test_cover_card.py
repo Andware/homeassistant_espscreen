@@ -22,9 +22,12 @@ import profiles  # noqa: E402
 sys.path.insert(0, str(ROOT / 'screen_manager/app'))
 sys.path.insert(0, str(ROOT / 'tests'))
 from core import ATTRS, cover_related, discover_screens, extras, state_message  # noqa: E402
+import core  # noqa: E402
+import page_layout  # noqa: E402
 
 HAS_AIOHTTP = importlib.util.find_spec('aiohttp') is not None
 RUNTIME = runtime_source()
+RECEIVER = (ROOT / 'components/smart_display/page_receiver.cpp').read_text()
 PROFILES = {name: profiles.text(name) for name in ('checkout/guition.yaml', 'checkout/cyd.yaml', 'packages/guition.yaml', 'packages/cyd.yaml')}
 BLIND = 'cover.venetianblind_0001'
 
@@ -101,6 +104,31 @@ class CoverSync(unittest.IsolatedAsyncioTestCase):
             ha.states['text.node'] = {'state': 'office-1'}
             await m.publish_layouts()
             self.assertEqual(published, ['sensor.esp_screens_office_1'])
+
+
+class SlatsOpenAt(unittest.TestCase):
+    """Where a cover's slats stand open (tilt_open): Home Assistant's rule (0 closed, 100 fully open) is the default and
+    never stored; 50 is a tile's choice for a blind closed at 0 and at 100, one way and the other (catalogue/cover.yaml)."""
+
+    def test_the_app_keeps_50_and_stores_no_default(self):
+        def layout(entity, value):
+            return {'title': 'Home', 'tiles': [{'entity': entity, 'slot': 0, 'options': {'tilt_open': value}}]}
+        self.assertEqual(core.validate_layout(layout('cover.blind', '50'))['tiles'][0]['options'], {'tilt_open': '50'})
+        self.assertEqual(core.validate_layout(layout('cover.blind', 50))['tiles'][0]['options'], {'tilt_open': '50'})
+        self.assertEqual(core.validate_layout(layout('cover.blind', '100'))['tiles'][0].get('options', {}), {})
+        for bad in (layout('cover.blind', '30'), layout('light.a', '50')):
+            with self.assertRaises(ValueError):
+                core.validate_layout(bad)
+        self.assertEqual(list(core.COVER_TILT_OPEN), ['100', '50'])
+        # An event may set it too (esp_screens_add_tile and friends), and the page document carries it as an interaction.
+        self.assertEqual(core.tile_options({'tilt_open': '50'}), {'tilt_open': '50'})
+        self.assertEqual(page_layout.INTERACTION['tilt_open'], 'tilt_open')
+
+    def test_it_reaches_the_screen(self):
+        states = {'cover.blind': {'state': 'open', 'attributes': {'current_tilt_position': 50, 'supported_features': 255}}}
+        message = core.state_message(0, {'entity': 'cover.blind', 'name': '', 'options': {'tilt_open': '50'}}, states)
+        self.assertEqual(message['o']['tilt_open'], '50')
+        self.assertIn('tile.tilt_middle = string(options["tilt_open"], 4) == "50";', RECEIVER)
 
 
 class Firmware(unittest.TestCase):

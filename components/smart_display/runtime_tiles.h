@@ -1398,8 +1398,12 @@ inline void cover_key(Tile &t, int command) {
   switch (command) {
     case tile_controls::COVER_OPEN: cover_go(t, a, 100, 1); break;
     case tile_controls::COVER_CLOSE: cover_go(t, a, 0, -1); break;
-    case tile_controls::COVER_OPEN_TILT: cover_go(t, a, 100, 1, true); break;
-    case tile_controls::COVER_CLOSE_TILT: cover_go(t, a, 0, -1, true); break;
+    // A blind open at 50 (tilt_open) opens to 50 and closes to the nearer end, down from the middle; the way follows.
+    case tile_controls::COVER_OPEN_TILT: t.tilt_middle ? cover_go(t, a, 50, 0, true) : cover_go(t, a, 100, 1, true); break;
+    case tile_controls::COVER_CLOSE_TILT:
+      if (t.tilt_middle) cover_go(t, a, std::isfinite(t.extra().tilt) && t.extra().tilt > 50 ? 100 : 0, 0, true);
+      else cover_go(t, a, 0, -1, true);
+      break;
     default: cover_go(t, a, NAN, 0); break;
   }
 }
@@ -2589,7 +2593,7 @@ inline void cover_slider_event(lv_event_t *e){
 }
 // One slider. The position fills from the top by how far the cover is closed; the tilt has no fill and its
 // handle moves over the slats, drawn at their angle (firmware 0.57.0).
-inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback=nullptr,void *user=nullptr){
+inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback=nullptr,void *user=nullptr,bool middle=false){
   int radius=std::max(8,w/7),handle_h=std::max(4,w/18),handle_w=tilt?w*3/5:w*2/5,inset=std::max(6,w/9);
   if(tilt)detail_shape(parent,x,y,w,h,cover_track(),radius);
   auto *slider=lv_slider_create(parent);lv_obj_remove_style_all(slider);
@@ -2611,7 +2615,7 @@ inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float val
     int margin=1000*(inset+handle_h)/std::max(1,h-2*(inset+handle_h));
     lv_slider_set_range(slider,-margin,1000+margin);
     lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):500,LV_ANIM_OFF);
-    lv_obj_add_event_cb(slider,cover_paint::slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,nullptr);
+    lv_obj_add_event_cb(slider,cover_paint::slats_draw,LV_EVENT_DRAW_MAIN_BEGIN,(void*)(uintptr_t)(middle?1:0));
   }else{
     lv_obj_set_style_pad_top(slider,inset+handle_h-w/2,LV_PART_KNOB);lv_obj_set_style_pad_bottom(slider,1-inset-w/2,LV_PART_KNOB);
     // Reversed, the fill hangs from the top; the stub past 0 holds the handle of a cover that is fully open.
@@ -2634,9 +2638,9 @@ inline void slider_handle(lv_obj_t *slider,int width,int height);
 // cover-tilt-position tile features: the position fills from the left by how far the cover is open, with the white
 // handle of every tile bar (slider_handle); the tilt keeps its slats and its accent handle. A lying position slider holds
 // the open share, so its value is turned around before it goes out (cover_bar_raw).
-inline lv_obj_t *cover_bar(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback,void *user){
+inline lv_obj_t *cover_bar(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback,void *user,bool middle=false){
   lv_obj_t *slider=nullptr;
-  if(tilt)slider=cover_paint::tilt_bar(parent,x,y,w,h,value);
+  if(tilt)slider=cover_paint::tilt_bar(parent,x,y,w,h,value,middle);
   else{
     slider=lv_slider_create(parent);lv_obj_remove_style_all(slider);
     lv_obj_set_pos(slider,x,y);lv_obj_set_size(slider,w,h);lv_slider_set_orientation(slider,LV_SLIDER_ORIENTATION_HORIZONTAL);
@@ -2803,7 +2807,7 @@ inline void render_cover_detail(Tile &t,bool large,int width,int height,int pad,
       int slider_h=box_h-2*edge-value_h-caption_h+4;
       int x=pad+(box_w-(count*slider_w+(count-1)*slider_gap))/2;
       for(int i=0;i<count;++i,x+=slider_w+slider_gap){
-        card_bind(cover_slider(detail_root,x,top+edge,slider_w,slider_h,parts[i].value,parts[i].tilt),t,cover_slider_paint,"",parts[i].tilt);
+        card_bind(cover_slider(detail_root,x,top+edge,slider_w,slider_h,parts[i].value,parts[i].tilt,nullptr,nullptr,t.tilt_middle),t,cover_slider_paint,"",parts[i].tilt);
         int ty=top+edge+slider_h+2,room=slider_w+slider_gap-4;
         cover_values[parts[i].tilt?1:0]=card_bind(detail_text(detail_root,percent(parts[i].value),x-(room-slider_w)/2,ty,room,big,LV_TEXT_ALIGN_CENTER,theme::INK),t,cover_value_paint,"",parts[i].tilt);
         detail_text(detail_root,parts[i].caption,x-(room-slider_w)/2,ty+value_h,room,text,LV_TEXT_ALIGN_CENTER,theme::SUBTLE);
@@ -2813,7 +2817,7 @@ inline void render_cover_detail(Tile &t,bool large,int width,int height,int pad,
       int slider_h=box_h-2*edge,label_w=side_label;
       int column=slider_w+8+label_w,x=pad+(box_w-(count*column+(count-1)*slider_gap))/2;
       for(int i=0;i<count;++i,x+=column+slider_gap){
-        card_bind(cover_slider(detail_root,x,top+edge,slider_w,slider_h,parts[i].value,parts[i].tilt),t,cover_slider_paint,"",parts[i].tilt);
+        card_bind(cover_slider(detail_root,x,top+edge,slider_w,slider_h,parts[i].value,parts[i].tilt,nullptr,nullptr,t.tilt_middle),t,cover_slider_paint,"",parts[i].tilt);
         int ty=top+(box_h-value_h-caption_h)/2;
         cover_values[parts[i].tilt?1:0]=card_bind(detail_text(detail_root,percent(parts[i].value),x+slider_w+8,ty,label_w,big,LV_TEXT_ALIGN_LEFT,theme::INK),t,cover_value_paint,"",parts[i].tilt);
         detail_text(detail_root,parts[i].caption,x+slider_w+8,ty+value_h,label_w,text,LV_TEXT_ALIGN_LEFT,theme::SUBTLE);
@@ -8065,8 +8069,8 @@ inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout 
     }
     if(g.slider){
       auto *&slider=w.parts[2+i];
-      if(!slider)slider=g.lying?cover_bar(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr)
-                               :cover_slider(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr);
+      if(!slider)slider=g.lying?cover_bar(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr,t.tilt_middle)
+                               :cover_slider(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr,t.tilt_middle);
       if(captured_slider!=slider)lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround((i||g.lying?value:100-value)*10):(i?500:0),LV_ANIM_OFF);
       if(ready)lv_obj_remove_state(slider,LV_STATE_DISABLED);else lv_obj_add_state(slider,LV_STATE_DISABLED);
       travel_look(slider,t,i==1,i!=1&&!g.lying);

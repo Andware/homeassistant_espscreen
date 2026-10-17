@@ -640,6 +640,10 @@
    "toggle": null,
    "taps": [],
    "guards": [],
+   "tilt_open": [
+    "100",
+    "50"
+   ],
    "picture": null,
    "map": null,
    "keypad": null

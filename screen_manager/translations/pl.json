@@ -2437,6 +2437,13 @@
         "confirm_hint": "Zablokowany zamek otwiera się dopiero po drugim dotknięciu kafelka lub przycisku. Blokowanie to zawsze jedno dotknięcie.",
         "lock_only_hint": "Ten ekran może blokować, ale nigdy nie odblokuje ani nie otworzy. Dobre dla ekranu w przedsionku, garażu lub pokoju dziecka."
       },
+      "tilt_open": {
+        "label": "Lamele otwarte przy",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Jak w Home Assistant: 0 % to zamknięte, 100 % całkiem otwarte.",
+        "50_hint": "Dla żaluzji otwartych przy 50 % i zamkniętych przy 0 % i 100 %, w jedną i w drugą stronę, jak SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Druga linia",
         "auto": "Automatycznie",

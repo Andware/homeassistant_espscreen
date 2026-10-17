@@ -39,3 +39,7 @@ controls:
     one_row: position
 inline:
   needs: {actions: [cover.set_cover_position]}
+# Where the slats stand open (`tilt_open`, a tile's choice in the editor, the first the default). Home Assistant's rule
+# is 100: its tilt runs from 0 closed to 100 fully open. Some blinds report 50 as open and 0 and 100 as closed one way
+# and the other (the SwitchBot Blind Tilt); the screen then draws them flat at 50 (cover_tile::slat_angle).
+tilt_open: ['100', '50']

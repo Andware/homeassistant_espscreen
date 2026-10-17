@@ -50,7 +50,7 @@ export const DEFAULTS: Record<string, unknown> = { sub: "auto", fit: rules.pictu
   zones: MAP?.zones[0], streets: MAP?.streets[0], look: MAP?.look[0], flow: rules.energyFlow[0],
   ...Object.fromEntries(Object.entries(CALENDAR_DEFAULTS).filter(([key]) => !["places", "words", "hide_words", "calendars"].includes(key))),
   // A sensor's meter (firmware 0.56.0, meter.validate): the ring and one segment are what nothing means.
-  meter: rules.meter.styles[0], segments: rules.meter.segments[0] };
+  meter: rules.meter.styles[0], segments: rules.meter.segments[0], tilt_open: "100" };
 
 const pageTile = (entity: string) => /^screen\.page_\d+$/.test(entity);
 
@@ -65,6 +65,8 @@ export function canonicalOptions(entity: string, options: TileOptions = {}, key 
     out.sub = words ? `text:${words}` : "none";
   }
   if (out.sub === "auto") delete out.sub;
+  // Where a cover's slats stand open: Home Assistant's 100 is never stored, and no other tile has the choice.
+  if (out.tilt_open !== undefined && (!entity.startsWith("cover.") || String(out.tilt_open) === "100")) delete out.tilt_open;
   // Perform action keeps its action; another tap choice leaves none behind.
   if (out.tap !== "action") delete out.action;
   // A live picture's pace and fill belong to the live picture, and their defaults are not stored. A bedside clock's key

@@ -32,7 +32,7 @@ const beside = computed(() => {
   if (textWidth(card.texts.name, fonts.label ?? 16) > Math.trunc(w / 2) - circle - gap) return false;
   const a = card.current?.a || {}, state = card.current?.state || "", primary = card.face.coverPrimary;
   const tilt = card.face.coverRow && /tilt/.test(String(card.tile.options?.controls || "")) ? coverTiltKind(state, a) : "";
-  const keys = primary === "buttons" ? controlKeys("cover", "buttons", state, a).length : 0, tiltKeys = tilt === "buttons" ? coverTiltKeys(a).length : 0;
+  const keys = primary === "buttons" ? controlKeys("cover", "buttons", state, a).length : 0, tiltKeys = tilt === "buttons" ? coverTiltKeys(a, card.tile.options?.tilt_open === "50").length : 0;
   const lines = lineOf(fonts.label ?? 16) + lineOf(fonts.sublabel ?? 14);
   const head = Math.max(lines, Math.min(circle, Math.trunc(h / 3)));
   const lay = (x: number, y: number, bw: number, bh: number) => coverLayout({ x, y, w: bw, h: bh }, touch, gap, lineOf(fonts.sublabel ?? 14), 2 * touch,
@@ -48,7 +48,7 @@ const beside = computed(() => {
       <span class="ic mdi" :class="{ lit: card.lit }">{{ glyph(card.icon) }}</span>
       <span class="tx"><span class="nm">{{ card.texts.name }}</span><span v-if="card.texts.line" class="st" :class="{ off: card.gone }">{{ card.texts.line }}</span></span>
     </span>
-    <CoverTilePreview :standing="false" :tilt="/tilt/.test(String(card.tile.options?.controls || ''))" :primary="card.face.coverPrimary"
+    <CoverTilePreview :standing="false" :at-half="card.tile.options?.tilt_open === '50'" :tilt="/tilt/.test(String(card.tile.options?.controls || ''))" :primary="card.face.coverPrimary"
       :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}" />
   </span>
 </template>

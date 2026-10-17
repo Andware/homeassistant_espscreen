@@ -2062,6 +2062,13 @@
         "confirm_hint": "Een vergrendeld slot gaat pas open na een tweede tik op de tegel of de knop. Vergrendelen is altijd één tik.",
         "lock_only_hint": "Dit scherm kan vergrendelen, maar nooit ontgrendelen of openen. Handig voor een scherm in een portiek, garage of kinderkamer."
       },
+      "tilt_open": {
+        "label": "Lamellen open bij",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Zoals Home Assistant het doet: 0 % is dicht, 100 % helemaal open.",
+        "50_hint": "Voor lamellen die open zijn bij 50 % en dicht bij 0 % en 100 %, de ene en de andere kant op, zoals de SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Tweede regel",
         "auto": "Automatisch",

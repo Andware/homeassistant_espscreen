@@ -2437,6 +2437,13 @@
         "confirm_hint": "Uma fechadura trancada só abre após um segundo toque no mosaico ou no botão. Trancar é sempre um toque.",
         "lock_only_hint": "Este ecrã pode trancar mas nunca destrancar nem abrir. Bom para um ecrã na entrada, na garagem ou num quarto de criança."
       },
+      "tilt_open": {
+        "label": "Lâminas abertas a",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Como no Home Assistant: 0 % é fechado, 100 % totalmente aberto.",
+        "50_hint": "Para estores abertos a 50 % e fechados a 0 % e a 100 %, para um lado e para o outro, como o SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Segunda linha",
         "auto": "Automático",

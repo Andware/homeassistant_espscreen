@@ -576,6 +576,9 @@ struct Tile {
   // A cover on its way (cover_travel.h): the target and the way show from the command until Home Assistant reports the
   // cover there or stopped, and its sliders take no finger meanwhile.
   cover_travel::Travel travel;
+  // Where the slats stand open (the tile's tilt_open option): at 100 as Home Assistant's rule has it, or at 50 for a blind
+  // that reports 0 and 100 as closed one way and the other.
+  bool tilt_middle = false;
   // A sensor's graph: 24 samples over `history_hours`, empty without one.
   unsigned history_hours = 24;
   std::vector<float> history;

@@ -2437,6 +2437,13 @@
         "confirm_hint": "Une serrure verrouillée ne s'ouvre qu'après une seconde touche sur la tuile ou le bouton. Verrouiller se fait toujours en une touche.",
         "lock_only_hint": "Cet écran peut verrouiller mais jamais déverrouiller ni ouvrir. Idéal pour un écran dans une entrée, un garage ou une chambre d'enfant."
       },
+      "tilt_open": {
+        "label": "Lamelles ouvertes à",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Comme dans Home Assistant : 0 % est fermé, 100 % entièrement ouvert.",
+        "50_hint": "Pour les stores ouverts à 50 % et fermés à 0 % et à 100 %, dans un sens et dans l'autre, comme le SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Deuxième ligne",
         "auto": "Automatique",

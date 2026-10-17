@@ -11,12 +11,16 @@ using tall_tile::Rect;
 // pale tint, so the handle stays what the eye takes first. `step` is the least distance between two slats (3 mm).
 struct Slat { float x1=0,y1=0,x2=0,y2=0; };
 struct Slats { std::array<Slat,16> slat{}; int count=0; int width=0; };
-inline float slat_angle(float tilt) {
+// The angle the slats stand at, 0 flat (open) to 72 degrees (closed). Home Assistant's rule: 0 closed, 100 open.
+// `at_half`: a blind that is open at 50 and closed at 0 and 100 (the tile's tilt_open option), its slats turning one way
+// below 50 and the other way above it.
+inline float slat_angle(float tilt,bool at_half=false) {
   if(!std::isfinite(tilt))tilt=50;
   tilt=std::max(0.0f,std::min(100.0f,tilt));
-  return (1.0f-tilt/100.0f)*72.0f*3.14159265f/180.0f;
+  const float closed=at_half?(tilt-50.0f)/50.0f:1.0f-tilt/100.0f;
+  return closed*72.0f*3.14159265f/180.0f;
 }
-inline Slats slats(int w,int h,float tilt,int step,int thickness) {
+inline Slats slats(int w,int h,float tilt,int step,int thickness,bool at_half=false) {
   Slats out;
   if(w<=0||h<=0||step<=0)return out;
   const bool lying=w>h;
@@ -24,7 +28,7 @@ inline Slats slats(int w,int h,float tilt,int step,int thickness) {
   const int pitch=std::max(step,std::min(across*42/100,along/9));
   const float half=std::max(1.0f,std::min({across*0.30f,pitch*0.78f,(along-thickness)/2.0f}));
   const int n=std::max(1,std::min(16,(along-2*(int)half-thickness)/pitch+1));
-  const float a=slat_angle(tilt),c=std::cos(a)*half,s=std::sin(a)*half;
+  const float a=slat_angle(tilt,at_half),c=std::cos(a)*half,s=std::sin(a)*half;
   const float first=(along-(n-1)*pitch)/2.0f,middle=across/2.0f;
   for(int i=0;i<n;++i){
     const float at=first+i*pitch;

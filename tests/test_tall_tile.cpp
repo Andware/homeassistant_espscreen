@@ -104,6 +104,16 @@ int main(){
     if(w<=h&&tilt==100.0f)assert(dy<0.5f);
     if(w<=h&&tilt==0.0f)assert(dy>dx);
   }
+  // A blind open at 50 (tilt_open): flat at 50, steep at both ends, turned one way below 50 and the other above it.
+  {
+    const auto open=cover_tile::slats(60,240,50,12,6,true),down=cover_tile::slats(60,240,0,12,6,true),up=cover_tile::slats(60,240,100,12,6,true);
+    assert(std::abs(open.slat[0].y2-open.slat[0].y1)<0.5f);
+    const float a=down.slat[0].y2-down.slat[0].y1,b=up.slat[0].y2-up.slat[0].y1;
+    assert(std::abs(a)>std::abs(down.slat[0].x2-down.slat[0].x1)&&std::abs(b)>std::abs(up.slat[0].x2-up.slat[0].x1));
+    assert((a<0)!=(b<0));
+    // Home Assistant's rule is untouched: 100 is flat there.
+    assert(std::abs(cover_tile::slats(60,240,100,12,6).slat[0].y2-cover_tile::slats(60,240,100,12,6).slat[0].y1)<0.5f);
+  }
   // A CYD-sized cell accepts one row, but cannot promise two physical rows.
   Metrics compact{131,92,13,13,28,4,39,280,{39,39},1};
   assert(layout(compact).fits);compact.row_count=2;assert(!layout(compact).fits);

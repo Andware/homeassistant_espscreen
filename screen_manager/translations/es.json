@@ -2437,6 +2437,13 @@
         "confirm_hint": "Una cerradura bloqueada solo se abre tras un segundo toque en la tarjeta o el botón. Bloquear siempre es un toque.",
         "lock_only_hint": "Esta pantalla puede bloquear pero nunca desbloquear ni abrir. Ideal para una pantalla en la entrada, el garaje o un cuarto infantil."
       },
+      "tilt_open": {
+        "label": "Lamas abiertas al",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Como en Home Assistant: 0 % es cerrado, 100 % totalmente abierto.",
+        "50_hint": "Para persianas abiertas al 50 % y cerradas al 0 % y al 100 %, hacia un lado y hacia el otro, como el SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Segunda línea",
         "auto": "Automático",

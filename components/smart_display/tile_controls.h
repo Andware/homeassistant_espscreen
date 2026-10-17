@@ -669,9 +669,13 @@ inline unsigned cover_keys(const Tile &t, std::array<Key, 3> &out) {
 inline unsigned cover_tilt_keys(const Tile &t, std::array<Key, 3> &out) {
   unsigned n = 0;
   const float tilt = t.extra().assumed ? NAN : t.extra().tilt;
-  if (t.supported & feature::COVER_OPEN_TILT) out[n++] = Key{glyph::BLINDS_OPEN, COVER_OPEN_TILT, "", false, std::isfinite(tilt) && tilt >= 99.5f};
+  // Open at 100 (Home Assistant's rule) or, for a blind open at 50 (tilt_open), at 50 and closed at both ends.
+  const bool middle = t.tilt_middle, known = std::isfinite(tilt);
+  const bool open = known && (middle ? std::fabs(tilt - 50.0f) <= 0.5f : tilt >= 99.5f);
+  const bool closed = known && (tilt <= 0.5f || (middle && tilt >= 99.5f));
+  if (t.supported & feature::COVER_OPEN_TILT) out[n++] = Key{glyph::BLINDS_OPEN, COVER_OPEN_TILT, "", false, open};
   if (t.supported & feature::COVER_STOP_TILT) out[n++] = Key{glyph::STOP, COVER_STOP_TILT, "", false, false};
-  if (t.supported & feature::COVER_CLOSE_TILT) out[n++] = Key{glyph::BLINDS, COVER_CLOSE_TILT, "", false, std::isfinite(tilt) && tilt <= 0.5f};
+  if (t.supported & feature::COVER_CLOSE_TILT) out[n++] = Key{glyph::BLINDS, COVER_CLOSE_TILT, "", false, closed};
   return n;
 }
 // The same percentage direction and capability guard for overlay and tile. A cover whose features Home Assistant did

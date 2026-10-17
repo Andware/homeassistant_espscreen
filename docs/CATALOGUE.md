@@ -83,6 +83,7 @@ inline:                       # the small slider beside the name
 toggle: {actions: [lock.lock]}   # what On / off as a tap needs; without this key: <domain>.toggle listed by Home Assistant
 taps: [run]                   # taps of this type beyond every tile's
 guards: [confirm, lock_only]  # a lock's guard choices
+tilt_open: ['100', '50']      # where a cover's slats stand open, the first the default (Home Assistant's rule)
 picture: {fit: [...], overlay: [...], refresh: [...]}   # how a live picture sits on its tile
 map: {framing: [...], distance: [...], ...}             # a map card's choices, the first of each the default; needs the map display (docs/MAP.md)
 energy: {flow: [dots, lines]}  # the energy card's choices (screen.yaml only), the first the default (docs/ENERGY.md)

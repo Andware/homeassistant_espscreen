@@ -99,7 +99,7 @@ export function validatePageShape(layout: PageLayout, plugins = false) {
       fields(tile.appearance, ['label', 'presentation', 'display', 'icon', 'background', 'historyHours', 'refresh', 'subtitle', 'fit', 'overlay',
         'mapEntities', 'mapFraming', 'mapDistance', 'mapFollow', 'mapMarkers', 'mapNames', 'mapZones', 'mapStreets', 'mapLook', 'energyFlow',
         ...CALENDAR_FIELDS, ...CALENDAR_MORE, ...METER_FIELDS], ['label']);
-      fields(tile.interaction, ['tap', 'inline', 'controls', 'action', 'guard', 'play', 'speaker', 'shuffle', 'repeat'], []);
+      fields(tile.interaction, ['tap', 'inline', 'controls', 'action', 'guard', 'play', 'speaker', 'shuffle', 'repeat', 'tilt_open'], []);
       const content = tile.content;
       fields(content, ['kind', 'entityId', 'name', 'target', 'plugin', 'tile', 'options'], ['kind']);
       if (content.kind === 'entity') {
@@ -150,8 +150,10 @@ export function validateCardOptions(tile: PageTile, entityId: string, size: stri
     // A plugin's tap action (plugin:<plugin>.<action>, docs/PLUGINS.md) goes on any tile, as the add-on takes it
     // (core.validate_layout): which tiles it suits is its manifest's, and a screen without the plugin does nothing.
     [PLUGIN_TILE.test(String(i.tap ?? '')) ? undefined : i.tap, catalogueTaps(domain)], [i.inline, ['none', 'slider']], [i.controls, controls],
-    [i.guard, ofType(domain)?.guards ?? []]] as [any, any[]][])
+    [i.guard, ofType(domain)?.guards ?? []], [i.tilt_open, ofType(domain)?.tilt_open ?? []]] as [any, any[]][])
     if (value !== undefined && !choices.includes(value)) fail();
+  // Where a cover's slats stand open (core.validate_layout): Home Assistant's 100, the default, is never stored.
+  if (i.tilt_open !== undefined && i.tilt_open === ofType(domain)?.tilt_open?.[0]) fail('normalization');
   if (a.icon !== undefined && !icon(a.icon)) fail();
   if (rules.wideOnly.includes(a.display || '') && !isWideSize(size)) fail('normalization');
   if (tile.content.kind === 'navigation' && (size === 'full' || a.display !== undefined || i.inline !== undefined ||

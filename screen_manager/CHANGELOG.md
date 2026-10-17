@@ -23,6 +23,11 @@
   slider's handle steps aside and a thin stripe glides over the slider in the direction it moves, until Home Assistant
   reports it there or stopped. The slider still takes a finger, so a cover sent the wrong way can be turned around at
   once, and the slats' tilt works the same way.
+- **Slats that are open at 50 %.** Home Assistant counts a blind's tilt from 0 (closed) to 100 (fully open), and the
+  screen draws its slats that way. Some blinds are open at 50 % and closed at 0 % and 100 %, one way and the other
+  (the SwitchBot Blind Tilt among them). A cover tile with slats now has the choice "Slats open at 50 %" in the editor:
+  the slats then stand flat at 50 and turn one way below it and the other way above it, open goes to 50, and close
+  goes to the nearer closed side. Home Assistant's way stays the default.
 - **A screen follows Home Assistant to another time zone.** Home Assistant's ESPHome integration tells a screen its
   time zone only when it connects, so a screen kept the old hour after the time zone changed in Home Assistant (a
   home on wheels crossing one) until Home Assistant restarted. The app now reloads each screen's integration when the

@@ -21,7 +21,8 @@ const canvas = useCanvasStore();
 const doc = useDocumentStore();
 // `primary`: the chosen control beside the slats ('position', 'buttons' or ''); `tilt`: whether the slats were chosen.
 // `standing`: false on a card one row high, which lays its controls only.
-const props = withDefaults(defineProps<{ primary: string; entityState: string; attributes: Record<string, any>; tilt?: boolean; standing?: boolean }>(), { tilt: true, standing: true });
+// `atHalf`: the slats stand open at 50, closed at both ends (the tile's tilt_open option).
+const props = withDefaults(defineProps<{ primary: string; entityState: string; attributes: Record<string, any>; tilt?: boolean; standing?: boolean; atHalf?: boolean }>(), { tilt: true, standing: true, atHalf: false });
 const root = ref<HTMLElement>();
 const { width, height } = useElementSize(root);
 // Mockup pixels per pixel of the glass.
@@ -30,7 +31,7 @@ const shape = computed(() => ({ ...doc.screenShape, look: canvas.isCompact ? 'co
 const keys = computed(() => tallKeys(shape.value));
 const tiltKind = computed(() => props.tilt ? coverTiltKind(props.entityState, props.attributes) : '');
 const mainKeys = computed(() => props.primary === 'buttons' ? controlKeys('cover', 'buttons', props.entityState, props.attributes) : []);
-const tiltKeys = computed(() => tiltKind.value === 'buttons' ? coverTiltKeys(props.attributes) : []);
+const tiltKeys = computed(() => tiltKind.value === 'buttons' ? coverTiltKeys(props.attributes, props.atHalf) : []);
 const extraKeys = computed(() => props.primary === 'position' ? controlKeys('cover', 'buttons', props.entityState, props.attributes) : []);
 const layout = computed(() => {
   const s = scale.value || 1, { touch, gap } = keys.value;
@@ -51,7 +52,7 @@ function keyBoxes(g: Group, count: number) {
 }
 // The slats of a tilt slider in its own pixels (cover_tile::slats: 3 mm apart at least, a millimetre thick).
 const mm = (n: number) => Math.floor(((shape.value.dpi || 170) * n + 12) / 25);
-const slatsOf = (g: Group) => slats(g.control.w, g.control.h, Number(props.attributes.current_tilt_position ?? 50), mm(3), Math.max(3, mm(1) + 1));
+const slatsOf = (g: Group) => slats(g.control.w, g.control.h, Number(props.attributes.current_tilt_position ?? 50), mm(3), Math.max(3, mm(1) + 1), props.atHalf);
 const percent = (v: unknown) => typeof v === 'number' ? `${Math.round(v)}%` : '—';
 const caption = (i: number, g: Group) => {
   const word = region.screenText(i === 1 ? 'screen.cover.tilt' : 'screen.cover.position');

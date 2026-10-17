@@ -187,6 +187,9 @@ ALARM_MIN_FIRMWARE = catalogue.parse_version(catalogue.of_type('alarm_control_pa
 LOCK_MIN_FIRMWARE = catalogue.parse_version(catalogue.of_type('lock')['firmware'])
 # How far a lock's tile may go (the `guard` option): unlock after a second tap, or lock only.
 LOCK_GUARDS = tuple(catalogue.of_type('lock')['guards'])
+# Where a cover's slats stand open (the `tilt_open` option): 100 as Home Assistant's rule has it, the default and never
+# stored, or 50 for a blind that reports 0 and 100 as closed one way and the other (catalogue/cover.yaml).
+COVER_TILT_OPEN = tuple(catalogue.of_type('cover')['tilt_open'])
 # An automation as a tile (GitHub #62): a tap switches it on or off and holding runs its actions, or with the tap option
 # `run` the other way round. Older firmware refuses the domain, so a layout with one waits for the update.
 AUTOMATION_MIN_FIRMWARE = catalogue.parse_version(catalogue.of_type('automation')['firmware'])
@@ -1359,6 +1362,8 @@ TILE_RESULT_EVENT = 'esp_screens_tile_result'
 TILE_EVENT_OPTIONS = {'size': 'size', 'controls': 'controls', 'display': 'display', 'icon': 'icon',
                       'color': 'background', 'background': 'background', 'tap': 'tap', 'inline': 'inline',
                       'history_hours': 'history_hours', 'refresh': 'refresh', 'fit': 'fit', 'overlay': 'overlay',
+                      # Where a cover's slats stand open: 100 (Home Assistant's rule) or 50.
+                      'tilt_open': 'tilt_open',
                       # How a map frames its people (app 0.4.33); who is on it is the editor's.
                       'framing': 'framing', 'distance': 'distance',
                       # A favourite (app 0.4.42): what it plays, as Home Assistant's library names it, and on which speaker.
@@ -1940,7 +1945,7 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
             continue
         if 'options' in tile:
             options = tile['options']
-            if not isinstance(options, dict) or set(options) - {'tap', 'display', 'inline', 'history_hours', 'background', 'size', 'icon', 'controls', 'action', 'refresh', 'sub', 'fit', 'overlay', 'guard', 'flow', *MAP_OWN, *FAVORITE_OWN, *calendar_feed.KEYS, *meter.KEYS}:
+            if not isinstance(options, dict) or set(options) - {'tap', 'display', 'inline', 'history_hours', 'background', 'size', 'icon', 'controls', 'action', 'refresh', 'sub', 'fit', 'overlay', 'guard', 'tilt_open', 'flow', *MAP_OWN, *FAVORITE_OWN, *calendar_feed.KEYS, *meter.KEYS}:
                 raise ValueError(t('addon.errors.layout.unknown_settings'))
             # A calendar card's choices (firmware 0.56.0): its calendars, its filters, its look; other tiles have none.
             if tile['entity'].startswith('calendar.'):
@@ -1997,6 +2002,14 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
                     raise ValueError(t('addon.errors.layout.invalid_setting', setting='guard'))
                 if options['guard'] == 'confirm':
                     options = {k: v for k, v in options.items() if k != 'guard'}
+            # A cover's slats: open at 100 (Home Assistant's rule, the default) or at 50; no other tile has the choice.
+            if 'tilt_open' in options:
+                value = str(options['tilt_open'])
+                if domain != 'cover' or value not in COVER_TILT_OPEN:
+                    raise ValueError(t('addon.errors.layout.invalid_setting', setting='tilt_open'))
+                options = {k: v for k, v in options.items() if k != 'tilt_open'}
+                if value != COVER_TILT_OPEN[0]:
+                    options['tilt_open'] = value
             # A plugin's tap action (docs/PLUGINS.md, plugin:<plugin>.<action>) on any tile: which domains it takes is its
             # manifest's, and a screen without that plugin does nothing on the tap.
             if plugin_tile(options.get('tap')):

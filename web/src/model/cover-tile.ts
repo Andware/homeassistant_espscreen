@@ -17,19 +17,22 @@ const none = (): Layout => ({ fits: false, tier: Tier.NONE, groups: [group(), gr
 export const barHeight = (touch: number) => div(touch * 85, 100);
 
 /** The angle of the slats (cover_tile::slat_angle): flat when open (100), 72 degrees when closed (0). */
-export function slatAngle(tilt: number) {
+/** The slats' angle (cover_tile::slat_angle): 0 flat to 72 degrees. `atHalf`: a blind open at 50 and closed at 0 and 100
+ * (the tile's tilt_open option), turned one way below 50 and the other way above it. */
+export function slatAngle(tilt: number, atHalf = false) {
   if (!Number.isFinite(tilt)) tilt = 50;
   tilt = Math.max(0, Math.min(100, tilt));
-  return (1 - tilt / 100) * 72 * 3.14159265 / 180;
+  const closed = atHalf ? (tilt - 50) / 50 : 1 - tilt / 100;
+  return closed * 72 * 3.14159265 / 180;
 }
 /** The slats of a slider w x h (cover_tile::slats): standing it stacks them, lying it sets them side by side. */
-export function slats(w: number, h: number, tilt: number, step: number, thickness: number): Slat[] {
+export function slats(w: number, h: number, tilt: number, step: number, thickness: number, atHalf = false): Slat[] {
   if (w <= 0 || h <= 0 || step <= 0) return [];
   const lying = w > h, across = lying ? h : w, along = lying ? w : h;
   const pitch = Math.max(step, Math.min(div(across * 42, 100), div(along, 9)));
   const half = Math.max(1, Math.min(across * 0.3, pitch * 0.78, (along - thickness) / 2));
   const n = Math.max(1, Math.min(16, div(along - 2 * Math.trunc(half) - thickness, pitch) + 1));
-  const a = slatAngle(tilt), c = Math.cos(a) * half, s = Math.sin(a) * half;
+  const a = slatAngle(tilt, atHalf), c = Math.cos(a) * half, s = Math.sin(a) * half;
   const first = (along - (n - 1) * pitch) / 2, middle = across / 2;
   return Array.from({ length: n }, (_, i) => {
     const at = first + i * pitch;

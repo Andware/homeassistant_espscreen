@@ -15,7 +15,7 @@ import ActionPicker from "./ActionPicker.vue";
 import IconChoices from "./IconChoices.vue";
 import IconPicker from "./IconPicker.vue";
 import TileAnchor from "./TileAnchor.vue";
-import { coverPrimary, hasCoverTilt, withCoverTilt } from "../model/tall-controls";
+import { coverPrimary, coverTiltKind, hasCoverTilt, withCoverTilt } from "../model/tall-controls";
 import { roomControls } from "../model/catalogue";
 import ChoiceField from "./ChoiceField.vue";
 import CalendarSection from "./inspector/CalendarSection.vue";
@@ -150,6 +150,15 @@ const tapNote = computed(() => tapHint(props.tile, panel.value, tap.value));
 // A lock's tile (firmware 0.5.0+): unlock after a second tap on it, or never unlock from this screen.
 const guard = computed(() => current("guard", "confirm") as string);
 const guards = computed(() => offer("guard", ["confirm", "lock_only"].map((key) => [key, t(`editor.tile.guard.${key}`)] as [string, string]), guard.value));
+// A cover's slats: open at 100 as Home Assistant's rule has it, or at 50 for a blind closed at 0 and at 100. Offered where
+// the cover has slats (or the choice is stored already).
+const tiltOpen = computed(() => String(current("tilt_open", "100")));
+const tiltOpens = computed(() => offer("tilt_open", ["100", "50"].map((key) => [key, t(`editor.tile.tilt_open.${key}`)] as [string, string]), tiltOpen.value));
+const hasSlats = computed(() => {
+  if (domain.value !== "cover") return false;
+  const live = entities.liveOf(props.tile.entity);
+  return tiltOpen.value !== "100" || Boolean(live && coverTiltKind(live.state, live.a));
+});
 // ---- The second line (app 0.2.105, firmware 0.2.90+) ----
 // Four ways to fill it: the line the screen works out itself, nothing at all, a value of the entity, or words of
 // your own. The list of values is Home Assistant's, asked for the entity when this panel opens; an entity Home
@@ -319,6 +328,9 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
       <ActionPicker v-if="domain !== 'screen' && !goesTo && tap === 'action'" :tile="tile" />
       <PropRow v-if="domain === 'lock'" :label="t('editor.tile.guard.label')" icon="check-circle" :hint="t(guard === 'lock_only' ? 'editor.tile.guard.lock_only_hint' : 'editor.tile.guard.confirm_hint')">
         <ChoiceField :choices="guards" :value="guard" :aria-label="t('editor.tile.guard.label')" @pick="(v) => setTileOption(tile, 'guard', v)" />
+      </PropRow>
+      <PropRow v-if="hasSlats && !goesTo" :label="t('editor.tile.tilt_open.label')" icon="sort-variant" :hint="t(tiltOpen === '50' ? 'editor.tile.tilt_open.50_hint' : 'editor.tile.tilt_open.100_hint')">
+        <ChoiceField :choices="tiltOpens" :value="tiltOpen" :aria-label="t('editor.tile.tilt_open.label')" @pick="(v) => setTileOption(tile, 'tilt_open', v)" />
       </PropRow>
       <PropRow v-if="controlsHere && !goesTo" :label="t('editor.tile.controls.label')" icon="tune-variant" :hint="!controlNote.warn ? controlNote.text : undefined">
         <ChoiceField :choices="controlList" :value="primaryControl" :tile="tile" preview-key="controls" :sample="controlSample" :aria-label="t('editor.tile.controls.label')" @pick="pickControl" />

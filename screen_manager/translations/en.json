@@ -2062,6 +2062,13 @@
         "confirm_hint": "A locked lock unlocks after a second tap on the tile or its key. Locking always takes one tap.",
         "lock_only_hint": "This screen can lock but never unlock or open. Good for a screen in a porch, a garage or a child's room."
       },
+      "tilt_open": {
+        "label": "Slats open at",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Home Assistant's rule: 0 % is closed, 100 % is fully open.",
+        "50_hint": "For blinds that are open at 50 % and closed at 0 % and 100 %, one way and the other, such as the SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Second line",
         "auto": "Automatic",

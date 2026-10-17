@@ -37,7 +37,7 @@ const standStyle = computed(() => ({ background: `linear-gradient(to top, ${card
       <span class="ic mdi">{{ glyph(card.icon) }}</span>
       <span class="tx"><span class="nm">{{ card.texts.name }}</span><span v-if="card.texts.headLine" class="st" :class="{ off: card.gone }">{{ card.texts.headLine }}</span></span>
     </span>
-    <CoverTilePreview v-if="card.face.coverExtended" :primary="card.face.tallControls" :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}">
+    <CoverTilePreview v-if="card.face.coverExtended" :at-half="card.tile.options?.tilt_open === '50'" :primary="card.face.tallControls" :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}">
       <template #fallback>
         <span v-if="card.face.tallControls === 'position'" class="cover-range" :style="{ '--position': `${100 - (card.current?.a?.current_position ?? 50)}%` }"></span>
         <span v-else-if="card.face.tallKeys.length" class="cover-row"><span v-for="(k, i) in card.face.tallKeys" :key="i" class="key mdi" :class="{ disabled: k.disabled }">{{ card.key(k.icon) }}</span></span>

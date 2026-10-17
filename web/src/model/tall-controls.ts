@@ -98,11 +98,14 @@ export function coverTiltKind(state: string, a: Attributes): '' | 'position' | '
   const f = Number(a.supported_features || 0);
   return f & bits('cover', 'SET_TILT_POSITION') ? 'position' : f & bits('cover', 'OPEN_TILT', 'CLOSE_TILT', 'STOP_TILT') ? 'buttons' : '';
 }
-export function coverTiltKeys(a: Attributes): ControlKey[] {
-  const f = Number(a.supported_features || 0), value = a.current_tilt_position;
+/** The slats' keys (tile_controls::cover_tilt_keys); `atHalf`: open at 50, closed at both ends (tilt_open). */
+export function coverTiltKeys(a: Attributes, atHalf = false): ControlKey[] {
+  const f = Number(a.supported_features || 0), value = a.current_tilt_position, known = typeof value === 'number';
+  const open = known && (atHalf ? Math.abs(value - 50) <= .5 : value >= 99.5);
+  const closed = known && (value <= .5 || (atHalf && value >= 99.5));
   return [
-    ...(f & bits('cover', 'OPEN_TILT') ? [{ icon: 'blinds-open', disabled: typeof value === 'number' && value >= 99.5 }] : []),
+    ...(f & bits('cover', 'OPEN_TILT') ? [{ icon: 'blinds-open', disabled: open }] : []),
     ...(f & bits('cover', 'STOP_TILT') ? [{ icon: 'stop' }] : []),
-    ...(f & bits('cover', 'CLOSE_TILT') ? [{ icon: 'blinds', disabled: typeof value === 'number' && value <= .5 }] : []),
+    ...(f & bits('cover', 'CLOSE_TILT') ? [{ icon: 'blinds', disabled: closed }] : []),
   ];
 }

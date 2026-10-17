@@ -2437,6 +2437,13 @@
         "confirm_hint": "Una serratura bloccata si apre solo dopo un secondo tocco sul riquadro o sul tasto. Bloccare richiede sempre un tocco.",
         "lock_only_hint": "Questo schermo può bloccare ma mai sbloccare o aprire. Utile per uno schermo in ingresso, in garage o nella cameretta."
       },
+      "tilt_open": {
+        "label": "Lamelle aperte al",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Come in Home Assistant: 0 % è chiuso, 100 % del tutto aperto.",
+        "50_hint": "Per tende aperte al 50 % e chiuse allo 0 % e al 100 %, da un lato e dall'altro, come lo SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Seconda riga",
         "auto": "Automatico",

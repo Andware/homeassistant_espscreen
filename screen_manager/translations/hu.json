@@ -2437,6 +2437,13 @@
         "confirm_hint": "A bezárt zár a csempére vagy a gombjára való második koppintás után nyílik ki. A bezáráshoz mindig egy koppintás elég.",
         "lock_only_hint": "Ez a kijelző be tud zárni, de kinyitni vagy nyitni soha. Jó választás előszobába, garázsba vagy gyerekszobába szánt kijelzőhöz."
       },
+      "tilt_open": {
+        "label": "Lamellák nyitva ennél",
+        "100": "100 %",
+        "50": "50 %",
+        "100_hint": "Ahogy a Home Assistant: 0 % zárva, 100 % teljesen nyitva.",
+        "50_hint": "Olyan redőnyökhöz, amelyek 50 %-nál nyitva, 0 %-nál és 100 %-nál az egyik és a másik irányba zárva vannak, mint a SwitchBot Blind Tilt."
+      },
       "sub": {
         "label": "Második sor",
         "auto": "Automatikus",

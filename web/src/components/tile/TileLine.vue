@@ -53,7 +53,7 @@ const card = props.card;
     </span>
     <span v-if="card.tile.options?.inline === 'slider'" class="mini-slider" :style="card.sliderStyle"></span>
     <span v-if="card.face.coverRow" class="ctl cover-row">
-      <CoverTilePreview :primary="card.face.coverPrimary" :tilt="card.face.coverRow" :standing="false" :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}">
+      <CoverTilePreview :primary="card.face.coverPrimary" :tilt="card.face.coverRow" :at-half="card.tile.options?.tilt_open === '50'" :standing="false" :entity-state="card.current?.state || ''" :attributes="card.current?.a || {}">
         <template #fallback>
           <span v-if="card.face.controls === 'position'" class="range" :style="card.sliderStyle"></span>
           <template v-else><span v-for="(control, i) in card.face.panelKeys" :key="i" class="key mdi" :class="{ disabled: control.disabled }">{{ card.key(control.icon) }}</span></template>

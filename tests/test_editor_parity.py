@@ -887,7 +887,8 @@ class CoverLayout(unittest.TestCase):
              for position, keys, tilt, tilt_keys, extra in ((True, 0, True, 0, 3), (True, 0, True, 0, 0), (False, 3, True, 0, 0),
                                                             (False, 3, False, 3, 0), (True, 0, False, 0, 0), (False, 2, False, 0, 0),
                                                             (False, 0, True, 0, 0))]
-    SLATS = [(w, h, tilt) for w in (30, 64, 96, 300) for h in (36, 80, 240, 500) for tilt in (0, 33, 45, 100)]
+    # The last of each: a blind open at 50 (the tile's tilt_open option), closed at 0 and at 100.
+    SLATS = [(w, h, tilt, half) for w in (30, 64, 96, 300) for h in (36, 80, 240, 500) for tilt in (0, 33, 45, 50, 70, 100) for half in (0, 1)]
 
     @classmethod
     def setUpClass(cls):
@@ -897,17 +898,17 @@ class CoverLayout(unittest.TestCase):
 const r = (x: any) => [x.x, x.y, x.w, x.h];
 const layouts = DATA.cases.map((c: any) => { const l = coverLayout({ x: 3, y: 5, w: c[1], h: c[2] }, c[0], 8, 16, 2 * c[0], !!c[3], c[4], !!c[5], c[6], c[7], !!c[8]);
   return [l.tier, ...l.groups.flatMap((g: any) => [...r(g.area), ...r(g.control), ...r(g.caption), g.keys, +g.slider, +g.horizontal, +g.lying]), ...r(l.swap)].join(" "); });
-const slat = DATA.slats.map((c: any) => slats(c[0], c[1], c[2], 18, 7).map((s: any) => [s.x1, s.y1, s.x2, s.y2].map((v: number) => v.toFixed(1)).join(",")).join(" "));
+const slat = DATA.slats.map((c: any) => slats(c[0], c[1], c[2], 18, 7, !!c[3]).map((s: any) => [s.x1, s.y1, s.x2, s.y2].map((v: number) => v.toFixed(1)).join(",")).join(" "));
 console.log(JSON.stringify({ layouts, slat }));''', {'cases': cls.CASES, 'slats': cls.SLATS}, tmp)
             cases = ',\n'.join('{%d,%d,%d,%d,%d,%d,%d,%d,%d}' % c for c in cls.CASES)
-            slat_cases = ',\n'.join('{%d,%d,%d}' % c for c in cls.SLATS)
+            slat_cases = ',\n'.join('{%d,%d,%d,%d}' % c for c in cls.SLATS)
             cls.cpp = build_and_run(f'''#include "components/smart_display/cover_tile.h"
 #include <cstdio>
 struct C {{ int touch, w, h, position, keys, tilt, tilt_keys, extra, standing; }};
 static const C CASES[] = {{
 {cases}
 }};
-struct S {{ int w, h, tilt; }};
+struct S {{ int w, h, tilt, half; }};
 static const S SLATS[] = {{
 {slat_cases}
 }};
@@ -920,7 +921,7 @@ int main() {{
     r(l.swap); std::printf("\\n");
   }}
   for (const auto &c : SLATS) {{
-    const auto s = cover_tile::slats(c.w, c.h, (float) c.tilt, 18, 7);
+    const auto s = cover_tile::slats(c.w, c.h, (float) c.tilt, 18, 7, c.half != 0);
     std::printf("slats");
     for (int i = 0; i < s.count; ++i) std::printf("%s%.1f,%.1f,%.1f,%.1f", i ? " " : " ", s.slat[i].x1, s.slat[i].y1, s.slat[i].x2, s.slat[i].y2);
     std::printf("\\n");

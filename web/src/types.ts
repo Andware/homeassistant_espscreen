@@ -15,6 +15,8 @@ export type TileOptions = {
   controls?: string;
   inline?: string;
   guard?: string;
+  // Where a cover's slats stand open: "100" (Home Assistant's rule, never stored) or "50".
+  tilt_open?: string;
   tap?: string;
   icon?: string;
   background?: string;
@@ -100,7 +102,7 @@ export type PageTile = {
     calendarWeekStart?: string; calendarHours?: [number, number]; calendarWeekNumbers?: boolean; calendarBookOn?: string; calendarBookPlace?: string; calendarBookTitle?: string;
     // A sensor's meter (firmware 0.56.0): TileOptions' meter, min, max, segments, colors and thresholds.
     meterStyle?: string; meterMin?: number; meterMax?: number; meterSegments?: number; meterColors?: string[]; meterThresholds?: number[] };
-  interaction: { tap?: string; inline?: string; controls?: string; action?: TileOptions["action"]; guard?: string; play?: FavoritePlay; speaker?: string; shuffle?: string; repeat?: string };
+  interaction: { tap?: string; inline?: string; controls?: string; action?: TileOptions["action"]; guard?: string; play?: FavoritePlay; speaker?: string; shuffle?: string; repeat?: string; tilt_open?: string };
   children?: ChildTile[];
 };
 export type Page = {
