@@ -1439,7 +1439,8 @@ inline void draw(lv_event_t *e) {
   lv_draw_rect_dsc_t d;
   lv_draw_rect_dsc_init(&d);
   d.bg_color = lv_color_hex(cover_paint::ACCENT);
-  d.bg_opa = LV_OPA_50;
+  // Cut short at either end, it fades instead of narrowing to a stripe that would read as a handle.
+  d.bg_opa = (lv_opa_t) (LV_OPA_50 * (hi - lo) * (hi - lo) / (length * length));
   d.radius = std::min(across / 2, (hi - lo) / 2);
   lv_area_t band = lying ? lv_area_t{lo, c.y1, hi, c.y2} : lv_area_t{c.x1, lo, c.x2, hi};
   lv_draw_rect(lv_event_get_layer(e), &d, &band);
@@ -7588,7 +7589,7 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
       if(volume){
         lv_obj_set_pos(w.control_slider,0,0);
         // Keep the dragged value while the command is under way; HA's report takes over afterwards.
-        if(!lv_obj_has_state(w.control_slider,LV_STATE_PRESSED) && !(t.pending && !t.confirmed))lv_slider_set_value(w.control_slider,slider_value(t),LV_ANIM_OFF);
+        travel_look(w.control_slider,t,false,true);if(!lv_obj_has_state(w.control_slider,LV_STATE_PRESSED) && !(t.pending && !t.confirmed))lv_slider_set_value(w.control_slider,slider_value(t),LV_ANIM_OFF);
         panel_w=pair_w;panel_h=key_y+m.key_h;
       }
     }
@@ -7616,7 +7617,7 @@ inline int layout_panel(Widgets &w,const Tile &t,bool large,int content_w,int co
     if(has_slider){
       lv_obj_remove_flag(w.control_slider,LV_OBJ_FLAG_HIDDEN);lv_obj_set_pos(w.control_slider,0,(panel_h-m.slider_h)/2);
       // Keep the dragged value while the command is under way; HA's report takes over afterwards.
-      if(!lv_obj_has_state(w.control_slider,LV_STATE_PRESSED) && !(t.pending && !t.confirmed))lv_slider_set_value(w.control_slider,slider_value(t),LV_ANIM_OFF);
+      travel_look(w.control_slider,t,false,true);if(!lv_obj_has_state(w.control_slider,LV_STATE_PRESSED) && !(t.pending && !t.confirmed))lv_slider_set_value(w.control_slider,slider_value(t),LV_ANIM_OFF);
       panel_w=track;
     }else lv_obj_add_flag(w.control_slider,LV_OBJ_FLAG_HIDDEN);
     if(mode=="volume"){
