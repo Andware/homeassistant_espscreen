@@ -98,6 +98,20 @@ every minute and paints a whole new picture every ten minutes, and its clock mov
 with each new picture. The seconds hand redraws only the strip of glass it passes. Boards with 4 MB of flash (the CYD
 and its kin) have no room for the faces and keep the digital clock, and so does a screen whose firmware predates them.
 
+**Photos** (app 0.4.89). The photos of a folder of Home Assistant's media, one after the other over the whole glass.
+In the drawer of Photos, **Folder** browses Home Assistant's media: an album, a person or a tag of Immich (its
+integration), a folder under Home Assistant's `/media`, Synology Photos, or any other media source. Then choose how long
+each photo stands (30 seconds to an hour), the order (shuffled, every photo once before any comes again, or the
+folder's own order) and how a photo fills the glass: **Auto** fills it with a photo of about its shape and shows a
+photo of another shape whole on its own colour, **Fill** always cuts, **Whole** never does. A photo has no words over
+it. The next photo is fetched and read before its turn, so it changes at once. iPhone photos (HEIC) are read too.
+Google Photos cannot be used: Google lets an app read only the photos that app uploaded itself.
+
+**Faces and steps of plugins** (app 0.4.89, plugin API 0.14). A plugin can bring a face for a step (another clock,
+another player, another way to show a photo), picked under Face in that step's drawer, or a step of its own, added to
+the list with **Add from plugins**. A plugin's face or step shows only on a screen that has the plugin; anywhere else
+the step shows its own face. How to make one is in docs/PLUGINS.md, "A screensaver", and the plugins repository.
+
 The cover and the camera are a little darker everywhere, so the words always read. A camera has nothing else on it,
 and a cover only its three keys: no bar, no spinner.
 
@@ -142,6 +156,19 @@ has.
   `web/src/model/clock-faces.ts`, Bauhaus's composition from the same hash. The clock is drawn whole again every minute
   (`apply_screen_settings`), which moves Glass and Classic (`clock_faces::drift`) and Bauhaus; `saver_tick` moves the
   seconds hand every second and invalidates only its old and new box (`clock_faces::tick`).
+- **The photos** (app 0.4.89, `screen_manager/app/saver_photos.py`): the choice keeps `photos` (`source`, a
+  `media-source://` id; `every`; `order`, `shuffle` or `in_order`; `fit`). The app reads the folder through Home
+  Assistant's websocket (`media_source/browse_media`, three levels deep, at most 500 photos, again after an hour),
+  walks it per screen, and fetches the next photo before its turn: `media_source/resolve_media` names its address and
+  the app fetches it with its own token (`HomeAssistant.media_file`: a path of Home Assistant's, or a public address,
+  never a redirect, at most 25 MB). A photo that cannot be read is passed over; five in a row read the folder again.
+  The word is `{"k": "photos", "e": "saver.photos", "x": {"pic": <mark>}}`, sent once the photo is here, to a screen
+  whose hello lists `saver_photos` (a board that draws pictures). The screen opens the full view under that name, asks
+  with `saver: photos`, and the app answers with a still link to `camera_feed.encode_photo`: exactly the screen's box,
+  not darkened, 8-bit. `photo_loop` starts a pass when a screen's next photo is due. Nothing of a photo is logged.
+- **Faces and steps of plugins** (plugin API 0.14): `media_face`, `photos_face` and `face` may name a plugin's saver,
+  `order` may hold up to four plugin steps, and `plugins` keeps their options and entities. The message gains `pf`;
+  docs/PLUGINS.md, "A screensaver", has the rest.
 - **The editor** (app 0.4.83): `ScreensaverCard.vue` lists the steps and `SaverInspector.vue` opens one in the drawer;
   both read and change the choice through `web/src/stores/screensaver.ts`, and drag their lists with
   `web/src/composables/useSortableRows.ts`.

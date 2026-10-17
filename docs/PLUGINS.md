@@ -220,6 +220,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | Settings rows | `settings(SettingsPage&)`; `settings_screen::plugin_pages` | `Plugins.settings_for`, `set_setting`: the manifest's `settings` (switch, number, select, text, button with its `status`), entities of the screen's own device found in the entity registry (`_setting_entities`) | in the plugin's details on the screen's Plugins tab (`PluginSettings.vue`), with its inputs and parts; Screen settings links there |
 | A question to Home Assistant | `tessera::send`, `on_message` (op `plugin`) | `Plugins.answer`: only `permissions.ha_commands`, logged; an answer the manifest's `answers` maps goes as its fields, the rest as it came; both bounded (`bounded`, 3.2 KB, by bytes) | the commands under "What it may do" |
 | The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`), `on_press` and `on_step(Step)` (0.11, "Touch feedback" below) | | |
+| A screensaver (0.14) | `Saver`, `add_saver(id, step, make)`, `SaverContext`; `ui::takes_taps`; `wish()`; "A screensaver" below | the manifest's `savers`; `Plugins.saver_kinds`, `saver_plugins`, `saver_step`, `refresh_savers`; `screen_saver.message`'s `pf`; `answer_plugin_pictures` with `question.saver` and `saver:picture` | the Screensaver card: a face per step, a step of its own in the order, its options |
 | A board's own hardware | the plugin's `plugin.yaml` (audio codecs, a relay), its `boards` in the manifest | offered only to the screens of those boards | the Plugins page says which boards |
 
 ## Touch feedback
@@ -363,7 +364,67 @@ shows while the next one comes (`set_picture` no longer clears it, and `tile_pic
 the store holds it), so a cover flow turns without a flash of blocks; the render host with `KEPT_PAGES_HOST=1` has a
 picture store of a 4-inch Guition's size, so its renders show every picture of a page as a board with PSRAM does.
 
+## A screensaver (0.14)
+
+The screensaver is a list of steps in the order the person put them (docs/SCREENSAVER.md): the music that plays, the
+photos of a folder, a camera, the clock. ESP Screen Manager picks the first that has something to show; the screen
+shows it over the whole glass while Auto standby dims it. A plugin adds to that list in two ways, and never beside it:
+
+- **A face of a step** (`step: clock`, `media` or `photos`): it draws the step the core already has, from the same
+  data the core's own face draws from. The person picks it under Face in that step's drawer. A screen that lacks the
+  plugin (it left, its build failed, older firmware) shows the step's own face: never a black glass.
+- **A step of its own** (`step: own`): a place in the order, from the plugin's fetch (`data`) and its entity
+  (`domains`, `attributes`, `fields`, as a tile of an entity), shown while its manifest's `when` holds: `always`,
+  `data` (its fetch has an answer) or `{state: [...]}` (its entity is in one of those states).
+
+The core decides when a saver shows: standby at a level above 0, without Sleep from Home Assistant, the cards closed,
+no alert. It goes on a wake, an alert, an update (`before_update` first), a level of 0, a new layout or another word.
+
+**The wire.** The app's word for the step (`op saver`) gains `pf`: `p` the saver (`plugin:<plugin>.<saver>`), `o` its
+options and `x` what it draws from. For a step of its own the word is `k: "plugin"` with `pf` alone. `x` is the step's
+contract in full words, built by the app (`screen_saver.media_contract`, `clock_contract`, `photos_contract`, or the
+plugin's own data), so the short keys of the core's own message can change without a plugin noticing. A field may be
+added; within major 0 none is renamed or taken away.
+
+| Step | `x` |
+|---|---|
+| media | `entity`, `name`, `title`, `artist`, `album`, `state`, `features` (Home Assistant's `supported_features`), `muted`, `volume` (0 to 1), `duration`, `position`, `position_at` (seconds since 1970), `picture` (`saver:picture` while there is a cover), `mark` (the cover's mark), `colour` (`#rrggbb`) |
+| clock | `temperature` (`21°`, `""` for none), `items` (`[{icon, text, since?}]`: a codepoint of Tessera's set, its words, or the moment it counts from) |
+| photos | `picture` (`saver:picture`), `mark`, `index`, `count`, `album` |
+| own | the fetch's answer and the entity's `state`, `name`, `attributes` and fields, as a plugin tile's `x` |
+
+**On the screen** (`plugin_host.cpp`, "A plugin's screensaver"): runtime_tiles makes the black glass on LVGL's top layer
+(`saver_glass`) and hands it to `plugin_host::saver_show` when `saver_plugin_draws` (the screen has that saver). The
+saver draws in a stage over the glass, which the host moves a millimetre along a slow circle every minute
+(`saver_view::drift`, the clock faces' rule) unless the manifest says `moves: true` (`Plugin::set_moves`, from
+`register_plugin`). Every call of a saver runs in the dark look (`theme::dark` set in `saver_call`), so its roles are
+white on black whatever the screen's look. `on_tick` comes from `tick_cards`, so it ticks on boards without pictures
+too. A new word for the same saver goes to `on_state` in place (`saver_state`); a finger's wish on the player is laid
+over `x` (`state`, `muted`) before the saver hears it.
+
+**Taps.** Only parts made with `ui::takes_taps` are clickable (`saver_touch`): a short tap goes to `on_tap` and a hold
+of `SAVER_MUTE_HOLD_MS` to `on_hold`, through the touch guard (`rt::allowed`, keys from `SAVER_TOUCH`), and the screen
+stays in standby. Everything else of the saver lets the finger through to `dim_wake_overlay`, which wakes the screen,
+and `saver_woke` keeps that touch from reaching a tile.
+
+**Pictures.** A saver's places are asked for as a card's (`saver_picture_want`, `SAVER_OWNER`, `Kind::CARD` 2), with
+`saver` instead of `card` and `for` the entity of a step of its own; the answer is `psaver`. The address `saver:picture`
+is the step's own picture: the app answers it with the cover of the player on the glass or the photo of the photos step
+(`server.saver_picture`), cut to the place. Its key carries the step's `mark`, so the next cover or photo is another
+picture under the same address. The store counts a saver's places as on the glass (`card_draws`, `card_letgo`).
+
+**wish().** `tessera::wish(entity, Wish, value)`: for the player on the screensaver `rt::saver_wish` (the core's own
+play and mute keys use it too, `saver_wishes`, optimistic.h's rules over the screensaver's word instead of a tile), for
+an entity of a tile `rt::wish`, and for any other entity the action alone.
+
+**The hello** lists a plugin's savers (`plugins[].savers`, `page_delivery.plugins_of`); the app offers and sends a face
+or step only to a screen that names it and has the plugin in its record (`Plugins.saver_kinds`).
+
+**Tested** by the host probe's three savers (a face of the music with a cover and a key, a face of the clock that
+moves itself, a step of its own) in `plugin_round` (`plugin_savers` in tools/render/run.py), and by
+tests/test_saver_plugins.py.
+
 ## What is not built yet
 
 A plugin's own messages beyond Home Assistant commands, Python modules of Tessera's own plugins in the add-on (the
-design's `module`), and pictures on a plugin's card over the page (the places exist for tiles only).
+design's `module`), and plugin faces of the camera step.

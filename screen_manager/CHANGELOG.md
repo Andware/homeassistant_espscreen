@@ -1,5 +1,15 @@
 ## Unreleased
 
+- **Photos as a screensaver.** The screensaver has a new step, Photos: the photos of a folder of Home Assistant's
+  media, one after the other over the whole glass. Pick an album, a person or a tag of Immich, a folder under
+  Home Assistant's media, or Synology Photos; choose how long each stands, shuffled or in order, and whether a photo
+  fills the glass or shows whole. iPhone photos are read too. Screens that show pictures only.
+- **Screensavers from plugins.** A plugin can now bring its own face for the clock, the music or the photos, or a step
+  of its own in the screensaver's list, with keys you can tap without waking the screen. A screen without that plugin
+  keeps the step's own face.
+- **The screensaver's play and mute keys follow Home Assistant as every key does.** They show their change at once and
+  go back when Home Assistant does not follow, by the same rules as the keys on the pages.
+
 - **The editor remembers where you are.** The open screen, the page of the app and a screen's Override YAML are in the
   page's address now: a reload opens the same screen again, the browser's Back and Forward go through what you had
   open, and a link to a screen can be kept. Leaving a screen with unsaved changes by the address bar asks first, as the
