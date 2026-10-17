@@ -10,7 +10,7 @@
 
 - **A cover shows that it is on its way.** A blind, curtain or garage door sent somewhere no longer jumps back to
   where it was while it moves: from the tap on, its tile and card show where it goes and say Opening or Closing, the
-  slider's handle steps aside and a soft band runs over the slider in the direction it moves, until Home Assistant
+  slider's handle steps aside and a thin stripe glides over the slider in the direction it moves, until Home Assistant
   reports it there or stopped. The slider still takes a finger, so a cover sent the wrong way can be turned around at
   once, and the slats' tilt works the same way.
 - **A screen follows Home Assistant to another time zone.** Home Assistant's ESPHome integration tells a screen its

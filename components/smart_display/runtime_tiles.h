@@ -1392,12 +1392,12 @@ inline void cover_key(Tile &t, int command) {
   }
 }
 // A cover slider while its cover is on its way (cover_travel.h). The fill stands faint at the target and the handle is
-// gone, so nothing looks as if it waits for a finger, and a soft band runs over the slider from where Home Assistant
+// gone, so nothing looks as if it waits for a finger, and a thin stripe glides over the slider from where Home Assistant
 // last had the cover towards where it goes, about once a second: the cover moves, and which way, also where it cannot
 // be seen. The slider still takes a finger: a press brings the handle back (the pressed state outranks the travel's)
 // and the release sends the cover elsewhere. The slats' slider has no fill, so its handle goes faint instead.
-// Only the sliders on the glass are redrawn, by one timer that lives while a band runs.
-namespace travel_band {
+// Only the sliders on the glass are redrawn, by one timer that lives while a stripe runs.
+namespace travel_stripe {
 struct Run { lv_obj_t *slider = nullptr; int from = 0, to = 0; };
 inline std::array<Run, 8> runs{};
 inline lv_timer_t *timer = nullptr;
@@ -1429,26 +1429,28 @@ inline void draw(lv_event_t *e) {
   const int a = at(slider, c, r->from), b = at(slider, c, r->to), span = std::abs(b - a);
   const int across = lying ? lv_area_get_height(&c) : lv_area_get_width(&c);
   if (span < 2) return;
-  const int length = std::max(across / 2, span / 3);
-  const float phase = (esphome::millis() % PERIOD) / float(PERIOD);
-  // The band's front runs from `a` to past `b`, so it leaves at the target before it starts again.
-  const int front = a + (b > a ? 1 : -1) * (int) std::lround(phase * (span + length));
-  const int lo = std::max(std::min(a, b), std::min(front, front - (b > a ? length : -length)));
-  const int hi = std::min(std::max(a, b), std::max(front, front - (b > a ? length : -length)));
-  if (hi <= lo) return;
+  // One thin stripe across the slider, as long as half its width, glides from where the cover was to where it goes,
+  // slowing as it arrives, and fades in at the start and out at the end; it never reaches the slider's rounded ends.
+  const int thick = std::max(3, across / 14), half = thick / 2;
+  const int length = std::max(thick, across / 2);
+  const float phase = (esphome::millis() % PERIOD) / float(PERIOD), eased = 1.0f - (1.0f - phase) * (1.0f - phase);
+  const int lo_end = (lying ? c.x1 : c.y1) + across / 4, hi_end = (lying ? c.x2 : c.y2) - across / 4;
+  const int at_ = std::clamp(a + (int) std::lround((b - a) * eased), lo_end, hi_end);
+  const float fade = std::min({1.0f, phase / 0.2f, (1.0f - phase) / 0.25f});
   lv_draw_rect_dsc_t d;
   lv_draw_rect_dsc_init(&d);
   d.bg_color = lv_color_hex(cover_paint::ACCENT);
-  // Cut short at either end, it fades instead of narrowing to a stripe that would read as a handle.
-  d.bg_opa = (lv_opa_t) (LV_OPA_50 * (hi - lo) * (hi - lo) / (length * length));
-  d.radius = std::min(across / 2, (hi - lo) / 2);
-  lv_area_t band = lying ? lv_area_t{lo, c.y1, hi, c.y2} : lv_area_t{c.x1, lo, c.x2, hi};
-  lv_draw_rect(lv_event_get_layer(e), &d, &band);
+  d.bg_opa = (lv_opa_t) std::lround(LV_OPA_80 * fade);
+  d.radius = LV_RADIUS_CIRCLE;
+  const int middle = lying ? (c.y1 + c.y2) / 2 : (c.x1 + c.x2) / 2;
+  lv_area_t stripe = lying ? lv_area_t{at_ - half, middle - length / 2, at_ - half + thick - 1, middle + length / 2}
+                           : lv_area_t{middle - length / 2, at_ - half, middle + length / 2, at_ - half + thick - 1};
+  lv_draw_rect(lv_event_get_layer(e), &d, &stripe);
 }
 inline void forget(lv_event_t *e) {
   if (Run *r = find(lv_event_get_target_obj(e))) *r = Run();
 }
-// The band of one slider: from and to in the slider's raw values, or none.
+// The stripe of one slider: from and to in the slider's raw values, or none.
 inline void set(lv_obj_t *slider, bool on, int from, int to) {
   Run *r = find(slider);
   if (!on) { if (r) { *r = Run(); lv_obj_invalidate(slider); } return; }
@@ -1466,14 +1468,14 @@ inline void set(lv_obj_t *slider, bool on, int from, int to) {
   r->to = to;
   if (!timer) timer = lv_timer_create(tick, FRAME, nullptr);
 }
-}  // namespace travel_band
+}  // namespace travel_stripe
 // `closed`: the slider holds the closed share (a standing blind, a tile's strip), else the open share or the tilt.
 inline void travel_look(lv_obj_t *slider, const Tile &t, bool tilt, bool closed) {
   if (!slider) return;
   const bool on = t.travelling() && t.travel.tilt == tilt;
   auto raw = [&](float v) { return (int) std::lround(std::clamp(closed ? 100.0f - v : v, 0.0f, 100.0f) * 10); };
   const float from = t.travel.real, to = t.travel.to;
-  travel_band::set(slider, on && std::isfinite(to), std::isfinite(from) ? raw(from) : raw(to < 50 ? 100 : 0), raw(to));
+  travel_stripe::set(slider, on && std::isfinite(to), std::isfinite(from) ? raw(from) : raw(to < 50 ? 100 : 0), raw(to));
   if (on == lv_obj_has_state(slider, LV_STATE_USER_1)) return;
   if (on) {
     if (!tilt) lv_obj_set_style_bg_opa(slider, LV_OPA_40, LV_PART_INDICATOR | LV_STATE_USER_1);
