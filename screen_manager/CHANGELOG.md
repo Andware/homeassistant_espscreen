@@ -5,6 +5,8 @@
   open, and a link to a screen can be kept. Leaving a screen with unsaved changes by the address bar asks first, as the
   sidebar does. Older links such as `#settings` still work.
 
+- **A plugin's README fits a phone.** A README with a table no longer made the plugin's details wider than the screen;
+  the text wraps to the width of the phone and a wide table or code block scrolls on its own.
 - **A tile added from Home Assistant no longer undoes a save made at the same moment.** An automation's tile event
   waits on Home Assistant for the entity's capabilities; a save from the editor during that wait is kept now, and the
   tile is placed on the new layout.
