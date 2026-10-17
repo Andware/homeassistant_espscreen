@@ -216,6 +216,9 @@ class Photos:
             if self.shows.get(inbox) is show and show.next == wanted:
                 show.misses += 1
                 show.next = None
+                # What went wrong, never which photo (its name or address).
+                LOG.info('Screensaver photos: a photo was passed over (%s%s)', type(error).__name__,
+                         f' {error.status}' if isinstance(getattr(error, 'status', None), int) else '')
                 if show.misses >= MAX_MISSES:
                     show.waited_at = self.clock()
                     folder = self.folders.get(show.source)

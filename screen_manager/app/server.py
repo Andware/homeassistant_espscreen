@@ -776,6 +776,14 @@ class HomeAssistant:
             if parsed.netloc or '..' in parsed.path or address.startswith('//'):
                 raise ValueError('unsafe photo address')
             url, headers = f'{root}{address}', {'Authorization': 'Bearer ' + self.token}
+            # Under the Supervisor its proxy passes /api/ alone, and a media source serves its files elsewhere
+            # (/media/local/..., /immich/...): the photo comes from Home Assistant itself, at the internal address it
+            # names, by the signature resolve_media gave the path (`authSig`), with no token of the app's.
+            if self.base == 'http://supervisor/core/api' and not parsed.path.startswith('/api/'):
+                direct = await self.internal_url()
+                if not direct or 'authSig=' not in (parsed.query or ''):
+                    raise ValueError('no way to Home Assistant for this photo')
+                url, headers = f'{direct}{address}', {}
         elif address.startswith(('http://', 'https://')):
             if not await self._allow_media_url(address):
                 raise ValueError('unsafe photo address')
@@ -793,6 +801,17 @@ class HomeAssistant:
                 if len(raw) > saver_photos.MAX_PHOTO_BYTES:
                     raise ValueError('photo too large')
             return bytes(raw)
+
+    async def internal_url(self):
+        """Home Assistant's own internal address (websocket network/url, its Network settings), without a trailing slash,
+        or '' when it has none; asked once."""
+        if getattr(self, '_internal_url', None) is None:
+            try:
+                urls = await self.request('network/url')
+                self._internal_url = str((urls or {}).get('internal') or '').rstrip('/')
+            except Exception:  # noqa: BLE001 - an older Home Assistant, or no rights: the proxy only
+                self._internal_url = ''
+        return self._internal_url
 
     async def browse_image(self, entity, picture):
         """A thumbnail of a player's library (app 0.4.42): a public address on the internet (Spotify's), or Home
