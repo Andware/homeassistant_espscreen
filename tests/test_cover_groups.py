@@ -72,7 +72,7 @@ class CoverTests(unittest.TestCase):
         module = (ROOT / 'components/smart_display/module_cover_groups.h').read_text()
         event = module[module.index('inline void blind_card_event('):module.index('inline void blind_slider_event(')]
         self.assertIn('b->state == "opening" || b->state == "closing"', event)
-        self.assertIn('(b->supported & feature::COVER_STOP) ? tile_controls::COVER_STOP', event)
+        self.assertIn('(b->supported & tile_controls::feature::COVER_STOP) ? tile_controls::COVER_STOP', event)
         self.assertIn('b->state == "closed" ? tile_controls::COVER_OPEN : tile_controls::COVER_CLOSE', event)
 
     def test_the_firmware_reads_what_the_app_sends(self):

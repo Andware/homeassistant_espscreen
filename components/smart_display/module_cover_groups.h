@@ -69,7 +69,7 @@ inline void blind_card_event(lv_event_t *e) {
   const Blind *b = blind_of(cards[i].entity);
   if (!b || b->unavailable) return;
   const bool moving = b->state == "opening" || b->state == "closing";
-  const int command = moving && (b->supported & feature::COVER_STOP) ? tile_controls::COVER_STOP
+  const int command = moving && (b->supported & tile_controls::feature::COVER_STOP) ? tile_controls::COVER_STOP
                     : b->state == "closed" ? tile_controls::COVER_OPEN : tile_controls::COVER_CLOSE;
   cover_key(b->entity, command);
 }
