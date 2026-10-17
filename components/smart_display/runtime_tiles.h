@@ -1735,17 +1735,9 @@ inline int text_width(const std::string &text,const lv_font_t *font){
   lv_point_t size;lv_text_get_size(&size,text.c_str(),font,0,0,LV_COORD_MAX,LV_TEXT_FLAG_NONE);return size.x;
 }
 // ---- Weather card: now, the next hours and the coming days, with rain ----
-// The colour of a condition's icon, as this look draws it on a card.
-inline uint32_t weather_color_raw(const std::string &c) {
-  using namespace theme::ha;
-  if(c=="sunny")return SUNNY;
-  if(c=="clear-night")return DEEP_PURPLE;
-  if(c=="rainy"||c=="pouring"||c=="lightning-rainy"||c=="snowy-rainy")return RAIN;
-  if(c=="snowy"||c=="hail")return SNOW;
-  if(c=="lightning")return LIGHTNING;
-  if(c=="partlycloudy")return PARTLY_CLOUDY;
-  return CLOUDY;
-}
+// The colour of a condition's icon on a card: the sky of the one weather table (tile_controls::weather_sky), the same the
+// chart beside it draws its marks in.
+inline uint32_t weather_color_raw(const std::string &c) { return tile_controls::weather_sky(c); }
 inline uint32_t weather_accent(const std::string &c) { return theme::foreground(weather_color_raw(c)); }
 inline lv_obj_t *detail_text(lv_obj_t *parent,const std::string &text,int x,int y,int width,const lv_font_t *font,lv_text_align_t align,uint32_t color){
   auto *l=detail_label(parent,text,x,y,std::max(1,width));lv_obj_set_style_text_font(l,font,0);lv_obj_set_height(l,lv_font_get_line_height(font));

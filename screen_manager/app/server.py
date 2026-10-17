@@ -3848,10 +3848,17 @@ class Manager:
         # Firmware 0.2.65+ takes a navigation tile on several pages, 0.16.0+ any entity on several tiles; an older
         # screen keeps one per page a navigation tile goes to, and one of everything else.
         firmware = self.firmware_version(inbox, screen) or (0, 0, 0)
-        layout, tile = run_tile_event(self.layouts.get(inbox) or {'title': screen['name'], 'tiles': []}, TILE_EVENTS[event_type], data,
-                                      firmware >= PAGE_TILE_REPEAT_MIN_FIRMWARE, self.layout_grid(inbox, screen).for_firmware(firmware),
-                                      firmware >= ENTITY_REPEAT_MIN_FIRMWARE)
-        await self.check_supported(inbox, layout)
+        for _ in range(3):
+            # check_supported waits on Home Assistant for the capabilities of the entity. A save of the editor's that lands
+            # meanwhile makes a new revision, and a layout laid over the one before it would undo that save without a
+            # word: start again from what is there now. Two saves in a row within one wait is as rare as it gets.
+            before = self.store.get(inbox)   # a copy of the record as stored: a save meanwhile shows as another one
+            layout, tile = run_tile_event(self.layouts.get(inbox) or {'title': screen['name'], 'tiles': []}, TILE_EVENTS[event_type], data,
+                                          firmware >= PAGE_TILE_REPEAT_MIN_FIRMWARE, self.layout_grid(inbox, screen).for_firmware(firmware),
+                                          firmware >= ENTITY_REPEAT_MIN_FIRMWARE)
+            await self.check_supported(inbox, layout)
+            if self.store.get(inbox) == before:
+                break
         record = self.store.get(inbox)
         if record and record['format'] == PAGE_FORMAT:
             self.save_pages(inbox, {'format': PAGE_FORMAT, 'revision': record['revision'], 'layout': replace_tiles(record, layout)})

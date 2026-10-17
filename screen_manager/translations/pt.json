@@ -1838,6 +1838,7 @@
         "on_screens": "Em {n} ecrã | Em {n} ecrãs",
         "fits_none": "Não é compatível com nenhum dos seus ecrãs",
         "failed": "A compilação falhou",
+        "not_running": "Não está a correr no ecrã",
         "queued": "Aguarda a sua vez"
       },
       "source": {

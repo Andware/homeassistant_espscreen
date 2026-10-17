@@ -1838,6 +1838,7 @@
         "on_screens": "Auf {n} Bildschirm | Auf {n} Bildschirmen",
         "fits_none": "Passt auf keinen deiner Bildschirme",
         "failed": "Erstellen fehlgeschlagen",
+        "not_running": "Läuft nicht auf dem Bildschirm",
         "queued": "Wartet, bis es dran ist"
       },
       "source": {

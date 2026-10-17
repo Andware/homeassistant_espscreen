@@ -1838,6 +1838,7 @@
         "on_screens": "Su {n} schermo | Su {n} schermi",
         "fits_none": "Non adatto a nessuno dei tuoi schermi",
         "failed": "Compilazione non riuscita",
+        "not_running": "Non è in esecuzione sullo schermo",
         "queued": "Attende il suo turno"
       },
       "source": {

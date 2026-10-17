@@ -3387,6 +3387,7 @@
         "on_screens": "On {n} screen | On {n} screens",
         "fits_none": "Fits none of your screens",
         "failed": "Build failed",
+        "not_running": "Not running on the screen",
         "queued": "Waits its turn"
       },
       "source": {

@@ -1,5 +1,20 @@
 ## Unreleased
 
+- **A tile added from Home Assistant no longer undoes a save made at the same moment.** An automation's tile event
+  waits on Home Assistant for the entity's capabilities; a save from the editor during that wait is kept now, and the
+  tile is placed on the new layout.
+- **The Plugins tab says when a screen does not run a plugin.** A plugin the app built into a screen that the screen
+  itself does not report, because it crashed at boot or the firmware on it was built without it, shows "Not running on
+  the screen" instead of "Installed".
+- **A plugin the firmware refuses by its API is named.** When a screen's update stops because a plugin was written for
+  another plugin API, the message names that plugin and offers its update, as it already did for a compiler error.
+- **The weather card and its chart agree on their colours.** A clear night, lightning with rain and snow with rain had
+  another colour on the card's icon than in the chart beside it; every weather colour comes from one table now.
+- **The overview opens fewer connections.** The small still screens on the overview take the normal refresh instead
+  of a live stream each, so a home with many screens keeps connections free for the editor itself.
+- **The compile cache is checked against GitHub's digest.** The prebuilt compile cache a build fetches is unpacked only
+  when its checksum matches the one GitHub names for it.
+
 - **Every file of the app is written whole or not at all.** The layouts, the settings, the plugins and now the Wi-Fi
   secrets of your screens too are written to a temporary file first and swapped in one step, so a power cut or a stop
   during a save never leaves half a file. A file the app cannot read is set aside beside the new one instead of being
