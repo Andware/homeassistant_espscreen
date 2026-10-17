@@ -53,8 +53,10 @@ What is open is in the page's address, and nowhere else: the editor has one rout
 `#/plugins` the pages of the app, and `#/override/<profile>` a screen's Override YAML. A reload opens the same again
 once the inventory has arrived (the session follows the address, `followAddress`), the browser's Back and Forward
 walk through what was open, a link to a screen can be kept, and the addresses from before the router (`#settings`)
-still work. Home Assistant's sidebar makes the editor's frame anew on a reload, at the bare address: the last address
-is kept in the tab (`sessionStorage`, `restoreKeptRoute`) and a page that starts without one goes back to it. Leaving a screen with unsaved changes by the address bar asks the same question as the sidebar does
+still work. Home Assistant's sidebar shows the editor in a frame whose address nobody sees, and makes it anew on a
+reload at the bare address: the route is mirrored into the hash of Home Assistant's own address
+(`/app/<slug>#/screens/...`, which can be copied), kept in the tab as well (`sessionStorage`), and a frame that starts
+at the overview goes back to what that hash or the tab says (`restoreKeptRoute`). Leaving a screen with unsaved changes by the address bar asks the same question as the sidebar does
 (`router.beforeEach` in the session store), and a no leaves the page and the address where they were. Code never reads
 or writes `location.hash`: a view is opened with `ui.go()` (the route names the pages know, `""` being the open screen
 or the overview), a screen with `session.select()`, an override with `ui.openOverride()`; what is open is read from

@@ -30,22 +30,31 @@ export const router = createRouter({
 // Every new view starts at the top, as a page does.
 router.afterEach((to, from) => { if (to.path !== from.path) window.scrollTo(0, 0); });
 
-// Home Assistant's sidebar shows the editor in an iframe it makes anew on every reload of its page, at the editor's bare
-// address: the hash would be gone, and with it the open screen. So the last address is kept in this tab (sessionStorage:
-// this tab alone, gone with it), and a page that starts at the overview goes back to it. An address someone typed or
-// kept (#/screens/..., #settings) wins: it is there, and nothing is restored over it; and a tab whose last address was
-// the overview itself stays there. (The router has already read the address when this runs: a bare one is `/` by then.)
+// Home Assistant's sidebar shows the editor in an iframe: the route lives on the iframe's address, which nobody sees,
+// and Home Assistant makes the iframe anew on every reload of its page, at the editor's bare address. So the route is
+// mirrored into the hash of the page around it (same origin through ingress, so the browser allows it; replaceState,
+// so Back and Forward stay the iframe's own): the address bar reads /app/<slug>#/screens/..., can be copied, and a page
+// that starts at the overview goes back to what that hash, or else what this tab last had (sessionStorage), says.
+// An address the iframe itself has (#/screens/..., an old #settings) wins: it is there, and nothing is restored over
+// it; a tab whose last address was the overview stays there. (The router has already read the iframe's address when
+// restoreKeptRoute runs: a bare one is `/` by then.) Outside a frame, and in a frame of another origin, only the tab's
+// storage is used.
 const KEPT = "esp-screens.route";
+const outer = (() => {
+  try { return window.top && window.top !== window && window.top.location.origin === location.origin ? window.top : null; } catch { return null; }
+})();
 router.afterEach((to, from) => {
   // The router's first navigation reads the address the page started with: a bare one is the overview, and keeping that
   // would write over the address this tab had before the reload, which restoreKeptRoute is about to read.
   if (from === START_LOCATION && to.path === "/") return;
   try { sessionStorage.setItem(KEPT, to.fullPath); } catch { /* storage may be off */ }
+  try { outer?.history.replaceState(outer.history.state, "", `${outer.location.pathname}${outer.location.search}#${to.fullPath}`); } catch { /* not ours to write */ }
 });
 export async function restoreKeptRoute() {
   if (router.currentRoute.value.path !== "/") return;
   let kept: string | null = null;
-  try { kept = sessionStorage.getItem(KEPT); } catch { /* storage may be off */ }
+  try { const hash = outer?.location.hash ?? ""; if (hash.startsWith("#/")) kept = hash.slice(1); } catch { /* not ours to read */ }
+  if (!kept) { try { kept = sessionStorage.getItem(KEPT); } catch { /* storage may be off */ } }
   if (kept && kept !== "/") await router.replace(kept);
 }
 
