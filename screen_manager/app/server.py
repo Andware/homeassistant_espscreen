@@ -217,6 +217,9 @@ class HomeAssistant:
         self.language_of = lambda: 'en'
         self.config_stale = False
         self.on_config = lambda: None
+        # Home Assistant's time zone changed (a screen in a van that crosses one): the manager resyncs the
+        # screens' clocks, which Home Assistant's ESPHome integration only tells a screen when it connects.
+        self.on_time_zone = lambda: None
         # (event type, data) of alert events for every screen, for Manager.alert_loop.
         self.broadcasts = asyncio.Queue()
         # (event type, data) of tile events (app 0.2.51+), for Manager.tile_loop.
@@ -455,13 +458,17 @@ class HomeAssistant:
         try:
             config = await self.request('get_config')
             self.units = config.get('unit_system') or {}
-            self.time_zone = ZoneInfo(config.get('time_zone') or 'UTC')
+            zone = ZoneInfo(config.get('time_zone') or 'UTC')
+            moved = isinstance(self.time_zone, ZoneInfo) and self.time_zone.key != zone.key
+            self.time_zone = zone
             self.location_name = config.get('location_name') if isinstance(config.get('location_name'), str) else ''
             language = config.get('language')
             changed = isinstance(language, str) and language != self.ha_language
             self.ha_language = language if isinstance(language, str) else self.ha_language
             if changed:
                 self.on_config()
+            if moved:
+                self.on_time_zone()
         except (Refused, TimeoutError, ConnectionError, ValueError, TypeError, AttributeError, KeyError):
             self.time_zone = self.time_zone or timezone.utc
 
@@ -801,6 +808,10 @@ class HomeAssistant:
         entries = await self.request('config_entries/get', domain='esphome')
         return {entry['entry_id']: entry for entry in entries or [] if isinstance(entry, dict) and entry.get('entry_id')}
 
+    async def reload_entry(self, entry_id):
+        """Load one integration again, as its Reload in Home Assistant's menu does: an ESPHome screen connects anew."""
+        await self.call_service('homeassistant', 'reload_config_entry', {'entry_id': entry_id})
+
     async def flows(self):
         """The config flows Home Assistant has under way, the devices under "Discovered" among them."""
         return [flow for flow in await self.request('config_entries/flow/progress') or [] if isinstance(flow, dict)]
@@ -964,6 +975,8 @@ class Manager:
         self.ha.language_of = self.region.language
         self.firmware.language = self.region.language
         self.ha.on_config = self.language_changed
+        self.ha.on_time_zone = self.time_zone_changed
+        self._clock_resync = None
         self.set_screens()
         self.skill_dir = claude_skill.skill_dir()
         self._registry_source, self._registry_index = None, {}
@@ -2559,6 +2572,23 @@ class Manager:
         self.write_languages()
         self.ha.changed.set()
         self.notify()
+
+    def time_zone_changed(self):
+        """Home Assistant moved to another time zone. Its ESPHome integration reads the zone once, when it connects to a
+        screen, and answers every later time request with that one, so a screen would keep the old hour until Home
+        Assistant restarts. Each screen's integration is loaded again, and the screen takes the new zone as it connects."""
+        if self._clock_resync is None or self._clock_resync.done():
+            self._clock_resync = asyncio.get_running_loop().create_task(self.resync_clocks())
+
+    async def resync_clocks(self):
+        zone = getattr(self.ha.time_zone, 'key', self.ha.time_zone)
+        for screen in self.screens():
+            try:
+                entry = await self.entry_of(screen)
+                await self.ha.reload_entry(entry)
+                LOG.info('%s follows Home Assistant to the time zone %s', screen['name'], zone)
+            except (ValueError, ConnectionError, TimeoutError, ClientError) as error:
+                LOG.warning('%s keeps its time zone until it reconnects: %s', screen['name'], error)
 
     def write_languages(self):
         """Every paired screen's YAML says the language of its next build (the LANGUAGE substitution)."""

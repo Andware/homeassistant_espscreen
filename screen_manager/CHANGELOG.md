@@ -1,5 +1,14 @@
 ## Unreleased
 
+- **A cover shows that it is on its way.** A blind, curtain or garage door sent somewhere no longer jumps back to
+  where it was while it moves: from the tap on, its tile and card show where it goes and say Opening or Closing, the
+  slider's handle steps aside and a soft band runs over the slider in the direction it moves, until Home Assistant
+  reports it there or stopped. The slider still takes a finger, so a cover sent the wrong way can be turned around at
+  once, and the slats' tilt works the same way.
+- **A screen follows Home Assistant to another time zone.** Home Assistant's ESPHome integration tells a screen its
+  time zone only when it connects, so a screen kept the old hour after the time zone changed in Home Assistant (a
+  home on wheels crossing one) until Home Assistant restarted. The app now reloads each screen's integration when the
+  time zone changes, and the screens show the new hour within seconds.
 - **The editor remembers where you are.** The open screen, the page of the app and a screen's Override YAML are in the
   page's address now: a reload opens the same screen again, the browser's Back and Forward go through what you had
   open, and a link to a screen can be kept. Leaving a screen with unsaved changes by the address bar asks first, as the
