@@ -28,9 +28,9 @@ namespace settings_screen {
 // old ones. The manager sends the older ones as their own keys in the layout message; dark_mode (firmware
 // 0.2.54+) only exists as the screen's own setting and entity, like page_buttons (firmware 0.2.69+): off, the
 // Previous and Next bar under the tiles goes and the tiles take its room.
-// Swiping is on until someone turns it off: a new screen has the edge gestures, the Dock among
-// them; a screen that saved its settings before keeps what it saved.
-inline int32_t swipe_pages = 1, rotation = 0, auto_home = 1, auto_home_seconds = 120, dark_mode = 0, page_buttons = 1;
+// Swiping is off until someone turns it on, as it always was: a screen that never saved its settings
+// stores no choice, so a default of on would turn it on for every screen out there with the update.
+inline int32_t swipe_pages = 0, rotation = 0, auto_home = 1, auto_home_seconds = 120, dark_mode = 0, page_buttons = 1;
 // The house at the far left of the top bar (firmware 0.2.100+): one tap and the screen is back on page 1, from
 // wherever it stands. On page 1 there is nowhere to go, so it is not drawn there and the page title starts at the
 // margin as it always did. Off, the bar is exactly what it was.

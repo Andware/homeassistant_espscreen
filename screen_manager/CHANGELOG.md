@@ -151,8 +151,9 @@
 - **The Dock: swipe up for every page at once.** On every board with 8 MB of flash or more, a swipe up from the bottom
   edge now opens the Dock, a drawer with all pages as small pictures with their names, in two rows. It comes up with
   your finger and opens the rest of the way when you let go (pulled up only a little, it falls back). A tap on the
-  page dots at the bottom opens it as well. Tap a page to go there, drag it down to close it, or swipe up once more to go home. The CYD and the other 4 MB boards keep going home on that swipe and get none of
-  its code, so their room for updates stays the same.
+  page dots at the bottom opens it as well. Tap a page to go there, drag it down to close it, or swipe up once more to go home. The swipes need Swipe between pages, which stays off until you turn it on under the screen's
+  settings. The CYD and the other 4 MB boards keep going home on that swipe and get none of its code, so their room
+  for updates stays the same.
 - **In the Dock, per page.** On a screen whose board has the Dock, a page's settings say how it stands there: its
   **Picture** (the default), an **Icon** of its own from the same icons as the tiles, or **Hidden**. A page left out of
   swiping is not in the Dock either.
@@ -183,10 +184,6 @@
 - **A new page asks what it needs.** The Add page window chooses the top bar with chips: the home key is on, and the
   clock and the screen's other items are a tap away instead of a clock on every new page. On a screen with the Dock it
   also asks how the page stands in the Dock: its picture, an icon, or hidden.
-- **Swipe between pages is on for a new screen.** A screen set up from now on can swipe through its pages, open the
-  settings from the top edge and open the Dock from the bottom edge without turning anything on first. A screen you
-  already have keeps the setting it has once any of its settings was ever changed on it; one whose settings were never
-  touched swipes too after this update. Turn it off under the screen's Settings, Swipe between pages.
 - **A wide tile's slider lines up with the tiles above it (#250).** On a tile three cells wide or more, a player's
   volume, a brightness or a -/+ took only the last cell at the right end, a short slider where the editor showed half
   the tile. The first cell now keeps the name, as on a tile of one cell, and the control fills every cell after it, on
