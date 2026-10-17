@@ -3091,9 +3091,6 @@ def installation_yaml(data):
     if not isinstance(chosen, dict) or any(key not in offered or value not in offered[key] for key, value in chosen.items()):
         raise ValueError(t('addon.errors.firmware.choice'))
     choice_lines = ''.join(f'  {key}: {quote(chosen[key])}\n' for key in offered if chosen.get(key, offered[key][0]) != offered[key][0])
-    # Swipe between pages is on for a screen set up here: the line is the screen's start value until it stores a choice
-    # of its own (packages/core.yaml, SWIPE_PAGES_DEFAULT). A profile written before has no line and keeps the core's off,
-    # so an update never turns swiping on for a screen that is out there.
     # The components and fonts come from the branch the board package does (packages/<key>.yaml), main unless the app
     # runs in another channel.
     branch_line = f'  GITHUB_REF: {quote(ref())}\n' if ref() != REF else ''
@@ -3120,7 +3117,6 @@ substitutions:
   DEVICE_NAME: {quote(name)}
   DEVICE_FRIENDLY_NAME: {quote(friendly.strip())}
   LANGUAGE: {quote(language)}
-  SWIPE_PAGES_DEFAULT: "1"
 {rotation_line}{grid_lines}{choice_lines}{branch_line}
 esphome:
   name: {quote(name)}

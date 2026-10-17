@@ -32,13 +32,6 @@ changes them with the entity's own action, and leaves them out of the layout mes
 | Show home button (0.2.100+) | `switch.<screen>_show_home_button` | `home_button` |
 | Rotation | `select.<screen>_rotation` | `rotation` (0.2.80+ on every board: a half turn on any glass, the quarter turns as well on a square one; standing up or lying down on other glass is the editor's Grid button, firmware 0.53.0+, because it changes the grid) |
 
-A screen starts with each setting's default until it stores a value of its own. Swipe between pages is the one whose
-default depends on the screen: off in the firmware and in `SETTING_RULES`, because every screen set up before had it off
-and one whose settings were never changed stores no choice, so a default of on would turn it on with an update. A screen
-set up with New screen starts with it on: its own YAML has `SWIPE_PAGES_DEFAULT: "1"` (`core.installation_yaml`), which
-the boot of `packages/core.yaml` puts in `settings_screen::swipe_pages` before `runtime_tiles::load_settings()` reads a
-stored choice. A YAML without the line builds the core's `"0"`. A stored choice wins either way.
-
 The row on the screen and in the editor says Back to Home; its three entities keep the names
 "Back to page 1", "Back to page 1 after" and "Back to page 1 on standby", which `SETTING_ENTITIES` and
 `OWNED_SETTINGS_MARKERS` match on. Don't rename them.
