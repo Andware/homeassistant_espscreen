@@ -85,10 +85,10 @@ describe("opening a screen", () => {
     api();
     useInventoryStore().inventory = inventory(screen("hall"));
     const session = useSessionStore(), ui = useUiStore();
-    ui.go("#settings");
+    await ui.go("#settings");
     await session.goHome();
     expect(ui.route).toBe("");
-    session.select("hall");
+    await session.select("hall");
     addTile("light.b");
     let yes = false;
     const asked = answerDialogs(() => yes);

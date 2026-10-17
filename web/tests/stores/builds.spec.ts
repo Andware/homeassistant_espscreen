@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { i18n } from "../../src/i18n";
 import { useBuildsStore } from "../../src/stores/builds";
 import { useUiStore } from "../../src/stores/ui";
+import { flushPromises } from "@vue/test-utils";
 import type { Screen } from "../../src/types";
 import { failure, fakeApi } from "../helpers/fake-api";
 import { useInventoryStore } from "../../src/stores/inventory";
@@ -125,7 +126,8 @@ describe("a build that ends while the page is open", () => {
     expect(notice.message).toBe(t("editor.build.update_failed", { name: "Living room" }));
     expect(notice.action!.label).toBe(t("editor.build.show_log"));
     notice.action!.run();
-    expect(location.hash).toBe("#firmware");
+    await flushPromises();
+    expect(useUiStore().route).toBe("#firmware");
   });
 
   it("reads a plugin build's outcome from the build line by its id, in the same answer that no longer names it", async () => {

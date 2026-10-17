@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **The editor remembers where you are.** The open screen, the page of the app and a screen's Override YAML are in the
+  page's address now: a reload opens the same screen again, the browser's Back and Forward go through what you had
+  open, and a link to a screen can be kept. Leaving a screen with unsaved changes by the address bar asks first, as the
+  sidebar does. Older links such as `#settings` still work.
+
 - **A tile added from Home Assistant no longer undoes a save made at the same moment.** An automation's tile event
   waits on Home Assistant for the entity's capabilities; a save from the editor during that wait is kept now, and the
   tile is placed on the new layout.
