@@ -24,6 +24,7 @@ import screen_hang
 import screen_labels
 import screen_saver
 import feedback
+import build_server
 from build_queue import BuildQueue
 from firmware import Firmware
 import ha_pairing
@@ -953,6 +954,8 @@ class Manager:
         self.firmware = Firmware(os.environ.get("ESPHOME_CONFIG", "/homeassistant/esphome"), self.path.parent)
         # The app's one build line (docs/BUILDS.md): updates, plugin builds, New screen and Firmware & USB wait in it.
         self.build_queue = self.firmware.builds = BuildQueue(self)
+        # The build server builds go to first when it is on (build_server.py, docs/BUILDS.md "On a build server").
+        self.build_server = self.firmware.server = build_server.BuildServer(self.path.parent, self.notify)
         # Plugins (docs/PLUGINS.md): which exist, which each screen runs, their files and their tiles' data.
         self.plugins = plugins.Plugins(self, self.path.parent, self.firmware.root)
         self.updates = Updater(self, self.path.parent / 'updates.json')
@@ -2631,6 +2634,8 @@ class Manager:
                 record['plugins'] = list(build.plugins['add'])
             if view['state'] == 'queued':
                 record['place'] = view['place']
+            # On the build server (build_server.py): its name and step, or why it builds here after all.
+            record.update({key: view[key] for key in ('where', 'server', 'remote', 'fallback') if view.get(key)})
             out[inbox] = record
         return out
 
@@ -4160,6 +4165,8 @@ def create_app(manager, development=False):
                 # on its way (Manager.builds), from one look at the line, so the editor has one source for every build.
                 'line': manager.build_queue.payload(),
                 'builds': manager.builds(screens, profiles),
+                # The build server: paired or not, there or not, on or off, what it builds (build_server.py).
+                'build_server': manager.build_server.view(),
                 'language': manager.region.view()}
     async def seen_pending(payload):
         """Marks each screen that waits for pairing that Home Assistant has found on the network (`seen`); the rest is
@@ -4819,7 +4826,50 @@ def create_app(manager, development=False):
         except ValueError as error:
             raise ValueError(t(FEEDBACK_ERRORS.get(str(error), 'addon.errors.invalid_input'))) from None
         return web.json_response({'feedback': store.view(device)})
+    # ---- The build server (build_server.py, docs/BUILDS.md "On a build server") ----
+    def build_server_refused(error):
+        return ValueError(t(f'addon.errors.build_server.{error.args[0]}'))
+    async def build_server_start(app):
+        manager.build_server.start()
+    app.on_startup.append(build_server_start)
+    async def build_server_view(request):
+        return web.json_response(manager.build_server.view())
+    async def build_server_preview(request):
+        """The server at an address: its name, its ESPHome and its fingerprint, for the person to compare."""
+        data = await request.json()
+        if not isinstance(data, dict):
+            raise ValueError(t('addon.errors.invalid_input'))
+        try:
+            return web.json_response(await manager.build_server.preview(data.get('host'), data.get('port')))
+        except build_server.Refused as error:
+            raise build_server_refused(error) from None
+    async def build_server_pair(request):
+        """Ask the previewed server to let this app in, with the one-time key a headless server prints."""
+        data = await request.json()
+        if not isinstance(data, dict):
+            raise ValueError(t('addon.errors.invalid_input'))
+        try:
+            return web.json_response(await manager.build_server.pair(data.get('host'), data.get('port'), data.get('key')))
+        except build_server.Refused as error:
+            raise build_server_refused(error) from None
+    async def build_server_change(request):
+        """On or off: whether builds go to the server first."""
+        data = await request.json()
+        if not isinstance(data, dict) or not isinstance(data.get('enabled'), bool):
+            raise ValueError(t('addon.errors.invalid_input'))
+        try:
+            return web.json_response(manager.build_server.set_enabled(data['enabled']))
+        except build_server.Refused as error:
+            raise build_server_refused(error) from None
+    async def build_server_forget(request):
+        return web.json_response(await manager.build_server.forget())
+    app.router.add_get('/api/build-server', build_server_view)
+    app.router.add_post('/api/build-server/preview', build_server_preview)
+    app.router.add_post('/api/build-server/pair', build_server_pair)
+    app.router.add_put('/api/build-server', build_server_change)
+    app.router.add_delete('/api/build-server', build_server_forget)
     async def shutdown(app):
+        await manager.build_server.stop()
         await manager.build_queue.close()
         task = manager.firmware.task
         if task and not task.done():

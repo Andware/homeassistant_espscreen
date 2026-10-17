@@ -475,8 +475,8 @@ Assistant ignores says "No answer" and, the first time, shows where to allow the
   free and runs fewer compilers at once when needed, and when Linux stops a compiler all the same it builds again with
   one compiler at a time, from where it stopped; the installer shows a card that says so (app 0.4.65). That is slower,
   but it finishes. When even one compiler is more than the machine has, the card says how much is free and how much
-  is needed: stop a few add-ons for a while or give the machine more memory, then try again. Or compile on a more
-  powerful computer with ESPHome Device Builder, with the same YAML.
+  is needed: stop a few add-ons for a while or give the machine more memory, then try again. Or let a faster computer
+  build: pair a build server under **Settings → Build server** (docs/BUILDS.md, "On a build server").
 - **Migrating an existing manual screen:** keep the old YAML and carry over the
   existing device name, API key, and OTA password into the new installation profile.
   Then choose the tiles in the app. The old fixed tile substitutions aren't

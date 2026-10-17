@@ -909,6 +909,30 @@ button.insp-sec-head:hover h3 { color: var(--ink); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; align-content: start; }
 .card h2 { font-size: 14px; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+/* The build server (BuildServerCard): its name and state, the fingerprint to compare, the switch that sends builds there. */
+.build-server .bs-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.build-server .chip.status.bad { color: var(--danger); background: var(--danger-soft); border-color: transparent; }
+.build-server .chip.status.bad .dot { background: var(--danger); }
+.build-server .chip.status:not(.good):not(.update):not(.bad) .dot { background: var(--line-strong); }
+.bs-server { display: grid; gap: 2px; }
+.bs-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+.bs-form { display: grid; gap: 10px; }
+.bs-address { display: grid; grid-template-columns: 1fr 88px; gap: 10px; }
+.bs-how summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); }
+.bs-how ul { margin: 8px 0; padding-left: 18px; display: grid; gap: 4px; }
+.bs-how a { font-size: 12.5px; }
+.fingerprint { display: flex; flex-wrap: wrap; gap: 6px; }
+.fingerprint span { width: 34px; height: 34px; display: grid; place-items: center; font-size: 19px; line-height: 1; border-radius: 9px; background: var(--surface-2); }
+.fingerprint.big span { width: 44px; height: 44px; font-size: 25px; border-radius: 11px; }
+.bs-wait { display: grid; gap: 8px; }
+.bs-wait p { display: flex; align-items: center; gap: 8px; }
+.bs-problem { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 9px; background: var(--danger-soft); color: var(--ink); font-size: 12.5px; }
+.bs-problem .ui-icon { color: var(--danger); font-size: 16px; flex: none; }
+.bs-problem span { flex: 1; }
+.bs-switch { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.bs-switch .sr-text { flex: 1; display: grid; gap: 2px; }
+.bs-switch b { font-weight: 550; font-size: 13px; color: var(--ink); }
+.bs-building { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
 .field { display: grid; gap: 6px; }
 .field > .f-label, fieldset legend { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; min-width: 0; }

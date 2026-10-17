@@ -925,7 +925,21 @@
       "extras": {
         "request": "This change of an extra is not possible on this screen."
       },
-      "display_precision_unregistered": "Home Assistant keeps no settings for this sensor because it has no unique ID, so its display precision can only be set in its YAML."
+      "display_precision_unregistered": "Home Assistant keeps no settings for this sensor because it has no unique ID, so its display precision can only be set in its YAML.",
+      "build_server": {
+        "host": "Enter the IP address or host name of the build server.",
+        "port": "The port is a number from 1 to 65535. A build server listens on 6055 unless you changed it.",
+        "unreachable": "Nothing answers at that address. Check that the build server runs, that it builds for other devices, and that a firewall lets port 6055 through.",
+        "protocol": "Something answers at that address, but it is not an ESPHome build server Tessera can talk to.",
+        "preview_first": "Look the build server up first, then compare its fingerprint.",
+        "no_window": "The build server does not take new devices right now. Open Pairing requests on it, then pair again.",
+        "no_window_key": "The build server did not take that key. Check the pairing key, or start the build server again for a new one.",
+        "rejected": "The build server refused the pairing.",
+        "mismatch": "This build server answered with another fingerprint than the one you checked. Look it up again.",
+        "not_paired": "Pair a build server first.",
+        "unknown": "The build server no longer knows Tessera. Pair it again.",
+        "pending": "The build server has not accepted Tessera yet."
+      }
     },
     "status": {
       "first_tiles": "Choose your first tiles",
@@ -2607,6 +2621,63 @@
       "alerts": {
         "text": "A card over the whole screen from an automation, on one screen or on all of them. The cheatsheet has the action names, fields, icons, and colors, and a form to try one.",
         "detail": "Full-screen notifications, from an automation"
+      },
+      "build_server": {
+        "title": "Build server",
+        "intro": "Build firmware on a faster computer. Tessera sends the screen's YAML to an ESPHome build server and installs what comes back. When the server can't, the build runs here as before.",
+        "connect": "Connect a build server",
+        "how_title": "How to start a build server",
+        "how_desktop": "ESPHome Desktop on a computer: it builds for other devices from the start.",
+        "how_builder": "ESPHome Device Builder: Settings → Build server → Enable remote build.",
+        "how_headless": "On a server without a screen: run {command} and use the key it prints.",
+        "how_link": "More about build servers",
+        "address": "Address",
+        "address_hint": "The IP address or host name of the computer. Home Assistant apps can't look for it on the network.",
+        "port": "Port",
+        "look_up": "Look it up",
+        "looking": "Looking…",
+        "check_title": "Is this your build server?",
+        "check_text": "{name} · ESPHome {version}",
+        "check_hint": "The build server shows its fingerprint where you turned on building for other devices, or in the window where you started it. Pair only when these emoji match.",
+        "server_emoji": "Its fingerprint",
+        "own_emoji": "Tessera's fingerprint",
+        "own_emoji_hint": "The build server shows these when you accept Tessera.",
+        "key": "Pairing key",
+        "key_hint": "The key this build server printed when it started, like ABCD-EFGH-JKLM-NPQR. It works once.",
+        "pair": "They match, pair",
+        "pairing": "Pairing…",
+        "back": "Back",
+        "cancel": "Cancel",
+        "wait_title": "Accept Tessera on {name}",
+        "wait_text": "Open Pairing requests on the build server, check that it shows these emoji for Tessera, and accept it.",
+        "paired": "Paired with {name}. Screens build there from now on.",
+        "status": {
+          "connecting": "Connecting…",
+          "online": "Ready",
+          "busy": "Busy with another build",
+          "offline": "Not reachable",
+          "pending": "Waiting for you to accept",
+          "refused": "Not paired anymore",
+          "mismatch": "Fingerprint changed"
+        },
+        "offline_text": "Builds run here until it is back.",
+        "refused_text": "{name} no longer knows Tessera, or nobody accepted it in time. Pair it again to build there.",
+        "mismatch_text": "{name} answered with another fingerprint than the one you checked. If you reinstalled it, pair it again.",
+        "send": "Build screens on this server",
+        "send_hint": "Off, or when the server can't be reached: builds run here.",
+        "version_same": "Builds with ESPHome {version}, the same as Tessera.",
+        "version_other": "Builds with ESPHome {ours}, which Tessera uses. The server installs it once, beside its own {theirs}.",
+        "building": "Building {file} · {step}",
+        "last_server": "Last build: {file} on this server in {time}.",
+        "last_here": "Last build: {file} ran here, {reason}.",
+        "last_failed": "Last build: {file} failed on this server. Its log says why.",
+        "minutes": "{m} min {s} s",
+        "seconds": "{s} s",
+        "pair_again": "Pair again",
+        "forget": "Forget",
+        "forget_confirm": "Forget {name}? Screens build here again. To remove Tessera there too, remove it from the paired devices of the build server.",
+        "forget_go": "Forget",
+        "unavailable": "This Tessera can't talk to a build server."
       }
     },
     "firmware": {
@@ -3749,7 +3820,27 @@
       "update_failed": "Updating {name} failed",
       "build_failed": "Building {name} failed",
       "show_log": "Show log",
-      "waiting_place": "Waiting its turn, 1 build first | Waiting its turn, {n} builds first"
+      "waiting_place": "Waiting its turn, 1 build first | Waiting its turn, {n} builds first",
+      "server": {
+        "bundle": "Packing the YAML",
+        "send": "Sending to {name}",
+        "queued": "Waiting on {name}",
+        "build": "Building on {name}",
+        "fetch": "Fetching the firmware",
+        "here": "Building here · {reason}",
+        "fallback": {
+          "offline": "the build server is not reachable",
+          "refused": "the build server is not paired",
+          "mismatch": "the build server's fingerprint changed",
+          "unavailable": "no build server here",
+          "lost": "the link to the build server dropped",
+          "refused_job": "the build server did not take it",
+          "provision": "the build server could not install ESPHome",
+          "cancelled": "it was stopped on the build server",
+          "fetch": "the firmware did not come back",
+          "bundle": "the YAML could not be packed"
+        }
+      }
     },
     "grid": {
       "title": "Grid",
