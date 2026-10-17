@@ -1,3 +1,10 @@
+## Unreleased
+
+- **A new screen swipes out of the box.** A screen set up with New screen now has Swipe between pages on from the
+  start, so it swipes through its pages, opens its settings from the top edge and opens the Dock from the bottom edge
+  without turning anything on first. Screens you already have keep the setting they have through the update. Turn it
+  off under the screen's Settings, Swipe between pages.
+
 ## 0.4.89 (firmware 0.57.0)
 
 - **A thermostat's state line no longer runs into its card.** On screens with dense glass (the Waveshare P4 and
