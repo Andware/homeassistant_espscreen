@@ -34,6 +34,7 @@ Home Assistant entity belongs in a board file. docs/README.md lists every doc an
 | change what a plugin can do, or how plugins reach a screen | docs/PLUGINS.md, then the tessera-plugins repository's docs | `plugin_api.h`, `plugin_host.cpp`, `screen_manager/app/plugins.py`, `plugin_manifest.py` |
 | touch the flash of a board with 4 MB | docs/FLASH_LAYOUT.md | `components/flash_layout/`, `packages/hardware/flash-4mb.yaml` |
 | change how a build waits its turn (updates, plugins, New screen, Firmware & USB) | docs/BUILDS.md | `screen_manager/app/build_queue.py`, `web/src/stores/builds.ts` |
+| change how a build is sent to a build server (ESPHome's remote build) | docs/BUILDS.md, "On a build server" | `screen_manager/app/build_server.py`, `web/src/components/BuildServerCard.vue` |
 | add or change a text | docs/TRANSLATING.md | `screen_manager/translations/en.json` |
 | touch the YAML package layers | docs/PROFILES.md | `packages/`, `checkout/` |
 | know which test proves what | docs/TESTING.md | `tools/check.sh` |

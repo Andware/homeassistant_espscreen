@@ -10,10 +10,17 @@
   keeps the step's own face.
 - **The screensaver's play and mute keys follow Home Assistant as every key does.** They show their change at once and
   go back when Home Assistant does not follow, by the same rules as the keys on the pages.
+- **Build on a faster computer.** Settings has a Build server card now: pair Tessera with ESPHome Desktop, ESPHome
+  Device Builder or a headless `esphome-device-builder --remote-build-only` on a computer on your network, compare its
+  fingerprint, and every screen's firmware is compiled there instead of on your Home Assistant machine: updates, plugin
+  builds, New screen and Firmware & USB. The server builds with the same ESPHome version as the app (it installs that
+  version once, beside its own), plugins from a folder go along, and the installing, the bridge on 4 MB boards and the
+  download stay as they were. The card shows whether the server is there and what it builds, every build says where it
+  runs, and when the server is off, away or cannot build it, the build simply runs here as before and says why.
 
 - **A cover shows that it is on its way.** A blind, curtain or garage door sent somewhere no longer jumps back to
   where it was while it moves: from the tap on, its tile and card show where it goes and say Opening or Closing, the
-  slider's handle steps aside and a soft band runs over the slider in the direction it moves, until Home Assistant
+  slider's handle steps aside and a thin stripe glides over the slider in the direction it moves, until Home Assistant
   reports it there or stopped. The slider still takes a finger, so a cover sent the wrong way can be turned around at
   once, and the slats' tilt works the same way.
 - **A screen follows Home Assistant to another time zone.** Home Assistant's ESPHome integration tells a screen its

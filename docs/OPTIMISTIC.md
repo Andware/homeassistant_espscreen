@@ -192,7 +192,7 @@ slider, its open and close keys, its slats) starts a **travel** (`components/sma
 `tests/test_cover_travel.cpp`) on every tile and the card of the cover:
 
 - From the moment of the tap the tile shows the target and says "Opening" or "Closing". The slider's fill stands faint
-  at the target, its handle is gone, and a soft band runs over it from where Home Assistant last had the cover towards
+  at the target, its handle is gone, and a thin stripe glides over it from where Home Assistant last had the cover towards
   the target, about once a second, so the cover is seen to move, and which way, also where the cover itself is out of
   sight.
 - Nothing is disabled and no busy sheet shows: a finger can send the cover elsewhere on its way. A press on the slider

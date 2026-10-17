@@ -299,7 +299,25 @@ export type IconInfo = { name: string; cp: string; label: string };
 export type Build = {
   id?: number; by: "update" | "plugins" | "install"; state: "queued" | "running"; place?: number; file?: string | null;
   stage?: string | null; phase?: string | null; plugins?: string[];
+} & ServerSide;
+// Where a build's compile runs (the add-on's build_server.py): `server` with the build server's name and its step
+// (`remote`), or `here` after a fallback, with the reason (`fallback`, editor.build.server.fallback.<reason>).
+export type ServerSide = { where?: "server" | "here" | null; server?: string | null; remote?: BuildServerStep | null; fallback?: string | null };
+export type BuildServerStep = "bundle" | "send" | "queued" | "build" | "fetch";
+export type Fingerprint = { emoji: string; name: string }[];
+// The build server as the add-on keeps it (build_server.BuildServer.view): paired or not, on or off, there or not.
+export type BuildServerView = {
+  rev: number; available: boolean; enabled: boolean; esphome: string;
+  own: { pin: string; emoji: Fingerprint };
+  server: { host: string; port: number; name: string; esphome: string; state: "paired" | "pending"; since: number; emoji: Fingerprint } | null;
+  connection: "off" | "connecting" | "online" | "offline" | "refused" | "mismatch"; error: string;
+  queue: { idle: boolean; running: boolean; queue_depth: number } | null;
+  building: { file: string; phase: BuildServerStep; started: number } | null;
+  last: { file: string; where: "server" | "here"; server: string; seconds?: number; reason?: string; failed?: boolean; at: number } | null;
 };
+// What Look it up finds at an address: the server's name, its ESPHome, its fingerprint, and whether it wants the one-time
+// key a headless server prints.
+export type BuildServerPreview = { host: string; port: number; pin: string; name: string; esphome: string; needs_key: boolean; provisions: boolean; emoji: Fingerprint };
 // One build of the add-on's build line (the live inventory's `line`, build_queue.BuildQueue.view): what runs, what waits
 // in order and the last ones that ended, newest first. `check` is a YAML check. While it waits, `place` is its turn and
 // `after` the profile that builds now; while it runs, ESPHome's `stage` and the build's `memory`; once it ended, why
@@ -310,7 +328,7 @@ export type LineBuild = {
   state: LineState; asked: number; started: number | null; finished: number | null; phase?: string | null; plugins?: string[];
   place?: number; after?: string | null; stage?: string | null; memory?: import("./model/install-progress").BuildMemory | null;
   reason?: string | null;
-};
+} & ServerSide;
 export type Inventory = {
   editor_features?: { tall_tiles?: boolean; plugins?: boolean };
   csrf?: string;
@@ -330,6 +348,8 @@ export type Inventory = {
   // The add-on's build line (build_queue.py, docs/BUILDS.md): what runs, what waits and the last that ended (newest
   // first), from the same look at the line as `builds`, in every live answer.
   line?: LineBuild[];
+  // The build server (build_server.py, docs/BUILDS.md "On a build server"), in every live answer.
+  build_server?: BuildServerView;
   // The CHANGELOG by release, newest first: only in the full inventory, not in the live payload (app 0.2.78).
   changelog?: ChangelogSection[];
   claude_skill?: { path: string; installed: boolean; current: boolean; restart?: boolean };

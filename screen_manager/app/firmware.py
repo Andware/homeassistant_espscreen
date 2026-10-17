@@ -17,6 +17,7 @@ import zipfile
 import atomic
 import build_cache
 import build_memory
+import build_server
 from core import BOARD_KEYS, REF, REPO, SHAPES, channel, hotspot_name, installation_yaml, old_hotspot_name, our_ref, ref
 from i18n import t
 
@@ -186,6 +187,10 @@ class Firmware:
         self.language = None  # the language builds speak: the manager's Settings -> Language & region (app 0.2.90)
         # The app's build line (build_queue.BuildQueue), which alone starts a job here; None on its own (a test).
         self.builds = None
+        # The build server builds go to first when it is on (build_server.BuildServer, docs/BUILDS.md "On a build
+        # server"), and per profile the images of its last build there: what `esphome upload --file` sends.
+        self.server = None
+        self.served = {}
 
     def profiles(self):
         if not self.root.exists(): return []
@@ -1130,19 +1135,67 @@ packages:
             code = await self.process.wait()
             return code, killed or (stage == 'compile' and build_memory.killed_exit(code))
 
+    async def compile_on_server(self, profile, env):
+        """The compile of a job on the build server when it is on (build_server.py): True when its images are staged
+        here, so the job goes on to its upload with them; False when the build runs here after all, with the reason in
+        the log and on the job (`fallback`), so the page says why. A build that failed on the server fails the job."""
+        self.served.pop(profile.name, None)
+        server = self.server
+        if server is None or not server.wanted():
+            return False
+        name = (server.server or {}).get('name') or 'the build server'
+        self.job.update(where='server', server=name, remote='bundle')
+        self._changed()
+
+        def phase(step):
+            self.job['remote'] = step
+            self._changed()
+
+        def log(line):
+            text = self.redact(terminal_line(line))
+            if text:
+                self.logs.append(text)
+        try:
+            self.served[profile.name] = await server.compile(profile, self.root, self.data, env, log, phase)
+            return True
+        except build_server.Failed as error:
+            raise RuntimeError(str(error)) from None
+        except build_server.Fallback as fallback:
+            detail = f' ({self.redact(fallback.detail)})' if fallback.detail else ''
+            self.logs.append(f'Build server: {build_server.FALLBACK_NOTES.get(fallback.reason, fallback.reason)}{detail} '
+                             'Building here instead.')
+            LOG.info('%s builds here: the build server %s (%s)', profile.name, fallback.reason, fallback.detail)
+            self.job.update(where='here', remote=None, fallback=fallback.reason)
+            self._changed()
+            await self.seed_cache(profile, env)
+            return False
+
+    def served_file(self, profile, action, target):
+        """`--file` for an upload of what the build server built last for this profile: the factory image over USB
+        (ESPHome writes it from address 0), the update image over Wi-Fi, the partition table for `widen`. Nothing for a
+        build made here, which ESPHome finds in its own build folder."""
+        images = self.served.get(profile.name) or {}
+        path = images.get('table') if action == 'widen' else images.get('factory') if target.startswith('/dev/') \
+            else images.get('ota')
+        return ['--file', str(path)] if path and Path(path).is_file() else []
+
     async def run(self, profile, action, target):
         env = self.build_env(profile)
         try:
             if action not in ('validate', 'widen'):
                 await self.retire_platformio()
-                await self.seed_cache(profile, env)
+                # A build the server makes needs no compile cache here; one that falls back gets it then.
+                if not (self.server and self.server.wanted()):
+                    await self.seed_cache(profile, env)
             stages = ['config'] if action=='validate' else ['upload'] if action=='widen' else ['compile'] + (['upload'] if action=='install' else [])
             memory = None
             for stage in stages:
                 cmd=['esphome']+(['--quiet'] if stage=='config' else [])+[stage]+(['--partition-table'] if action=='widen' else [])+[str(profile)]
-                if stage=='upload': cmd += ['--device',target]
+                if stage=='upload': cmd += ['--device',target] + self.served_file(profile, action, target)
                 self.job['stage']=stage
                 self._changed()
+                if stage == 'compile' and await self.compile_on_server(profile, env):
+                    continue
                 if stage == 'compile':
                     # As many compilers at once as the memory that is free takes (build_memory, app 0.4.65). The job
                     # carries the plan, so the editor can say why this build is slower than the machine's cores allow.
