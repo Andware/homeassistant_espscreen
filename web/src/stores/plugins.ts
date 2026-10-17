@@ -8,7 +8,7 @@ import { computed, effectScope, onScopeDispose, reactive, ref, watch } from "vue
 import { getJson, send } from "../api";
 import { t } from "../i18n";
 import { boardTitle } from "../model/boards";
-import { attachLine, barItemView, barTypesOf, choiceKey, compareUrl, fit, isTest, nodeOf, ownYaml, pluginDefaults, pluginTileId, testPlugin,
+import { attachLine, barItemView, barTypesOf, choiceKey, pluginSaverKey, saverTypesOf, compareUrl, fit, isTest, nodeOf, ownYaml, pluginDefaults, pluginTileId, testPlugin,
   text, tileTypesOf, type AppFit, type Installed, type Plugin, type PluginTileOption, type Texts } from "../model/plugins";
 import type { Screen } from "../types";
 import { useBuildsStore } from "./builds";
@@ -94,6 +94,16 @@ export const usePluginsStore = defineStore("plugins", () => {
   const pluginTileOf = (entity: string) => tileTypes.value.get(entity);
   /** A plugin's top bar item by its key (plugin:<plugin>.<item>), as the editor shows it. */
   const barItemOf = (key: string | undefined) => barItemView(key ? barTypes.value.get(key) : undefined);
+  // The screensavers of the plugins the editor knows (plugin API 0.14), by their key (plugin:<plugin>.<saver>).
+  const saverTypes = computed(() => saverTypesOf(index.value));
+  /** A plugin's screensaver by its key, also of a plugin that is not on the screen (any more). */
+  const saverOf = (key: string) => saverTypes.value.get(key);
+  /** The screensavers of the plugins this screen runs: a face of a step, or a step of its own. */
+  function saversFor(screen: Screen | undefined) {
+    if (!screen || screen.virtual) return [];
+    return index.value.filter((plugin) => installedOn(screen, plugin.id)).flatMap((plugin) =>
+      (plugin.savers || []).map((saver) => ({ key: pluginSaverKey(plugin.id, saver.id), plugin, saver })));
+  }
   /** Whether a plugin fits a screen, with what only the add-on knows about it there. */
   const fits = (plugin: Plugin, screen: Screen | null) => fit(plugin, screen, (screen && appFit.value[screen.id]) || {});
 
@@ -566,7 +576,7 @@ export const usePluginsStore = defineStore("plugins", () => {
     // What the Plugins page, a screen's tab and the cards read as they draw (stores/lookup.ts); choicesFor, previewFor and
     // planOn answer at once and ask the add-on for what they do not have yet.
     ...lookups({
-      pluginTileOf, barItemOf, fits, choicesFor, choicesPending, previewFor, tapActionsFor, barItemsFor, entitiesIn, needsConsent, realScreens,
+      pluginTileOf, barItemOf, saverOf, saversFor, fits, choicesFor, choicesPending, previewFor, tapActionsFor, barItemsFor, entitiesIn, needsConsent, realScreens,
       otherOrigin, hasUpdate, updatesOn, tilesOn, partsOn, valueOf, needsAttach, pluginsFile, setupChanged, setupReady, secretSet, partsKb,
       installedOn, buildingOn, testsOn, allTests, labelOf, stageOf, statusOn, statusOverall, planOn, comesAlong, neededBy, canLike,
       isSetAside, isTakingOff, trayPlan, trayAlong, trayReady, setAsideKb, removalPlan, newsFrom, compareFor, screenLine,

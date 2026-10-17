@@ -2,31 +2,71 @@
 // One step of the screensaver in the drawer (app 0.4.83): whether it is used, and what it shows: its players in the
 // order they are tried, or its camera. The order of the steps changes here too, a place earlier or later. The clock has
 // an inspector of its own with its row of entities at the head (SaverClock.vue, app 0.4.89).
+// Since app 0.4.89 also the photos (their folder, pace, order and fit) and a plugin's step of its own (its entity and
+// options, and Remove); the music and the photos can show a plugin's face instead of the screen's own.
 import { computed } from "vue";
 import { t } from "../i18n";
 import { useSortableRows } from "../composables/useSortableRows";
-import type { SaverKind } from "../types";
+import { text, type PluginTileOption } from "../model/plugins";
+import { glyph } from "../model/topbar";
+import type { PluginValue, SaverPhotos as Photos, SaverStep } from "../types";
+import SaverPhotos from "./SaverPhotos.vue";
+import PluginOptions from "./PluginOptions.vue";
+import Segmented from "./Segmented.vue";
 import Icon from "./ui/Icon.vue";
 import InspectorHead from "./ui/InspectorHead.vue";
+import PropRow from "./ui/PropRow.vue";
 import Section from "./ui/Section.vue";
 import SwitchRow from "./ui/SwitchRow.vue";
 import UiPicker from "./ui/UiPicker.vue";
 import UiSelect from "./ui/UiSelect.vue";
 import { useEntitiesStore } from "../stores/entities";
-import { MAX_PLAYERS, SAVER_ICONS, saverLabel, useScreensaverStore } from "../stores/screensaver";
+import { usePluginsStore } from "../stores/plugins";
+import { MAX_PLAYERS, PHOTO_EVERY, PHOTO_FITS, PHOTO_ORDERS, isPluginKey, useScreensaverStore, type FaceStep } from "../stores/screensaver";
 import { useInspectorStore } from "../stores/inspector";
 
 const entities = useEntitiesStore();
+const plugins = usePluginsStore();
 const screensaver = useScreensaverStore();
 const insp = useInspectorStore();
 
-const props = defineProps<{ step: SaverKind }>();
+const props = defineProps<{ step: SaverStep }>();
 const T = (name: string, values?: Record<string, unknown>) => t(`editor.screen_settings.screensaver.${name}`, values || {});
-const place = computed(() => screensaver.savedOrder.indexOf(props.step));
+const place = computed(() => screensaver.stepPlace(props.step));
 const crumbs = computed(() => [
   { text: T("title"), open: insp.closeInspector },
-  ...(screensaver.saver?.pictures ? [{ text: T("place", { n: place.value + 1, count: screensaver.savedOrder.length }) }] : []),
+  ...(place.value.count > 1 ? [{ text: T("place", place.value) }] : []),
 ]);
+
+// ---- The face of the music or the photos: the screen's own, or a plugin's.
+const faceStep = computed<FaceStep | null>(() => (props.step === "media" || props.step === "photos" ? props.step : null));
+const faceChoices = computed<[string, string][]>(() => {
+  if (!faceStep.value) return [];
+  const faces = screensaver.facesFor(faceStep.value).map((s) => [s.key, text(s.saver.name)] as [string, string]);
+  const chosen = screensaver.faceOf(faceStep.value);
+  // A face whose plugin left the screen stays named until another is chosen; the screen shows its own meanwhile.
+  if (chosen && !faces.some(([key]) => key === chosen)) faces.push([chosen, screensaver.stepLabel(chosen)]);
+  return faces.length ? [["", T("face_standard")], ...faces] : [];
+});
+const faceKey = computed(() => (faceStep.value ? screensaver.faceOf(faceStep.value) : ""));
+const facePlugin = computed(() => (faceKey.value ? plugins.saverOf(faceKey.value) : undefined));
+
+// ---- The photos: how long each stands, in what order, and how one fills the glass.
+const everyChoices = computed<[number, string][]>(() => PHOTO_EVERY.map((seconds) => [seconds, T(`photos_every_${seconds}`)]));
+const orderChoices = computed<[string, string][]>(() => PHOTO_ORDERS.map((order) => [order, T(`photos_order_${order}`)]));
+const fitChoices = computed<[string, string][]>(() => PHOTO_FITS.map((fit) => [fit, T(`photos_fit_${fit}`)]));
+
+// ---- A plugin's step of its own: its entity and its options.
+const pluginKey = computed(() => (isPluginKey(props.step) ? props.step : null));
+const known = computed(() => (pluginKey.value ? plugins.saverOf(pluginKey.value) : undefined));
+const here = computed(() => Boolean(pluginKey.value && screensaver.pluginHere(pluginKey.value)));
+const stepEntity = computed(() => (pluginKey.value ? screensaver.pluginSetting(pluginKey.value).entity : ""));
+const entityItems = computed(() => plugins.entitiesIn(known.value?.saver.domains || []).filter((e) => e.id !== stepEntity.value)
+  .map((e) => ({ id: e.id, name: e.name, hint: screensaver.entityPlace(e.id) })));
+// The options of the plugin face or step that is open, and where a change goes.
+const optionsKey = computed(() => pluginKey.value || faceKey.value);
+const optionsOf = computed(() => (pluginKey.value ? known.value : facePlugin.value));
+const setOption = (option: PluginTileOption, value: PluginValue) => optionsKey.value && screensaver.setPluginOption(optionsKey.value, option.id, value);
 const shown = computed(() => playerSort.live.value || screensaver.players);
 const free = computed(() => screensaver.entitiesOf("media", screensaver.players));
 const freeItems = computed(() => free.value.map((e) => ({ id: e.id, name: e.name, hint: e.area })));
@@ -35,7 +75,7 @@ const playerSort = useSortableRows<string>({ rows: "#saver-players > .item", ite
 </script>
 
 <template>
-  <InspectorHead :title="saverLabel(step)" :code="SAVER_ICONS[step]" :crumbs="crumbs" />
+  <InspectorHead :title="screensaver.stepLabel(step)" :code="screensaver.stepIcon(step)" :crumbs="crumbs" />
   <div v-if="screensaver.saver" class="dr-body saver-drawer">
     <section class="insp-sec">
       <div class="insp-sec-body saver-use">
@@ -65,17 +105,64 @@ const playerSort = useSortableRows<string>({ rows: "#saver-players > .item", ite
       <p class="hint saver-foot-hint">{{ T("keys_hint") }}</p>
     </template>
 
-    <Section v-else :title="saverLabel('camera')">
+    <template v-else-if="step === 'photos'">
+      <Section :title="T('photos_folder')">
+        <SaverPhotos />
+        <small class="help">{{ T("photos_hint") }}</small>
+      </Section>
+      <Section :title="T('photos_show')">
+        <PropRow :label="T('photos_every')" icon="clock-outline" for="saver-photos-every">
+          <UiSelect id="saver-photos-every" :model-value="screensaver.photos.every" :options="everyChoices" @update:model-value="(value: number) => screensaver.setPhotos({ every: value })" />
+        </PropRow>
+        <PropRow :label="T('photos_order')" icon="shuffle-variant" stack>
+          <Segmented :choices="orderChoices" :value="screensaver.photos.order" @pick="(value: Photos['order']) => screensaver.setPhotos({ order: value })" />
+        </PropRow>
+        <PropRow :label="T('photos_fit')" icon="crop-landscape" stack>
+          <Segmented :choices="fitChoices" :value="screensaver.photos.fit" @pick="(value: Photos['fit']) => screensaver.setPhotos({ fit: value })" />
+        </PropRow>
+        <small class="help">{{ T(`photos_fit_${screensaver.photos.fit}_hint`) }}</small>
+      </Section>
+    </template>
+
+    <template v-else-if="pluginKey">
+      <p v-if="known" class="plugin-tile-from"><span class="mdi">{{ glyph("F0A66") }}</span>{{ t("editor.plugin_tile.from", { plugin: text(known.plugin.name) }) }}</p>
+      <p v-if="!here" class="hint warn saver-foot-hint" id="saver-plugin-gone">{{ T("plugin_gone") }}</p>
+      <p v-if="known?.saver.example" class="hint saver-foot-hint">{{ text(known.saver.example) }}</p>
+      <Section v-if="known?.saver.domains?.length" :title="t('editor.plugin_tile.entity')">
+        <div v-if="stepEntity" class="item saver-player single">
+          <span class="tx"><b>{{ entities.entityName(stepEntity) }}</b><small v-if="screensaver.entityPlace(stepEntity)">{{ screensaver.entityPlace(stepEntity) }}</small></span>
+          <button type="button" class="x" :aria-label="T('remove_player', { name: entities.entityName(stepEntity) })" @click="screensaver.setPluginEntity(pluginKey, '')"><Icon name="close" /></button>
+        </div>
+        <UiPicker :items="entityItems" :placeholder="T('plugin_entity_search')" :empty="T('plugin_entity_none')" @pick="(id: string) => pluginKey && screensaver.setPluginEntity(pluginKey, id)">
+          <template #trigger>
+            <button type="button" class="ghost-btn" id="saver-plugin-entity"><Icon name="plus" />{{ stepEntity ? T("plugin_entity_change") : T("plugin_entity_choose") }}</button>
+          </template>
+        </UiPicker>
+      </Section>
+    </template>
+
+    <Section v-else :title="screensaver.stepLabel('camera')">
       <UiSelect id="saver-camera" :model-value="screensaver.saver.camera" :options="screensaver.cameraChoices" @update:model-value="(value: string) => screensaver.changeSaver({ camera: value })" />
       <small class="help">{{ T("camera_hint") }}</small>
     </Section>
 
+    <!-- The face of the music or the photos, where a plugin this screen runs has one. -->
+    <Section v-if="faceChoices.length" :title="T('face')">
+      <UiSelect id="saver-step-face" :model-value="faceKey" :options="faceChoices" @update:model-value="(value: string) => faceStep && screensaver.setFace(faceStep, isPluginKey(value) ? value : '')" />
+      <small v-if="facePlugin?.saver.example" class="help">{{ text(facePlugin.saver.example) }}</small>
+    </Section>
+    <!-- The options of the plugin's face or step that is open. -->
+    <Section v-if="optionsKey && optionsOf?.saver.options?.length" :title="t('editor.plugin_tile.options')">
+      <PluginOptions :plugin="optionsOf.plugin" :options="optionsOf.saver.options" :values="screensaver.pluginValues(optionsKey)" @change="setOption" />
+    </Section>
+
   </div>
   <div class="dr-foot">
+    <button v-if="pluginKey" type="button" class="btn danger" id="saver-plugin-remove" @click="screensaver.removePluginStep(pluginKey)"><Icon name="delete-outline" />{{ t("editor.common.remove") }}</button>
     <span class="spacer"></span>
-    <div v-if="screensaver.saver?.pictures" class="tool-group" role="group">
-      <button type="button" class="icon-btn" :disabled="place <= 0" :aria-label="T('earlier')" :title="T('earlier')" @click="screensaver.moveStep(step, -1)"><Icon name="arrow-up" /></button>
-      <button type="button" class="icon-btn" :disabled="place >= screensaver.savedOrder.length - 1" :aria-label="T('later')" :title="T('later')" @click="screensaver.moveStep(step, 1)"><Icon name="arrow-down" /></button>
+    <div v-if="place.count > 1" class="tool-group" role="group">
+      <button type="button" class="icon-btn" :disabled="place.n <= 1" :aria-label="T('earlier')" :title="T('earlier')" @click="screensaver.moveStep(step, -1)"><Icon name="arrow-up" /></button>
+      <button type="button" class="icon-btn" :disabled="place.n >= place.count" :aria-label="T('later')" :title="T('later')" @click="screensaver.moveStep(step, 1)"><Icon name="arrow-down" /></button>
     </div>
   </div>
 </template>

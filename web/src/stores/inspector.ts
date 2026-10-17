@@ -5,7 +5,7 @@
 // screensaver's drawers when the layout comes back, and every drawer when the draft is replaced as a whole.
 import { defineStore } from "pinia";
 import { computed, onScopeDispose, ref, watch } from "vue";
-import type { SaverKind, Tile } from "../types";
+import type { SaverStep, Tile } from "../types";
 import { useDocumentStore } from "./document";
 import { useDragStore } from "./drag";
 import { useEntitiesStore } from "./entities";
@@ -20,7 +20,7 @@ export type Inspector =
   | { kind: "bar-add" }
   | { kind: "saver-item"; index: number }
   | { kind: "saver-add" }
-  | { kind: "saver"; step: SaverKind }
+  | { kind: "saver"; step: SaverStep }
   | { kind: "page"; id: string }
   | { kind: "inspect"; entity?: string; slot?: number; key?: number };
 // Where the next tile from the library goes: an empty cell a click marked, or a key place under a bedside clock (app
@@ -140,8 +140,8 @@ export const useInspectorStore = defineStore("inspector", () => {
     doc.selectedTileId = null;
     inspector.value = { kind: "saver-item", index };
   }
-  // One step of the screensaver in the drawer: its players, its camera or its clock.
-  function openSaverStep(step: SaverKind) {
+  // One step of the screensaver in the drawer: its players, its photos, its camera, its clock or a plugin's step.
+  function openSaverStep(step: SaverStep) {
     iconPickerOpen.value = false; back.value = null;
     doc.selectedTileId = null;
     inspector.value = { kind: "saver", step };

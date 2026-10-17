@@ -4164,8 +4164,9 @@ def create_app(manager, development=False):
                                      'pictures': bool(camera_feed.box(screen, 'full')), 'standby': can_standby(screen),
                                      # The clock's faces where the board has their module (docs/MODULES.md).
                                      'faces': has_module(screen, screen_saver.MODULE),
-                                     # The photos step where the screen's firmware takes it (app 0.4.89).
-                                     'photos': screen_saver.PHOTOS_FEATURE in (getattr(manager.page_senders.get(screen['id']), 'features', None) or ())}
+                                     # The photos step where the screen's firmware takes it (app 0.4.89); `photos` is the
+                                     # choice's own folder, pace, order and fit.
+                                     'photos_step': screen_saver.PHOTOS_FEATURE in (getattr(manager.page_senders.get(screen['id']), 'features', None) or ())}
             # The delivery and our own word for a screen that reports nothing, in the editor's language (app 0.2.90).
             status = manager.status.get(screen['id'])
             word = PAGE_DELIVERY_WORDS.get(status) if isinstance(status, str) else None

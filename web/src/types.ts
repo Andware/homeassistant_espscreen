@@ -148,14 +148,27 @@ export type UpdateInfo = {
 // The screensaver (app 0.4.48): a player, a camera and the order the screen tries them in, the clock a step of its own.
 // `ready`: the screen's firmware takes one; `pictures`: its board draws pictures, else the clock alone; `standby`: it
 // goes into standby at all.
-export type SaverKind = "media" | "camera" | "clock";
+// `photos` (app 0.4.89): photos from a folder of Home Assistant's media, a step of its own after the music.
+export type SaverKind = "media" | "photos" | "camera" | "clock";
+// A plugin's screensaver (plugin API 0.14): a face of a step above, or a step of its own in the order, `plugin:<plugin>.<saver>`.
+export type PluginSaverKey = `plugin:${string}.${string}`;
+// A step in the order: one of the screen's own, or a plugin's (at most four of those).
+export type SaverStep = SaverKind | PluginSaverKey;
+// The photos step: the media source folder ('' for none yet), how many seconds a photo stands, in what order they come
+// and how one fills the glass (`auto` fills it with a photo of about its shape and shows another whole).
+export type SaverPhotos = { source: string; every: number; order: "shuffle" | "in_order"; fit: "auto" | "fill" | "whole" };
+// What a plugin's face or step keeps: its options as a plugin's tile keeps them, and the entity it belongs to.
+export type SaverPluginSetting = { options: Record<string, PluginValue>; entity: string };
 // `weather` (app 0.4.52): the temperature under the clock, "auto" for Home Assistant's first weather entity, "" for none.
 // `more` (app 0.4.54): the players the music step tries after `media`, in their order.
-// `face` and the rest (module clock_faces): the clock's face, Glass's numerals, the seconds hand and the face's look.
-export type ScreensaverChoice = { show: boolean; media: string; camera: string; order: SaverKind[]; off: SaverKind[]; weather?: string; more?: string[]; items?: HeaderItem[];
-  face?: "digital" | "glass" | "classic" | "bauhaus"; numerals?: number; seconds?: boolean; look?: "dark" | "light" | "auto" };
-// `faces`: the screen's board has the clock's faces (docs/MODULES.md).
-export type ScreensaverView = ScreensaverChoice & { ready: boolean; pictures: boolean; standby: boolean; faces?: boolean };
+// `face` and the rest (module clock_faces): the clock's face, Glass's numerals, the seconds hand and the face's look;
+// `face` may also be a plugin's face of the clock, and `media_face`, `photos_face` a plugin's face of those steps ('' for
+// the screen's own). `plugins`: the options and entity of each plugin face or step, by its key.
+export type ScreensaverChoice = { show: boolean; media: string; camera: string; order: SaverStep[]; off: SaverStep[]; weather?: string; more?: string[]; items?: HeaderItem[];
+  face?: "digital" | "glass" | "classic" | "bauhaus" | PluginSaverKey; numerals?: number; seconds?: boolean; look?: "dark" | "light" | "auto";
+  photos?: SaverPhotos; media_face?: "" | PluginSaverKey; photos_face?: "" | PluginSaverKey; plugins?: Record<string, SaverPluginSetting> };
+// `faces`: the screen's board has the clock's faces (docs/MODULES.md). `photos_step`: the screen's firmware takes the photos step.
+export type ScreensaverView = ScreensaverChoice & { ready: boolean; pictures: boolean; standby: boolean; faces?: boolean; photos_step?: boolean };
 export type SettingsView = { owner: string; keys: string[]; values: Record<string, any>; unavailable: string[]; rotations?: number[]; switches?: string[]; calibrate?: boolean };
 // The two ways a screen can hang (app 0.2.107), chosen when it is built: lying down or standing up. A board's own
 // numbers for each way come from boards.json, which the add-on serves with the firmware status.

@@ -4,12 +4,15 @@
 // entity's look, its icons, or the entities to add (the row's +). It replaces the clock's own drawer, an entity's drawer
 // with a second head, and Add as a drawer of its own whose Cancel left the clock: the row stays at the head whatever is
 // under it and shows every choice on an entity at once. An entity is dragged left or right in the row and moved with left
-// and right in the foot; Escape goes one step out (stores/inspector.ts escape).
+// and right in the foot; Escape goes one step out (stores/inspector.ts escape). A plugin the screen runs can bring a face
+// of the clock (plugin API 0.14): it stands beside the screen's own faces, by its icon and name, with its options under it.
 import { computed, watch } from "vue";
 import { t } from "../i18n";
 import { useSortableRows } from "../composables/useSortableRows";
+import { text, type PluginTileOption } from "../model/plugins";
 import { entityItem, glyph, itemKey } from "../model/topbar";
-import type { HeaderItem } from "../types";
+import type { HeaderItem, PluginSaverKey, PluginValue } from "../types";
+import PluginOptions from "./PluginOptions.vue";
 import BarStrip, { type StripFace } from "./BarStrip.vue";
 import EntityItemPicker from "./EntityItemPicker.vue";
 import IconChoices from "./IconChoices.vue";
@@ -25,6 +28,7 @@ import PropRow from "./ui/PropRow.vue";
 import SwitchRow from "./ui/SwitchRow.vue";
 import UiSelect from "./ui/UiSelect.vue";
 import { useEntitiesStore } from "../stores/entities";
+import { usePluginsStore } from "../stores/plugins";
 import { useTopbarStore } from "../stores/topbar";
 import { SAVER_ICONS, SAVER_ITEMS_MAX, saverLabel, useScreensaverStore } from "../stores/screensaver";
 import { useDocumentStore } from "../stores/document";
@@ -35,6 +39,7 @@ const topbar = useTopbarStore();
 const screensaver = useScreensaverStore();
 const doc = useDocumentStore();
 const insp = useInspectorStore();
+const plugins = usePluginsStore();
 
 // `index` -1 is the clock itself; `adding` is the row's +.
 const props = defineProps<{ index: number; adding?: boolean }>();
@@ -78,8 +83,16 @@ const taken = (it: HeaderItem) => screensaver.saverItems.some((other) => other.e
 const ui = useUiStore();
 const at = computed(() => new Date(ui.now));
 const faceKind = computed(() => screensaver.face);
-const analog = computed(() => faceKind.value !== "digital");
-const faceChoices = computed(() => SAVER_FACES.map((kind) => ({ kind, label: T(`faces.${kind}`) })));
+// A plugin's face of the clock, when one is chosen: the screen's own face settings step aside for its options.
+const pluginFace = computed(() => screensaver.clockPluginFace);
+const pluginFaceKind = computed(() => (pluginFace.value ? plugins.saverOf(pluginFace.value) : undefined));
+const analog = computed(() => !pluginFace.value && faceKind.value !== "digital");
+// The screen's own faces where its board has them (the digital clock elsewhere), and the faces of its plugins.
+const faceChoices = computed(() => (screensaver.facesHere ? SAVER_FACES : (["digital"] as SaverFaceKind[])).map((kind) => ({ kind, label: T(`faces.${kind}`) })));
+const pluginFaces = computed(() => screensaver.facesFor("clock"));
+const facesShown = computed(() => screensaver.facesHere || pluginFaces.value.length > 0);
+const pickPluginFace = (key: PluginSaverKey) => screensaver.setFace("clock", key);
+const setFaceOption = (option: PluginTileOption, value: PluginValue) => pluginFace.value && screensaver.setPluginOption(pluginFace.value, option.id, value);
 const looks2 = computed<[string, string][]>(() => [["dark", T("look_dark")], ["light", T("look_light")], ["auto", T("look_auto")]]);
 // Twelve numerals bunch on long glass, so there only none and four.
 const numeralChoices = computed<[number, string][]>(() => [[0, T("numerals_none")], [4, "4"],
@@ -89,14 +102,15 @@ const numerals = computed(() => {
   return n === 12 && !twelveFits(screensaver.glassSize.width, screensaver.glassSize.height) ? 4 : n;
 });
 const pickFace = (kind: SaverFaceKind) => screensaver.changeSaver({ face: kind });
-// Glass and Bauhaus show the face alone; the temperature and the entities stand on Classic and the digital clock.
-const withRow = computed(() => faceKind.value === "digital" || faceKind.value === "classic");
+// Glass and Bauhaus show the face alone; the temperature and the entities stand on Classic and the digital clock, and a
+// plugin's face gets them as the digital clock has them.
+const withRow = computed(() => Boolean(pluginFace.value) || faceKind.value === "digital" || faceKind.value === "classic");
 
 // The clock's place among the steps, as its own drawer had it.
-const place = computed(() => screensaver.savedOrder.indexOf("clock"));
+const place = computed(() => screensaver.stepPlace("clock"));
 const crumbs = computed(() => [
   { text: T("title"), open: insp.closeInspector },
-  ...(screensaver.saver?.pictures ? [{ text: T("place", { n: place.value + 1, count: screensaver.savedOrder.length }) }] : []),
+  ...(place.value.count > 1 ? [{ text: T("place", place.value) }] : []),
 ]);
 
 // An entity pressed in the row and moved left or right takes the place it is over (composables/useSortableRows.ts); let
@@ -151,10 +165,10 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
       <!-- The clock itself: whether it is used, how it looks on the glass, and the temperature beside its entities. -->
       <template v-else>
         <SwitchRow :label="T('on')" :model-value="screensaver.isOn('clock')" @update:model-value="(on: boolean) => screensaver.toggleStep('clock', on)" />
-        <PropRow v-if="screensaver.facesHere" :label="T('face')" icon="clock-outline" stack>
+        <PropRow v-if="facesShown" :label="T('face')" icon="clock-outline" stack>
           <div class="face-picks" id="saver-faces" role="radiogroup" :aria-label="T('face')">
             <button v-for="c in faceChoices" :key="c.kind" type="button" role="radio" class="face-pick" :data-face="c.kind"
-              :aria-checked="faceKind === c.kind ? 'true' : 'false'" @click="pickFace(c.kind)">
+              :aria-checked="!pluginFace && faceKind === c.kind ? 'true' : 'false'" @click="pickFace(c.kind)">
               <span class="face-thumb" :style="{ aspectRatio: screensaver.glassRatio }">
                 <span v-if="c.kind === 'digital'" class="face-digital">{{ screensaver.clockPreview.time }}</span>
                 <SaverFace v-else :kind="c.kind" :dark="screensaver.faceDark" :numerals="numerals" :seconds="false"
@@ -162,8 +176,19 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
               </span>
               <span class="face-name">{{ c.label }}</span>
             </button>
+            <!-- A plugin's face: no picture of it here (it is the plugin's own drawing), so its icon and name. -->
+            <button v-for="p in pluginFaces" :key="p.key" type="button" role="radio" class="face-pick" :data-face="p.key"
+              :aria-checked="pluginFace === p.key ? 'true' : 'false'" :title="text(p.plugin.name)" @click="pickPluginFace(p.key)">
+              <span class="face-thumb face-plugin" :style="{ aspectRatio: screensaver.glassRatio }"><span class="mdi">{{ glyph(p.saver.icon || p.plugin.icon) }}</span></span>
+              <span class="face-name">{{ text(p.saver.name) }}</span>
+            </button>
           </div>
         </PropRow>
+        <template v-if="pluginFaceKind">
+          <p class="plugin-tile-from"><span class="mdi">{{ glyph("F0A66") }}</span>{{ t("editor.plugin_tile.from", { plugin: text(pluginFaceKind.plugin.name) }) }}</p>
+          <PluginOptions v-if="pluginFaceKind.saver.options?.length" :plugin="pluginFaceKind.plugin" :options="pluginFaceKind.saver.options"
+            :values="screensaver.pluginValues(pluginFace)" @change="setFaceOption" />
+        </template>
         <SaverGlass :height="150" />
         <template v-if="analog">
           <PropRow :label="T('look')" icon="theme-light-dark" stack>
@@ -190,11 +215,11 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
       <button type="button" class="icon-btn" :disabled="index >= items.length - 1" :aria-label="t('editor.topbar.right_move')" :title="t('editor.topbar.right_move')" @click="move(1)"><Icon name="chevron-right" /></button>
     </div>
   </div>
-  <div v-else-if="!item && !adding && screensaver.saver?.pictures" class="dr-foot">
+  <div v-else-if="!item && !adding && place.count > 1" class="dr-foot">
     <span class="spacer"></span>
     <div class="tool-group" role="group">
-      <button type="button" class="icon-btn" :disabled="place <= 0" :aria-label="T('earlier')" :title="T('earlier')" @click="screensaver.moveStep('clock', -1)"><Icon name="arrow-up" /></button>
-      <button type="button" class="icon-btn" :disabled="place >= screensaver.savedOrder.length - 1" :aria-label="T('later')" :title="T('later')" @click="screensaver.moveStep('clock', 1)"><Icon name="arrow-down" /></button>
+      <button type="button" class="icon-btn" :disabled="place.n <= 1" :aria-label="T('earlier')" :title="T('earlier')" @click="screensaver.moveStep('clock', -1)"><Icon name="arrow-up" /></button>
+      <button type="button" class="icon-btn" :disabled="place.n >= place.count" :aria-label="T('later')" :title="T('later')" @click="screensaver.moveStep('clock', 1)"><Icon name="arrow-down" /></button>
     </div>
   </div>
 </template>
@@ -206,6 +231,7 @@ function move(step: number) { if (screensaver.moveSaverItem(props.index, props.i
 .face-pick[aria-checked="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); color: var(--ink); }
 .face-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .face-thumb { display: grid; place-items: center; width: 100%; max-height: 72px; border-radius: 4px; overflow: hidden; background: #000; }
+.face-plugin { color: #fff; font-size: 20px; }
 .face-digital { color: #fff; font-size: 13px; font-weight: 300; font-variant-numeric: tabular-nums; }
 .face-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 </style>
