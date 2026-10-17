@@ -41,9 +41,9 @@ export const useSessionStore = defineStore("session", () => {
   // ---- The address (router.ts) ----
   // The main view ui.go("") goes to: the open screen, else the overview.
   ui.setMainView(() => (scr.selected ? screenRoute(scr.selected) : "/"));
-  // Back, Forward or a typed address that leaves a screen with unsaved changes asks first, as select() asks; a no keeps
-  // the page and the address where they were. select() and goHome() close the document before they move, so they are
-  // never asked twice.
+  // Back, Forward or a typed address that leaves a screen with unsaved changes asks first, as choosing a screen asks; a
+  // no keeps the page and the address where they were. Choosing a screen and going home close the document before they
+  // move, so nobody is asked twice.
   const unguard = router.beforeEach(async (to) => {
     const leaves = Boolean(scr.selected) && doc.dirty && (to.name === "home" || (to.name === "screen" && to.params.id !== scr.selected));
     if (!leaves) return true;
