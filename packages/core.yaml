@@ -23,6 +23,10 @@ substitutions:
   # The language of every text on the screen (app 0.2.90): a file in screen_manager/translations, English for any
   # text it lacks. ESP Screens writes it into the screen's own YAML, from Home Assistant's language or its Settings.
   LANGUAGE: "en"
+  # Swipe between pages on a screen that has stored no choice of its own: off, as every screen set up before had it, so
+  # an update changes nothing there. New screen writes "1" into a new screen's own YAML, which then swipes and opens the
+  # Dock out of the box. Once the screen stores a choice (any change of a setting), that choice wins. Keep "0" here.
+  SWIPE_PAGES_DEFAULT: "0"
 
   ## DIM settings
   AUTO_DIM: "true"                                 # true = enable auto dimming
@@ -193,6 +197,8 @@ esphome:
           // the 3.3 V rail under the brownout level when it switches on from a dark screen, so that board has no
           // standby and no night. The rows, the entities and the add-on's Settings follow the same fact.
           settings_screen::can_standby = ${CAN_STANDBY};
+          // Swipe between pages before the screen's own choice is read: the start value of a screen that stored none.
+          settings_screen::swipe_pages = ${SWIPE_PAGES_DEFAULT};
           runtime_tiles::load_settings();
           // Colours (firmware 0.2.54+): the styles of this profile take their colours from theme.h. The list runs now,
           // in the look the screen saved, before anything is drawn, and again after every change of look.
