@@ -57,7 +57,7 @@ export const useUiStore = defineStore("ui", () => {
         spare.focus();
         spare.select();
       }
-      let copied = false;
+      let copied: boolean;
       try {
         copied = document.execCommand("copy");
       } catch {

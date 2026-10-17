@@ -47,8 +47,8 @@ fontTools and jinja2, and stops when one is missing, because a skipped test prov
   release has something the snapshots lack or contradict.
 - **Translations** (`tools/i18n.py check`, `header --check` and `lint`): every language against English, the key
   header the firmware builds against, and no English left in the firmware's code.
-- **The editor**: `npm ci`, the Vitest suite, the type check and the build, and whether the bundle in Git equals that
-  build.
+- **The editor**: `npm ci`, the Vitest suite, ESLint (`npm run lint`, which `npm run check` and so the build run too),
+  the type check and the build, and whether the bundle in Git equals that build.
 - **The firmware preview**, the shared firmware compiled to WebAssembly for the editor: whether it is older than the
   firmware sources, and its tests (`web/wasm/test_*.mjs`) at three glass shapes. `.github/workflows/preview.yml`
   rebuilds and commits it when the firmware sources move; locally, `sh web/wasm/build.sh` with Emscripten does the
