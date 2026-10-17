@@ -427,6 +427,10 @@ class Run:
         await asyncio.sleep(0.5)
         if (await self.render('_dock-dragged', keep=False)).tobytes() != before.tobytes():
             self.failures.append('dock: page 1 looks different after the drawer was dragged away')
+        # One page (a large grid holds the whole demo): no page bar with dots to tap, and no page 2 to come home from.
+        if pages < 2:
+            self.warnings.append('dock: one page, so the page dots and the way home from page 2 were not tried')
+            return
         # A tap on the page dots in the middle of the page bar opens it too; a tap above it closes it again.
         start = len(self.lines)
         await self.finger([(width // 2, height - 12), (width // 2, height - 12)], rest=0.1)
