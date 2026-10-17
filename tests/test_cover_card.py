@@ -138,9 +138,11 @@ class Firmware(unittest.TestCase):
         # Percentage direction and all feature masks are exercised in C++.
         event = RUNTIME[RUNTIME.index('inline void cover_slider_event('):RUNTIME.index('inline lv_obj_t *cover_slider(')]
         self.assertIn('code!=LV_EVENT_RELEASED', event)
-        self.assertIn('tile_controls::cover_position_action(t,lv_slider_get_value(slider),tilt)', event)
-        self.assertIn('if(call.valid())action(call.service,t.entity,call.key,call.value)', event)
-        self.assertIn('if(cmd>=70 && cmd<130){auto a=tile_controls::key_action(t,cmd-70);', RUNTIME)
+        self.assertIn('const int raw=lv_slider_get_value(slider);', event)
+        self.assertIn('tile_controls::cover_position_action(t,raw,tilt)', event)
+        # The command goes out as a travel (cover_travel.h): the card shows where the cover goes until it gets there.
+        self.assertIn('cover_go(t,call,tilt?percent:100-percent,0,tilt);', event)
+        self.assertIn('if(cmd>=70 && cmd<130){if(t.domain()=="cover")cover_key(t,cmd-70);}', RUNTIME)
         # The once-a-second tick of an open card must not replace "Open · 60% · Tilt 40%" with the raw state.
         tick = RUNTIME[RUNTIME.index('inline void tick() {'):]
         self.assertIn('card_status(t,detail_status_brief)', tick[:tick.index('if(!enabled)return;')])
