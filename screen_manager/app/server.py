@@ -23,6 +23,7 @@ import claude_skill
 import screen_hang
 import screen_labels
 import screen_saver
+import saver_photos
 import feedback
 from build_queue import BuildQueue
 from firmware import Firmware
@@ -758,6 +759,34 @@ class HomeAssistant:
                     raise ValueError('picture too large')
             return bytes(raw)
 
+    async def media_file(self, address):
+        """A photo of the screensaver's folder (saver_photos.py), at the address Home Assistant's own
+        `media_source/resolve_media` named for it: a path of Home Assistant (/media/..., an integration's own view such as
+        Immich's) with the app's token, or a public address on the internet; never a private one, never a redirect."""
+        root = self.base[:-4] if self.base.endswith('/api') else self.base
+        if address.startswith('/'):
+            parsed = urlsplit(address)
+            if parsed.netloc or '..' in parsed.path or address.startswith('//'):
+                raise ValueError('unsafe photo address')
+            url, headers = f'{root}{address}', {'Authorization': 'Bearer ' + self.token}
+        elif address.startswith(('http://', 'https://')):
+            if not await self._allow_media_url(address):
+                raise ValueError('unsafe photo address')
+            url, headers = address, {}
+        else:
+            raise ValueError('unknown photo address')
+        async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=saver_photos.FETCH_SECONDS),
+                                    allow_redirects=False) as response:
+            response.raise_for_status()
+            if (response.content_length or 0) > saver_photos.MAX_PHOTO_BYTES:
+                raise ValueError('photo too large')
+            raw = bytearray()
+            async for chunk in response.content.iter_chunked(65536):
+                raw += chunk
+                if len(raw) > saver_photos.MAX_PHOTO_BYTES:
+                    raise ValueError('photo too large')
+            return bytes(raw)
+
     async def browse_image(self, entity, picture):
         """A thumbnail of a player's library (app 0.4.42): a public address on the internet (Spotify's), or Home
         Assistant's own proxy for that player's library (Sonos, Music Assistant); never a private address, never a
@@ -959,6 +988,11 @@ class Manager:
         self.savers = screen_saver.ScreenSavers(self.path.parent / 'screensavers.json')
         self.saver_sent = {}
         self.saver_shown = {}  # the player each screen's screensaver shows, by inbox
+        # The photos step (app 0.4.89, saver_photos.py): a folder of Home Assistant's media, walked per screen.
+        self.photos = saver_photos.Photos(lambda kind, **data: self.ha.request(kind, **data),
+                                          lambda address: self.ha.media_file(address))
+        self.photos.changed = lambda: self.ha.changed.set()
+        self.photo_links = {}  # inbox -> (mark, box, fit, token) of the photo link a screen got last
         # Settings -> Language & region (app 0.2.90): the language, clock and numbers of every screen.
         self.region = Region(self.path.parent / 'language.json', ha_language=lambda: getattr(self.ha, 'ha_language', None))
         self.ha.language_of = self.region.language
@@ -3214,9 +3248,21 @@ class Manager:
         broken = {entity for entity in screen_saver.players(choice) if self.camera.cover_broken(entity)}
         # A face other than the digital clock, for a screen whose hello says it draws them (module clock_faces).
         faces = screen_saver.FACES_FEATURE in (getattr(sender, 'features', None) or ())
+        # The photos step (app 0.4.89): only for a screen whose hello names it, and only while it may show.
+        photos = None
+        if pictures and screen_saver.PHOTOS_FEATURE in (getattr(sender, 'features', None) or ()):
+            wanted = choice.get('show') and 'photos' not in choice.get('off', ()) and choice['photos'].get('source')
+            photos = self.photos.state(screen.get('id'), choice['photos']) if wanted else {'ready': False}
+            if not wanted:
+                self.photos.forget(screen.get('id'))
         return screen_saver.message(choice, self.ha.states, pictures, short, media_extras, self.player_ground, keys,
                                     held=self.saver_shown.get(screen.get('id'), ''), bar=self.saver_item if row else None,
-                                    broken=broken, faces=faces)
+                                    broken=broken, faces=faces, photos=photos, plugins=self.saver_plugins(screen, choice))
+
+    def saver_plugins(self, screen, choice):
+        """The plugins' faces and steps a screen's screensaver may show (plugin API 0.14), or None for a screen without
+        any: {'faces': {key: step}, 'steps': {key: what the step draws from, None while it has nothing}}."""
+        return self.plugins.saver_plugins(screen, choice, self.ha.states) if core.plugins_enabled() else None
 
     def saver_item(self, item):
         """One of the clock's entity items as the top bar sends it (header_bar.entity_item)."""
@@ -3293,7 +3339,7 @@ class Manager:
             await self.library_art(inbox, screen, request)
             return
         # The screensaver's picture (app 0.4.48, firmware 0.29.0+): the screen's whole box, darkened, of its own choice.
-        if request.get('saver') in ('media', 'camera'):
+        if request.get('saver') in ('media', 'camera', 'photos'):
             await self.answer_saver(inbox, screen, request)
             return
         # The pictures of a plugin tile's places (plugin API 0.10): one atlas for all of them.
@@ -3358,6 +3404,9 @@ class Manager:
         """A link to the screensaver's picture (camera_feed.encode_saver) of the player or camera this screen's
         screensaver follows, at the screen's full box; an empty link while there is none."""
         kind, entity = request.get('saver'), request.get('entity')
+        if kind == 'photos':
+            await self.answer_photo(inbox, screen, request)
+            return
         if not screen or not screen.get('online') or entity not in self.saver_entities(inbox):
             return
         if (kind == 'media') != (entity.split('.')[0] == 'media_player'):
@@ -3384,6 +3433,46 @@ class Manager:
         if not url and kind == 'media':
             # The cover did not come: a pass right away, which gives the glass to the next step (cover_broken).
             self.ha.changed.set()
+
+    async def answer_photo(self, inbox, screen, request):
+        """A link to the photo this screen's photos step shows now (camera_feed.encode_photo), at the screen's full box: a
+        still link, made once per photo and size. No answer while the photo is not here: the screen asks again."""
+        if not screen or not screen.get('online') or request.get('entity') != screen_saver.PHOTOS_ENTITY:
+            return
+        box, action = camera_feed.box(screen, 'full', camera_feed.picture_cap(request)), self.transport(inbox, screen)
+        if not box or not action:
+            return
+        choice = self.savers.get(screen.get('device_id')) if screen.get('device_id') else dict(screen_saver.DEFAULT)
+        fit = choice['photos'].get('fit', 'auto')
+        raw = self.photos.raw(inbox)
+        if raw is None:
+            return
+        state = self.photos.state(inbox, choice['photos'])
+        key = (state.get('mark'), tuple(box), fit)
+        made = self.photo_links.get(inbox)
+        token = made[1] if made and made[0] == key and made[1] in self.camera.links else None
+        if token is None:
+            try:
+                image = await asyncio.get_running_loop().run_in_executor(None, camera_feed.encode_photo, raw, tuple(box), fit)
+            except Exception as error:  # noqa: BLE001 - a photo that cannot be read is passed over at the next turn
+                LOG.info('Screensaver photo on %s cannot be read (%s)', screen['name'], type(error).__name__)
+                return
+            token = self.camera.link(screen_saver.PHOTOS_ENTITY, tuple(box), still=image)
+            self.photo_links[inbox] = (key, token)
+        base = await camera_feed.base_url(self.ha.request)
+        if not base:
+            return
+        url = f'{base}/camera/{token}.bmp'
+        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'saver', 'e': screen_saver.PHOTOS_ENTITY, 'u': url},
+                                  action, request)
+        LOG.info('Screensaver photo on %s', screen['name'])
+
+    async def photo_loop(self):
+        """A pass when a screen's next photo is due (the passes otherwise follow Home Assistant's changes)."""
+        while True:
+            await asyncio.sleep(2)
+            if self.photos.due():
+                self.ha.changed.set()
 
     async def answer_live(self, inbox, screen, request):
         """The strip for a page's live camera tiles: every tile the screen names must be a camera tile of its layout
@@ -3499,7 +3588,15 @@ class Manager:
             return
         placed = self.layouts.get(inbox, {}).get('tiles', [])
         of_entity = None
-        if question.card:
+        if question.saver:
+            # A screensaver of a plugin (plugin API 0.14): one this screen runs and shows, answered as "psaver". Home
+            # Assistant's own pictures for a step of an entity: the entity chosen for it.
+            answer = {'v': 1, 'op': 'camera', 't': 'psaver', 'e': question.entity, 'u': ''}
+            entry, kind = self.plugins.saver_kinds(inbox).get(question.entity, (None, None))
+            choice = self.savers.get(screen.get('device_id')) if screen.get('device_id') else {}
+            chosen = ((choice.get('plugins') or {}).get(question.entity) or {}).get('entity', '')
+            of_entity = bool(question.of) and question.of == chosen
+        elif question.card:
             # A card over the page (plugin API 0.13): of a plugin this screen runs, answered as "pcard". Home
             # Assistant's own pictures only for a card shown for an entity of the screen's layout.
             answer = {'v': 1, 'op': 'camera', 't': 'pcard', 'e': question.entity, 'u': ''}
@@ -3519,7 +3616,9 @@ class Manager:
             LOG.info('Pictures for %s on %s refused: %s', question.entity, screen['name'], problem)
             await self.send_auxiliary(inbox, answer, action, request)
             return
-        raws = await asyncio.gather(*(self.plugins.pictures.fetch(url, entry.manifest, kind, of_entity)
+        raws = await asyncio.gather(*(self.saver_picture(inbox, screen, kind)
+                                      if url == plugin_pictures.SAVER_PICTURE else
+                                      self.plugins.pictures.fetch(url, entry.manifest, kind, of_entity)
                                       for url in question.sources))
         base = await camera_feed.base_url(self.ha.request)
         if not base:
@@ -3536,6 +3635,17 @@ class Manager:
         await self.send_auxiliary(inbox, answer, action, request)
         LOG.info('Pictures of %s on %s: %d of %d%s', question.entity, screen['name'], sum(raw is not None for raw in raws),
                  len(raws), '' if answer['u'] else ', no picture')
+
+    async def saver_picture(self, inbox, screen, kind):
+        """The picture of the step a plugin's screensaver face draws (plugin API 0.14, 'saver:picture'): the cover of the
+        player the music step shows, or the photo of the photos step; None while there is none."""
+        if kind.get('step') == 'photos':
+            return self.photos.raw(inbox)
+        if kind.get('step') == 'media':
+            entity = self.saver_shown.get(inbox, '')
+            if entity:
+                return await self.camera.cover_raw(entity)
+        return None
 
     async def thumbnail(self, entity, url, title=''):
         """A picture of a player's library, fetched once and kept a while (the library's covers and the favourites'); None
@@ -4053,7 +4163,9 @@ def create_app(manager, development=False):
                                      'ready': (manager.firmware_version(screen['id'], screen) or (0, 0, 0)) >= SCREENSAVER_MIN_FIRMWARE,
                                      'pictures': bool(camera_feed.box(screen, 'full')), 'standby': can_standby(screen),
                                      # The clock's faces where the board has their module (docs/MODULES.md).
-                                     'faces': has_module(screen, screen_saver.MODULE)}
+                                     'faces': has_module(screen, screen_saver.MODULE),
+                                     # The photos step where the screen's firmware takes it (app 0.4.89).
+                                     'photos': screen_saver.PHOTOS_FEATURE in (getattr(manager.page_senders.get(screen['id']), 'features', None) or ())}
             # The delivery and our own word for a screen that reports nothing, in the editor's language (app 0.2.90).
             status = manager.status.get(screen['id'])
             word = PAGE_DELIVERY_WORDS.get(status) if isinstance(status, str) else None
@@ -4293,6 +4405,18 @@ def create_app(manager, development=False):
         label = manager.labels.set(screen['device_id'], data['name'])
         manager.notify()
         return web.json_response({'name': label or screen['name']})
+    async def browse_photos(request):
+        """One level of Home Assistant's media sources for the photos step's folder (app 0.4.89): the folders in it and
+        how many photos it holds right there."""
+        content_id = request.query.get('id', '')
+        if content_id and not screen_saver.MEDIA_SOURCE.fullmatch(content_id):
+            return web.json_response({'error': t('addon.errors.pages.fields')}, status=400)
+        try:
+            return web.json_response(await manager.photos.browse(content_id))
+        except Exception as error:  # noqa: BLE001 - Home Assistant could not browse it
+            LOG.info('Photos folder cannot be browsed (%s)', type(error).__name__)
+            return web.json_response({'id': content_id, 'title': '', 'folders': [], 'photos': 0, 'failed': True})
+
     async def change_screensaver(request):
         """The screensaver of one screen (app 0.4.48): the whole choice at once; the screen hears of it on the next pass."""
         data = await request.json()
@@ -4987,6 +5111,7 @@ def create_app(manager, development=False):
     app.router.add_put('/api/screens/{inbox}/name', rename_screen)
     app.router.add_put('/api/screens/{inbox}/settings', change_settings)
     app.router.add_put('/api/screens/{inbox}/screensaver', change_screensaver)
+    app.router.add_get('/api/screensaver/photos', browse_photos)
     app.router.add_post('/api/screens/{inbox}/feedback', feedback_action)
     app.router.add_static('/assets/', static / 'assets')
     return app
@@ -5045,7 +5170,7 @@ async def main():
         try:
             await asyncio.gather(ha.run(), manager.run(), manager.history_loop(), manager.updates.run(),
                                  manager.alert_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(),
-                                 manager.media_loop(), manager.pairing_loop(),
+                                 manager.media_loop(), manager.pairing_loop(), manager.photo_loop(),
                                  *([manager.plugins.loop(), manager.plugin_loop()] if core.plugins_enabled() else []))
         finally:
             await cameras.cleanup()

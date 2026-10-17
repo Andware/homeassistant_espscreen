@@ -58,7 +58,11 @@ namespace tessera {
 // card's room, with tap_point() in the card's own pixels.
 // 0.13: pictures on a card over the page: ui::picture and ui::set_picture in a card's calls as in a tile's, and the
 // manifest's `pictures` of a card.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 13;
+// 0.14: screensavers (docs/PLUGINS.md "A screensaver"): add_saver, a Saver drawn over the whole glass in standby, as a
+// face of a step of the screensaver (the clock, the music, the photos) or as a step of its own; ui::takes_taps, a part of
+// it a finger may tap without waking the screen; "saver:picture", the step's own picture for a place; and wish(), a
+// value a finger changed, shown at once and squared with Home Assistant as every control of the screen does.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 14;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -251,6 +255,58 @@ struct TapAction {
   std::string id, key;       // the action's id in the manifest, and plugin:<plugin>.<action>
   std::function<void(const TapContext &)> run;
 };
+// ---- A screensaver (0.14, docs/PLUGINS.md "A screensaver") ----
+// The screensaver is a list of steps the person orders in the editor: the music that plays, the photos of a folder, a
+// camera, the clock, and steps of plugins. ESP Screen Manager picks the first that has something to show; the screen
+// shows it over the whole glass while Auto standby dims it, at the standby or night level. Tessera decides WHEN a step
+// shows (and takes it away when a finger wakes the screen, an alert comes, an update starts, or the level goes to 0); a
+// plugin decides HOW it looks. A plugin's saver is either a face of one of Tessera's steps (`step` CLOCK, MEDIA or
+// PHOTOS: it draws from what that step knows, the same data Tessera's own face has) or a step of its own (OWN: it draws
+// from its fetch and its entity, as a plugin tile, and its manifest's `when` says when it has something to show).
+enum class SaverStep : uint8_t { CLOCK, MEDIA, PHOTOS, OWN };
+// What a saver gets when it comes on the glass. Valid during show() only (copy what you keep).
+struct SaverContext {
+  lv_obj_t *parent;          // the whole glass, black, on LVGL's top layer: everything the saver makes goes in here
+  int width, height;         // the glass in pixels
+  SaverStep step;
+  uint8_t level;             // the backlight's level in percent (the standby or the night level; never 0)
+  bool night;                // the night levels hold now: a face may go darker still
+  JsonObjectConst options;   // the saver's options as the person set them in the editor (the manifest's `options`)
+};
+// A screensaver of a plugin: one object while it is on the glass, deleted when it leaves. It never exists off the glass.
+// It is drawn in the dark look whatever the screen's look, as Tessera's own clock: theme roles (ui::color, ui::label)
+// give their dark values in every call of a saver, on the black glass, so the glass gives as little light as it can.
+// Tessera moves the whole saver up to a millimetre every minute so nothing stands on the same pixels for hours, unless
+// the manifest says `moves: true` (the saver moves itself, as a clock that turns or a picture that changes).
+class Saver : public InPsram {
+ public:
+  virtual ~Saver() = default;
+  // Make the parts, in context.parent. Called once, before anything else.
+  virtual void show(const SaverContext &context) = 0;
+  // What the step knows (the contract of its step in docs/PLUGINS.md "A screensaver"): for MEDIA the player and what it
+  // plays, for CLOCK the temperature and the row of entities, for PHOTOS the photo, for OWN the fetch's answer and the
+  // entity, as a tile's on_state. Called after show(), and again whenever it changed (a wish of the finger shows here
+  // at once, wish()). Fields only come to it; none is renamed or taken away within major 0.
+  virtual void on_state(JsonObjectConst data) {}
+  // Once a second while it is on the glass, with the screen's clock (seconds since 1970, 0 until it is set). Paint what
+  // changed, never the whole saver: the glass draws only the boxes that changed.
+  virtual void on_tick(uint32_t epoch) {}
+  // A tap on a part made with ui::takes_taps, through the touch guard every key passes; tap_point() says where, in the
+  // glass's pixels. The screen stays in standby. A tap anywhere else wakes the screen and the saver goes.
+  virtual void on_tap() {}
+  // A finger held on such a part for a second and a half (as volume down held mutes on Tessera's own player face).
+  virtual void on_hold() {}
+};
+struct SaverType {
+  Plugin *plugin;
+  std::string id, key;       // the saver's id in the manifest, and plugin:<plugin>.<saver>
+  SaverStep step;
+  std::function<Saver *()> make;
+};
+// What wish() can change (0.14), the fields of Tessera's own controls (optimistic.h): the player's play and pause ("1"
+// playing, "0" not), its mute ("1", "0"), and an entity's on and off ("on", "off").
+enum class Wish : uint8_t { PLAYING, MUTED, ON_OFF };
+
 struct TileType {
   Plugin *plugin;
   std::string id, key;       // the tile's id in the manifest, and plugin:<plugin>.<tile> (its entity in a layout)
@@ -309,11 +365,19 @@ class Plugin {
   // An item for the top bar (manifest `bar_items`), placed on a page's bar in the editor. `read` says what it shows now;
   // the screen asks again every few seconds and draws the bar again when that changed.
   void add_bar_item(const char *id, std::function<BarItem()> read);
+  // A screensaver of this plugin (manifest `savers`, 0.14), by its id; `step` must be the manifest's. Call it in setup().
+  void add_saver(const char *id, SaverStep step, std::function<Saver *()> make);
   // Set by the code generation (smart_display.register_plugin() in the plugin's __init__.py), from the plugin's
   // manifest and its translations/<language>.json (part "screen", in the language the screen is built with).
   void set_identity(const char *id, const char *version) { id_ = id; version_ = version; }
   void set_text(const char *key, const char *text) { texts_.push_back({key, text}); }
   void set_memory(const char *tile, uint16_t bytes) { memory_.push_back({tile, bytes}); }
+  // A screensaver of the manifest's `moves: true` (0.14): it moves itself, and the host leaves it where it draws.
+  void set_moves(const char *saver) { moving_.push_back(saver); }
+  bool moves(const std::string &saver) const {
+    for (const char *id : moving_) if (saver == id) return true;
+    return false;
+  }
   // A text of the plugin's own, "" when it has none by that key.
   const char *text(const char *key) const;
   // What one tile of this type costs of the layout memory (the manifest's `memory`), 1024 when it was not set.
@@ -322,6 +386,7 @@ class Plugin {
  private:
   std::vector<std::pair<const char *, const char *>> texts_;
   std::vector<std::pair<const char *, uint16_t>> memory_;
+  std::vector<const char *> moving_;
   const char *id_ = "", *version_ = "";
 };
 
@@ -332,6 +397,7 @@ const TileType *tile_type(const std::string &key);
 std::vector<CardType> &card_types();
 std::vector<TapAction> &tap_actions();
 std::vector<BarItemType> &bar_items();
+std::vector<SaverType> &saver_types();
 
 // ---- What the core offers a plugin ----
 // The screen's clock: seconds since 1970, 0 until Home Assistant set it.
@@ -393,6 +459,14 @@ bool action(const char *service, const std::string &entity, const char *key = nu
 // area_id) or the action has none. False when it was not sent: no object, a field name that is not a-z, 0-9 and _,
 // entity_id given twice, too many or too much (the log says which).
 bool action(const char *service, const std::string &entity, JsonVariantConst fields);
+// A value a finger changed (0.14, docs/OPTIMISTIC.md): it shows at once on every tile and card of the entity and on the
+// screensaver (a saver's on_state gets it), the action goes out at once (taps while it is on its way fold into one), and
+// Home Assistant's reports, answers and silence square it: a refusal or no answer puts the old value back. Use it for
+// every control that changes what an entity shows (play and pause, mute, on and off), never a value of your own that you
+// write before the action. wish(entity, Wish::PLAYING, "0") pauses a player. False when it was not sent (no such field
+// for that domain, or the screen may not perform actions now). A step (volume up and down) has nothing to show and goes
+// as an action().
+bool wish(const std::string &entity, Wish field, const std::string &value);
 
 namespace ui {
 // Sizes: a physical size in millimetres of glass, or a size of the reference look in this board's pixels.
@@ -425,6 +499,10 @@ lv_color_t tone_color(Tone tone, theme::Role normal);
 lv_obj_t *block(lv_obj_t *parent, theme::Role fill);
 // The UTF-8 of an icon of Tessera's set by its codepoint (0xF0B5E), for a label in Font::ICON or ICON_SMALL.
 std::string icon(uint32_t codepoint);
+// A part of a screensaver a finger may tap without waking the screen (0.14): its taps go to Saver::on_tap (and a hold to
+// on_hold), through the touch guard every key passes; a press gives the plugins their on_press. Every other part of a
+// saver lets the finger through to the glass, which wakes. A saver of the manifest's `taps: true` only; call it in show().
+void takes_taps(lv_obj_t *part);
 // A label of several lines (0.10): wraps at its width and is cut with dots at its height, both the plugin's to set
 // (lv_obj_set_size); for a description, a sentence, a title that may take two lines. ui::set_text and the rest apply.
 lv_obj_t *text(lv_obj_t *parent, Font font, theme::Role role = theme::INK);

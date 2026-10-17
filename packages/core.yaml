@@ -670,6 +670,9 @@ api:
                     features.add("saver_keys");
                     // saver_items (firmware 0.50.0+, app 0.4.81): the clock's row of entities, `wi` of the op "saver".
                     features.add("saver_items");
+                    // saver_photos (app 0.4.89): the screensaver's photos step, a folder of Home Assistant's media, one photo
+                    // after the other over the whole glass. Only a board that draws pictures shows them.
+                    if (runtime_tiles::camera_supported()) features.add("saver_photos");
                     // speaker_groups (firmware 0.26.0+, app speakers.py): a player's speakers with a key to join or leave
                     // the group and each one's volume, its inputs behind a key of their own, and the speaker it follows.
                     features.add("speaker_groups");

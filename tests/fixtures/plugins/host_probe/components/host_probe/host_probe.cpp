@@ -246,11 +246,71 @@ class ProbeCloser : public tessera::Card {
 };
 std::string ProbeCloser::mode;
 
+// A screensaver (plugin API 0.14): every moment one line with its id, so the harness follows a face of the music, a face
+// of the clock and a step of its own. The deck lays out a place for the step's cover and one key that takes taps.
+class ProbeSaver : public tessera::Saver {
+ public:
+  explicit ProbeSaver(const char *id) : id_(id) {}
+  ~ProbeSaver() override { ESP_LOGI(TAG, "saver=%s destroy", id_); }
+  void show(const tessera::SaverContext &c) override {
+    ESP_LOGI(TAG, "saver=%s show %dx%d step=%d level=%u night=%d dark=%d", id_, c.width, c.height, (int) c.step,
+             (unsigned) c.level, (int) c.night, (int) theme::dark);
+    words_ = ui::label(c.parent, Font::HEADLINE, theme::INK);
+    lv_obj_set_width(words_, c.width / 2);
+    lv_obj_set_pos(words_, ui::px(16), ui::px(16));
+    if (c.step == tessera::SaverStep::MEDIA) {
+      if (ui::pictures()) {
+        const int side = std::min(c.width, c.height) / 2;
+        cover_ = ui::picture(c.parent);
+        lv_obj_set_size(cover_, side, side);
+        lv_obj_set_pos(cover_, c.width - side - ui::px(16), ui::px(16));
+      }
+      key_ = ui::block(c.parent, theme::ACCENT);
+      lv_obj_set_size(key_, ui::px(64), ui::px(64));
+      lv_obj_set_pos(key_, ui::px(16), c.height - ui::px(80));
+      ui::takes_taps(key_);
+      lv_obj_update_layout(c.parent);
+      lv_area_t a;
+      lv_obj_get_coords(key_, &a);
+      ESP_LOGI(TAG, "saver=%s key %d,%d,%d,%d", id_, (int) a.x1, (int) a.y1, (int) a.x2, (int) a.y2);
+    }
+  }
+  void on_state(JsonObjectConst data) override {
+    entity_ = data["entity"] | "";
+    playing_ = std::string(data["state"] | "") == "playing";
+    std::string all;
+    serializeJson(data, all);
+    ESP_LOGI(TAG, "saver=%s state %.200s", id_, all.c_str());
+    ui::set_text(words_, std::string(data["title"] | (data["temperature"] | (data["name"] | ""))));
+    if (cover_) ui::set_picture(cover_, data["picture"] | "");
+  }
+  void on_tick(uint32_t epoch) override {
+    if (ticked_) return;
+    ticked_ = true;
+    ESP_LOGI(TAG, "saver=%s tick epoch=%u", id_, (unsigned) epoch);
+  }
+  void on_tap() override {
+    const tessera::Point at = tessera::tap_point();
+    const bool sent = !entity_.empty() && tessera::wish(entity_, tessera::Wish::PLAYING, playing_ ? "0" : "1");
+    ESP_LOGI(TAG, "saver=%s tap at=%d,%d wish=%d", id_, at.x, at.y, (int) sent);
+  }
+  void on_hold() override { ESP_LOGI(TAG, "saver=%s hold", id_); }
+
+ private:
+  const char *id_;
+  std::string entity_;
+  bool playing_ = false, ticked_ = false;
+  lv_obj_t *words_{}, *cover_{}, *key_{};
+};
+
 void HostProbe::setup() {
   set_up_ = true;
   add_tile("probe", [this]() { return new ProbeTile(this); });
   add_card("detail", []() { return new ProbeCard(); });
   add_card("closer", []() { return new ProbeCloser(); });
+  add_saver("deck", tessera::SaverStep::MEDIA, []() { return new ProbeSaver("deck"); });
+  add_saver("dial", tessera::SaverStep::CLOCK, []() { return new ProbeSaver("dial"); });
+  add_saver("alarm", tessera::SaverStep::OWN, []() { return new ProbeSaver("alarm"); });
   add_tap_action("open", [this](const tessera::TapContext &c) {
     ESP_LOGI(TAG, "tap_action entity=[%s] name=[%s] tile=%d", c.entity, c.name, c.tile);
     tessera::open_card(plugin_id(), "detail", c.entity, c.tile);

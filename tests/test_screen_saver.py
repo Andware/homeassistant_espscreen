@@ -33,14 +33,17 @@ PLAYER, CAMERA = 'media_player.living_room', 'camera.front_door'
 PLAYING = {'state': 'playing', 'attributes': {'friendly_name': 'Living room', 'media_title': 'Song', 'media_artist': 'Band',
                                               'media_duration': 200, 'entity_picture': '/api/media_player_proxy/x?cache=1'}}
 DOOR = {'state': 'idle', 'attributes': {'friendly_name': 'Front door'}}
-CHOICE = {'show': True, 'media': PLAYER, 'camera': CAMERA, 'order': ['media', 'camera', 'clock'], 'off': [], 'weather': 'auto', 'more': [], 'items': [],
-          'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark'}
+CHOICE = {'show': True, 'media': PLAYER, 'camera': CAMERA, 'order': ['media', 'photos', 'camera', 'clock'], 'off': [], 'weather': 'auto', 'more': [], 'items': [],
+          'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark',
+          'photos': {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto'}, 'media_face': '', 'photos_face': '', 'plugins': {}}
 
 
 class Choice(unittest.TestCase):
     def test_a_choice_is_checked_and_filled_in(self):
         self.assertEqual(screen_saver.validate({}), screen_saver.DEFAULT)
-        self.assertEqual(screen_saver.validate({'show': True})['order'], ['media', 'camera', 'clock'])
+        self.assertEqual(screen_saver.validate({'show': True})['order'], ['media', 'photos', 'camera', 'clock'])
+        # An order saved before the photos (app 0.4.88) gets them right after the music.
+        self.assertEqual(screen_saver.validate({'order': ['clock', 'media', 'camera']})['order'], ['clock', 'media', 'photos', 'camera'])
         for wrong in ({'show': 'yes'}, {'media': 'camera.front'}, {'camera': 'media_player.x'}, {'media': 'Media Player'},
                       {'order': ['media', 'clock']}, {'order': ['media', 'media', 'clock']}, {'off': ['tv']}, {'colour': 1}, None):
             with self.assertRaises(ValueError, msg=wrong):

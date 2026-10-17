@@ -169,7 +169,9 @@ def plugins_of(answer):
             continue
         tiles = [tile for tile in item.get("tiles") or [] if isinstance(tile, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,31}", tile)]
         version = item.get("version") if isinstance(item.get("version"), str) else ""
-        plugins.append({"id": item["id"], "version": version[:16], "tiles": tiles[:8]})
+        # Its screensavers (plugin API 0.14): a face of a step, or a step of its own, by their ids.
+        savers = [saver for saver in item.get("savers") or [] if isinstance(saver, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,31}", saver)]
+        plugins.append({"id": item["id"], "version": version[:16], "tiles": tiles[:8], "savers": savers[:4]})
         if len(plugins) == 16:
             break
     return api, plugins

@@ -402,6 +402,52 @@ def encode_saver(raw, box, kind, ground=0):
     return tile_art.bmp(picture, compact=True)
 
 
+# A photo of the screensaver's photos step (app 0.4.89, saver_photos.py): exactly the screen's full box, not darkened
+# (no words stand over it, and the standby level dims the glass already). `fit` 'auto' fills the glass with a photo about
+# its shape (neither a quarter wider nor taller than the glass, the five-to-four rule of a cover) and shows a photo of
+# another shape whole, on its own colour darkened; 'fill' always cuts, 'whole' never does. 8-bit on the photo's own
+# palette, dithered, as every picture of the screensaver.
+PHOTO_GROUND_DIM = 0.55
+
+
+def photo_fills(size, box, fit):
+    """Whether a photo of `size` fills the glass of `box` (cut to it), or shows whole."""
+    if fit == 'fill':
+        return True
+    if fit == 'whole':
+        return False
+    (pw, ph), (bw, bh) = size, box
+    return pw * bh * SAVER_SQUARE[1] <= bw * ph * SAVER_SQUARE[0] and bw * ph * SAVER_SQUARE[1] <= pw * bh * SAVER_SQUARE[0]
+
+
+def encode_photo(raw, box, fit='auto'):
+    """The photos step's picture as a BMP of exactly `box`."""
+    from PIL import Image, ImageOps, ImageStat
+    import saver_photos
+    import tile_art
+    saver_photos.heif()
+    with Image.open(io.BytesIO(raw)) as source:
+        if source.width * source.height > saver_photos.MAX_PIXELS:
+            raise ValueError('photo too large')
+        source.draft('RGB', box)
+        image = ImageOps.exif_transpose(source)
+        if image.mode in ('RGBA', 'LA', 'P', 'PA'):
+            image = image.convert('RGBA')
+            flat = Image.new('RGB', image.size)
+            flat.paste(image, mask=image.getchannel('A'))
+            image = flat
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
+        if photo_fills(image.size, box, fit):
+            picture = ImageOps.fit(image, box, Image.Resampling.LANCZOS)
+        else:
+            whole = ImageOps.contain(image, box, Image.Resampling.LANCZOS)
+            colour = tuple(int(c * (1 - PHOTO_GROUND_DIM)) for c in ImageStat.Stat(whole.resize((16, 16))).mean[:3])
+            picture = Image.new('RGB', box, colour)
+            picture.paste(whole, ((box[0] - whole.width) // 2, (box[1] - whole.height) // 2))
+    return tile_art.bmp(picture, compact=True)
+
+
 def encode_cover(raw, size, background):
     """A media player's picture as a square 24-bit BMP of `size` pixels with rounded corners, the corners filled with
     `background` (0xRRGGBB): what the screen draws on its card without any work of its own. A picture that is not

@@ -366,13 +366,15 @@ std::string receive(const std::string &payload) {
       // "saver" (app 0.4.48, firmware 0.29.0+): the screensaver's picture of the whole glass, as a full view's.
       // "vmap" (module vacuum): a vacuum card's map, cleaned up by the app (vacuum_map.py).
       // "pcard" (plugin API 0.13): the pictures of a plugin's card over the page; `e` names the card (plugin:<p>.<card>).
-      if (view == "live" ? !valid_entity_list(entity) : !valid_entity(entity) || (view != "full" && view != "alert" && view != "cover" && view != "lib" && view != "saver" && view != "vmap" && view != "pcard")) return false;
+      // "psaver" (plugin API 0.14): the pictures of a plugin's screensaver; `e` names it (plugin:<p>.<saver>).
+      if (view == "live" ? !valid_entity_list(entity) : (!valid_entity(entity) && entity != SAVER_PHOTOS) || (view != "full" && view != "alert" && view != "cover" && view != "lib" && view != "saver" && view != "vmap" && view != "pcard" && view != "psaver")) return false;
       if (!url.empty() && url.rfind("http://", 0) != 0) return false;
       // Every answer but an alert's carries the number of its question; one to an older question is dropped. A tile's
       // picture is the answer to that tile's last question (tile_picture::Questions).
       const uint32_t number = root["view"].is<unsigned>() ? root["view"].as<unsigned>() : 0;
       const bool current = view == "live" ? tile_questions.answered(number) >= 0
                            : view == "pcard" ? plugin_host::card_question(number)
+                           : view == "psaver" ? plugin_host::saver_question(number)
                            : number == (view == "cover" ? cover_view_id : view == "lib" ? library_art_view_id : view == "vmap" ? vacuum_map_view_id : camera_view_id);
       if (view != "alert" && (!root["view"].is<unsigned>() || !current)) {
         ESP_LOGD("picture", "answer %u (%s) to an older question: dropped", (unsigned) number, view.c_str());
@@ -410,14 +412,32 @@ std::string receive(const std::string &payload) {
     if (op == "saver") {
       // What the screensaver shows (app 0.4.48, firmware 0.29.0+, screen_saver.py): "media", "camera", "clock" or ""
       // for none. A player brings its words and the marks of its picture; the picture is asked for as camera "saver".
+      // "photos" (app 0.4.89): a photo of a folder, its mark in `x.pic`; "plugin" (plugin API 0.14): a plugin's step of
+      // its own, all of it in `pf`.
       SaverChoice next;
       next.kind = string(root["k"], 8);
-      if (!next.kind.empty() && next.kind != "media" && next.kind != "camera" && next.kind != "clock") return false;
-      if (next.kind == "media" || next.kind == "camera") {
+      if (!next.kind.empty() && next.kind != "media" && next.kind != "photos" && next.kind != "camera" && next.kind != "clock" &&
+          next.kind != "plugin") return false;
+      if (next.kind == "media" || next.kind == "camera" || next.kind == "photos") {
         next.entity = string(root["e"], 120);
-        if (!valid_entity(next.entity)) return false;
+        if (next.kind == "photos" ? next.entity != SAVER_PHOTOS : !valid_entity(next.entity)) return false;
         next.name = string(root["n"], 80);
       }
+      if (next.kind == "photos") next.picture = string(root["x"]["pic"], 16);
+      // A plugin's face of the step, or its step of its own (plugin API 0.14): which saver, and its options and what it
+      // draws from, kept as the app sent them for the plugin. One that is not readable leaves the step's own face.
+      if (root["pf"].is<JsonObject>()) {
+        auto pf = root["pf"];
+        const std::string key = string(pf["p"], 72);
+        if (key.rfind("plugin:", 0) == 0 && valid_entity(key)) {
+          next.plugin = key;
+          JsonDocument data;
+          data["o"] = pf["o"];
+          data["x"] = pf["x"];
+          serializeJson(data, next.plugin_data);
+        }
+      }
+      if (next.kind == "plugin" && next.plugin.empty()) return false;
       if (next.kind == "media") {
         auto extra = root["x"];
         next.title = string(root["t"], 80);

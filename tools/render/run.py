@@ -1089,7 +1089,102 @@ class Run:
         await self.page_done(0)
         await self.until(lambda l: probe(l, f'tile={moved} tick'), 10, 'the moved tile ticked after page 2', start)
         assert said(start, 'tile=0 ') == 0, 'the plugin tile that went still hears its moments'
+        if 'render_standby' in self.services:
+            await self.plugin_savers(calls, probe, said)
         return await self.self_test()
+
+    async def plugin_savers(self, calls, probe, said):
+        """A plugin's screensaver (plugin API 0.14, docs/PLUGINS.md "A screensaver") on the real firmware: the probe's
+        face of the clock, its face of the music with the cover as a place and a key that takes taps, and its step of its
+        own, each as the app's word says it (screen_saver.message's `pf`). The hello names them; each shows, hears its
+        state and its clock, and goes when the next comes; a tap on the key wishes play or pause, sends the action and
+        stays in standby, and without a word from Home Assistant the face goes back; a hold holds; a tap beside it wakes
+        the screen and the saver leaves the glass. Every count from the probe's own lines."""
+        import plugin_pictures
+        import tile_art
+        mine = next((p for p in self.sender.plugins if p['id'] == 'host_probe'), None)
+        assert mine and mine.get('savers') == ['deck', 'dial', 'alarm'], f'the hello names the savers {mine}'
+        pictured = 'camera' in json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board]
+        async def dimmed():
+            if 'render_saver' not in self.services:
+                return None
+            begin = len(self.lines)
+            await self.call('render_saver')
+            return SAVER.search(await self.until(lambda l: SAVER.search(l), 10, 'render_saver', begin))[1] == '1'
+        await self.call('render_standby', enter=1)
+        start = len(self.lines)
+        await self.send({'v': 1, 'op': 'saver', 'k': 'clock', 'w': '21°',
+                         'pf': {'p': 'plugin:host_probe.dial', 'o': {}, 'x': {'temperature': '21°', 'items': []}}})
+        shown = await self.until(lambda l: probe(l, 'saver=dial show'), 10, 'the clock face shown', start)
+        assert 'dark=1' in shown, f'a saver is drawn in the dark look whatever the screen\'s: {shown}'
+        await self.until(lambda l: probe(l, 'saver=dial state') and '21' in l, 10, 'the clock face hears the temperature', start)
+        await self.until(lambda l: probe(l, 'saver=dial tick'), 10, 'the clock face ticks', start)
+        await asyncio.sleep(0.6)
+        await self.render('plugin-saver-dial')
+        if pictured:
+            start = len(calls)
+            lines = len(self.lines)
+            entity = 'media_player.living_room'
+            word = {'k': 'media', 'e': entity, 'n': 'Living room', 't': 'Evening Drive', 'x': {'artist': 'Nova Coast', 'pic': 'c0ffee1234'},
+                    's': 'playing', 'f': 1 | 4 | 8 | 1024 | 16384}
+            contract = {'entity': entity, 'name': 'Living room', 'title': 'Evening Drive', 'artist': 'Nova Coast', 'state': 'playing',
+                        'features': 1 | 4 | 8 | 1024 | 16384, 'muted': False, 'picture': 'saver:picture', 'mark': 'c0ffee1234'}
+            await self.send({'v': 1, 'op': 'saver', **word, 'pf': {'p': 'plugin:host_probe.deck', 'o': {}, 'x': contract}})
+            await self.until(lambda l: probe(l, 'saver=dial destroy'), 10, 'the clock face left for the music', lines)
+            key = await self.until(lambda l: probe(l, 'saver=deck key '), 10, 'the music face and its key', lines)
+            x1, y1, x2, y2 = (int(n) for n in key.rsplit(' ', 1)[1].split(','))
+            # Its cover: asked as a saver's (`saver`), the address the step's own, answered as the app does ("psaver").
+            for _ in range(24):
+                asked = [c for c in calls[start:] if c.service == 'esphome.screen_camera' and dict(c.data).get('saver') == '1']
+                if asked:
+                    break
+                await asyncio.sleep(0.5)
+            assert asked, 'the music face did not ask for its cover'
+            data = dict(asked[-1].data)
+            question = plugin_pictures.parse(data, self.canvas)
+            assert question and question.saver and question.sources == ['saver:picture'], f'the face asked as {data}'
+            import media_art
+            body = tile_art.layers([media_art.png(0, 640)], question.ground, question.atlas, question.styles(), compact=True)
+            url = self.pictures.url(f'{self.item.key}-psaver.bmp', body)
+            await self.send({'v': 1, 'op': 'camera', 't': 'psaver', 'e': data['tiles'], 'u': url, 'view': int(data['view'])})
+            await asyncio.sleep(1.5)
+            await self.render('plugin-saver-deck')
+            # The key: a tap wishes the pause, the action goes, the face hears "paused" at once and the screen stays dark.
+            since, lines = len(calls), len(self.lines)
+            await self.tap((x1 + x2) // 2, (y1 + y2) // 2)
+            await self.until(lambda l: probe(l, 'saver=deck tap') and 'wish=1' in l, 10, 'the tap on the face\'s key', lines)
+            await self.until(lambda l: probe(l, 'saver=deck state') and '"state":"paused"' in l, 10, 'the wish shown at once', lines)
+            for _ in range(40):
+                if any(c.service == 'media_player.media_play_pause' for c in calls[since:]):
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise RuntimeError('saver: the face\'s key sent no media_play_pause')
+            if await dimmed() is False:
+                raise RuntimeError('saver: the tap on the face\'s key woke the screen')
+            # No word from Home Assistant: the old value comes back (optimistic.h's cap), as Tessera's own keys do.
+            await self.until(lambda l: probe(l, 'saver=deck state') and '"state":"playing"' in l, 10, 'the wish back without a word', lines)
+            lines = len(self.lines)
+            await self.call('render_finger', x=(x1 + x2) // 2, y=(y1 + y2) // 2, down=True)
+            await asyncio.sleep(2.0)
+            await self.call('render_finger', x=(x1 + x2) // 2, y=(y1 + y2) // 2, down=False)
+            await self.until(lambda l: probe(l, 'saver=deck hold'), 10, 'a hold on the face\'s key', lines)
+            self.warnings.append('saver face of the music: cover as psaver, a tap wishes and stays in standby, no word puts it back, a hold')
+        lines = len(self.lines)
+        await self.send({'v': 1, 'op': 'saver', 'k': 'plugin',
+                         'pf': {'p': 'plugin:host_probe.alarm', 'o': {}, 'x': {'state': 'on', 'name': 'Alarm'}}})
+        await self.until(lambda l: probe(l, 'saver=alarm show'), 10, 'the step of its own shown', lines)
+        await asyncio.sleep(0.6)
+        await self.render('plugin-saver-alarm')
+        lines = len(self.lines)
+        await self.tap(8, 8)
+        await self.until(lambda l: probe(l, 'saver=alarm destroy'), 10, 'a tap beside wakes and the saver goes', lines)
+        if await dimmed():
+            raise RuntimeError('saver: a tap on the glass did not wake the screen')
+        made, gone = said(0, 'saver=') and sum(probe(l, ' show ') and 'saver=' in l for l in self.lines), \
+            sum(probe(l, 'saver=') and l.rstrip().endswith('destroy') for l in self.lines)
+        assert made == gone, f'{made} savers shown, {gone} deleted'
+        self.warnings.append(f'plugin savers: {made} shown and deleted, the clock face, the step of its own')
 
     async def rectangular_tiles(self, grid):
         """Real cards in multi-row cells, beside ordinary neighbors, on every board."""
@@ -2284,17 +2379,22 @@ class Run:
         self.client.subscribe_service_calls(calls.append)
         pictured = 'camera' in json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board]
         served = [0]
-        async def answer(since, timeout=8):
+        async def answer(since, entity=None, timeout=8):
             end = time.monotonic() + timeout
             while time.monotonic() < end:
                 for call in calls[since:]:
                     data = dict(call.data)
                     if call.service != 'esphome.screen_camera' or data.get('_answered'):
                         continue
+                    # The question of this step: a question left from the step before (a wake that opened it) is not.
+                    if entity and data.get('entity') != entity:
+                        continue
                     # The screensaver's picture as ESP Screens makes it: the screen's full box, within the picture cap.
                     kind, box = data.get('saver'), camera_feed.capped(self.canvas)
                     raw = media_art.png(0, 640) if kind == 'media' else porch(*self.camera)
-                    body = camera_feed.encode_saver(raw, box, kind, int(ground.split(',')[0], 16) if ground else 0)
+                    # A photo of the photos step (app 0.4.89): a standing one, shown whole on its own colour.
+                    body = camera_feed.encode_photo(porch(900, 1200), box) if kind == 'photos' else \
+                        camera_feed.encode_saver(raw, box, kind, int(ground.split(',')[0], 16) if ground else 0)
                     url = self.pictures.url(f'{self.item.key}-saver-{served[0]}.bmp', body)
                     served[0] += 1
                     await self.send({'v': 1, 'op': 'camera', 't': 'saver', 'e': data['entity'], 'u': url, 'view': int(data['view'])})
@@ -2318,6 +2418,7 @@ class Run:
         if pictured:
             steps = [('media', {'k': 'media', 'e': 'media_player.living_room', 'n': 'Living room', 't': 'Evening Drive',
                                 'x': {'artist': 'Nova Coast', 'album': 'Low Sun', 'pic': 'c0ffee1234', 'g': ground}}),
+                     ('photos', {'k': 'photos', 'e': 'saver.photos', 'n': '', 'x': {'pic': 'f0f0f0f0f0'}}),
                      ('camera', {'k': 'camera', 'e': 'camera.front_door', 'n': 'Front door'}), *steps]
         async def probe():
             start = len(self.lines)
@@ -2335,8 +2436,8 @@ class Run:
         for name, message in steps:
             start = len(calls)
             await self.send({'v': 1, 'op': 'saver', **message})
-            if not name.startswith('clock'):
-                await answer(start)
+            if not name.startswith('clock') and not name.startswith('face'):
+                await answer(start, message.get('e'))
             await asyncio.sleep(1.5)
             await self.render(f'saver-{name}')
             if name != 'media':

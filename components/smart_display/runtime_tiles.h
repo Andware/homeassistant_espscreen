@@ -225,8 +225,9 @@ inline bool awake() { return !screen_awake || screen_awake(); }
 // is not awake, everything else keeps waiting for a touch.
 inline bool saver_pictures = false;
 inline bool pictures_awake() { return awake() || saver_pictures; }
-// What ESP Screen Manager says the screensaver shows (op "saver", screen_saver.py): "media", "camera", "clock" or ""
-// for none, with the player's or camera's name and, for a player, its title, artist and album, its picture's mark and
+// What ESP Screen Manager says the screensaver shows (op "saver", screen_saver.py): "media", "photos" (app 0.4.89, a
+// folder of Home Assistant's media; `entity` is screen_saver.PHOTOS_ENTITY, `picture` the photo's mark), "camera",
+// "clock", "plugin" (a plugin's step of its own, plugin API 0.14) or "" for none, with the player's or camera's name and, for a player, its title, artist and album, its picture's mark and
 // the cover's colour (the picture is made again when either changes). Where the track is, is no part of it.
 // The clock's face (module clock_faces, app `cf`): the digital clock every screen has, or Glass, Classic or Bauhaus on
 // a screen with the module. Its numerals (Glass: 0, 4 or 12), its seconds hand, and its look: dark, light or the screen's.
@@ -237,6 +238,8 @@ struct SaverFace {
   bool seconds = true;
   bool operator==(const SaverFace &o) const { return kind == o.kind && numerals == o.numerals && look == o.look && seconds == o.seconds; }
 };
+// The photos step's picture on the wire (screen_saver.PHOTOS_ENTITY): no entity of Home Assistant's, the step itself.
+inline const std::string SAVER_PHOTOS = "saver.photos";
 struct SaverChoice {
   std::string kind, entity, name, title, artist, album, picture, ground;
   SaverFace face;
@@ -247,10 +250,15 @@ struct SaverChoice {
   std::string state;
   uint32_t features = 0;
   bool muted = false;
+  // A plugin's face of this step or a plugin's own step (plugin API 0.14, app `pf`): its key (plugin:<plugin>.<saver>),
+  // and its options and what it draws from as the app sent them ({"o": ..., "x": ...}), handed to the plugin as they are.
+  std::string plugin;
+  roomy::Text plugin_data;
   bool operator==(const SaverChoice &o) const {
     return kind == o.kind && entity == o.entity && name == o.name && title == o.title && artist == o.artist &&
            album == o.album && picture == o.picture && ground == o.ground && weather == o.weather && row == o.row &&
-           state == o.state && features == o.features && muted == o.muted && face == o.face;
+           state == o.state && features == o.features && muted == o.muted && face == o.face && plugin == o.plugin &&
+           plugin_data == o.plugin_data;
   }
 };
 inline SaverChoice saver_next, saver_now;  // the app's latest word, and what the glass shows
@@ -260,10 +268,9 @@ inline lv_obj_t *saver_root = nullptr;      // the clock
 inline lv_obj_t *saver_first = nullptr, *saver_second = nullptr;
 inline bool saver_words_due = false;
 // A player's keys over its cover (firmware 0.33.0+): volume up, volume down, play or pause. They take their own tap, so
-// the screen stays in standby; a touch anywhere else wakes it. `saver_flipped`: when the play key last showed the other
-// face ahead of Home Assistant's word.
+// the screen stays in standby; a touch anywhere else wakes it. What a key changes shows at once and is squared with Home
+// Assistant's word as every control's (saver_wish, docs/OPTIMISTIC.md).
 inline std::array<lv_obj_t *, 3> saver_keys{};
-inline uint32_t saver_flipped = 0;
 inline void saver_keys_draw();
 // A next track that came while a picture was on its way (firmware 0.32.0+): followed once that load has ended, so the
 // online_image never gets a second link in the middle of a download and the one that lands is the one asked for.
@@ -10408,7 +10415,10 @@ inline void swipe_test(unsigned count, unsigned interval_ms, unsigned back_ms) {
 inline uint32_t last_live_second=0;
 inline int last_clock_minute=-2;
 inline bool was_fresh=false;
+inline void saver_wish_tick(uint32_t now);
 inline void tick() {
+  // A finger's wish on the screensaver's player goes out, or comes back without a word (saver_wish).
+  saver_wish_tick(esphome::millis());
 #ifndef ESP_SCREEN_HOST
   // Asked to hang the other way (hang): the answer went out, the preferences are written, the screen starts again.
   if (turn_restart_at && esphome::millis() - turn_restart_at > 500) { turn_restart_at = 0; esphome::App.safe_reboot(); }
@@ -11820,7 +11830,8 @@ inline void map_keys_place() {
 }
 
 inline void camera_open(const std::string &entity, const std::string &name, int map_index, const std::string &focus) {
-  if (!camera_supported() || !valid_entity(entity)) return;
+  // The screensaver's photos (app 0.4.89) open the full view as a camera does, under the step's own name.
+  if (!camera_supported() || (!valid_entity(entity) && entity != SAVER_PHOTOS)) return;
   camera_close();
   camera_map_index = map_index;
   // Opened on someone (a person tile tapped): focused from the start, and Back closes the map at once.
@@ -11984,6 +11995,8 @@ inline void camera_answer(const std::string &view, const std::string &entity, co
     tile_picture_answer(number, url, now);
   } else if (view == "pcard") {  // the pictures of a plugin's card over the page (plugin API 0.13)
     plugin_host::card_picture_answer(entity, url, number);
+  } else if (view == "psaver") {  // the pictures of a plugin's screensaver (plugin API 0.14)
+    plugin_host::saver_picture_answer(entity, url, number);
   } else if (url.empty()) {  // announced before its alert
     alert_announced = entity;
     alert_announced_at = now;
@@ -12307,6 +12320,7 @@ inline void pictures_round() {
   if (media_library::picture_want(library)) loader.want(owners::LIBRARY, std::move(library));
   card_picture_wants();
   plugin_host::card_picture_want();
+  plugin_host::saver_picture_want();
   // Never under a finger, and not between two quick page turns (camera_view::settled): a download that starts then is
   // for a page on its way past. Asking the app is an event and goes at once.
   auto *input = lv_indev_get_next(nullptr);
@@ -12334,9 +12348,16 @@ inline uint32_t saver_ticked = 0;
 // stand there all evening, and the Wi-Fi and Home Assistant need not fetch a picture every four seconds for it.
 constexpr uint32_t SAVER_CAMERA_MS = 15000;
 
+// The steps whose picture is the full view's (one picture of the whole glass the app made): a cover, a photo, a camera.
+inline bool saver_picture_kind(const std::string &kind) { return kind == "media" || kind == "photos" || kind == "camera"; }
+// A plugin draws this word (plugin API 0.14): a face of the step this screen has, or a plugin's step of its own. A face
+// the screen lacks (the plugin left it) leaves the step's own face.
+inline bool saver_plugin_draws(const SaverChoice &c) { return !c.plugin.empty() && plugin_host::saver_known(c.plugin); }
 inline bool saver_wanted() {
   const auto &kind = saver_next.kind;
-  return kind == "clock" || ((kind == "media" || kind == "camera") && camera_supported() && valid_entity(saver_next.entity));
+  if (kind == "plugin") return saver_plugin_draws(saver_next);
+  return kind == "clock" || (saver_picture_kind(kind) && camera_supported() &&
+                             (valid_entity(saver_next.entity) || saver_next.entity == SAVER_PHOTOS));
 }
 inline lv_obj_t *saver_text(lv_obj_t *parent, const lv_font_t *font, uint32_t color, const media_card::Rect &r, const std::string &text,
                             lv_text_align_t align = LV_TEXT_ALIGN_CENTER) {
@@ -12461,6 +12482,8 @@ inline saver_view::Keys saver_key_layout() {
 // white over the darkened picture or the cover's colour.
 inline void saver_words() {
   if (!camera_root || !saver_camera) return;
+  // A photo stands alone: no words, no keys (app 0.4.89).
+  if (saver_now.kind == "photos") { saver_words_due = false; return; }
   const auto &c = saver_now;
   const int width = overlay_card::screen_width(), height = overlay_card::screen_height();
   const bool large = ui::large();
@@ -12530,11 +12553,62 @@ inline void saver_send(const char *service, const char *key = nullptr, const cha
   esphome::api::global_api_server->send_homeassistant_action(request);
   ESP_LOGI("saver", "key %s%s%s for %s", service, value ? " " : "", value ? value : "", saver_now.entity.c_str());
 }
-inline void saver_mute(bool muted, uint32_t now) {
-  saver_send("media_player.volume_mute", "is_volume_muted", muted ? "true" : "false");
-  saver_now.muted = muted;
-  saver_flipped = now ? now : 1;
+// What a finger changed on the screensaver's player (its keys, or a plugin's face through tessera::wish, plugin API
+// 0.14), shown at once and squared with Home Assistant's word by optimistic.h's rules, as every control's
+// (docs/OPTIMISTIC.md): the app's next word that still says the old value keeps the wish in front, the value wished
+// ends it, and silence puts the old value back. The player is no tile of the page (a speaker in another room), so the
+// wish reads and writes the screensaver's word where a tile's wish reads and writes the tile.
+inline optimistic::Pool<2> saver_wishes;
+inline std::string saver_read(const SaverChoice &c, optimistic::Field f) {
+  if (f == optimistic::Field::PLAYING) return c.state == "playing" ? "1" : "0";
+  if (f == optimistic::Field::MUTED) return c.muted ? "1" : "0";
+  return {};
+}
+inline void saver_write(SaverChoice &c, optimistic::Field f, const std::string &value) {
+  if (f == optimistic::Field::PLAYING) c.state = value == "1" ? "playing" : "paused";
+  else if (f == optimistic::Field::MUTED) c.muted = value == "1";
+}
+// The glass shows the wished value: the keys' faces, and a plugin's face hears it in its on_state.
+inline void saver_wish_show() {
   saver_faces();
+  plugin_host::saver_refresh();
+}
+inline void saver_wish_tick(uint32_t now) {
+  for (auto &w : saver_wishes.wishes) {
+    if (w.phase == optimistic::Phase::IDLE) continue;
+    const auto outcome = optimistic::tick(w, now);
+    if (outcome == optimistic::Outcome::SEND) {
+      if (w.entity == saver_now.entity) saver_send(w.service.c_str(), w.key.empty() ? nullptr : w.key.c_str(), w.value.c_str());
+      optimistic::sent(w, false);
+    } else if (outcome == optimistic::Outcome::REVERT && w.entity == saver_now.entity) {
+      ESP_LOGI("saver", "%s back to '%s' (no word from Home Assistant)", w.entity.c_str(), w.before.c_str());
+      saver_write(saver_now, w.field, w.before);
+      saver_wish_show();
+    }
+  }
+}
+// A finger's wish for the player on the glass: `value` in optimistic::Field's words, and the action that makes it so.
+inline bool saver_wish(optimistic::Field field, const std::string &value, const char *service, const char *key = "",
+                       const char *data = "") {
+  if (!fresh() || saver_now.kind != "media" || !valid_entity(saver_now.entity) || !service) return false;
+  auto &w = saver_wishes.slot(saver_now.entity, field);
+  optimistic::want(w, saver_now.entity, saver_now.entity, field, saver_read(saver_now, field), value, esphome::millis());
+  w.service = service; w.key = key ? key : ""; w.value = data ? data : "";
+  ESP_LOGI("saver", "wish %s: '%s' (was '%s')", saver_now.entity.c_str(), value.c_str(), w.before.c_str());
+  saver_write(saver_now, field, value);
+  saver_wish_show();
+  saver_wish_tick(esphome::millis());  // a choice goes out now, unless one is on its way
+  return true;
+}
+// The app's next word for the player: a wish still on its way stays in front of a word from before it.
+inline void saver_wish_reported(SaverChoice &next) {
+  for (auto &w : saver_wishes.wishes) {
+    if (!w.live() || w.entity != next.entity || next.kind != "media") continue;
+    if (optimistic::report(w, saver_read(next, w.field)) == optimistic::Outcome::KEEP) saver_write(next, w.field, w.want);
+  }
+}
+inline void saver_mute(bool muted) {
+  saver_wish(optimistic::Field::MUTED, muted ? "1" : "0", "media_player.volume_mute", "is_volume_muted", muted ? "true" : "false");
 }
 inline void saver_key_event(lv_event_t *e) {
   const int n = (int) (intptr_t) lv_event_get_user_data(e);
@@ -12546,20 +12620,17 @@ inline void saver_key_event(lv_event_t *e) {
     if (!saver_pressed || now - saver_pressed < SAVER_MUTE_HOLD_MS || saver_now.muted ||
         !(saver_now.features & tile_controls::feature::MEDIA_VOLUME_MUTE)) return;
     saver_pressed = 0;
-    if (allowed(now, 703, "screensaver mute")) saver_mute(true, now);
+    if (allowed(now, 703, "screensaver mute")) saver_mute(true);
     return;
   }
   if (n == 2) {
     if (!allowed(now, 700, "screensaver play")) return;
-    saver_send("media_player.media_play_pause");
-    saver_now.state = saver_now.state == "playing" ? "paused" : "playing";
-    saver_flipped = now ? now : 1;
-    saver_faces();
+    saver_wish(optimistic::Field::PLAYING, saver_now.state == "playing" ? "0" : "1", "media_player.media_play_pause");
     return;
   }
   // A volume key, on the release: the hold that muted used this contact up, so it does not also step.
   if (!screen_input::touch_guard.accept_repeat(now, 701 + n)) return;
-  if (saver_now.muted) { saver_mute(false, now); return; }
+  if (saver_now.muted) { saver_mute(false); return; }
   saver_send(n == 0 ? "media_player.volume_up" : "media_player.volume_down");
 }
 inline void saver_keys_draw() {
@@ -12604,6 +12675,7 @@ inline void saver_keys_draw() {
 
 inline void saver_hide() {
   saver_follow_due = false;
+  plugin_host::saver_hide();
 #ifdef SD_MOD_CLOCK_FACES
   clock_faces::forget();
 #endif
@@ -12614,8 +12686,31 @@ inline void saver_hide() {
   saver_now = SaverChoice{};
   saver_pictures = false;
 }
+// The glass the screensaver draws on itself (the clock, a plugin's saver): black, the whole of it, on the top layer under
+// an alert, with nothing that takes a tap (a plugin's parts that do take theirs, ui::takes_taps).
+inline lv_obj_t *saver_glass() {
+  auto *root = lv_obj_create(lv_layer_top());
+  lv_obj_remove_style_all(root);
+  lv_obj_remove_flag(root, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_remove_flag(root, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_size(root, lv_pct(100), lv_pct(100));
+  lv_obj_set_style_bg_opa(root, LV_OPA_COVER, 0);
+  lv_obj_set_style_bg_color(root, theme::color(theme::CAMERA_PAGE), 0);
+  lv_obj_move_to_index(root, 0);
+  return root;
+}
 inline void saver_show() {
   saver_now = saver_next;
+  // A plugin's face or step (plugin API 0.14): the plugin draws on the glass; the step's picture is a place of its own
+  // (saver:picture), loaded by the plugin host, so the full view stays closed.
+  if (saver_plugin_draws(saver_now)) {
+    saver_pictures = camera_supported();
+    saver_root = saver_glass();
+    plugin_host::saver_show(saver_root, saver_now.plugin, saver_now.plugin_data, standby_level(),
+                            screen_settings::current.night(minute_of_day()));
+    ESP_LOGI("saver", "%s by %s", saver_now.kind.c_str(), saver_now.plugin.c_str());
+    return;
+  }
   saver_pictures = saver_now.kind != "clock";
   if (saver_pictures) {
     // The full view, asked for as the screensaver's picture (camera_request adds what it shows), then stripped of its
@@ -12626,19 +12721,13 @@ inline void saver_show() {
     lv_obj_remove_flag(camera_root, LV_OBJ_FLAG_CLICKABLE);
     for (lv_obj_t **part : {&camera_back, &camera_title, &camera_spinner}) if (*part) { lv_obj_delete(*part); *part = nullptr; }
     lv_obj_move_to_index(camera_root, 0);
-    // A camera refreshes at its pace; a cover loads once, and a new track is a new picture (saver_sync).
-    if (saver_now.kind == "media") camera.once = true;
+    // A camera refreshes at its pace; a cover and a photo load once, and the next is a new picture (saver_sync).
+    if (saver_now.kind != "camera") camera.once = true;
     else camera.every = SAVER_CAMERA_MS;
     ESP_LOGI("saver", "%s %s", saver_now.kind.c_str(), saver_now.entity.c_str());
     return;
   }
-  saver_root = lv_obj_create(lv_layer_top());
-  lv_obj_remove_style_all(saver_root);
-  lv_obj_remove_flag(saver_root, LV_OBJ_FLAG_CLICKABLE);
-  lv_obj_remove_flag(saver_root, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_size(saver_root, lv_pct(100), lv_pct(100));
-  lv_obj_set_style_bg_opa(saver_root, LV_OPA_COVER, 0);
-  lv_obj_move_to_index(saver_root, 0);
+  saver_root = saver_glass();
   saver_clock_draw();
   ESP_LOGI("saver", "clock");
 }
@@ -12662,7 +12751,7 @@ inline void saver_follow() {
   saver_now = saver_next;
   saver_keys_draw();  // the keys are the next player's at once; its words wait for its picture
   camera.open(saver_now.entity);
-  if (saver_now.kind == "media") camera.once = true;
+  if (saver_now.kind != "camera") camera.once = true;
   else camera.every = SAVER_CAMERA_MS;
   saver_words_due = true;
   ESP_LOGI("saver", "%s %s, the last picture stays until it comes", saver_now.kind.c_str(), saver_now.entity.c_str());
@@ -12670,16 +12759,27 @@ inline void saver_follow() {
 inline void saver_follow_pending() {
   if (!std::exchange(saver_follow_due, false)) return;
   if (saver_lit && saver_camera && camera_root && camera_picture && !(saver_next == saver_now) &&
-      (saver_next.kind == "media" || saver_next.kind == "camera")) saver_follow();
+      saver_picture_kind(saver_next.kind) && !saver_plugin_draws(saver_next)) saver_follow();
 }
 // apply_screen_settings, after every change and every minute: `lit` is standby with a backlight that is on.
 inline void saver_sync(bool lit) {
   saver_lit = lit;
   const bool shown = saver_root || saver_camera;
   if (!lit || !saver_wanted()) { if (shown) saver_hide(); return; }
-  // The camera and the cover stand as they are while nothing changed; the clock is drawn again, a minute later.
-  if (shown && saver_next == saver_now && saver_now.kind != "clock") return;
-  if (saver_camera && camera_root && camera_picture && (saver_next.kind == "media" || saver_next.kind == "camera")) { saver_follow(); return; }
+  // The camera and the cover stand as they are while nothing changed; the clock is drawn again, a minute later. A
+  // plugin's saver stays and draws on its own clock (on_tick).
+  if (shown && saver_next == saver_now && (saver_now.kind != "clock" || !saver_now.plugin.empty())) return;
+  // The same plugin's saver for the same step with a new word: it paints that in place (on_state).
+  if (saver_root && !saver_now.plugin.empty() && saver_next.plugin == saver_now.plugin && saver_next.kind == saver_now.kind &&
+      saver_plugin_draws(saver_next)) {
+    saver_now = saver_next;
+    plugin_host::saver_state(saver_now.plugin_data);
+    return;
+  }
+  if (saver_camera && camera_root && camera_picture && saver_picture_kind(saver_next.kind) && !saver_plugin_draws(saver_next)) {
+    saver_follow();
+    return;
+  }
   saver_hide();
   saver_show();
 }
@@ -12692,7 +12792,8 @@ inline void saver_wake() {
 // A new layout on its way (cancel_layout_input): every picture goes; saver_tick draws the screensaver again.
 inline void saver_forget() { saver_hide(); }
 // The app's word (page_receiver.cpp). In standby the glass follows at once, through apply_screen_settings.
-inline void saver_receive(const SaverChoice &next) {
+inline void saver_receive(SaverChoice next) {
+  saver_wish_reported(next);
   if (next == saver_next) return;
   saver_next = next;
   if (!awake() && saver_changed) saver_changed();
@@ -12700,16 +12801,6 @@ inline void saver_receive(const SaverChoice &next) {
 inline void saver_tick(uint32_t now) {
   if (now - saver_ticked < 1000) return;
   saver_ticked = now;
-  // A play key that turned ahead of Home Assistant and heard nothing shows what the app last said again.
-  if (saver_flipped && now - saver_flipped > 5000) {
-    saver_flipped = 0;
-    if (saver_camera && saver_now.entity == saver_next.entity &&
-        (saver_now.state != saver_next.state || saver_now.muted != saver_next.muted)) {
-      saver_now.state = saver_next.state;
-      saver_now.muted = saver_next.muted;
-      saver_faces();
-    }
-  }
   // Gone under it (a new layout, an alert that closed the camera): drawn again.
   if (saver_lit && !saver_root && !saver_camera && saver_wanted()) saver_show();
 #ifdef SD_MOD_CLOCK_FACES

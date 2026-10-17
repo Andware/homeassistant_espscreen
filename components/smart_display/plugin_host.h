@@ -5,6 +5,8 @@
 #include <string>
 #include <ArduinoJson.h>
 #include "tile_picture.h"
+#include "lvgl.h"
+#include "roomy.h"
 
 namespace runtime_tiles {
 struct Widgets;
@@ -65,6 +67,21 @@ void card_picture_answer(const std::string &card, const std::string &url, uint32
 bool card_question(uint32_t number);
 bool card_draws(const void *picture);
 void card_letgo(const void *download);
+
+// A plugin's screensaver (plugin API 0.14, plugin_api.h "A screensaver"), shown by runtime_tiles in standby when the app's
+// word names it: whether this screen has it (plugin:<plugin>.<saver>), whether one is on the glass, show one on the glass
+// `root` with the app's word for it ({"o": options, "x": what it draws from}), at the backlight's level, a new word for
+// it, the same word again (a finger's wish on the player shows in it, saver_wish), and its end (the root goes with it).
+bool saver_known(const std::string &key);
+bool saver_shows();
+void saver_show(lv_obj_t *root, const std::string &key, const roomy::Text &data, int level, bool night);
+void saver_state(const roomy::Text &data);
+void saver_refresh();
+void saver_hide();
+// Its pictures, as a card's: what it wants this round, the app's answer ("psaver"), and whether a number is its question's.
+void saver_picture_want();
+void saver_picture_answer(const std::string &key, const std::string &url, uint32_t number);
+bool saver_question(uint32_t number);
 
 // The moments of every plugin.
 void ready();

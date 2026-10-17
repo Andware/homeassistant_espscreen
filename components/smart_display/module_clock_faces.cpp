@@ -495,8 +495,8 @@ inline void bauhaus(lv_obj_t *stage, const SaverFace &f, const Ink &k, int W, in
 // Glass and Classic stand a fraction further along a slow circle every minute, up to a millimetre from their place.
 inline lv_point_t drift(const esphome::ESPTime &now) {
   if (!now.is_valid()) return {0, 0};
-  const float a = (now.hour * 60 + now.minute) * 0.7f, r = ui::mm(1);
-  return {(int32_t) std::lround(std::cos(a) * r), (int32_t) std::lround(std::sin(a) * r)};
+  const auto at = saver_view::drift(now.hour * 60 + now.minute, ui::mm(1));
+  return {(int32_t) at.x, (int32_t) at.y};
 }
 void draw(lv_obj_t *root, const SaverFace &f, const esphome::ESPTime &now, const std::vector<header_bar::Item> &row,
                  const std::string &degrees) {

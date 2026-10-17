@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 # The plugin API this core offers (components/smart_display/plugin_api.h, PLUGIN_API_MAJOR/MINOR; a test keeps them
 # equal). A plugin names the API it was written for; it builds on every core with the same major and at least its minor.
 # Something new raises the minor; a plugin builds on the same major from its own minor up. Only a break raises the major.
-PLUGIN_API = (0, 13)
+PLUGIN_API = (0, 14)
 # Major 0 is the time before that promise: a minor may still change a name or a signature. The minors that did are
 # listed here (and in __init__.py's PLUGIN_API_BREAKS; a test keeps them equal), so a plugin written before one is told
 # so in one sentence instead of failing in the compiler. 0.4: Plugin::on_tick became on_interval.
@@ -36,7 +36,7 @@ TEXT_KEY = re.compile(r'^[a-z][a-z0-9_]{0,47}$')
 
 TOP = {'id', 'version', 'api', 'icon', 'maintainer', 'license', 'stage', 'topics', 'requires', 'provides', 'boards',
        'flash_kb', 'permissions', 'attributes', 'privacy', 'inputs', 'parts', 'tiles', 'fetch', 'answers', 'cards',
-       'tap_actions', 'bar_items', 'settings'}
+       'tap_actions', 'bar_items', 'settings', 'savers'}
 ATTRIBUTES = ('cloud', 'commercial', 'ai-developed')
 # How far along a plugin is, in the maker's word: ready for every day, still finding its feet, or there to show what a
 # plugin can do and to learn from. The editor shows a badge for the last two; a manifest without it is beta.
@@ -105,6 +105,12 @@ SEARCH = 'search'
 # Places for pictures on one tile (0.10, `pictures`): the screen asks for them as one picture (tile_picture.h's
 # MAX_PARTS, a test keeps them equal), and the app paints at most this many frames for a tile.
 MAX_PICTURES = 8
+# A plugin's screensavers (0.14, docs/MANIFEST.md "savers"): a face of a step of the screensaver (the clock, the music,
+# the photos) or a step of its own. `when` says when a step of its own has something to show.
+MAX_SAVERS = 4
+SAVER_STEPS = ('clock', 'media', 'photos', 'own')
+SAVER_WHEN = ('always', 'data', 'state')
+SAVER_API = (0, 14)
 
 
 class ManifestError(ValueError):
@@ -223,12 +229,105 @@ def _features(value, where, strict, keep_unknown=False):
     return [name for name in names if keep_unknown or name in FEATURES]
 
 
+def check_savers(value, out, keys, fetch_ids, choice_lists, searched, options_of):
+    """The plugin's screensavers (0.14). A face draws a step the screen already has (`step: clock`, `media`, `photos`)
+    from the step's own contract; a step of its own (`step: own`) draws from a fetch (`data`) and/or an entity
+    (`domains`, `attributes`, `fields`, as a tile of an entity), and says when it has something to show (`when`)."""
+    savers = []
+    raw = _list(value, 'savers', MAX_SAVERS)
+    if raw:
+        match = API.match(out['api'])
+        if not match or (int(match.group(1)), int(match.group(2))) < SAVER_API:
+            raise ManifestError('savers', f'screensavers need plugin API {SAVER_API[0]}.{SAVER_API[1]} (api: "{SAVER_API[0]}.{SAVER_API[1]}")')
+    for i, item in enumerate(raw):
+        where = f'savers[{i}]'
+        item = _object(item, where, {'id', 'name', 'icon', 'step', 'memory', 'pictures', 'taps', 'moves', 'options',
+                                     'example', 'data', 'domains', 'attributes', 'fields', 'when'},
+                       ('id', 'name', 'step', 'memory'))
+        saver = {'id': _id(item['id'], f'{where}.id'), 'name': _text_key(item['name'], f'{where}.name', keys)}
+        icon = item.get('icon', out['icon'])
+        if not isinstance(icon, str) or not MDI.match(icon):
+            raise ManifestError(f'{where}.icon', 'a Material Design Icons name')
+        saver['icon'] = icon
+        if item['step'] not in SAVER_STEPS:
+            raise ManifestError(f'{where}.step', f'one of {", ".join(SAVER_STEPS)}')
+        saver['step'] = item['step']
+        saver['memory'] = _number(item['memory'], f'{where}.memory', 64, MAX_TILE_BYTES, whole=True)
+        # Places for pictures (as a tile's); 'saver:picture' is the step's own picture (the cover, the photo).
+        saver['pictures'] = _number(item.get('pictures', 0), f'{where}.pictures', 0, MAX_PICTURES, whole=True)
+        for flag in ('taps', 'moves'):
+            if flag in item and not isinstance(item[flag], bool):
+                raise ManifestError(f'{where}.{flag}', 'true or false')
+            saver[flag] = bool(item.get(flag, False))
+        own = saver['step'] == 'own'
+        for field in ('data', 'domains', 'attributes', 'fields', 'when'):
+            if field in item and not own:
+                raise ManifestError(f'{where}.{field}', f'only a step of its own (step: own) has "{field}": a face draws '
+                                                        f'from its step')
+        domains = _strings(item.get('domains'), f'{where}.domains', 8)
+        if not all(re.match(r'^[a-z_]+$', domain) for domain in domains):
+            raise ManifestError(f'{where}.domains', 'Home Assistant domains, such as [weather]')
+        saver['domains'] = domains
+        attributes = _strings(item.get('attributes'), f'{where}.attributes', MAX_ATTRIBUTES)
+        if attributes and not domains:
+            raise ManifestError(f'{where}.attributes', 'only a step with "domains" belongs to an entity and gets attributes')
+        if not all(re.match(r'^[a-z_][a-z0-9_]{0,47}$', a) for a in attributes):
+            raise ManifestError(f'{where}.attributes', 'attribute names such as forecast')
+        saver['attributes'] = attributes
+        saver['has_attributes'] = []
+        if 'fields' in item:
+            if not domains:
+                raise ManifestError(f'{where}.fields', 'only a step with "domains" belongs to an entity and gets fields')
+            saver['fields'] = check_fields(item['fields'], f'{where}.fields')
+        else:
+            saver['fields'] = {}
+        if 'data' in item:
+            if item['data'] not in fetch_ids:
+                raise ManifestError(f'{where}.data', 'must name a fetch of this plugin')
+            saver['data'] = item['data']
+        if own and 'data' not in saver and not domains:
+            raise ManifestError(where, 'a step of its own draws from a fetch ("data") or an entity ("domains")')
+        when = item.get('when', 'always' if own else None)
+        if own:
+            if isinstance(when, dict):
+                when = _object(when, f'{where}.when', {'state'}, ('state',))
+                states = _strings(when['state'], f'{where}.when.state', 16)
+                if not states or not domains:
+                    raise ManifestError(f'{where}.when.state', 'the states of its entity in which the step shows, such '
+                                                               'as [rainy, pouring]; it needs "domains"')
+                saver['when'] = {'state': states}
+            elif when in ('always', 'data'):
+                if when == 'data' and 'data' not in saver:
+                    raise ManifestError(f'{where}.when', '"data" needs a fetch ("data")')
+                saver['when'] = when
+            else:
+                raise ManifestError(f'{where}.when', 'always, data, or {state: [...]}')
+        options = [check_option(option, f'{where}.options[{j}]', keys, fetch_ids)
+                   for j, option in enumerate(_list(item.get('options'), f'{where}.options', MAX_OPTIONS))]
+        _unique(options, f'{where}.options')
+        saver['options'] = options
+        for option in options:
+            if option.get('options_from'):
+                choice_lists.add(option['options_from'])
+                if option.get('search'):
+                    searched.add(option['options_from'])
+        if 'example' in item:
+            saver['example'] = _text_key(item['example'], f'{where}.example', keys)
+        saver['options_key'] = f'saver:{saver["id"]}'
+        options_of[saver['options_key']] = {option['id']: option for option in options}
+        savers.append(saver)
+    _unique(savers, 'savers')
+    return savers
+
+
 def plugin_type(manifest):
     """What a plugin adds, read from its manifest so a maker cannot say it wrong (the editor's tabs): `tiles` for one
     with tiles to put on a page, `hardware` for one that makes a part of a board work (it brings a feature, asks for a
     pin, or is made for certain boards), `functions` for the rest (the top bar, tap actions, a voice, a sound)."""
     if manifest['tiles']:
         return 'tiles'
+    if manifest.get('savers'):
+        return 'screensavers'
     if manifest['provides'] or manifest['boards'] != 'any' or any(i['kind'] == 'gpio' for i in manifest['inputs']):
         return 'hardware'
     return 'functions'
@@ -782,15 +881,16 @@ def check(manifest, english=None, strict=True):
         tiles.append(tile)
     _unique(tiles, 'tiles')
     out['tiles'] = tiles
+    out['savers'] = check_savers(manifest.get('savers'), out, keys, fetch_ids, choice_lists, searched, options_of)
 
     fetches = []
     for i, item in enumerate(raw_fetches):
-        users = [t for t in tiles if t.get('data') == (item or {}).get('id')
+        users = [t for t in (*tiles, *out['savers']) if t.get('data') == (item or {}).get('id')
                  or any(o.get('options_from') == (item or {}).get('id') for o in t['options'])]
         # The options of the tiles that use it; an option is a list only when it is one in every tile that has it.
         options = {}
         for tile in users:
-            for key, option in options_of[tile['id']].items():
+            for key, option in options_of[tile.get('options_key', tile['id'])].items():
                 if key in options and bool(options[key].get('multiple')) != bool(option.get('multiple')):
                     options[key] = {**option, 'multiple': None, 'mixed': True}
                 else:

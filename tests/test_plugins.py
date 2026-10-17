@@ -875,7 +875,7 @@ class Hello(unittest.TestCase):
         api, plugins = plugins_of({'plugin_api': '0.1', 'plugins': [
             {'id': 'bus', 'version': '1.0.0', 'tiles': ['next', 'Bad!']}, {'id': 'Nope'}, 'junk']})
         self.assertEqual(api, '0.1')
-        self.assertEqual(plugins, [{'id': 'bus', 'version': '1.0.0', 'tiles': ['next']}])
+        self.assertEqual(plugins, [{'id': 'bus', 'version': '1.0.0', 'tiles': ['next'], 'savers': []}])
 
 
 class Sidecar(unittest.TestCase):

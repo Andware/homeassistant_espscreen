@@ -138,7 +138,7 @@ async def _p4(config):
 # The plugin API this core offers: plugin_api.h's PLUGIN_API_MAJOR/MINOR and the add-on's plugin_manifest.PLUGIN_API
 # (a test keeps the three equal). A plugin builds on the same major from its own minor up, unless a minor between its
 # own and this one changed a name while the major is 0 (PLUGIN_API_BREAKS, the same as plugin_manifest.py's).
-PLUGIN_API = (0, 13)
+PLUGIN_API = (0, 14)
 PLUGIN_API_BREAKS = {0: (4,)}
 PLUGIN_MANIFEST = "tessera-plugin.yaml"
 
@@ -224,6 +224,10 @@ async def register_plugin(var, component_file):
             raise cv.Invalid(f"Plugin {manifest.get('id')}: tile {tile.get('id')} names its memory in bytes, 64 to 16384 "
                              "(tessera-plugin.yaml, tiles[].memory)")
         cg.add(var.set_memory(str(tile["id"]), memory))
+    # A screensaver that moves itself (plugin API 0.14, `moves: true`): the host leaves it where it draws.
+    for saver in manifest.get("savers") or []:
+        if saver.get("moves") is True:
+            cg.add(var.set_moves(str(saver["id"])))
     language = (CORE.config.get("smart_display") or {}).get(CONF_LANGUAGE, "en")
     for key, text in sorted(plugin_texts(folder, language).items()):
         cg.add(var.set_text(key, text))
