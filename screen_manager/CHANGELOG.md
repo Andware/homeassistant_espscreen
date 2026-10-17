@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **Every file of the app is written whole or not at all.** The layouts, the settings, the plugins and now the Wi-Fi
+  secrets of your screens too are written to a temporary file first and swapped in one step, so a power cut or a stop
+  during a save never leaves half a file. A file the app cannot read is set aside beside the new one instead of being
+  started over, and a file written by a newer version of the app is left exactly as it is.
+
 - **A plugin's build no longer sees the app's own keys.** ESPHome runs a plugin's component while it builds a screen,
   inside this app. That build now gets only the environment the compilers read, never the token the app holds for Home
   Assistant or anything else of the app's own. The warning before you add a plugin now says where its code runs: on the

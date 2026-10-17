@@ -14,6 +14,7 @@ import signal
 import time
 import yaml
 import zipfile
+import atomic
 import build_cache
 import build_memory
 from core import BOARD_KEYS, REF, REPO, SHAPES, channel, hotspot_name, installation_yaml, old_hotspot_name, our_ref, ref
@@ -272,9 +273,7 @@ class Firmware:
             values[key] = value
         path = self.root / 'secrets.yaml'
         if wifi['state'] == 'new':
-            with path.open('x') as f:
-                os.chmod(path, 0o600)
-                yaml.safe_dump(values, f, width=4096)
+            self._write_secrets(path, yaml.safe_dump(values, width=4096))
             return
         # An existing file with missing keys: replace only that key's own line, or append it.
         text = path.read_text()
@@ -288,7 +287,7 @@ class Firmware:
         check = yaml.safe_load(text)
         if not isinstance(check, dict) or any(check.get(key) != value for key, value in values.items()):
             raise ValueError(t('addon.errors.firmware.wifi_not_set'))
-        path.write_text(text)
+        self._write_secrets(path, text)
 
     def change_wifi(self, data):
         """Another network or password (app 0.4.32): both lines in secrets.yaml replaced in place, every other line and
@@ -311,12 +310,7 @@ class Firmware:
         check = yaml.safe_load(text)
         if not isinstance(check, dict) or check.get('wifi_ssid') != ssid or check.get('wifi_password') != password:
             raise ValueError(t('addon.errors.firmware.wifi_not_set'))
-        if not path.exists():
-            with path.open('x') as f:
-                os.chmod(path, 0o600)
-                f.write(text)
-            return
-        path.write_text(text)
+        self._write_secrets(path, text)
 
     def create(self, data):
         """Write the device profile, its empty local override, and any missing wifi secrets."""
@@ -692,13 +686,13 @@ packages:
         return profile, path
 
     def _atomic_write(self, path, text):
-        temporary = path.with_name(path.name + '.tmp')
-        with temporary.open('w', encoding='utf8') as handle:
-            os.chmod(temporary, 0o600)
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        temporary.replace(path)
+        atomic.write_text(path, text)
+
+    def _write_secrets(self, path, text):
+        """secrets.yaml whole or not at all (atomic.write_text): a stop during the write never leaves the Wi-Fi of every
+        screen half written. A file that is there keeps its mode; a new one is the owner's alone."""
+        mode = (path.stat().st_mode & 0o777) if path.exists() else 0o600
+        atomic.write_text(path, text, mode)
 
     def _ensure_override_include(self, profile):
         """Attach an existing profile to its sidecar without reformatting user YAML."""
