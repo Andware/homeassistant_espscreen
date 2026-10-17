@@ -43,7 +43,7 @@ HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', 
 // one, so the tests see every choice as a button in a row, as the side-by-side form draws them.
 config.global.stubs = {
   ChoiceField: defineComponent({
-    props: ["choices", "value", "disabled"],
+    props: { choices: Array, value: { type: null }, disabled: Boolean },
     emits: ["pick"],
     setup(props: any, { emit }) {
       return () => h("div", { class: "seg" }, (props.choices as [unknown, string][]).map(([key, text]) => h("button", {
