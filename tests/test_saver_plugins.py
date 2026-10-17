@@ -297,6 +297,17 @@ class Photos(unittest.TestCase):
             self.assertEqual(state['mark'], saver_photos.mark('media-source://x/1.jpg'))
         asyncio.run(run())
 
+    def test_a_heic_may_have_fewer_pixels_than_a_jpeg(self):
+        # A JPEG is read small (draft); a HEIC is decoded whole, so a telephone's 48 MP passes and little more.
+        from types import SimpleNamespace
+        self.assertEqual(saver_photos.pixel_limit(SimpleNamespace(format='JPEG')), saver_photos.MAX_PIXELS)
+        self.assertEqual(saver_photos.pixel_limit(SimpleNamespace(format='HEIF')), saver_photos.MAX_PIXELS_HEIF)
+        self.assertGreaterEqual(saver_photos.MAX_PIXELS_HEIF, 48_000_000)
+        self.assertLess(saver_photos.MAX_PIXELS_HEIF, saver_photos.MAX_PIXELS)
+        # encode_photo reads the same limit, so a photo readable() let through is not refused later.
+        source = (ROOT / 'screen_manager/app/camera_feed.py').read_text()
+        self.assertIn('saver_photos.pixel_limit(source)', source)
+
     def test_a_crafted_picture_of_too_many_pixels_is_refused(self):
         from PIL import Image
         out = io.BytesIO()

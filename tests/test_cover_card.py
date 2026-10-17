@@ -161,6 +161,13 @@ class Firmware(unittest.TestCase):
         for name, text in PROFILES.items():
             self.assertIn('runtime_tiles::hold_card(index);', text, f'{name}: the preview opens the card a hold opens')
 
+    def test_the_swap_key_starts_over_with_a_new_layout(self):
+        # The swap stands by tile index; a new layout may put another cover at that index (cancel_layout_input).
+        cancel = RUNTIME[RUNTIME.index('inline void cancel_layout_input(bool invalidate_widgets) {'):]
+        cancel = cancel[:cancel.index('\n}\n')]
+        self.assertIn('cover_swapped.fill(0);', cancel)
+        self.assertLess(cancel.index('if (invalidate_widgets) {'), cancel.index('cover_swapped.fill(0);'))
+
     def test_the_card_commits_on_release_and_keeps_its_status_line(self):
         # Both views dispatch through the capability-checked percentage helper.
         # Percentage direction and all feature masks are exercised in C++.

@@ -438,7 +438,7 @@ def encode_photo(raw, box, fit='auto', moving=None):
     import tile_art
     saver_photos.heif()
     with Image.open(io.BytesIO(raw)) as source:
-        if source.width * source.height > saver_photos.MAX_PIXELS:
+        if source.width * source.height > saver_photos.pixel_limit(source):
             raise ValueError('photo too large')
         source.draft('RGB', box)
         image = ImageOps.exif_transpose(source)

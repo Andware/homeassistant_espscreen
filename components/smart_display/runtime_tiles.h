@@ -8011,7 +8011,8 @@ inline cover_tile::Layout cover_tile_layout(const Tile &t,tall_tile::Rect body,i
     position&&card.keys?tile_controls::cover_keys(t,keys):0,t.row_span()>1||t.full);
 }
 // A cover card whose slats share one row with its primary control (cover_tile::SWAP) shows one of the two: the swap key
-// turns it. By the tile's index, so it stays while the card is drawn again; a new layout starts at the primary.
+// turns it. By the tile's index, so it stays while the card is drawn again; a new layout starts at the primary
+// (cancel_layout_input clears the table, so an index that is another cover's now does not inherit the swap).
 inline std::array<uint8_t,TILES_MAX> cover_swapped{};
 inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout &l,int width,int height);
 // Both overlay and tile use the same feature-filtered cover commands. Slot ownership is resolved on every tap;
@@ -13303,6 +13304,8 @@ inline void cancel_layout_input(bool invalidate_widgets) {
   history = History{};
   if (invalidate_widgets) {
     for (auto &w : widgets) { w.index = grid.max_tiles(); w.cached_active = -1; }
+    // The next layout's cover cards start at their primary control: an index may be another cover's now.
+    cover_swapped.fill(0);
     forget_kept();
     if (layout_changed) layout_changed();
   }

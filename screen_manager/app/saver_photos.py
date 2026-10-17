@@ -256,13 +256,23 @@ def readable(raw):
     from PIL import Image
     heif()
     with Image.open(io.BytesIO(raw)) as image:
-        if image.width * image.height > MAX_PIXELS:
+        if image.width * image.height > pixel_limit(image):
             raise ValueError('photo too large')
 
 
 # A photo of more pixels than this is refused before it is read: a 108 MP telephone's photo still passes, a crafted
 # picture of a billion pixels does not (Pillow's own warning starts at 89 MP).
 MAX_PIXELS = 120_000_000
+# A JPEG is decoded small (Image.draft, camera_feed.encode_photo), a HEIC is not: pillow-heif decodes it whole, three
+# bytes a pixel, before anything is scaled. 50 MP, the most a telephone takes, is 150 MB on a Raspberry Pi; more is not
+# a photo from a telephone.
+MAX_PIXELS_HEIF = 50_000_000
+
+
+def pixel_limit(image):
+    """The pixels a photo may have, by how Pillow reads its format: small for a JPEG, whole for a HEIC."""
+    return MAX_PIXELS_HEIF if image.format in ('HEIF', 'AVIF') else MAX_PIXELS
+
 _heif = None
 
 

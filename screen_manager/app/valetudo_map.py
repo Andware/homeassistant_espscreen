@@ -31,6 +31,9 @@ MAX_JSON = 32 * 1024 * 1024
 # The long side of the drawn map in pixels: the largest tile on the largest glass, and the full view, take it smaller.
 SIDE = 800
 MARGIN = 2  # map pixels around the walls
+# The map's own pixels (pixelSize, 5 cm each as a rule): a flat of 100 m on a side is 2000 x 2000 of them. A map far
+# larger is not one a robot drew, and its picture is refused before Pillow is asked for it.
+MAX_CELLS = 4_000_000
 
 # Pure greys, which the glass's 16-bit colour keeps grey (map_card.py), readable on a light and on a dark tile.
 FLOOR = (0x9A, 0x9A, 0x9A, 255)
@@ -97,12 +100,12 @@ def runs(layer):
 
 def render(raw):
     """The map a Valetudo placeholder carries, drawn as a PNG, or None when `raw` is not one (or not readable)."""
-    text = map_json(raw)
-    if text is None:
-        return None
     try:
+        text = map_json(raw)
+        if text is None:
+            return None
         return draw(json.loads(text))
-    except (ValueError, TypeError, KeyError, IndexError, AttributeError):
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError, zlib.error):
         return None
 
 
@@ -119,6 +122,8 @@ def draw(valetudo):
     top = min(y for _, y, _ in spans) - MARGIN
     bottom = max(y for _, y, _ in spans) + 1 + MARGIN
     width, height = right - left, bottom - top
+    if width * height > MAX_CELLS:
+        raise ValueError('a map too large to be one')
     # Every map pixel the same whole number of picture pixels: walls stay crisp.
     k = max(1, SIDE // max(width, height))
 

@@ -86,6 +86,23 @@ class ValetudoMapTest(unittest.TestCase):
         self.assertIsNone(valetudo_map.render(raw))
         self.assertEqual(asyncio.run(valetudo_map.prepared(raw)), raw)
 
+    def test_a_map_of_absurd_size_keeps_the_placeholder(self):
+        # A run at a million map pixels asks for a picture of a terabyte; it is refused before Pillow is asked.
+        huge = {'pixelSize': 5, 'entities': [], 'layers': [
+            {'type': 'wall', 'pixels': [0, 0, 1_000_000, 1_000_000]}]}
+        raw = placeholder(huge)
+        self.assertIsNone(valetudo_map.render(raw))
+        self.assertEqual(asyncio.run(valetudo_map.prepared(raw)), raw)
+
+    def test_a_broken_inflate_keeps_the_placeholder(self):
+        from PIL import Image
+        out = io.BytesIO()
+        Image.new('RGB', (40, 30), (0, 80, 200)).save(out, 'PNG')
+        image = out.getvalue()
+        text = chunk(b'zTXt', b'ValetudoMap\0\0' + b'not deflate at all')
+        raw = image[:-12] + text + image[-12:]
+        self.assertIsNone(valetudo_map.render(raw))
+
     def test_draws_each_map_once(self):
         raw = placeholder(flat())
         calls = []

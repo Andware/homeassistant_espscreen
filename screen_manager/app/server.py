@@ -772,6 +772,7 @@ class HomeAssistant:
         `media_source/resolve_media` named for it: a path of Home Assistant (/media/..., an integration's own view such as
         Immich's) with the app's token, or a public address on the internet; never a private one, never a redirect."""
         root = self.base[:-4] if self.base.endswith('/api') else self.base
+        options = {}
         if address.startswith('/'):
             parsed = urlsplit(address)
             if parsed.netloc or '..' in parsed.path or address.startswith('//'):
@@ -785,6 +786,11 @@ class HomeAssistant:
                 if not direct or 'authSig=' not in (parsed.query or ''):
                     raise ValueError('no way to Home Assistant for this photo')
                 url, headers = f'{direct}{address}', {}
+                # A home on https with its own certificate: the request carries no secret (the signature is the
+                # photo's own, from Home Assistant), so the certificate is not checked here, as a browser in the
+                # house would need telling to.
+                if direct.startswith('https://'):
+                    options['ssl'] = False
         elif address.startswith(('http://', 'https://')):
             if not await self._allow_media_url(address):
                 raise ValueError('unsafe photo address')
@@ -792,7 +798,7 @@ class HomeAssistant:
         else:
             raise ValueError('unknown photo address')
         async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=saver_photos.FETCH_SECONDS),
-                                    allow_redirects=False) as response:
+                                    allow_redirects=False, **options) as response:
             response.raise_for_status()
             if (response.content_length or 0) > saver_photos.MAX_PHOTO_BYTES:
                 raise ValueError('photo too large')
