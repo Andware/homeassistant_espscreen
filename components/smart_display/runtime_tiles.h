@@ -9749,9 +9749,17 @@ inline bool check_tile_geometry() {
     lv_area_t title,value,track,content;
     lv_obj_get_content_coords(w.tile,&content);
     lv_obj_get_coords(w.title,&title);lv_obj_get_coords(w.value,&value);
-    bool custom=lv_obj_has_flag(w.title,LV_OBJ_FLAG_HIDDEN);
-    const bool extended=w.index<model.count&&model.tiles[w.index].row_span()>1&&!w.full&&(w.extra_mode=="tall"||w.extra_mode=="cover_tilt");
+    // A camera's or a map's picture fills the card (render_camera_card): its name, if any, stands at the bottom on the
+    // picture and the state line, the icon and the parts are hidden, so only the name's place is checked here.
+    const bool picture_card=w.index<model.count&&(model.tiles[w.index].live()||model.tiles[w.index].is_map())&&w.extra_mode=="tall";
+    bool custom=lv_obj_has_flag(w.title,LV_OBJ_FLAG_HIDDEN)||picture_card;
+    const bool extended=!picture_card&&w.index<model.count&&model.tiles[w.index].row_span()>1&&!w.full&&(w.extra_mode=="tall"||w.extra_mode=="cover_tilt");
     bool fits=true;
+    if(picture_card&&!lv_obj_has_flag(w.title,LV_OBJ_FLAG_HIDDEN)){
+      const bool named=title.x1>=content.x1&&title.x2<=content.x2&&title.y1>=content.y1&&title.y2<=content.y2;
+      if(!named)ESP_LOGE("ui_test","Picture name bounds slot=%u title=%d,%d..%d,%d content=%d,%d..%d,%d",(unsigned)w.index,(int)title.x1,(int)title.y1,(int)title.x2,(int)title.y2,(int)content.x1,(int)content.y1,(int)content.x2,(int)content.y2);
+      fits=fits&&named;
+    }
     if(w.index<model.count && model.tiles[w.index].height>1 && tile_grid){
       const int gap=lv_obj_get_style_pad_row(tile_grid,LV_PART_MAIN);
       const int cell=(lv_obj_get_content_height(tile_grid)-(int)(grid.rows-1)*gap)/(int)grid.rows;
@@ -9904,7 +9912,9 @@ inline bool check_tile_geometry() {
     // clock's parts are held to the card's border instead of its content area.
     // The clock's digits are placed by their glyphs (firmware 0.3.6+): the empty top and bottom of a big font's line
     // box may stand in the padding too, the digits themselves stay in the content area.
-    const bool dial=w.extra_mode=="calendar" || w.extra_mode=="analog" || w.extra_mode=="calm" || w.extra_mode=="flip" || w.extra_mode=="digital" || w.extra_mode=="bedside";
+    // The calendar card's canvas covers the whole card, its padding too (calendar_view.cpp), and paints its plan in the
+    // content's coordinates: it is held to the card's border as well.
+    const bool dial=w.extra_mode=="calendar" || w.extra_mode=="calendar_card" || w.extra_mode=="analog" || w.extra_mode=="calm" || w.extra_mode=="flip" || w.extra_mode=="digital" || w.extra_mode=="bedside";
     lv_area_t card_box;lv_obj_get_coords(w.tile,&card_box);
       for(auto *p:w.parts){
         if(!p || lv_obj_has_flag(p,LV_OBJ_FLAG_HIDDEN))continue;
