@@ -32,10 +32,12 @@ export const SAVER_ORDER: SaverKind[] = ["media", "photos", "camera", "clock"];
 export const PLUGIN_STEPS_MAX = 4;
 export const PLUGIN_SETTINGS_MAX = 8;
 // The photos step (screen_saver.PHOTOS_DEFAULT and its choices): seconds a photo stands, the order and the fit.
-export const PHOTOS_DEFAULT: SaverPhotos = { source: "", every: 60, order: "shuffle", fit: "auto" };
+export const PHOTOS_DEFAULT: SaverPhotos = { source: "", every: 60, order: "shuffle", fit: "auto", motion: "still" };
 export const PHOTO_EVERY = [30, 60, 300, 900, 3600] as const;
 export const PHOTO_ORDERS = ["shuffle", "in_order"] as const;
 export const PHOTO_FITS = ["auto", "fill", "whole"] as const;
+// Still, or a photo that fills the glass moving a pixel at a time (picture_motion.h in the firmware).
+export const PHOTO_MOTIONS = ["still", "slow"] as const;
 // The steps a plugin's face can stand in for.
 export type FaceStep = "clock" | "media" | "photos";
 // One level of Home Assistant's media sources (api/screensaver/photos): its folders and how many photos it holds right there.

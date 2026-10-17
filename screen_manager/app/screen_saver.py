@@ -55,7 +55,10 @@ PHOTOS_ENTITY = 'saver.photos'
 PHOTO_EVERY = (30, 60, 300, 900, 3600)
 PHOTO_ORDERS = ('shuffle', 'in_order')
 PHOTO_FITS = ('auto', 'fill', 'whole')
-PHOTOS_DEFAULT = {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto'}
+# `motion` (app 0.4.89): `slow` cuts a photo that fills the glass a little larger, and the screen moves it a pixel at a
+# time (picture_motion.h), where that larger photo fits the screen's picture memory.
+PHOTO_MOTIONS = ('still', 'slow')
+PHOTOS_DEFAULT = {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto', 'motion': 'still'}
 MEDIA_SOURCE = re.compile(r'^media-source://[^\s]{1,500}$')
 # `weather` (app 0.4.52): whose temperature the clock shows under the time. 'auto' takes Home Assistant's first weather
 # entity that reports one, '' shows none, and a weather entity of your choice is that one.
@@ -177,7 +180,7 @@ def valid_photos(value):
     if not isinstance(source, str) or (source and not MEDIA_SOURCE.fullmatch(source)):
         raise ValueError('screensaver photos')
     result['source'] = source
-    for name, allowed in (('every', PHOTO_EVERY), ('order', PHOTO_ORDERS), ('fit', PHOTO_FITS)):
+    for name, allowed in (('every', PHOTO_EVERY), ('order', PHOTO_ORDERS), ('fit', PHOTO_FITS), ('motion', PHOTO_MOTIONS)):
         if name in value:
             if isinstance(value[name], bool) or value[name] not in allowed:
                 raise ValueError('screensaver photos')
@@ -389,6 +392,10 @@ def message(choice, states, pictures, short, media_extras, ground=None, keys=Fal
         result['e'] = PHOTOS_ENTITY
         result['n'] = ''
         result['x'] = {'pic': photos.get('mark', '')}
+        # It moves slowly (picture_motion.h): the screen moves a photo larger than its glass; one that came at the glass's
+        # size stands still.
+        if (choice.get('photos') or {}).get('motion') == 'slow':
+            result['x']['mv'] = 1
         if own:
             result['pf'] = plugin_face(own, choice, photos_contract(photos))
         return result

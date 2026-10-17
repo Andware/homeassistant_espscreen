@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Entera",
         "photos_fit_auto_hint": "Una foto con la forma aproximada de la pantalla la llena. Las demás se ven enteras, sobre su propio color.",
         "photos_fit_fill_hint": "Cada foto llena la pantalla, recortada en los bordes.",
-        "photos_fit_whole_hint": "Cada foto se ve entera, sobre su propio color."
+        "photos_fit_whole_hint": "Cada foto se ve entera, sobre su propio color.",
+        "photos_motion": "Movimiento",
+        "photos_motion_still": "Quieta",
+        "photos_motion_slow": "Lento",
+        "photos_motion_still_hint": "Cada foto se queda quieta.",
+        "photos_motion_slow_hint": "Una foto que llena el cristal se desliza despacio, píxel a píxel. Las pantallas de 10 pulgadas muestran sus fotos quietas: una foto más grande no cabe en su memoria."
       },
       "plugins": {
         "title": "Plugins",

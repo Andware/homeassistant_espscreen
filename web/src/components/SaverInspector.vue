@@ -22,7 +22,7 @@ import UiPicker from "./ui/UiPicker.vue";
 import UiSelect from "./ui/UiSelect.vue";
 import { useEntitiesStore } from "../stores/entities";
 import { usePluginsStore } from "../stores/plugins";
-import { MAX_PLAYERS, PHOTO_EVERY, PHOTO_FITS, PHOTO_ORDERS, isPluginKey, useScreensaverStore, type FaceStep } from "../stores/screensaver";
+import { MAX_PLAYERS, PHOTO_EVERY, PHOTO_FITS, PHOTO_MOTIONS, PHOTO_ORDERS, isPluginKey, useScreensaverStore, type FaceStep } from "../stores/screensaver";
 import { useInspectorStore } from "../stores/inspector";
 
 const entities = useEntitiesStore();
@@ -55,6 +55,7 @@ const facePlugin = computed(() => (faceKey.value ? plugins.saverOf(faceKey.value
 const everyChoices = computed<[number, string][]>(() => PHOTO_EVERY.map((seconds) => [seconds, T(`photos_every_${seconds}`)]));
 const orderChoices = computed<[string, string][]>(() => PHOTO_ORDERS.map((order) => [order, T(`photos_order_${order}`)]));
 const fitChoices = computed<[string, string][]>(() => PHOTO_FITS.map((fit) => [fit, T(`photos_fit_${fit}`)]));
+const motionChoices = computed<[string, string][]>(() => PHOTO_MOTIONS.map((motion) => [motion, T(`photos_motion_${motion}`)]));
 
 // ---- A plugin's step of its own: its entity and its options.
 const pluginKey = computed(() => (isPluginKey(props.step) ? props.step : null));
@@ -121,6 +122,10 @@ const playerSort = useSortableRows<string>({ rows: "#saver-players > .item", ite
           <Segmented :choices="fitChoices" :value="screensaver.photos.fit" @pick="(value: Photos['fit']) => screensaver.setPhotos({ fit: value })" />
         </PropRow>
         <small class="help">{{ T(`photos_fit_${screensaver.photos.fit}_hint`) }}</small>
+        <PropRow :label="T('photos_motion')" icon="arrow-right" stack>
+          <Segmented :choices="motionChoices" :value="screensaver.photos.motion || 'still'" @pick="(value: Photos['motion']) => screensaver.setPhotos({ motion: value })" />
+        </PropRow>
+        <small class="help">{{ T(`photos_motion_${screensaver.photos.motion || 'still'}_hint`) }}</small>
       </Section>
     </template>
 

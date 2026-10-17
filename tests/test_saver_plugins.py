@@ -121,6 +121,30 @@ class Pick(unittest.TestCase):
         self.assertEqual(shown, {'op': 'saver', 'k': 'photos', 'e': 'saver.photos', 'n': '', 'x': {'pic': 'abc'}})
 
 
+class Motion(unittest.TestCase):
+    def test_a_moving_photo_is_cut_larger_where_it_fits(self):
+        self.assertEqual(camera_feed.motion_box((480, 480)), (518, 518))
+        self.assertEqual(camera_feed.motion_box((1024, 600), (2048, 2 * 1024 * 1024)), (1106, 648))
+        # The 10-inch's full glass has no room for a larger photo in its picture memory: its photos stand still.
+        self.assertIsNone(camera_feed.motion_box((1280, 800), (2048, 2 * 1024 * 1024)))
+        from PIL import Image
+        bmp = camera_feed.encode_photo(jpeg((4000, 3000)), (800, 480), 'fill', (864, 518))
+        with Image.open(io.BytesIO(bmp)) as image:
+            self.assertEqual(image.size, (864, 518))
+        # A photo shown whole is never cut larger: it does not move.
+        bmp = camera_feed.encode_photo(jpeg((3000, 4000)), (800, 480), 'whole', (864, 518))
+        with Image.open(io.BytesIO(bmp)) as image:
+            self.assertEqual(image.size, (800, 480))
+
+    def test_the_word_says_it_moves(self):
+        choice = {'show': True, 'order': ['photos', 'clock', 'media', 'camera'],
+                  'photos': {'source': 'media-source://media_source/local/family', 'motion': 'slow'}}
+        shown = message(choice, {}, photos={'ready': True, 'mark': 'abc'})
+        self.assertEqual(shown['x'], {'pic': 'abc', 'mv': 1})
+        with self.assertRaises(ValueError):
+            screen_saver.validate({'photos': {'motion': 'fast'}})
+
+
 class Manifest(unittest.TestCase):
     BASE = {'id': 'vinyl', 'version': '1.0.0', 'api': '0.14', 'icon': 'album', 'maintainer': 'someone', 'license': 'MIT',
             'topics': ['media']}
@@ -137,6 +161,12 @@ class Manifest(unittest.TestCase):
                          [('deck', 'media', True, False), ('rain', 'own', False, False)])
         self.assertEqual(out['savers'][1]['when'], {'state': ['rainy', 'pouring']})
         self.assertEqual(pm.plugin_type(out), 'screensavers')
+
+    def test_a_face_over_its_steps_picture(self):
+        out = self.check([{'id': 'deck', 'name': 'deck', 'step': 'photos', 'memory': 500, 'backdrop': True}])
+        self.assertTrue(out['savers'][0]['backdrop'])
+        with self.assertRaises(pm.ManifestError):
+            self.check([{'id': 'deck', 'name': 'deck', 'step': 'clock', 'memory': 500, 'backdrop': True}])
 
     def test_what_is_refused(self):
         bad = [

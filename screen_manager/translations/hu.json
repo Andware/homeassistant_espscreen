@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Egész",
         "photos_fit_auto_hint": "A kijelzőhöz hasonló alakú fotó kitölti azt. A többi egészben látszik, a saját színén.",
         "photos_fit_fill_hint": "Minden fotó kitölti a kijelzőt, a szélein levágva.",
-        "photos_fit_whole_hint": "Minden fotó egészben látszik, a saját színén."
+        "photos_fit_whole_hint": "Minden fotó egészben látszik, a saját színén.",
+        "photos_motion": "Mozgás",
+        "photos_motion_still": "Álló",
+        "photos_motion_slow": "Lassú",
+        "photos_motion_still_hint": "Minden fotó áll.",
+        "photos_motion_slow_hint": "Az üveget kitöltő fotó lassan, pixelenként úszik rajta. A 10 hüvelykes képernyők állva mutatják a fotókat: egy nagyobb fotó nem fér a memóriájukba."
       },
       "plugins": {
         "title": "Bővítmények",

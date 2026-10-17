@@ -1135,6 +1135,10 @@ bool saver_known(const std::string &key) {
   return false;
 }
 bool saver_shows() { return saver_open != nullptr; }
+bool saver_backdrop(const std::string &key) {
+  for (const auto &type : tessera::saver_types()) if (type.key == key) return type.plugin->backdrop(type.id);
+  return false;
+}
 
 static const char *step_name(tessera::SaverStep step) {
   switch (step) {
@@ -1687,6 +1691,7 @@ void close_card() {}
 bool card_open() { return false; }
 bool saver_known(const std::string &) { return false; }
 bool saver_shows() { return false; }
+bool saver_backdrop(const std::string &) { return false; }
 void saver_show(lv_obj_t *, const std::string &, const roomy::Text &, int, bool) {}
 void saver_state(const roomy::Text &) {}
 void saver_refresh() {}

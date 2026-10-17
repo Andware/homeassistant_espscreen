@@ -79,8 +79,8 @@ describe("the photos step", () => {
     expect(saver.summary("photos").text).toBe("Holiday");
     await flushPromises();
     expect(saver.summary("photos").text).toBe("Holiday 2026");
-    saver.setPhotos({ every: 300, order: "in_order", fit: "whole" });
-    expect(saver.photos).toEqual({ source: "media-source://media_source/local/Holiday", every: 300, order: "in_order", fit: "whole" });
+    saver.setPhotos({ every: 300, order: "in_order", fit: "whole", motion: "slow" });
+    expect(saver.photos).toEqual({ source: "media-source://media_source/local/Holiday", every: 300, order: "in_order", fit: "whole", motion: "slow" });
   });
 
   it("is chosen by going down the media sources in its drawer", async () => {

@@ -57,6 +57,7 @@
 #include "tile_picture.h"
 #include "media_card.h"
 #include "saver_view.h"
+#include "picture_motion.h"
 #include "energy_view.h"
 #include "calendar_view.h"
 #include "meter_view.h"
@@ -254,11 +255,13 @@ struct SaverChoice {
   // and its options and what it draws from as the app sent them ({"o": ..., "x": ...}), handed to the plugin as they are.
   std::string plugin;
   roomy::Text plugin_data;
+  // The photos step's photo moves slowly (app `x.mv`, picture_motion.h).
+  bool motion = false;
   bool operator==(const SaverChoice &o) const {
     return kind == o.kind && entity == o.entity && name == o.name && title == o.title && artist == o.artist &&
            album == o.album && picture == o.picture && ground == o.ground && weather == o.weather && row == o.row &&
            state == o.state && features == o.features && muted == o.muted && face == o.face && plugin == o.plugin &&
-           plugin_data == o.plugin_data;
+           plugin_data == o.plugin_data && motion == o.motion;
   }
 };
 inline SaverChoice saver_next, saver_now;  // the app's latest word, and what the glass shows
@@ -277,6 +280,8 @@ inline void saver_keys_draw();
 inline bool saver_follow_due = false;
 inline void saver_follow_pending();
 inline bool saver_camera = false;           // the camera's full view on the glass is the screensaver's (a camera or a cover)
+// The full view is the backdrop of a plugin's face (plugin API 0.14, `backdrop: true`): the picture alone, no words, no keys.
+inline bool saver_bare = false;
 inline void saver_words();
 inline bool saver_woke = false;  // the last wake took the screensaver away: that touch does nothing else
 inline void saver_tick(uint32_t now);
@@ -10547,9 +10552,12 @@ inline uint32_t last_live_second=0;
 inline int last_clock_minute=-2;
 inline bool was_fresh=false;
 inline void saver_wish_tick(uint32_t now);
+inline void saver_motion_tick(uint32_t now);
 inline void tick() {
   // A finger's wish on the screensaver's player goes out, or comes back without a word (saver_wish).
   saver_wish_tick(esphome::millis());
+  // A photo of the screensaver that moves takes its next pixel.
+  saver_motion_tick(esphome::millis());
 #ifndef ESP_SCREEN_HOST
   // Asked to hang the other way (hang): the answer went out, the preferences are written, the screen starts again.
   if (turn_restart_at && esphome::millis() - turn_restart_at > 500) { turn_restart_at = 0; esphome::App.safe_reboot(); }
@@ -12175,12 +12183,45 @@ inline std::string camera_key() {
   if (camera_map_index >= 0) key += "|" + map_focus + (theme::dark ? "|dark" : "") + (map_move.none() ? "" : "|" + map_move.text());
   // The cover's colour only shows beside a cover on long glass (saver_view::shape): on square glass it is no new picture.
   if (saver_camera) {
-    key += "|saver|" + saver_now.picture;
+    key += "|saver|" + saver_now.picture + (saver_now.motion ? "|moves" : "");
     if (saver_view::shape(overlay_card::screen_width(), overlay_card::screen_height()) != saver_view::Shape::fill) key += "|" + saver_now.ground;
   }
   return key;
 }
 inline std::string camera_tag() { return (saver_camera ? "saver|" : "full|") + camera.entity; }
+// A photo of the screensaver that moves (app 0.4.89, picture_motion.h): the app cut it larger than the glass, and the
+// glass shows its piece of it, a pixel further every PIXEL_MS. One that came at the glass's size (a screen whose memory
+// has no room for the larger one) stands still, as every other picture of the screensaver.
+inline picture_motion::Path saver_motion;
+inline uint32_t saver_motion_since = 0;
+inline picture_motion::Offset saver_motion_shown{-1, -1};
+inline void saver_motion_place(uint32_t now) {
+  if (!camera_picture || !saver_motion.moves()) return;
+  const auto o = picture_motion::at(saver_motion, now - saver_motion_since);
+  if (o.x == saver_motion_shown.x && o.y == saver_motion_shown.y) return;
+  saver_motion_shown = o;
+  lv_image_set_offset_x(camera_picture, -o.x);
+  lv_image_set_offset_y(camera_picture, -o.y);
+}
+inline void saver_motion_start(const lv_image_dsc_t *src) {
+  const int width = overlay_card::screen_width(), height = overlay_card::screen_height();
+  saver_motion = saver_now.kind == "photos" && saver_now.motion && src
+                     ? picture_motion::path(src->header.w, src->header.h, width, height, saver_now.picture)
+                     : picture_motion::Path{};
+  saver_motion_shown = {-1, -1};
+  if (!camera_picture) return;
+  if (!saver_motion.moves()) {
+    lv_image_set_offset_x(camera_picture, 0);
+    lv_image_set_offset_y(camera_picture, 0);
+    lv_image_set_inner_align(camera_picture, LV_IMAGE_ALIGN_COVER);
+    return;
+  }
+  lv_image_set_inner_align(camera_picture, LV_IMAGE_ALIGN_TOP_LEFT);
+  saver_motion_since = esphome::millis();
+  saver_motion_place(saver_motion_since);
+}
+// Every 250 ms (tick): the next pixel, only when it is due.
+inline void saver_motion_tick(uint32_t now) { if (saver_camera) saver_motion_place(now); }
 // The full view's picture is here, or not.
 inline void view_done(picture_loader::Outcome outcome) {
   if (!camera_root) return;
@@ -12196,11 +12237,12 @@ inline void view_done(picture_loader::Outcome outcome) {
   camera.shown = true;
   const bool first = camera_picture == nullptr;
   camera_show(camera_root, camera_picture, src, outcome == picture_loader::Outcome::LOADED);
+  if (camera_picture && saver_camera) saver_motion_start(src);
   if (first && camera_picture && saver_camera) {
     // The screensaver's picture is the whole glass; one that came smaller (the size cap, picture_store::MAX_BYTES) is
-    // scaled to it, the same proportions. Its words lie over it.
+    // scaled to it, the same proportions. Its words lie over it. A photo that moves shows the glass's piece of it.
     lv_obj_set_size(camera_picture, lv_pct(100), lv_pct(100));
-    lv_image_set_inner_align(camera_picture, LV_IMAGE_ALIGN_COVER);
+    if (!saver_motion.moves()) lv_image_set_inner_align(camera_picture, LV_IMAGE_ALIGN_COVER);
     saver_words();
   } else if (camera_picture && saver_camera && saver_words_due) {
     // The next track's picture is on the glass: its words come with it (saver_follow).
@@ -12615,6 +12657,8 @@ inline saver_view::Keys saver_key_layout() {
 // white over the darkened picture or the cover's colour.
 inline void saver_words() {
   if (!camera_root || !saver_camera) return;
+  // Under a plugin's face the picture stands alone: the face draws its own words and keys.
+  if (saver_bare) { saver_words_due = false; return; }
   // A photo stands alone: no words, no keys (app 0.4.89).
   if (saver_now.kind == "photos") { saver_words_due = false; return; }
   const auto &c = saver_now;
@@ -12768,7 +12812,7 @@ inline void saver_key_event(lv_event_t *e) {
 }
 inline void saver_keys_draw() {
   for (lv_obj_t *&key : saver_keys) if (key) { lv_obj_delete(key); key = nullptr; }
-  if (!camera_root || !saver_camera || saver_now.kind != "media") return;
+  if (!camera_root || !saver_camera || saver_bare || saver_now.kind != "media") return;
   const auto l = saver_key_layout();
   const uint32_t ink = media_ink();
   const lv_font_t *small = mini_icon_font ? mini_icon_font : detail_font;
@@ -12816,6 +12860,7 @@ inline void saver_hide() {
   saver_root = nullptr;
   if (saver_camera) camera_close();
   saver_camera = false;
+  saver_bare = false;
   saver_now = SaverChoice{};
   saver_pictures = false;
 }
@@ -12838,7 +12883,26 @@ inline void saver_show() {
   // (saver:picture), loaded by the plugin host, so the full view stays closed.
   if (saver_plugin_draws(saver_now)) {
     saver_pictures = camera_supported();
+    // A face with the step's own picture under it (`backdrop`): the full view as Tessera's own face opens it, bare, and
+    // the plugin's glass clear over it, under an alert.
+    if (plugin_host::saver_backdrop(saver_now.plugin) && saver_picture_kind(saver_now.kind) && camera_supported()) {
+      saver_bare = saver_camera = true;
+      camera_open(saver_now.entity, saver_now.name, -1, "");
+      if (camera_root) {
+        lv_obj_remove_flag(camera_root, LV_OBJ_FLAG_CLICKABLE);
+        for (lv_obj_t **part : {&camera_back, &camera_title, &camera_spinner}) if (*part) { lv_obj_delete(*part); *part = nullptr; }
+        lv_obj_move_to_index(camera_root, 0);
+        if (saver_now.kind != "camera") camera.once = true;
+        else camera.every = SAVER_CAMERA_MS;
+      } else {
+        saver_bare = saver_camera = false;
+      }
+    }
     saver_root = saver_glass();
+    if (saver_bare) {
+      lv_obj_set_style_bg_opa(saver_root, LV_OPA_TRANSP, 0);
+      lv_obj_move_to_index(saver_root, 1);
+    }
     plugin_host::saver_show(saver_root, saver_now.plugin, saver_now.plugin_data, standby_level(),
                             screen_settings::current.night(minute_of_day()));
     ESP_LOGI("saver", "%s by %s", saver_now.kind.c_str(), saver_now.plugin.c_str());
@@ -12892,7 +12956,7 @@ inline void saver_follow() {
 inline void saver_follow_pending() {
   if (!std::exchange(saver_follow_due, false)) return;
   if (saver_lit && saver_camera && camera_root && camera_picture && !(saver_next == saver_now) &&
-      saver_picture_kind(saver_next.kind) && !saver_plugin_draws(saver_next)) saver_follow();
+      saver_picture_kind(saver_next.kind) && (!saver_plugin_draws(saver_next) || saver_bare)) saver_follow();
 }
 // apply_screen_settings, after every change and every minute: `lit` is standby with a backlight that is on.
 inline void saver_sync(bool lit) {
@@ -12905,7 +12969,10 @@ inline void saver_sync(bool lit) {
   // The same plugin's saver for the same step with a new word: it paints that in place (on_state).
   if (saver_root && !saver_now.plugin.empty() && saver_next.plugin == saver_now.plugin && saver_next.kind == saver_now.kind &&
       saver_plugin_draws(saver_next)) {
-    saver_now = saver_next;
+    // Its backdrop follows the next cover or photo as Tessera's own face does (the last stays until it comes).
+    if (saver_bare && camera_root && camera_picture && (saver_next.entity != saver_now.entity ||
+        saver_next.picture != saver_now.picture || saver_next.motion != saver_now.motion)) saver_follow();
+    else saver_now = saver_next;
     plugin_host::saver_state(saver_now.plugin_data);
     return;
   }

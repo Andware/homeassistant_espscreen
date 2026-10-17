@@ -408,6 +408,16 @@ def encode_saver(raw, box, kind, ground=0):
 # another shape whole, on its own colour darkened; 'fill' always cuts, 'whole' never does. 8-bit on the photo's own
 # palette, dithered, as every picture of the screensaver.
 PHOTO_GROUND_DIM = 0.55
+# A photo that moves (photos `motion: slow`, picture_motion.h) is cut this much larger than the glass on either side, the
+# room the screen moves it in: 38 pixels on a 480 glass, a minute from one corner to the other at a pixel a second and a half.
+MOTION_OVERSCAN = 0.08
+
+
+def motion_box(box, cap=None):
+    """The box a moving photo is cut to for glass of `box`: MOTION_OVERSCAN larger, or None when that does not fit the
+    screen's picture memory (the 10-inch's 1280 x 800 does not: its photos stand still)."""
+    big = (round(box[0] * (1 + MOTION_OVERSCAN)), round(box[1] * (1 + MOTION_OVERSCAN)))
+    return big if capped(big, cap=cap) == big else None
 
 
 def photo_fills(size, box, fit):
@@ -420,8 +430,9 @@ def photo_fills(size, box, fit):
     return pw * bh * SAVER_SQUARE[1] <= bw * ph * SAVER_SQUARE[0] and bw * ph * SAVER_SQUARE[1] <= pw * bh * SAVER_SQUARE[0]
 
 
-def encode_photo(raw, box, fit='auto'):
-    """The photos step's picture as a BMP of exactly `box`."""
+def encode_photo(raw, box, fit='auto', moving=None):
+    """The photos step's picture as a BMP of exactly `box`, or of `moving` (motion_box) for a photo that fills the glass
+    and moves: the screen shows the glass's piece of it."""
     from PIL import Image, ImageOps, ImageStat
     import saver_photos
     import tile_art
@@ -439,7 +450,7 @@ def encode_photo(raw, box, fit='auto'):
         elif image.mode != 'RGB':
             image = image.convert('RGB')
         if photo_fills(image.size, box, fit):
-            picture = ImageOps.fit(image, box, Image.Resampling.LANCZOS)
+            picture = ImageOps.fit(image, moving or box, Image.Resampling.LANCZOS)
         else:
             whole = ImageOps.contain(image, box, Image.Resampling.LANCZOS)
             colour = tuple(int(c * (1 - PHOTO_GROUND_DIM)) for c in ImageStat.Stat(whole.resize((16, 16))).mean[:3])

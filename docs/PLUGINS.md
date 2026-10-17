@@ -380,6 +380,12 @@ shows it over the whole glass while Auto standby dims it. A plugin adds to that 
 The core decides when a saver shows: standby at a level above 0, without Sleep from Home Assistant, the cards closed,
 no alert. It goes on a wake, an alert, an update (`before_update` first), a level of 0, a new layout or another word.
 
+**A backdrop.** A face of the music or the photos whose manifest says `backdrop: true` has the step's own picture under
+it: runtime_tiles opens the full view as Tessera's own face does (the cover, or the photo with its motion), bare
+(`saver_bare`: no words, no keys), and lays the saver's glass clear over it (index 1, under an alert). It follows the next
+cover or photo as the core's face does (`saver_follow`). The saver draws only what goes over the picture; the drift
+moves its stage alone, so a photo that fills the glass never shows a black edge.
+
 **The wire.** The app's word for the step (`op saver`) gains `pf`: `p` the saver (`plugin:<plugin>.<saver>`), `o` its
 options and `x` what it draws from. For a step of its own the word is `k: "plugin"` with `pf` alone. `x` is the step's
 contract in full words, built by the app (`screen_saver.media_contract`, `clock_contract`, `photos_contract`, or the

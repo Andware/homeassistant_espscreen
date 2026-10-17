@@ -103,8 +103,11 @@ In the drawer of Photos, **Folder** browses Home Assistant's media: an album, a 
 integration), a folder under Home Assistant's `/media`, Synology Photos, or any other media source. Then choose how long
 each photo stands (30 seconds to an hour), the order (shuffled, every photo once before any comes again, or the
 folder's own order) and how a photo fills the glass: **Auto** fills it with a photo of about its shape and shows a
-photo of another shape whole on its own colour, **Fill** always cuts, **Whole** never does. A photo has no words over
-it. The next photo is fetched and read before its turn, so it changes at once. iPhone photos (HEIC) are read too.
+photo of another shape whole on its own colour, **Fill** always cuts, **Whole** never does. **Motion** set to **Slow**
+moves a photo that fills the glass slowly across it, a pixel every second and a half, from a corner of its own toward the
+opposite one; it reads as a still photo that breathes, and nothing stands on the same pixels for long. The 10-inch
+screens keep their photos still: the larger photo that moving needs does not fit their picture memory. A photo has no
+words over it. The next photo is fetched and read before its turn, so it changes at once. iPhone photos (HEIC) are read too.
 Google Photos cannot be used: Google lets an app read only the photos that app uploaded itself.
 
 **Faces and steps of plugins** (app 0.4.89, plugin API 0.14). A plugin can bring a face for a step (another clock,
@@ -162,6 +165,10 @@ has.
   walks it per screen, and fetches the next photo before its turn: `media_source/resolve_media` names its address and
   the app fetches it with its own token (`HomeAssistant.media_file`: a path of Home Assistant's, or a public address,
   never a redirect, at most 25 MB). A photo that cannot be read is passed over; five in a row read the folder again.
+  With `motion: slow` the word carries `"mv": 1` and the app cuts a photo that fills the glass `MOTION_OVERSCAN` (8 %)
+  larger (`camera_feed.motion_box`, none where that does not fit the screen's picture cap); the screen shows the glass's
+  piece of it and moves it by `picture_motion.h` (`saver_motion_start`, `saver_motion_tick` every 250 ms, a new offset
+  only when a pixel is due), a photo at the glass's size standing still as before.
   The word is `{"k": "photos", "e": "saver.photos", "x": {"pic": <mark>}}`, sent once the photo is here, to a screen
   whose hello lists `saver_photos` (a board that draws pictures). The screen opens the full view under that name, asks
   with `saver: photos`, and the app answers with a still link to `camera_feed.encode_photo`: exactly the screen's box,

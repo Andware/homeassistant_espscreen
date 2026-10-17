@@ -74,6 +74,8 @@ void card_letgo(const void *download);
 // it, the same word again (a finger's wish on the player shows in it, saver_wish), and its end (the root goes with it).
 bool saver_known(const std::string &key);
 bool saver_shows();
+// The saver has the step's own picture under it (`backdrop: true`): runtime_tiles opens that picture first.
+bool saver_backdrop(const std::string &key);
 void saver_show(lv_obj_t *root, const std::string &key, const roomy::Text &data, int level, bool night);
 void saver_state(const roomy::Text &data);
 void saver_refresh();

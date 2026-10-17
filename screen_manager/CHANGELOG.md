@@ -3,7 +3,8 @@
 - **Photos as a screensaver.** The screensaver has a new step, Photos: the photos of a folder of Home Assistant's
   media, one after the other over the whole glass. Pick an album, a person or a tag of Immich, a folder under
   Home Assistant's media, or Synology Photos; choose how long each stands, shuffled or in order, and whether a photo
-  fills the glass or shows whole. iPhone photos are read too. Screens that show pictures only.
+  fills the glass or shows whole, and whether it stands still or moves slowly across the glass. iPhone photos are read
+  too. Screens that show pictures only.
 - **Screensavers from plugins.** A plugin can now bring its own face for the clock, the music or the photos, or a step
   of its own in the screensaver's list, with keys you can tap without waking the screen. A screen without that plugin
   keeps the step's own face.

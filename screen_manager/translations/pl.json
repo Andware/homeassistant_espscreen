@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Całe",
         "photos_fit_auto_hint": "Zdjęcie o kształcie zbliżonym do ekranu wypełnia go. Inne widać w całości, na ich własnym kolorze.",
         "photos_fit_fill_hint": "Każde zdjęcie wypełnia ekran, przycięte na brzegach.",
-        "photos_fit_whole_hint": "Każde zdjęcie widać w całości, na jego własnym kolorze."
+        "photos_fit_whole_hint": "Każde zdjęcie widać w całości, na jego własnym kolorze.",
+        "photos_motion": "Ruch",
+        "photos_motion_still": "Stoi",
+        "photos_motion_slow": "Powoli",
+        "photos_motion_still_hint": "Każde zdjęcie stoi.",
+        "photos_motion_slow_hint": "Zdjęcie wypełniające szybę przesuwa się powoli, piksel po pikselu. Ekrany 10-calowe pokazują zdjęcia nieruchomo: większe zdjęcie nie mieści się w ich pamięci."
       },
       "plugins": {
         "title": "Wtyczki",

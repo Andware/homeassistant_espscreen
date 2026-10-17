@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Intera",
         "photos_fit_auto_hint": "Una foto di forma simile allo schermo lo riempie. Le altre si vedono intere, sul loro colore.",
         "photos_fit_fill_hint": "Ogni foto riempie lo schermo, tagliata ai bordi.",
-        "photos_fit_whole_hint": "Ogni foto si vede intera, sul suo colore."
+        "photos_fit_whole_hint": "Ogni foto si vede intera, sul suo colore.",
+        "photos_motion": "Movimento",
+        "photos_motion_still": "Ferma",
+        "photos_motion_slow": "Lento",
+        "photos_motion_still_hint": "Ogni foto resta ferma.",
+        "photos_motion_slow_hint": "Una foto che riempie il vetro scorre lentamente, un pixel alla volta. Gli schermi da 10 pollici tengono le foto ferme: una foto più grande non entra nella loro memoria."
       },
       "plugins": {
         "title": "Plugin",

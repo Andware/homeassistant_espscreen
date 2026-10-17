@@ -1103,7 +1103,7 @@ class Run:
         import plugin_pictures
         import tile_art
         mine = next((p for p in self.sender.plugins if p['id'] == 'host_probe'), None)
-        assert mine and mine.get('savers') == ['deck', 'dial', 'alarm'], f'the hello names the savers {mine}'
+        assert mine and mine.get('savers') == ['deck', 'dial', 'alarm', 'frame'], f'the hello names the savers {mine}'
         pictured = 'camera' in json.loads((REPO / 'screen_manager/app/boards.json').read_text())[self.item.board]
         async def dimmed():
             if 'render_saver' not in self.services:
@@ -1170,6 +1170,34 @@ class Run:
             await self.call('render_finger', x=(x1 + x2) // 2, y=(y1 + y2) // 2, down=False)
             await self.until(lambda l: probe(l, 'saver=deck hold'), 10, 'a hold on the face\'s key', lines)
             self.warnings.append('saver face of the music: cover as psaver, a tap wishes and stays in standby, no word puts it back, a hold')
+        if pictured:
+            # A face over the step's own photo (`backdrop`): the screen asks for the photo as its own face does, the
+            # face draws over it on a clear glass, and the photo moves (`mv`).
+            start, lines = len(calls), len(self.lines)
+            import camera_feed
+            await self.send({'v': 1, 'op': 'saver', 'k': 'photos', 'e': 'saver.photos', 'n': '', 'x': {'pic': 'beef00beef', 'mv': 1},
+                             'pf': {'p': 'plugin:host_probe.frame', 'o': {}, 'x': {'picture': 'saver:picture', 'mark': 'beef00beef',
+                                                                                     'index': 2, 'count': 9, 'album': 'Family'}}})
+            await self.until(lambda l: probe(l, 'saver=frame show'), 10, 'the photo face over its photo', lines)
+            for _ in range(24):
+                asked = [c for c in calls[start:] if c.service == 'esphome.screen_camera' and dict(c.data).get('saver') == 'photos']
+                if asked:
+                    break
+                await asyncio.sleep(0.5)
+            assert asked, 'the photo under the face was not asked for'
+            data = dict(asked[-1].data)
+            box = camera_feed.capped(self.canvas)
+            moving = camera_feed.motion_box(box, camera_feed.picture_cap(data))
+            body = camera_feed.encode_photo(porch(1600, 1200), box, 'fill', moving)
+            url = self.pictures.url(f'{self.item.key}-frame.bmp', body)
+            await self.send({'v': 1, 'op': 'camera', 't': 'saver', 'e': 'saver.photos', 'u': url, 'view': int(data['view'])})
+            await asyncio.sleep(1.5)
+            first = await self.render('plugin-saver-frame')
+            await asyncio.sleep(2 * 1.6)
+            later = await self.render('plugin-saver-frame-later')
+            if moving and first.convert('RGB').tobytes() == later.convert('RGB').tobytes():
+                raise RuntimeError('saver: the photo under the face did not move')
+            self.warnings.append(f'saver face over its photo: photo {moving or box}, {"moving" if moving else "still"}')
         lines = len(self.lines)
         await self.send({'v': 1, 'op': 'saver', 'k': 'plugin',
                          'pf': {'p': 'plugin:host_probe.alarm', 'o': {}, 'x': {'state': 'on', 'name': 'Alarm'}}})

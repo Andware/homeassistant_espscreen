@@ -60,7 +60,8 @@ namespace tessera {
 // manifest's `pictures` of a card.
 // 0.14: screensavers (docs/PLUGINS.md "A screensaver"): add_saver, a Saver drawn over the whole glass in standby, as a
 // face of a step of the screensaver (the clock, the music, the photos) or as a step of its own; ui::takes_taps, a part of
-// it a finger may tap without waking the screen; "saver:picture", the step's own picture for a place; and wish(), a
+// it a finger may tap without waking the screen; "saver:picture", the step's own picture for a place, or the manifest's
+// `backdrop: true`, the step's own picture (moving, for the photos) under the whole saver; and wish(), a
 // value a finger changed, shown at once and squared with Home Assistant as every control of the screen does; drift(),
 // the slow circle against burn-in, for a saver that moves only some of its parts.
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 14;
@@ -274,6 +275,10 @@ struct SaverContext {
   bool night;                // the night levels hold now: a face may go darker still
   JsonObjectConst options;   // the saver's options as the person set them in the editor (the manifest's `options`)
 };
+// A face of the music or the photos whose manifest says `backdrop: true` has the step's own picture under it: the cover
+// or the photo over the whole glass, moving slowly where the person chose so for the photos, as Tessera's own face shows
+// it but without its words and keys. The saver's glass is then clear, and it draws only what goes over the picture (a
+// clock over the photos); it needs no place of its own for that picture.
 // A screensaver of a plugin: one object while it is on the glass, deleted when it leaves. It never exists off the glass.
 // It is drawn in the dark look whatever the screen's look, as Tessera's own clock: theme roles (ui::color, ui::label)
 // give their dark values in every call of a saver, on the black glass, so the glass gives as little light as it can.
@@ -379,6 +384,12 @@ class Plugin {
     for (const char *id : moving_) if (saver == id) return true;
     return false;
   }
+  // A screensaver of the manifest's `backdrop: true` (0.14): the screen shows the step's own picture under it.
+  void set_backdrop(const char *saver) { backdrops_.push_back(saver); }
+  bool backdrop(const std::string &saver) const {
+    for (const char *id : backdrops_) if (saver == id) return true;
+    return false;
+  }
   // A screensaver of the manifest's `taps: true` (0.14): its parts may take taps (ui::takes_taps).
   void set_taps(const char *saver) { tapping_.push_back(saver); }
   bool taps(const std::string &saver) const {
@@ -393,7 +404,7 @@ class Plugin {
  private:
   std::vector<std::pair<const char *, const char *>> texts_;
   std::vector<std::pair<const char *, uint16_t>> memory_;
-  std::vector<const char *> moving_, tapping_;
+  std::vector<const char *> moving_, tapping_, backdrops_;
   const char *id_ = "", *version_ = "";
 };
 

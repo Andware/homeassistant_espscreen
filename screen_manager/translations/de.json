@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Ganz",
         "photos_fit_auto_hint": "Ein Foto etwa in der Form des Bildschirms füllt ihn. Andere erscheinen ganz, auf ihrer eigenen Farbe.",
         "photos_fit_fill_hint": "Jedes Foto füllt den Bildschirm, an den Rändern beschnitten.",
-        "photos_fit_whole_hint": "Jedes Foto erscheint ganz, auf seiner eigenen Farbe."
+        "photos_fit_whole_hint": "Jedes Foto erscheint ganz, auf seiner eigenen Farbe.",
+        "photos_motion": "Bewegung",
+        "photos_motion_still": "Still",
+        "photos_motion_slow": "Langsam",
+        "photos_motion_still_hint": "Jedes Foto steht still.",
+        "photos_motion_slow_hint": "Ein Foto, das das Glas füllt, gleitet langsam darüber, ein Pixel nach dem anderen. Die 10-Zoll-Bildschirme zeigen ihre Fotos still: ein größeres Foto passt nicht in ihren Speicher."
       },
       "plugins": {
         "title": "Plugins",

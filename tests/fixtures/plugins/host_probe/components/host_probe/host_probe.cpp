@@ -281,7 +281,7 @@ class ProbeSaver : public tessera::Saver {
     std::string all;
     serializeJson(data, all);
     ESP_LOGI(TAG, "saver=%s state %.200s", id_, all.c_str());
-    ui::set_text(words_, std::string(data["title"] | (data["temperature"] | (data["name"] | ""))));
+    ui::set_text(words_, std::string(data["title"] | (data["temperature"] | (data["album"] | (data["name"] | "")))));
     if (cover_) ui::set_picture(cover_, data["picture"] | "");
   }
   void on_tick(uint32_t epoch) override {
@@ -311,6 +311,7 @@ void HostProbe::setup() {
   add_saver("deck", tessera::SaverStep::MEDIA, []() { return new ProbeSaver("deck"); });
   add_saver("dial", tessera::SaverStep::CLOCK, []() { return new ProbeSaver("dial"); });
   add_saver("alarm", tessera::SaverStep::OWN, []() { return new ProbeSaver("alarm"); });
+  add_saver("frame", tessera::SaverStep::PHOTOS, []() { return new ProbeSaver("frame"); });
   add_tap_action("open", [this](const tessera::TapContext &c) {
     ESP_LOGI(TAG, "tap_action entity=[%s] name=[%s] tile=%d", c.entity, c.name, c.tile);
     tessera::open_card(plugin_id(), "detail", c.entity, c.tile);

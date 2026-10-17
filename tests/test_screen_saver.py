@@ -35,7 +35,7 @@ PLAYING = {'state': 'playing', 'attributes': {'friendly_name': 'Living room', 'm
 DOOR = {'state': 'idle', 'attributes': {'friendly_name': 'Front door'}}
 CHOICE = {'show': True, 'media': PLAYER, 'camera': CAMERA, 'order': ['media', 'photos', 'camera', 'clock'], 'off': [], 'weather': 'auto', 'more': [], 'items': [],
           'face': 'digital', 'numerals': 4, 'seconds': True, 'look': 'dark',
-          'photos': {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto'}, 'media_face': '', 'photos_face': '', 'plugins': {}}
+          'photos': {'source': '', 'every': 60, 'order': 'shuffle', 'fit': 'auto', 'motion': 'still'}, 'media_face': '', 'photos_face': '', 'plugins': {}}
 
 
 class Choice(unittest.TestCase):

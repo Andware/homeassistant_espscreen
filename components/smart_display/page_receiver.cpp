@@ -423,7 +423,11 @@ std::string receive(const std::string &payload) {
         if (next.kind == "photos" ? next.entity != SAVER_PHOTOS : !valid_entity(next.entity)) return false;
         next.name = string(root["n"], 80);
       }
-      if (next.kind == "photos") next.picture = string(root["x"]["pic"], 16);
+      if (next.kind == "photos") {
+        next.picture = string(root["x"]["pic"], 16);
+        // It moves slowly (app 0.4.89): a photo larger than the glass moves a pixel at a time (picture_motion.h).
+        next.motion = root["x"]["mv"].is<int>() && root["x"]["mv"].as<int>() == 1;
+      }
       // A plugin's face of the step, or its step of its own (plugin API 0.14): which saver, and its options and what it
       // draws from, kept as the app sent them for the plugin. One that is not readable leaves the step's own face.
       if (root["pf"].is<JsonObject>()) {

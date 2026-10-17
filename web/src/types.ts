@@ -156,7 +156,7 @@ export type PluginSaverKey = `plugin:${string}.${string}`;
 export type SaverStep = SaverKind | PluginSaverKey;
 // The photos step: the media source folder ('' for none yet), how many seconds a photo stands, in what order they come
 // and how one fills the glass (`auto` fills it with a photo of about its shape and shows another whole).
-export type SaverPhotos = { source: string; every: number; order: "shuffle" | "in_order"; fit: "auto" | "fill" | "whole" };
+export type SaverPhotos = { source: string; every: number; order: "shuffle" | "in_order"; fit: "auto" | "fill" | "whole"; motion?: "still" | "slow" };
 // What a plugin's face or step keeps: its options as a plugin's tile keeps them, and the entity it belongs to.
 export type SaverPluginSetting = { options: Record<string, PluginValue>; entity: string };
 // `weather` (app 0.4.52): the temperature under the clock, "auto" for Home Assistant's first weather entity, "" for none.

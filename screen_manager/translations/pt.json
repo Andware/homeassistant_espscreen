@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Inteira",
         "photos_fit_auto_hint": "Uma fotografia com cerca da forma do ecrã preenche-o. As outras aparecem inteiras, sobre a sua própria cor.",
         "photos_fit_fill_hint": "Cada fotografia preenche o ecrã, cortada nas margens.",
-        "photos_fit_whole_hint": "Cada fotografia aparece inteira, sobre a sua própria cor."
+        "photos_fit_whole_hint": "Cada fotografia aparece inteira, sobre a sua própria cor.",
+        "photos_motion": "Movimento",
+        "photos_motion_still": "Parada",
+        "photos_motion_slow": "Lento",
+        "photos_motion_still_hint": "Cada foto fica parada.",
+        "photos_motion_slow_hint": "Uma foto que preenche o ecrã desliza devagar, um píxel de cada vez. Os ecrãs de 10 polegadas mostram as fotos paradas: uma foto maior não cabe na memória."
       },
       "plugins": {
         "title": "Plugins",

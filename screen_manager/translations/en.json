@@ -2559,7 +2559,12 @@
         "photos_fit_whole": "Whole",
         "photos_fit_auto_hint": "A photo of about the screen's shape fills it. Others show whole, on their own colour.",
         "photos_fit_fill_hint": "Every photo fills the screen, cut at the edges.",
-        "photos_fit_whole_hint": "Every photo shows whole, on its own colour."
+        "photos_fit_whole_hint": "Every photo shows whole, on its own colour.",
+        "photos_motion": "Motion",
+        "photos_motion_still": "Still",
+        "photos_motion_slow": "Slow",
+        "photos_motion_still_hint": "Each photo stands still.",
+        "photos_motion_slow_hint": "A photo that fills the glass moves slowly across it, a pixel at a time. The 10-inch screens keep their photos still: a larger photo does not fit their memory."
       },
       "plugins": {
         "title": "Plugins",

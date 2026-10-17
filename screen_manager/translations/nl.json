@@ -2559,7 +2559,12 @@
         "photos_fit_whole": "Geheel",
         "photos_fit_auto_hint": "Een foto van ongeveer de vorm van het scherm vult het. Andere staan er geheel op, op hun eigen kleur.",
         "photos_fit_fill_hint": "Elke foto vult het scherm, aan de randen bijgesneden.",
-        "photos_fit_whole_hint": "Elke foto staat er geheel op, op zijn eigen kleur."
+        "photos_fit_whole_hint": "Elke foto staat er geheel op, op zijn eigen kleur.",
+        "photos_motion": "Beweging",
+        "photos_motion_still": "Stil",
+        "photos_motion_slow": "Langzaam",
+        "photos_motion_still_hint": "Elke foto staat stil.",
+        "photos_motion_slow_hint": "Een foto die het glas vult schuift er langzaam overheen, een pixel tegelijk. De 10-inch schermen houden hun foto's stil: een grotere foto past niet in hun geheugen."
       },
       "plugins": {
         "title": "Plugins",

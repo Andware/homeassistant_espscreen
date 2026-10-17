@@ -2934,7 +2934,12 @@
         "photos_fit_whole": "Entière",
         "photos_fit_auto_hint": "Une photo à peu près de la forme de l'écran le remplit. Les autres s'affichent entières, sur leur propre couleur.",
         "photos_fit_fill_hint": "Chaque photo remplit l'écran, rognée sur les bords.",
-        "photos_fit_whole_hint": "Chaque photo s'affiche entière, sur sa propre couleur."
+        "photos_fit_whole_hint": "Chaque photo s'affiche entière, sur sa propre couleur.",
+        "photos_motion": "Mouvement",
+        "photos_motion_still": "Fixe",
+        "photos_motion_slow": "Lent",
+        "photos_motion_still_hint": "Chaque photo reste fixe.",
+        "photos_motion_slow_hint": "Une photo qui remplit l'écran glisse lentement, un pixel à la fois. Les écrans de 10 pouces gardent leurs photos fixes : une photo plus grande ne tient pas dans leur mémoire."
       },
       "plugins": {
         "title": "Plugins",

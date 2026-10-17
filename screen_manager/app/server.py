@@ -3497,20 +3497,23 @@ class Manager:
             return
         choice = self.savers.get(screen.get('device_id')) if screen.get('device_id') else dict(screen_saver.DEFAULT)
         fit = choice['photos'].get('fit', 'auto')
+        # A photo that moves is cut a little larger, where that fits the screen's picture memory (picture_motion.h).
+        moving = camera_feed.motion_box(tuple(box), camera_feed.picture_cap(request)) \
+            if choice['photos'].get('motion') == 'slow' else None
         raw = self.photos.raw(inbox)
         if raw is None:
             return
         state = self.photos.state(inbox, choice['photos'])
-        key = (state.get('mark'), tuple(box), fit)
+        key = (state.get('mark'), tuple(box), fit, moving)
         made = self.photo_links.get(inbox)
         token = made[1] if made and made[0] == key and made[1] in self.camera.links else None
         if token is None:
             try:
-                image = await asyncio.get_running_loop().run_in_executor(None, camera_feed.encode_photo, raw, tuple(box), fit)
+                image = await asyncio.get_running_loop().run_in_executor(None, camera_feed.encode_photo, raw, tuple(box), fit, moving)
             except Exception as error:  # noqa: BLE001 - a photo that cannot be read is passed over at the next turn
                 LOG.info('Screensaver photo on %s cannot be read (%s)', screen['name'], type(error).__name__)
                 return
-            token = self.camera.link(screen_saver.PHOTOS_ENTITY, tuple(box), still=image)
+            token = self.camera.link(screen_saver.PHOTOS_ENTITY, tuple(moving or box), still=image)
             self.photo_links[inbox] = (key, token)
         base = await camera_feed.base_url(self.ha.request)
         if not base:

@@ -231,6 +231,9 @@ async def register_plugin(var, component_file):
         # Parts that take taps only on a saver whose manifest says so (`taps: true`), as the editor tells the person.
         if saver.get("taps") is True:
             cg.add(var.set_taps(str(saver["id"])))
+        # The step's own picture under the saver (`backdrop: true`): the screen shows it, the saver draws over it.
+        if saver.get("backdrop") is True:
+            cg.add(var.set_backdrop(str(saver["id"])))
     language = (CORE.config.get("smart_display") or {}).get(CONF_LANGUAGE, "en")
     for key, text in sorted(plugin_texts(folder, language).items()):
         cg.add(var.set_text(key, text))

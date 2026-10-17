@@ -43,5 +43,7 @@ savers:
   - { id: deck, name: deck, step: media, memory: 400, pictures: 1, taps: true }
   # A face of the clock: no pictures, and it moves itself (the host leaves it where it draws).
   - { id: dial, name: dial, step: clock, memory: 300, moves: true }
+  # A face of the photos over the step's own photo (`backdrop`): the screen shows the photo, moving, and the face its words.
+  - { id: frame, name: frame, step: photos, memory: 300, backdrop: true }
   # A step of its own, of a sensor's entity, shown while it is on.
   - { id: alarm, name: alarm, step: own, memory: 300, domains: [binary_sensor], when: { state: ["on"] } }

@@ -22,6 +22,7 @@
     "three": "Three",
     "deck": "Probe deck",
     "dial": "Probe dial",
-    "alarm": "Probe alarm"
+    "alarm": "Probe alarm",
+    "frame": "Probe frame"
   }
 }

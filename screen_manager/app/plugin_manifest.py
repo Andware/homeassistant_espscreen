@@ -241,8 +241,8 @@ def check_savers(value, out, keys, fetch_ids, choice_lists, searched, options_of
             raise ManifestError('savers', f'screensavers need plugin API {SAVER_API[0]}.{SAVER_API[1]} (api: "{SAVER_API[0]}.{SAVER_API[1]}")')
     for i, item in enumerate(raw):
         where = f'savers[{i}]'
-        item = _object(item, where, {'id', 'name', 'icon', 'step', 'memory', 'pictures', 'taps', 'moves', 'options',
-                                     'example', 'data', 'domains', 'attributes', 'fields', 'when'},
+        item = _object(item, where, {'id', 'name', 'icon', 'step', 'memory', 'pictures', 'taps', 'moves', 'backdrop',
+                                     'options', 'example', 'data', 'domains', 'attributes', 'fields', 'when'},
                        ('id', 'name', 'step', 'memory'))
         saver = {'id': _id(item['id'], f'{where}.id'), 'name': _text_key(item['name'], f'{where}.name', keys)}
         icon = item.get('icon', out['icon'])
@@ -255,10 +255,14 @@ def check_savers(value, out, keys, fetch_ids, choice_lists, searched, options_of
         saver['memory'] = _number(item['memory'], f'{where}.memory', 64, MAX_TILE_BYTES, whole=True)
         # Places for pictures (as a tile's); 'saver:picture' is the step's own picture (the cover, the photo).
         saver['pictures'] = _number(item.get('pictures', 0), f'{where}.pictures', 0, MAX_PICTURES, whole=True)
-        for flag in ('taps', 'moves'):
+        for flag in ('taps', 'moves', 'backdrop'):
             if flag in item and not isinstance(item[flag], bool):
                 raise ManifestError(f'{where}.{flag}', 'true or false')
             saver[flag] = bool(item.get(flag, False))
+        # `backdrop` (0.14): the screen shows the step's own picture under the saver, over the whole glass and moving
+        # where the person chose so (the photos' motion), and the saver draws over it. Only a step with a picture.
+        if saver['backdrop'] and saver['step'] not in ('media', 'photos'):
+            raise ManifestError(f'{where}.backdrop', 'only a face of the music or the photos has the step\'s picture under it')
         own = saver['step'] == 'own'
         for field in ('data', 'domains', 'attributes', 'fields', 'when'):
             if field in item and not own:
