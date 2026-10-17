@@ -925,7 +925,21 @@
       "extras": {
         "request": "Tej zmiany dodatku nie można wprowadzić na tym ekranie."
       },
-      "display_precision_unregistered": "Home Assistant nie przechowuje ustawień tego czujnika, ponieważ nie ma on unikalnego identyfikatora, więc jego precyzję można ustawić tylko w jego YAML."
+      "display_precision_unregistered": "Home Assistant nie przechowuje ustawień tego czujnika, ponieważ nie ma on unikalnego identyfikatora, więc jego precyzję można ustawić tylko w jego YAML.",
+      "build_server": {
+        "host": "Wpisz adres IP lub nazwę hosta serwera kompilacji.",
+        "port": "Port to liczba od 1 do 65535. Serwer kompilacji nasłuchuje na 6055, chyba że to zmieniono.",
+        "unreachable": "Pod tym adresem nic nie odpowiada. Sprawdź, czy serwer kompilacji działa, czy kompiluje dla innych urządzeń i czy zapora przepuszcza port 6055.",
+        "protocol": "Coś odpowiada pod tym adresem, ale to nie jest serwer kompilacji ESPHome, z którym Tessera może rozmawiać.",
+        "preview_first": "Najpierw wyszukaj serwer kompilacji, potem porównaj jego odcisk.",
+        "no_window": "Serwer kompilacji nie przyjmuje teraz nowych urządzeń. Otwórz na nim Pairing requests, potem sparuj ponownie.",
+        "no_window_key": "Serwer kompilacji nie przyjął tego klucza. Sprawdź klucz parowania albo uruchom serwer ponownie, aby dostać nowy.",
+        "rejected": "Serwer kompilacji odrzucił parowanie.",
+        "mismatch": "Ten serwer kompilacji odpowiedział innym odciskiem niż ten, który sprawdzono. Wyszukaj go ponownie.",
+        "not_paired": "Najpierw sparuj serwer kompilacji.",
+        "unknown": "Serwer kompilacji nie zna już Tessera. Sparuj go ponownie.",
+        "pending": "Serwer kompilacji jeszcze nie zaakceptował Tessera."
+      }
     },
     "status": {
       "first_tiles": "Wybierz pierwsze kafelki",
@@ -3027,6 +3041,63 @@
       "alerts": {
         "text": "Karta na cały ekran uruchamiana z automatyzacji, na jednym ekranie lub na wszystkich. Ściąga zawiera nazwy akcji, pola, ikony i kolory oraz formularz do wypróbowania alertu.",
         "detail": "Powiadomienia na cały ekran, z automatyzacji"
+      },
+      "build_server": {
+        "title": "Serwer kompilacji",
+        "intro": "Kompiluj firmware na szybszym komputerze. Tessera wysyła YAML ekranu do serwera kompilacji ESPHome i instaluje to, co wróci. Gdy serwer nie może, kompilacja działa tutaj, jak dotąd.",
+        "connect": "Połącz serwer kompilacji",
+        "how_title": "Jak uruchomić serwer kompilacji",
+        "how_desktop": "ESPHome Desktop na komputerze: od początku kompiluje dla innych urządzeń.",
+        "how_builder": "ESPHome Device Builder: Settings → Build server → Enable remote build.",
+        "how_headless": "Na serwerze bez ekranu: uruchom {command} i użyj klucza, który wypisze.",
+        "how_link": "Więcej o serwerach kompilacji",
+        "address": "Adres",
+        "address_hint": "Adres IP lub nazwa hosta komputera. Aplikacje Home Assistant nie mogą go szukać w sieci.",
+        "port": "Port",
+        "look_up": "Wyszukaj",
+        "looking": "Szukam…",
+        "check_title": "Czy to Twój serwer kompilacji?",
+        "check_text": "{name} · ESPHome {version}",
+        "check_hint": "Serwer kompilacji pokazuje swój odcisk tam, gdzie włączono kompilację dla innych urządzeń, albo w oknie, w którym go uruchomiono. Paruj tylko, gdy te emoji się zgadzają.",
+        "server_emoji": "Jego odcisk",
+        "own_emoji": "Odcisk Tessera",
+        "own_emoji_hint": "Serwer kompilacji pokaże je, gdy akceptujesz Tessera.",
+        "key": "Klucz parowania",
+        "key_hint": "Klucz wypisany przez serwer kompilacji przy starcie, np. ABCD-EFGH-JKLM-NPQR. Działa jeden raz.",
+        "pair": "Zgadzają się, paruj",
+        "pairing": "Parowanie…",
+        "back": "Wstecz",
+        "cancel": "Anuluj",
+        "wait_title": "Zaakceptuj Tessera na {name}",
+        "wait_text": "Otwórz Pairing requests na serwerze kompilacji, sprawdź, czy pokazuje te emoji dla Tessera, i zaakceptuj.",
+        "paired": "Sparowano z {name}. Od teraz ekrany kompilują się tam.",
+        "status": {
+          "connecting": "Łączenie…",
+          "online": "Gotowy",
+          "busy": "Zajęty inną kompilacją",
+          "offline": "Nieosiągalny",
+          "pending": "Czeka na akceptację",
+          "refused": "Już nie sparowany",
+          "mismatch": "Odcisk się zmienił"
+        },
+        "offline_text": "Kompilacje działają tutaj, dopóki nie wróci.",
+        "refused_text": "{name} nie zna już Tessera albo nikt nie zaakceptował go na czas. Sparuj ponownie, aby tam kompilować.",
+        "mismatch_text": "{name} odpowiedział innym odciskiem niż ten, który sprawdzono. Jeśli zainstalowano go ponownie, sparuj go ponownie.",
+        "send": "Kompiluj ekrany na tym serwerze",
+        "send_hint": "Wyłączone lub gdy serwer jest nieosiągalny: kompilacje działają tutaj.",
+        "version_same": "Kompiluje z ESPHome {version}, tym samym co Tessera.",
+        "version_other": "Kompiluje z ESPHome {ours}, którego używa Tessera. Serwer instaluje go raz, obok własnego {theirs}.",
+        "building": "Kompilowanie {file} · {step}",
+        "last_server": "Ostatnia kompilacja: {file} na tym serwerze w {time}.",
+        "last_here": "Ostatnia kompilacja: {file} działała tutaj, {reason}.",
+        "last_failed": "Ostatnia kompilacja: {file} nie powiodła się na tym serwerze. Log mówi dlaczego.",
+        "minutes": "{m} min {s} s",
+        "seconds": "{s} s",
+        "pair_again": "Sparuj ponownie",
+        "forget": "Zapomnij",
+        "forget_confirm": "Zapomnieć {name}? Ekrany znów kompilują się tutaj. Aby usunąć tam także Tessera, usuń ją ze sparowanych urządzeń serwera kompilacji.",
+        "forget_go": "Zapomnij",
+        "unavailable": "Ta Tessera nie może rozmawiać z serwerem kompilacji."
       }
     },
     "firmware": {
@@ -3797,7 +3868,27 @@
       "update_failed": "Aktualizacja {name} nie powiodła się",
       "build_failed": "Kompilacja {name} nie powiodła się",
       "show_log": "Pokaż log",
-      "waiting_place": "Czeka, najpierw 1 kompilacja | Czeka, najpierw {n} kompilacje | Czeka, najpierw {n} kompilacji"
+      "waiting_place": "Czeka, najpierw 1 kompilacja | Czeka, najpierw {n} kompilacje | Czeka, najpierw {n} kompilacji",
+      "server": {
+        "bundle": "Pakowanie YAML",
+        "send": "Wysyłanie do {name}",
+        "queued": "Czeka na {name}",
+        "build": "Kompilowanie na {name}",
+        "fetch": "Pobieranie firmware",
+        "here": "Kompilowanie tutaj · {reason}",
+        "fallback": {
+          "offline": "serwer kompilacji jest nieosiągalny",
+          "refused": "serwer kompilacji nie jest sparowany",
+          "mismatch": "odcisk serwera kompilacji się zmienił",
+          "unavailable": "brak tu serwera kompilacji",
+          "lost": "połączenie z serwerem kompilacji zostało zerwane",
+          "refused_job": "serwer kompilacji jej nie przyjął",
+          "provision": "serwer kompilacji nie mógł zainstalować ESPHome",
+          "cancelled": "zatrzymano ją na serwerze kompilacji",
+          "fetch": "firmware nie wrócił",
+          "bundle": "nie udało się spakować YAML"
+        }
+      }
     },
     "grid": {
       "title": "Siatka",

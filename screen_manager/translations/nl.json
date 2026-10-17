@@ -925,7 +925,21 @@
       "extras": {
         "request": "Deze extra kan op dit scherm niet zo worden gewijzigd."
       },
-      "display_precision_unregistered": "Home Assistant bewaart geen instellingen voor deze sensor omdat hij geen unieke ID heeft, dus de weergaveprecisie kan alleen in zijn YAML worden ingesteld."
+      "display_precision_unregistered": "Home Assistant bewaart geen instellingen voor deze sensor omdat hij geen unieke ID heeft, dus de weergaveprecisie kan alleen in zijn YAML worden ingesteld.",
+      "build_server": {
+        "host": "Vul het IP-adres of de hostnaam van de buildserver in.",
+        "port": "De poort is een getal van 1 tot 65535. Een buildserver luistert op 6055, tenzij je dat hebt veranderd.",
+        "unreachable": "Op dat adres antwoordt niets. Controleer of de buildserver draait, of hij voor andere apparaten bouwt en of een firewall poort 6055 doorlaat.",
+        "protocol": "Op dat adres antwoordt iets, maar het is geen ESPHome-buildserver waar Tessera mee kan praten.",
+        "preview_first": "Zoek de buildserver eerst op en vergelijk dan zijn vingerafdruk.",
+        "no_window": "De buildserver neemt nu geen nieuwe apparaten aan. Open daar Pairing requests en koppel opnieuw.",
+        "no_window_key": "De buildserver nam die sleutel niet aan. Controleer de koppelsleutel, of start de buildserver opnieuw voor een nieuwe.",
+        "rejected": "De buildserver heeft het koppelen geweigerd.",
+        "mismatch": "Deze buildserver antwoordde met een andere vingerafdruk dan die je hebt gecontroleerd. Zoek hem opnieuw op.",
+        "not_paired": "Koppel eerst een buildserver.",
+        "unknown": "De buildserver kent Tessera niet meer. Koppel hem opnieuw.",
+        "pending": "De buildserver heeft Tessera nog niet geaccepteerd."
+      }
     },
     "status": {
       "first_tiles": "Kies je eerste tegels",
@@ -2652,6 +2666,63 @@
       "alerts": {
         "text": "Een kaart over het hele scherm vanuit een automatisering, op één scherm of op allemaal. De cheatsheet heeft de actienamen, velden, iconen en kleuren, en een formulier om er een te proberen.",
         "detail": "Meldingen over het hele scherm, vanuit een automatisering"
+      },
+      "build_server": {
+        "title": "Buildserver",
+        "intro": "Bouw firmware op een snellere computer. Tessera stuurt de YAML van het scherm naar een ESPHome-buildserver en installeert wat terugkomt. Lukt dat de server niet, dan bouwt Tessera hier zoals voorheen.",
+        "connect": "Buildserver koppelen",
+        "how_title": "Zo start je een buildserver",
+        "how_desktop": "ESPHome Desktop op een computer: die bouwt meteen voor andere apparaten.",
+        "how_builder": "ESPHome Device Builder: Settings → Build server → Enable remote build.",
+        "how_headless": "Op een server zonder scherm: voer {command} uit en gebruik de sleutel die het toont.",
+        "how_link": "Meer over buildservers",
+        "address": "Adres",
+        "address_hint": "Het IP-adres of de hostnaam van de computer. Home Assistant-apps kunnen hem niet zelf op het netwerk zoeken.",
+        "port": "Poort",
+        "look_up": "Opzoeken",
+        "looking": "Zoeken…",
+        "check_title": "Is dit jouw buildserver?",
+        "check_text": "{name} · ESPHome {version}",
+        "check_hint": "De buildserver toont zijn vingerafdruk waar je bouwen voor andere apparaten hebt aangezet, of in het venster waarin je hem startte. Koppel alleen als deze emoji overeenkomen.",
+        "server_emoji": "Zijn vingerafdruk",
+        "own_emoji": "Vingerafdruk van Tessera",
+        "own_emoji_hint": "De buildserver toont deze als je Tessera accepteert.",
+        "key": "Koppelsleutel",
+        "key_hint": "De sleutel die deze buildserver bij het starten toonde, zoals ABCD-EFGH-JKLM-NPQR. Hij werkt één keer.",
+        "pair": "Ze kloppen, koppelen",
+        "pairing": "Koppelen…",
+        "back": "Terug",
+        "cancel": "Annuleren",
+        "wait_title": "Accepteer Tessera op {name}",
+        "wait_text": "Open Pairing requests op de buildserver, controleer dat die deze emoji voor Tessera toont en accepteer.",
+        "paired": "Gekoppeld met {name}. Schermen worden voortaan daar gebouwd.",
+        "status": {
+          "connecting": "Verbinden…",
+          "online": "Klaar",
+          "busy": "Bezig met een andere build",
+          "offline": "Niet bereikbaar",
+          "pending": "Wacht op jouw akkoord",
+          "refused": "Niet meer gekoppeld",
+          "mismatch": "Vingerafdruk veranderd"
+        },
+        "offline_text": "Tot hij terug is, wordt hier gebouwd.",
+        "refused_text": "{name} kent Tessera niet meer, of niemand heeft op tijd geaccepteerd. Koppel opnieuw om daar te bouwen.",
+        "mismatch_text": "{name} antwoordde met een andere vingerafdruk dan die je hebt gecontroleerd. Heb je hem opnieuw geïnstalleerd, koppel dan opnieuw.",
+        "send": "Schermen op deze server bouwen",
+        "send_hint": "Uit, of als de server onbereikbaar is: dan wordt hier gebouwd.",
+        "version_same": "Bouwt met ESPHome {version}, dezelfde als Tessera.",
+        "version_other": "Bouwt met ESPHome {ours}, die Tessera gebruikt. De server installeert die één keer, naast zijn eigen {theirs}.",
+        "building": "{file} bouwen · {step}",
+        "last_server": "Laatste build: {file} op deze server in {time}.",
+        "last_here": "Laatste build: {file} hier gebouwd, {reason}.",
+        "last_failed": "Laatste build: {file} mislukte op deze server. Het log zegt waarom.",
+        "minutes": "{m} min {s} s",
+        "seconds": "{s} s",
+        "pair_again": "Opnieuw koppelen",
+        "forget": "Vergeten",
+        "forget_confirm": "{name} vergeten? Schermen worden dan weer hier gebouwd. Om Tessera ook daar te verwijderen, haal je het weg uit de gekoppelde apparaten van de buildserver.",
+        "forget_go": "Vergeten",
+        "unavailable": "Deze Tessera kan niet met een buildserver praten."
       }
     },
     "firmware": {
@@ -3797,7 +3868,27 @@
       "update_failed": "Bijwerken van {name} is mislukt",
       "build_failed": "Bouwen van {name} is mislukt",
       "show_log": "Log tonen",
-      "waiting_place": "Wacht op zijn beurt, 1 build eerst | Wacht op zijn beurt, {n} builds eerst"
+      "waiting_place": "Wacht op zijn beurt, 1 build eerst | Wacht op zijn beurt, {n} builds eerst",
+      "server": {
+        "bundle": "YAML inpakken",
+        "send": "Versturen naar {name}",
+        "queued": "Wachten op {name}",
+        "build": "Bouwen op {name}",
+        "fetch": "Firmware ophalen",
+        "here": "Hier bouwen · {reason}",
+        "fallback": {
+          "offline": "de buildserver is niet bereikbaar",
+          "refused": "de buildserver is niet gekoppeld",
+          "mismatch": "de vingerafdruk van de buildserver is veranderd",
+          "unavailable": "hier is geen buildserver",
+          "lost": "de verbinding met de buildserver viel weg",
+          "refused_job": "de buildserver nam hem niet aan",
+          "provision": "de buildserver kon ESPHome niet installeren",
+          "cancelled": "hij is op de buildserver gestopt",
+          "fetch": "de firmware kwam niet terug",
+          "bundle": "de YAML kon niet worden ingepakt"
+        }
+      }
     },
     "grid": {
       "title": "Raster",

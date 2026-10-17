@@ -925,7 +925,21 @@
       "extras": {
         "request": "Diese Änderung eines Extras ist auf diesem Bildschirm nicht möglich."
       },
-      "display_precision_unregistered": "Home Assistant speichert keine Einstellungen für diesen Sensor, weil er keine eindeutige ID hat. Seine Anzeigegenauigkeit lässt sich daher nur in seinem YAML festlegen."
+      "display_precision_unregistered": "Home Assistant speichert keine Einstellungen für diesen Sensor, weil er keine eindeutige ID hat. Seine Anzeigegenauigkeit lässt sich daher nur in seinem YAML festlegen.",
+      "build_server": {
+        "host": "Gib die IP-Adresse oder den Hostnamen des Build-Servers ein.",
+        "port": "Der Port ist eine Zahl von 1 bis 65535. Ein Build-Server lauscht auf 6055, wenn du das nicht geändert hast.",
+        "unreachable": "Unter dieser Adresse antwortet nichts. Prüfe, ob der Build-Server läuft, ob er für andere Geräte baut und ob eine Firewall Port 6055 durchlässt.",
+        "protocol": "Unter dieser Adresse antwortet etwas, aber es ist kein ESPHome-Build-Server, mit dem Tessera sprechen kann.",
+        "preview_first": "Suche zuerst den Build-Server und vergleiche dann seinen Fingerabdruck.",
+        "no_window": "Der Build-Server nimmt gerade keine neuen Geräte an. Öffne dort Pairing requests und kopple dann erneut.",
+        "no_window_key": "Der Build-Server hat diesen Schlüssel nicht angenommen. Prüfe den Kopplungsschlüssel oder starte den Build-Server neu, um einen neuen zu erhalten.",
+        "rejected": "Der Build-Server hat die Kopplung abgelehnt.",
+        "mismatch": "Dieser Build-Server hat mit einem anderen Fingerabdruck geantwortet als dem, den du geprüft hast. Suche ihn erneut.",
+        "not_paired": "Kopple zuerst einen Build-Server.",
+        "unknown": "Der Build-Server kennt Tessera nicht mehr. Kopple ihn erneut.",
+        "pending": "Der Build-Server hat Tessera noch nicht angenommen."
+      }
     },
     "status": {
       "first_tiles": "Wähle deine ersten Kacheln",
@@ -3027,6 +3041,63 @@
       "alerts": {
         "text": "Eine Karte über den ganzen Bildschirm, ausgelöst von einer Automation, auf einem Bildschirm oder auf allen. Der Spickzettel enthält die Aktionsnamen, Felder, Symbole und Farben und ein Formular zum Ausprobieren.",
         "detail": "Vollbild-Benachrichtigungen aus einer Automation"
+      },
+      "build_server": {
+        "title": "Build-Server",
+        "intro": "Erstelle Firmware auf einem schnelleren Computer. Tessera schickt das YAML des Bildschirms an einen ESPHome-Build-Server und installiert, was zurückkommt. Kann der Server nicht, läuft der Build wie bisher hier.",
+        "connect": "Build-Server verbinden",
+        "how_title": "So startest du einen Build-Server",
+        "how_desktop": "ESPHome Desktop auf einem Computer: baut von Anfang an für andere Geräte.",
+        "how_builder": "ESPHome Device Builder: Settings → Build server → Enable remote build.",
+        "how_headless": "Auf einem Server ohne Bildschirm: führe {command} aus und nutze den Schlüssel, den es ausgibt.",
+        "how_link": "Mehr über Build-Server",
+        "address": "Adresse",
+        "address_hint": "Die IP-Adresse oder der Hostname des Computers. Home Assistant-Apps können ihn nicht im Netzwerk suchen.",
+        "port": "Port",
+        "look_up": "Suchen",
+        "looking": "Suche…",
+        "check_title": "Ist das dein Build-Server?",
+        "check_text": "{name} · ESPHome {version}",
+        "check_hint": "Der Build-Server zeigt seinen Fingerabdruck dort, wo du das Bauen für andere Geräte eingeschaltet hast, oder im Fenster, in dem du ihn gestartet hast. Kopple nur, wenn diese Emoji übereinstimmen.",
+        "server_emoji": "Sein Fingerabdruck",
+        "own_emoji": "Fingerabdruck von Tessera",
+        "own_emoji_hint": "Der Build-Server zeigt diese, wenn du Tessera annimmst.",
+        "key": "Kopplungsschlüssel",
+        "key_hint": "Der Schlüssel, den dieser Build-Server beim Start ausgegeben hat, etwa ABCD-EFGH-JKLM-NPQR. Er gilt einmal.",
+        "pair": "Stimmt, koppeln",
+        "pairing": "Kopplung…",
+        "back": "Zurück",
+        "cancel": "Abbrechen",
+        "wait_title": "Tessera auf {name} annehmen",
+        "wait_text": "Öffne Pairing requests auf dem Build-Server, prüfe, ob er diese Emoji für Tessera zeigt, und nimm es an.",
+        "paired": "Mit {name} gekoppelt. Bildschirme werden ab jetzt dort gebaut.",
+        "status": {
+          "connecting": "Verbinde…",
+          "online": "Bereit",
+          "busy": "Mit anderem Build beschäftigt",
+          "offline": "Nicht erreichbar",
+          "pending": "Wartet auf deine Annahme",
+          "refused": "Nicht mehr gekoppelt",
+          "mismatch": "Fingerabdruck geändert"
+        },
+        "offline_text": "Builds laufen hier, bis er wieder da ist.",
+        "refused_text": "{name} kennt Tessera nicht mehr, oder niemand hat es rechtzeitig angenommen. Kopple ihn erneut, um dort zu bauen.",
+        "mismatch_text": "{name} hat mit einem anderen Fingerabdruck geantwortet als dem, den du geprüft hast. Wenn du ihn neu installiert hast, kopple ihn erneut.",
+        "send": "Bildschirme auf diesem Server bauen",
+        "send_hint": "Aus, oder wenn der Server nicht erreichbar ist: Builds laufen hier.",
+        "version_same": "Baut mit ESPHome {version}, wie Tessera.",
+        "version_other": "Baut mit ESPHome {ours}, das Tessera nutzt. Der Server installiert es einmalig neben seinem eigenen {theirs}.",
+        "building": "Baue {file} · {step}",
+        "last_server": "Letzter Build: {file} auf diesem Server in {time}.",
+        "last_here": "Letzter Build: {file} lief hier, {reason}.",
+        "last_failed": "Letzter Build: {file} ist auf diesem Server fehlgeschlagen. Das Protokoll sagt, warum.",
+        "minutes": "{m} min {s} s",
+        "seconds": "{s} s",
+        "pair_again": "Erneut koppeln",
+        "forget": "Vergessen",
+        "forget_confirm": "{name} vergessen? Bildschirme werden wieder hier gebaut. Um Tessera auch dort zu entfernen, entferne es aus den gekoppelten Geräten des Build-Servers.",
+        "forget_go": "Vergessen",
+        "unavailable": "Dieses Tessera kann nicht mit einem Build-Server sprechen."
       }
     },
     "firmware": {
@@ -3797,7 +3868,27 @@
       "update_failed": "Update von {name} fehlgeschlagen",
       "build_failed": "Build von {name} fehlgeschlagen",
       "show_log": "Log anzeigen",
-      "waiting_place": "Wartet, 1 Build zuerst | Wartet, {n} Builds zuerst"
+      "waiting_place": "Wartet, 1 Build zuerst | Wartet, {n} Builds zuerst",
+      "server": {
+        "bundle": "YAML wird gepackt",
+        "send": "Wird an {name} gesendet",
+        "queued": "Wartet auf {name}",
+        "build": "Wird auf {name} gebaut",
+        "fetch": "Firmware wird abgeholt",
+        "here": "Wird hier gebaut · {reason}",
+        "fallback": {
+          "offline": "der Build-Server ist nicht erreichbar",
+          "refused": "der Build-Server ist nicht gekoppelt",
+          "mismatch": "der Fingerabdruck des Build-Servers hat sich geändert",
+          "unavailable": "hier gibt es keinen Build-Server",
+          "lost": "die Verbindung zum Build-Server ist abgebrochen",
+          "refused_job": "der Build-Server hat ihn nicht angenommen",
+          "provision": "der Build-Server konnte ESPHome nicht installieren",
+          "cancelled": "er wurde auf dem Build-Server gestoppt",
+          "fetch": "die Firmware ist nicht zurückgekommen",
+          "bundle": "das YAML konnte nicht gepackt werden"
+        }
+      }
     },
     "grid": {
       "title": "Raster",

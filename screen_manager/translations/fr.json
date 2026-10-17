@@ -925,7 +925,21 @@
       "extras": {
         "request": "Ce changement d’un extra n’est pas possible sur cet écran."
       },
-      "display_precision_unregistered": "Home Assistant ne conserve aucun réglage pour ce capteur, car il n'a pas d'identifiant unique. Sa précision d'affichage ne peut donc être définie que dans son YAML."
+      "display_precision_unregistered": "Home Assistant ne conserve aucun réglage pour ce capteur, car il n'a pas d'identifiant unique. Sa précision d'affichage ne peut donc être définie que dans son YAML.",
+      "build_server": {
+        "host": "Saisissez l'adresse IP ou le nom d'hôte du serveur de compilation.",
+        "port": "Le port est un nombre de 1 à 65535. Un serveur de compilation écoute sur 6055, sauf si vous l'avez changé.",
+        "unreachable": "Rien ne répond à cette adresse. Vérifiez que le serveur de compilation tourne, qu'il compile pour d'autres appareils et qu'un pare-feu laisse passer le port 6055.",
+        "protocol": "Quelque chose répond à cette adresse, mais ce n'est pas un serveur de compilation ESPHome avec lequel Tessera peut parler.",
+        "preview_first": "Recherchez d'abord le serveur de compilation, puis comparez son empreinte.",
+        "no_window": "Le serveur de compilation n'accepte pas de nouveaux appareils pour le moment. Ouvrez Pairing requests sur le serveur, puis associez à nouveau.",
+        "no_window_key": "Le serveur de compilation n'a pas accepté cette clé. Vérifiez la clé d'association, ou redémarrez le serveur pour en obtenir une nouvelle.",
+        "rejected": "Le serveur de compilation a refusé l'association.",
+        "mismatch": "Ce serveur de compilation a répondu avec une autre empreinte que celle que vous avez vérifiée. Recherchez-le à nouveau.",
+        "not_paired": "Associez d'abord un serveur de compilation.",
+        "unknown": "Le serveur de compilation ne connaît plus Tessera. Associez-le à nouveau.",
+        "pending": "Le serveur de compilation n'a pas encore accepté Tessera."
+      }
     },
     "status": {
       "first_tiles": "Choisissez vos premières tuiles",
@@ -3027,6 +3041,63 @@
       "alerts": {
         "text": "Une carte sur tout l'écran, déclenchée par une automatisation, sur un écran ou sur tous. L'aide-mémoire donne les noms des actions, les champs, les icônes et les couleurs, avec un formulaire pour en essayer une.",
         "detail": "Notifications plein écran, depuis une automatisation"
+      },
+      "build_server": {
+        "title": "Serveur de compilation",
+        "intro": "Compilez le firmware sur un ordinateur plus rapide. Tessera envoie le YAML de l'écran à un serveur de compilation ESPHome et installe ce qui revient. Quand le serveur ne peut pas, la compilation se fait ici, comme avant.",
+        "connect": "Connecter un serveur de compilation",
+        "how_title": "Démarrer un serveur de compilation",
+        "how_desktop": "ESPHome Desktop sur un ordinateur : il compile pour d'autres appareils dès le départ.",
+        "how_builder": "ESPHome Device Builder : Settings → Build server → Enable remote build.",
+        "how_headless": "Sur un serveur sans écran : lancez {command} et utilisez la clé qu'il affiche.",
+        "how_link": "En savoir plus sur les serveurs de compilation",
+        "address": "Adresse",
+        "address_hint": "L'adresse IP ou le nom d'hôte de l'ordinateur. Les apps Home Assistant ne peuvent pas le chercher sur le réseau.",
+        "port": "Port",
+        "look_up": "Rechercher",
+        "looking": "Recherche…",
+        "check_title": "Est-ce votre serveur de compilation ?",
+        "check_text": "{name} · ESPHome {version}",
+        "check_hint": "Le serveur de compilation affiche son empreinte là où vous avez activé la compilation pour d'autres appareils, ou dans la fenêtre où vous l'avez démarré. N'associez que si ces emoji correspondent.",
+        "server_emoji": "Son empreinte",
+        "own_emoji": "Empreinte de Tessera",
+        "own_emoji_hint": "Le serveur de compilation les affiche quand vous acceptez Tessera.",
+        "key": "Clé d'association",
+        "key_hint": "La clé que ce serveur de compilation a affichée au démarrage, comme ABCD-EFGH-JKLM-NPQR. Elle ne sert qu'une fois.",
+        "pair": "Identiques, associer",
+        "pairing": "Association…",
+        "back": "Retour",
+        "cancel": "Annuler",
+        "wait_title": "Acceptez Tessera sur {name}",
+        "wait_text": "Ouvrez Pairing requests sur le serveur de compilation, vérifiez qu'il affiche ces emoji pour Tessera, puis acceptez.",
+        "paired": "Associé à {name}. Les écrans y sont compilés désormais.",
+        "status": {
+          "connecting": "Connexion…",
+          "online": "Prêt",
+          "busy": "Occupé par une autre compilation",
+          "offline": "Injoignable",
+          "pending": "En attente de votre accord",
+          "refused": "Plus associé",
+          "mismatch": "Empreinte modifiée"
+        },
+        "offline_text": "Les compilations se font ici jusqu'à son retour.",
+        "refused_text": "{name} ne connaît plus Tessera, ou personne ne l'a accepté à temps. Associez-le à nouveau pour y compiler.",
+        "mismatch_text": "{name} a répondu avec une autre empreinte que celle que vous avez vérifiée. Si vous l'avez réinstallé, associez-le à nouveau.",
+        "send": "Compiler les écrans sur ce serveur",
+        "send_hint": "Désactivé, ou si le serveur est injoignable : la compilation se fait ici.",
+        "version_same": "Compile avec ESPHome {version}, comme Tessera.",
+        "version_other": "Compile avec ESPHome {ours}, celui qu'utilise Tessera. Le serveur l'installe une fois, à côté de son propre {theirs}.",
+        "building": "Compilation de {file} · {step}",
+        "last_server": "Dernière compilation : {file} sur ce serveur en {time}.",
+        "last_here": "Dernière compilation : {file} faite ici, {reason}.",
+        "last_failed": "Dernière compilation : {file} a échoué sur ce serveur. Son journal dit pourquoi.",
+        "minutes": "{m} min {s} s",
+        "seconds": "{s} s",
+        "pair_again": "Associer à nouveau",
+        "forget": "Oublier",
+        "forget_confirm": "Oublier {name} ? Les écrans sont à nouveau compilés ici. Pour y retirer Tessera aussi, supprimez-le des appareils associés du serveur de compilation.",
+        "forget_go": "Oublier",
+        "unavailable": "Ce Tessera ne peut pas parler à un serveur de compilation."
       }
     },
     "firmware": {
@@ -3797,7 +3868,27 @@
       "update_failed": "La mise à jour de {name} a échoué",
       "build_failed": "La compilation de {name} a échoué",
       "show_log": "Voir le journal",
-      "waiting_place": "En attente, 1 compilation avant | En attente, {n} compilations avant"
+      "waiting_place": "En attente, 1 compilation avant | En attente, {n} compilations avant",
+      "server": {
+        "bundle": "Préparation du YAML",
+        "send": "Envoi à {name}",
+        "queued": "En attente de {name}",
+        "build": "Compilation sur {name}",
+        "fetch": "Récupération du firmware",
+        "here": "Compilation ici · {reason}",
+        "fallback": {
+          "offline": "le serveur de compilation est injoignable",
+          "refused": "le serveur de compilation n'est pas associé",
+          "mismatch": "l'empreinte du serveur de compilation a changé",
+          "unavailable": "pas de serveur de compilation ici",
+          "lost": "la connexion au serveur de compilation a été perdue",
+          "refused_job": "le serveur de compilation ne l'a pas accepté",
+          "provision": "le serveur de compilation n'a pas pu installer ESPHome",
+          "cancelled": "elle a été arrêtée sur le serveur de compilation",
+          "fetch": "le firmware n'est pas revenu",
+          "bundle": "le YAML n'a pas pu être préparé"
+        }
+      }
     },
     "grid": {
       "title": "Grille",

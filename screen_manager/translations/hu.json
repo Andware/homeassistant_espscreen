@@ -925,7 +925,21 @@
       "extras": {
         "request": "Ez a módosítás ezen a kijelzőn nem lehetséges."
       },
-      "display_precision_unregistered": "A Home Assistant nem tárol beállításokat ehhez az érzékelőhöz, mert nincs egyedi azonosítója, így a pontossága csak a YAML-jában állítható be."
+      "display_precision_unregistered": "A Home Assistant nem tárol beállításokat ehhez az érzékelőhöz, mert nincs egyedi azonosítója, így a pontossága csak a YAML-jában állítható be.",
+      "build_server": {
+        "host": "Add meg a fordítószerver IP-címét vagy gépnevét.",
+        "port": "A port egy szám 1 és 65535 között. A fordítószerver a 6055-ös porton figyel, hacsak nem módosítottad.",
+        "unreachable": "Ezen a címen semmi sem válaszol. Ellenőrizd, hogy fut-e a fordítószerver, fordít-e más eszközöknek, és hogy a tűzfal átengedi-e a 6055-ös portot.",
+        "protocol": "Ezen a címen válaszol valami, de nem olyan ESPHome fordítószerver, amellyel a Tessera beszélni tud.",
+        "preview_first": "Előbb keresd meg a fordítószervert, aztán hasonlítsd össze az ujjlenyomatát.",
+        "no_window": "A fordítószerver most nem fogad új eszközöket. Nyisd meg rajta a Pairing requests részt, majd párosíts újra.",
+        "no_window_key": "A fordítószerver nem fogadta el ezt a kulcsot. Ellenőrizd a párosítókulcsot, vagy indítsd újra a fordítószervert egy új kulcsért.",
+        "rejected": "A fordítószerver elutasította a párosítást.",
+        "mismatch": "Ez a fordítószerver más ujjlenyomattal válaszolt, mint amit ellenőriztél. Keresd meg újra.",
+        "not_paired": "Előbb párosíts egy fordítószervert.",
+        "unknown": "A fordítószerver már nem ismeri a Tesserát. Párosítsd újra.",
+        "pending": "A fordítószerver még nem fogadta el a Tesserát."
+      }
     },
     "status": {
       "first_tiles": "Válaszd ki az első csempéidet",
@@ -3027,6 +3041,63 @@
       "alerts": {
         "text": "Egy automatizmusból érkező, az egész kijelzőt betöltő kártya, egy vagy az összes kijelzőn. A puskában megtalálod a műveletneveket, mezőket, ikonokat és színeket, valamint egy űrlapot a kipróbáláshoz.",
         "detail": "Teljes képernyős értesítések automatizmusból"
+      },
+      "build_server": {
+        "title": "Fordítószerver",
+        "intro": "Fordítsd a firmware-t egy gyorsabb számítógépen. A Tessera elküldi a kijelző YAML-jét egy ESPHome fordítószervernek, és telepíti, amit visszakap. Ha a szerver nem tudja, a fordítás itt fut, mint eddig.",
+        "connect": "Fordítószerver csatlakoztatása",
+        "how_title": "Fordítószerver indítása",
+        "how_desktop": "ESPHome Desktop egy számítógépen: kezdettől fordít más eszközöknek.",
+        "how_builder": "ESPHome Device Builder: Settings → Build server → Enable remote build.",
+        "how_headless": "Képernyő nélküli szerveren: futtasd ezt: {command}, és használd a kiírt kulcsot.",
+        "how_link": "Bővebben a fordítószerverekről",
+        "address": "Cím",
+        "address_hint": "A számítógép IP-címe vagy gépneve. A Home Assistant alkalmazások nem tudják megkeresni a hálózaton.",
+        "port": "Port",
+        "look_up": "Keresés",
+        "looking": "Keresés…",
+        "check_title": "Ez a te fordítószervered?",
+        "check_text": "{name} · ESPHome {version}",
+        "check_hint": "A fordítószerver ott mutatja az ujjlenyomatát, ahol bekapcsoltad a más eszközöknek való fordítást, vagy abban az ablakban, ahol elindítottad. Csak akkor párosíts, ha ezek az emojik egyeznek.",
+        "server_emoji": "Az ujjlenyomata",
+        "own_emoji": "A Tessera ujjlenyomata",
+        "own_emoji_hint": "A fordítószerver ezeket mutatja, amikor elfogadod a Tesserát.",
+        "key": "Párosítókulcs",
+        "key_hint": "A kulcs, amit a fordítószerver induláskor kiírt, például ABCD-EFGH-JKLM-NPQR. Egyszer használható.",
+        "pair": "Egyeznek, párosítás",
+        "pairing": "Párosítás…",
+        "back": "Vissza",
+        "cancel": "Mégse",
+        "wait_title": "Fogadd el a Tesserát itt: {name}",
+        "wait_text": "Nyisd meg a fordítószerveren a Pairing requests részt, ellenőrizd, hogy ezeket az emojikat mutatja-e a Tesserához, és fogadd el.",
+        "paired": "Párosítva: {name}. A kijelzők mostantól ott fordulnak.",
+        "status": {
+          "connecting": "Csatlakozás…",
+          "online": "Kész",
+          "busy": "Másik fordítással foglalt",
+          "offline": "Nem érhető el",
+          "pending": "Elfogadásra vár",
+          "refused": "Már nincs párosítva",
+          "mismatch": "Az ujjlenyomat változott"
+        },
+        "offline_text": "Amíg vissza nem tér, a fordítások itt futnak.",
+        "refused_text": "{name} már nem ismeri a Tesserát, vagy senki sem fogadta el időben. Párosítsd újra, hogy ott fordíthass.",
+        "mismatch_text": "{name} más ujjlenyomattal válaszolt, mint amit ellenőriztél. Ha újratelepítetted, párosítsd újra.",
+        "send": "Kijelzők fordítása ezen a szerveren",
+        "send_hint": "Kikapcsolva, vagy ha a szerver nem érhető el: a fordítások itt futnak.",
+        "version_same": "ESPHome {version} verzióval fordít, ugyanazzal, mint a Tessera.",
+        "version_other": "ESPHome {ours} verzióval fordít, amit a Tessera használ. A szerver egyszer telepíti a saját {theirs} verziója mellé.",
+        "building": "{file} fordítása · {step}",
+        "last_server": "Utolsó fordítás: {file} ezen a szerveren, {time} alatt.",
+        "last_here": "Utolsó fordítás: {file} itt futott, mert {reason}.",
+        "last_failed": "Utolsó fordítás: {file} sikertelen ezen a szerveren. A naplója megmondja, miért.",
+        "minutes": "{m} perc {s} mp",
+        "seconds": "{s} mp",
+        "pair_again": "Újrapárosítás",
+        "forget": "Elfelejtés",
+        "forget_confirm": "Elfelejted ezt: {name}? A kijelzők újra itt fordulnak. Hogy ott is eltávolítsd a Tesserát, töröld a fordítószerver párosított eszközei közül.",
+        "forget_go": "Elfelejtés",
+        "unavailable": "Ez a Tessera nem tud fordítószerverrel beszélni."
       }
     },
     "firmware": {
@@ -3797,7 +3868,27 @@
       "update_failed": "{name} frissítése nem sikerült",
       "build_failed": "{name} fordítása nem sikerült",
       "show_log": "Napló megnyitása",
-      "waiting_place": "Várakozik, 1 fordítás előtte | Várakozik, {n} fordítás előtte"
+      "waiting_place": "Várakozik, 1 fordítás előtte | Várakozik, {n} fordítás előtte",
+      "server": {
+        "bundle": "A YAML csomagolása",
+        "send": "Küldés ide: {name}",
+        "queued": "Várakozás erre: {name}",
+        "build": "Fordítás itt: {name}",
+        "fetch": "A firmware letöltése",
+        "here": "Fordítás itt · {reason}",
+        "fallback": {
+          "offline": "a fordítószerver nem érhető el",
+          "refused": "a fordítószerver nincs párosítva",
+          "mismatch": "a fordítószerver ujjlenyomata változott",
+          "unavailable": "itt nincs fordítószerver",
+          "lost": "megszakadt a kapcsolat a fordítószerverrel",
+          "refused_job": "a fordítószerver nem vállalta",
+          "provision": "a fordítószerver nem tudta telepíteni az ESPHome-ot",
+          "cancelled": "leállították a fordítószerveren",
+          "fetch": "a firmware nem jött vissza",
+          "bundle": "a YAML-t nem sikerült becsomagolni"
+        }
+      }
     },
     "grid": {
       "title": "Rács",
