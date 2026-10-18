@@ -255,6 +255,8 @@ struct SaverChoice {
   // and its options and what it draws from as the app sent them ({"o": ..., "x": ...}), handed to the plugin as they are.
   std::string plugin;
   roomy::Text plugin_data;
+  // Its options alone (`pf.o`): other options make the plugin's saver anew, as a tile's do (docs/PLUGINS.md).
+  roomy::Text plugin_options;
   // The photos step's photo moves slowly (app `x.mv`, picture_motion.h).
   bool motion = false;
   bool operator==(const SaverChoice &o) const {
@@ -12984,9 +12986,10 @@ inline void saver_sync(bool lit) {
   // The camera and the cover stand as they are while nothing changed; the clock is drawn again, a minute later. A
   // plugin's saver stays and draws on its own clock (on_tick).
   if (shown && saver_next == saver_now && (saver_now.kind != "clock" || !saver_now.plugin.empty())) return;
-  // The same plugin's saver for the same step with a new word: it paints that in place (on_state).
+  // The same plugin's saver for the same step with a new word: it paints that in place (on_state). Other options make
+  // it anew, as Tessera's own face is drawn again for another look: a saver reads its options in show().
   if (saver_root && !saver_now.plugin.empty() && saver_next.plugin == saver_now.plugin && saver_next.kind == saver_now.kind &&
-      saver_plugin_draws(saver_next)) {
+      saver_next.plugin_options == saver_now.plugin_options && saver_plugin_draws(saver_next)) {
     // Its backdrop follows the next cover or photo as Tessera's own face does (the last stays until it comes).
     if (saver_bare && camera_root && camera_picture && (saver_next.entity != saver_now.entity ||
         saver_next.picture != saver_now.picture || saver_next.motion != saver_now.motion)) saver_follow();

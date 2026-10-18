@@ -66,6 +66,26 @@ class Choice(unittest.TestCase):
         self.assertEqual({k: choice[k] for k in old if k != 'order'}, {k: v for k, v in old.items() if k != 'order'})
 
 
+class Options(unittest.TestCase):
+    """A face whose options change while it is on the glass is made anew (GitHub: a plugin clock kept its old colour
+    until its screensaver was turned off and on): the app sends the new options, and the screen compares them."""
+
+    def test_the_app_sends_other_options(self):
+        def options(colour):
+            choice = {'show': True, 'order': ['clock', 'media', 'photos', 'camera'], 'face': DIAL, 'plugins': {DIAL: {'options': {'colour': colour}}}}
+            return message(choice, {}, plugins={'faces': {DIAL: 'clock'}, 'steps': {}}, faces=True)['pf']['o']
+        self.assertEqual(options('green'), {'colour': 'green'})
+        self.assertNotEqual(options('green'), options('blue'))
+
+    def test_the_screen_makes_the_saver_anew_for_other_options(self):
+        receiver = (ROOT / 'components/smart_display/page_receiver.cpp').read_text()
+        self.assertIn('serializeJson(pf["o"], next.plugin_options);', receiver)
+        runtime = (ROOT / 'components/smart_display/runtime_tiles.h').read_text()
+        in_place = runtime[runtime.index('// The same plugin\'s saver for the same step with a new word'):]
+        in_place = in_place[:in_place.index('{\n')]
+        self.assertIn('saver_next.plugin_options == saver_now.plugin_options', in_place)
+
+
 class Pick(unittest.TestCase):
     def test_a_plugin_face_goes_only_to_a_screen_that_has_it(self):
         choice = {'show': True, 'media': PLAYER, 'media_face': DECK, 'plugins': {DECK: {'options': {'spin': True}}}}

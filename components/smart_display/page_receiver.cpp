@@ -439,6 +439,7 @@ std::string receive(const std::string &payload) {
           data["o"] = pf["o"];
           data["x"] = pf["x"];
           serializeJson(data, next.plugin_data);
+          serializeJson(pf["o"], next.plugin_options);
         }
       }
       if (next.kind == "plugin" && next.plugin.empty()) return false;

@@ -406,7 +406,8 @@ saver draws in a stage over the glass, which the host moves a millimetre along a
 `register_plugin`). Every call of a saver runs in the dark look (`theme::dark` set in `saver_call`), so its roles are
 white on black whatever the screen's look. `on_tick` comes from `tick_cards`, so it ticks on boards without pictures
 too. A new word for the same saver goes to `on_state` in place (`saver_state`); a finger's wish on the player is laid
-over `x` (`state`, `muted`) before the saver hears it.
+over `x` (`state`, `muted`) before the saver hears it. Other options make the saver anew (`saver_sync` compares
+`plugin_options`), as a tile's do: it reads its options in `show()`, and the person sees a change at once.
 
 **Taps.** Only parts made with `ui::takes_taps` are clickable (`saver_touch`): a short tap goes to `on_tap` and a hold
 of `SAVER_MUTE_HOLD_MS` to `on_hold`, through the touch guard (`rt::allowed`, keys from `SAVER_TOUCH`), and the screen
