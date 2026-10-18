@@ -4,6 +4,9 @@
   start, so it swipes through its pages, opens its settings from the top edge and opens the Dock from the bottom edge
   without turning anything on first. Screens you already have keep the setting they have through the update. Turn it
   off under the screen's Settings, Swipe between pages.
+- **A plugin's screensaver follows its options at once.** Changing an option of a plugin's clock or screensaver
+  face (a colour, seconds on or off) now shows on the screen right away, as Tessera's own clock does, instead of only
+  after the screensaver was turned off and on again. On main since 2026-10-18 for screens that are built again.
 
 ## 0.4.89 (firmware 0.57.0)
 
