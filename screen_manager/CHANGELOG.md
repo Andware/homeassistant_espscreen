@@ -26,6 +26,10 @@
   home network and a separate one for devices, screens on the second network got the picture address of the first
   and showed no camera images, covers or maps. Each screen now gets the address Home Assistant has on its own network.
   With one network nothing changes.
+- **Firmware & USB knows a screen's address (#143).** Installing over Wi-Fi from Firmware & USB asked for the
+  screen's address, although the app already knew it for the screen's Update. It now fills in the address of a paired
+  screen when you choose its profile. An address you type yourself stays as you typed it. Thanks to @woozer for the
+  change.
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.

@@ -4884,7 +4884,19 @@ def create_app(manager, development=False):
     async def firmware_status(request):
         # New screen asks what is taken while the name is typed, so a clash is said before anything is written. The build
         # line itself goes with the live inventory (`line`); this answer has ESPHome's job and the log of what runs now.
-        return web.json_response({**manager.firmware.status(), 'taken': manager.taken_names()})
+        status = manager.firmware.status()
+        # A profile of a paired screen carries the address its Update goes to (updates.resolve: the screen's IP address,
+        # else the one kept from before), so Firmware & USB fills it in; none when two screens claim the profile.
+        profiles, addresses = manager.firmware.profile_names(), {}
+        for screen in manager.screens():
+            profile, host = manager.updates.resolve(screen, profiles)
+            if profile:
+                addresses.setdefault(profile, []).append(host)
+        for profile in status['profiles']:
+            matches = addresses.get(profile['file'], [])
+            if len(matches) == 1 and matches[0]:
+                profile['host'] = matches[0]
+        return web.json_response({**status, 'taken': manager.taken_names()})
     async def firmware_start(request):
         """Firmware & USB and the YAML check: one ESPHome action, which waits its turn in the build line. The answer is
         that build (BuildQueue.view), followed by its `id` in the firmware answer's `builds`."""
