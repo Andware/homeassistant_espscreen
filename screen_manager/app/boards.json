@@ -1809,9 +1809,14 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "DISPLAY_MODEL": [
+     "ST7121",
+     "ST7123"
+    ]
+   },
    "inch": 5.0,
-   "model": "Tab5 ST7121",
+   "model": "Tab5",
    "name": "M5Stack Tab5",
    "order": 16,
    "settings": [
@@ -1820,7 +1825,7 @@
     "echo_cancellation"
    ],
    "status": "new",
-   "touch": "ST7121"
+   "touch": "ST7121/ST7123"
   },
   "chip": "ESP32-P4",
   "columns": 3,
@@ -6114,9 +6119,14 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "DISPLAY_MODEL": [
+     "ST7121",
+     "ST7123"
+    ]
+   },
    "inch": 5.0,
-   "model": "Tab5 ST7121",
+   "model": "Tab5",
    "name": "M5Stack Tab5",
    "order": 16,
    "settings": [
@@ -6125,7 +6135,7 @@
     "echo_cancellation"
    ],
    "status": "new",
-   "touch": "ST7121"
+   "touch": "ST7121/ST7123"
   },
   "chip": "ESP32-P4",
   "columns": 3,
@@ -7355,9 +7365,14 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "DISPLAY_MODEL": [
+     "ST7121",
+     "ST7123"
+    ]
+   },
    "inch": 5.0,
-   "model": "Tab5 ST7121",
+   "model": "Tab5",
    "name": "M5Stack Tab5",
    "order": 16,
    "settings": [
@@ -7366,7 +7381,7 @@
     "echo_cancellation"
    ],
    "status": "new",
-   "touch": "ST7121"
+   "touch": "ST7121/ST7123"
   },
   "chip": "ESP32-P4",
   "columns": 3,

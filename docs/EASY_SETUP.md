@@ -33,7 +33,7 @@ ESPHome Device Builder is optional:
 | Waveshare P4, 4 inch (experimental) | ESP32-P4-86-Panel-ETH-2RO, 720×720, ST7703 MIPI-DSI and GT911, ESP32-P4 ([details](WAVESHAREP4.md)) |
 | Guition, 4.3 inch (experimental) | JC4880P443, 480×800, ST7701 MIPI-DSI and GT911, pre-v3 ESP32-P4 ([details](JC4880P443.md)) |
 | CrowPanel, 10.1 inch (experimental) | Elecrow CrowPanel Advanced 10.1 ESP32-P4 (DHE04310D, V1.1 or V1.2), 1024×600, EK79007 MIPI-DSI and GT911, pre-v3 ESP32-P4 ([details](CROWPANEL101.md)) |
-| M5Stack Tab5, 5 inch (new) | Tab5 ST7121, 1280×720, ST7121 MIPI-DSI and touch, ESP32-P4 ([details](TAB5.md)) |
+| M5Stack Tab5, 5 inch (new) | Tab5, 1280×720, ST7121 or ST7123 MIPI-DSI and touch (New screen asks which), ESP32-P4 ([details](TAB5.md)) |
 
 Other screens with roughly the same name can have different pins. Use
 the board profile that matches the hardware. Use a USB cable that supports data.
@@ -381,7 +381,7 @@ that screen and says where it is set.
 
 | Substitution | Boards | What it changes |
 |---|---|---|
-| `DISPLAY_MODEL` | CYD, Hosyond | ESPHome's `mipi_spi` model of the display controller (`ILI9341`, `ST7789V`, ...) |
+| `DISPLAY_MODEL` | CYD, Hosyond, Tab5 | the display controller: ESPHome's `mipi_spi` model on the CYD and the Hosyond (`ILI9341`, `ST7789V`, ...), `ST7121` or `ST7123` on the Tab5 |
 | `DISPLAY_DATA_RATE` | CYD, Hosyond | the display's SPI clock (`40MHz`; some boards want `20MHz`) |
 | `DISPLAY_INVERT_COLORS` | CYD, Hosyond | `true` for a panel that shows its colours inverted |
 | `GRID_COLS`, `GRID_ROWS` | every board | the grid a screen starts with lying down (`GRID_COLS_PORTRAIT` and `GRID_ROWS_PORTRAIT` standing up). New screen writes them when **Advanced** chose another grid. Since firmware 0.53.0 the editor changes columns and rows beside the mockup without a build, and the screen keeps the grid it was given |

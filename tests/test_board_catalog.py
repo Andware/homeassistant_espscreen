@@ -46,11 +46,13 @@ class Catalog(unittest.TestCase):
         tab5 = firmware_module.BOARD_CHOICES['tab5']
         self.assertEqual((tab5['name'], tab5['model'], tab5['inch'], tab5['touch'], tab5['status'], tab5['calibrate'],
                           tab5['camera']),
-                         ('M5Stack Tab5', 'Tab5 ST7121', 5.0, 'ST7121', 'new', False, True))
+                         ('M5Stack Tab5', 'Tab5', 5.0, 'ST7121/ST7123', 'new', False, True))
+        # Two controllers under one name (GitHub #79, #240): New screen asks, and the ST7121 stays the default.
+        self.assertEqual(tab5['choices'], {'DISPLAY_MODEL': ['ST7121', 'ST7123']})
         source = profiles.BOARDS['tab5'].read_text()
-        self.assertIn('model: M5STACK-TAB5-ST7121', source)
+        self.assertIn('model: M5STACK-TAB5-${DISPLAY_MODEL}', source)
+        self.assertIn('DISPLAY_MODEL: "ST7121"', source)
         self.assertIn('platform: st7123', source)
-        self.assertIn('TOUCH_CONTROLLER: "ST7121"', source)
 
     def test_what_the_files_say_is_worked_out_not_written(self):
         for board in profiles.CATALOG:

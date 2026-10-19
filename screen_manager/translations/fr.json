@@ -3152,7 +3152,7 @@
         "DISPLAY_MODEL": "Contrôleur d'affichage"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "La plupart de ces cartes ont le premier. Prenez l'autre si l'écran affiche du bruit ou une image brouillée."
+        "DISPLAY_MODEL": "Commencez par le premier. Prenez l'autre si l'écran reste noir ou affiche du bruit ou une image brouillée."
       },
       "choice_usual": "la plupart",
       "orientation_landscape": "À l'horizontale",

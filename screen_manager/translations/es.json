@@ -3152,7 +3152,7 @@
         "DISPLAY_MODEL": "Controlador de pantalla"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "La mayoría de estas placas llevan el primero. Elige el otro si la pantalla muestra ruido o una imagen distorsionada."
+        "DISPLAY_MODEL": "Empieza por el primero. Elige el otro si la pantalla se queda negra o muestra ruido o una imagen distorsionada."
       },
       "choice_usual": "la mayoría",
       "orientation_landscape": "En horizontal",

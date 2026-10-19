@@ -3152,7 +3152,7 @@
         "DISPLAY_MODEL": "Display-Controller"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Die meisten dieser Boards haben den ersten. Nimm den anderen, wenn der Bildschirm Rauschen oder ein verzerrtes Bild zeigt."
+        "DISPLAY_MODEL": "Nimm zuerst den ersten. Nimm den anderen, wenn der Bildschirm schwarz bleibt oder Rauschen oder ein verzerrtes Bild zeigt."
       },
       "choice_usual": "die meisten",
       "orientation_landscape": "Quer",

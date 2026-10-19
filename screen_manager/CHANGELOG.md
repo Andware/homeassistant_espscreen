@@ -7,6 +7,14 @@
 - **A plugin's screensaver follows its options at once.** Changing an option of a plugin's clock or screensaver
   face (a colour, seconds on or off) now shows on the screen right away, as Tessera's own clock does, instead of only
   after the screensaver was turned off and on again. On main since 2026-10-18 for screens that are built again.
+- **New screen accepts a secrets.yaml of comments only (#263).** ESPHome Device Builder can leave a `secrets.yaml`
+  with only comments in it, and the Wi-Fi step of New screen called that file invalid and stopped. It now reads it as
+  a file without Wi-Fi yet, as ESPHome does, and adds the two Wi-Fi lines below the comments. A file that is not a list
+  of secrets is still left alone.
+- **The M5Stack Tab5 with an ST7123 display (#240).** The Tab5 is sold with an ST7121 or an ST7123 display controller,
+  and the wrong one leaves the screen black. New screen now asks which one the Tab5 has, with the ST7121 as before
+  first. Tab5 screens you already have keep the ST7121. Thanks to @pedromfa and @the-make-r, who found and tested the
+  ST7123.
 
 ## 0.4.89 (firmware 0.57.0)
 

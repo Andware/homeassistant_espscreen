@@ -3152,7 +3152,7 @@
         "DISPLAY_MODEL": "Kijelzővezérlő"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "A legtöbb ilyen panelen az első van. Ha a kijelző zajos vagy torz képet mutat, válaszd a másikat."
+        "DISPLAY_MODEL": "Kezdd az elsővel. Ha a kijelző fekete marad, zajos vagy torz képet mutat, válaszd a másikat."
       },
       "choice_usual": "a legtöbb panel",
       "orientation_landscape": "Fekvő",

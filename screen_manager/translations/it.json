@@ -3152,7 +3152,7 @@
         "DISPLAY_MODEL": "Controller del display"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "La maggior parte di queste schede ha il primo. Scegli l'altro se lo schermo mostra rumore o un'immagine disturbata."
+        "DISPLAY_MODEL": "Inizia con il primo. Scegli l'altro se lo schermo resta nero o mostra rumore o un'immagine disturbata."
       },
       "choice_usual": "la maggior parte",
       "orientation_landscape": "In orizzontale",

@@ -2777,7 +2777,7 @@
         "DISPLAY_MODEL": "Display controller"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Most of these boards have the first one. Take the other when the screen shows noise or a garbled picture."
+        "DISPLAY_MODEL": "Start with the first. Take the other when the screen stays black or shows noise or a garbled picture."
       },
       "choice_usual": "most boards",
       "orientation_landscape": "Lying down",

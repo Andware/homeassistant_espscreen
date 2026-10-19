@@ -3152,7 +3152,7 @@
         "DISPLAY_MODEL": "Kontroler wyświetlacza"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Większość tych płytek ma pierwszy. Wybierz drugi, gdy ekran pokazuje szum lub zniekształcony obraz."
+        "DISPLAY_MODEL": "Zacznij od pierwszego. Wybierz drugi, gdy ekran pozostaje czarny albo pokazuje szum lub zniekształcony obraz."
       },
       "choice_usual": "większość",
       "orientation_landscape": "Poziomo",

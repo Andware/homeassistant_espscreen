@@ -2777,7 +2777,7 @@
         "DISPLAY_MODEL": "Displaycontroller"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "De meeste van deze borden hebben de eerste. Kies de andere als het scherm ruis of een verminkt beeld laat zien."
+        "DISPLAY_MODEL": "Begin met de eerste. Kies de andere als het scherm zwart blijft of ruis of een verminkt beeld laat zien."
       },
       "choice_usual": "de meeste",
       "orientation_landscape": "Liggend",
