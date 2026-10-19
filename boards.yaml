@@ -217,3 +217,11 @@ wavesharep47b:
   status: experimental
   # The ESP32-P4 7B with rev3 silicon (GitHub #271), not the ESP32-S3-Touch-LCD-7B. Its speaker and microphones are not
   # used yet: nobody has tried them with this board file.
+
+wavesharep47:
+  file: wavesharep47.yaml
+  name: Waveshare
+  model: ESP32-P4-WIFI6-Touch-LCD-7
+  status: experimental
+  # The 7-inch 720 x 1280 board of the ESP32-P4-WIFI6-Touch-LCD 7, 8 and 10.1-inch series (GitHub #274), pre-v3 silicon.
+  # Not the 7B. Its speaker and microphones are not part of the board file yet (docs/WAVESHAREP47.md).

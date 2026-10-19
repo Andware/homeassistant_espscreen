@@ -64,6 +64,11 @@
   earlier silicon needs one line of Override YAML). Run by [@tomvanoosterwyck](https://github.com/tomvanoosterwyck)
   ([#271](https://github.com/MaxGramser/homeassistant_espscreen/pull/271)), who checked the picture, touch, brightness,
   standby and the wake. Its speaker and microphones are not used yet. Choose it under New screen.
+- **A new board, experimental: the Waveshare ESP32-P4-WIFI6-Touch-LCD-7**, the 7-inch ESP32-P4 board with 1280 x 720
+  MIPI-DSI glass, GT911 touch and a dimmable backlight, built for the earlier ESP32-P4 silicon (a board with rev3 needs
+  one line of Override YAML). Run by [@Nulifier](https://github.com/Nulifier)
+  ([#274](https://github.com/MaxGramser/homeassistant_espscreen/pull/274)), who checked the picture, rotation, touch,
+  the backlight and Wi-Fi. Its speaker and microphones are not part of it yet. Choose it under New screen.
 
 ## 0.4.89 (firmware 0.57.0)
 
