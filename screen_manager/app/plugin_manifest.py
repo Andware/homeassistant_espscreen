@@ -111,6 +111,9 @@ MAX_SAVERS = 4
 SAVER_STEPS = ('clock', 'media', 'photos', 'own')
 SAVER_WHEN = ('always', 'data', 'state')
 SAVER_API = (0, 14)
+# An option of kind entity (0.15): a tile's own choice of a Home Assistant entity, which the app follows and sends under
+# x.entities (Plugins.tile_message). Only a tile's: a screensaver's options have no entities sent with them.
+ENTITY_OPTION_API = (0, 15)
 
 
 class ManifestError(ValueError):
@@ -309,6 +312,9 @@ def check_savers(value, out, keys, fetch_ids, choice_lists, searched, options_of
         options = [check_option(option, f'{where}.options[{j}]', keys, fetch_ids)
                    for j, option in enumerate(_list(item.get('options'), f'{where}.options', MAX_OPTIONS))]
         _unique(options, f'{where}.options')
+        if any(option['kind'] == 'entity' for option in options):
+            raise ManifestError(f'{where}.options', 'an option of kind entity belongs to a tile; a screensaver step of an '
+                                                    'entity names its domains')
         saver['options'] = options
         for option in options:
             if option.get('options_from'):
@@ -875,6 +881,11 @@ def check(manifest, english=None, strict=True):
         options = [check_option(option, f'{where}.options[{j}]', keys, fetch_ids)
                    for j, option in enumerate(_list(item.get('options'), f'{where}.options', MAX_OPTIONS))]
         _unique(options, f'{where}.options')
+        if any(option['kind'] == 'entity' for option in options):
+            match = API.match(out['api'])
+            if not match or (int(match.group(1)), int(match.group(2))) < ENTITY_OPTION_API:
+                need = '.'.join(map(str, ENTITY_OPTION_API))
+                raise ManifestError(f'{where}.options', f'an option of kind entity needs plugin API {need} (api: "{need}")')
         tile['options'] = options
         for option in options:
             if option.get('options_from'):

@@ -53,7 +53,7 @@ class Manifest(unittest.TestCase):
         self.assertEqual(out['fetch'][0]['placeholders'], ['stop'])
 
     def test_entity_option_names_domains_and_attributes(self):
-        data = manifest()
+        data = manifest(api='0.15')
         data['tiles'][0]['options'].append({'id': 'power', 'kind': 'entity', 'label': 'key',
                                              'domains': ['sensor'], 'attributes': ['unit_of_measurement']})
         option = pm.check(data, ENGLISH)['tiles'][0]['options'][-1]
@@ -62,6 +62,15 @@ class Manifest(unittest.TestCase):
         for wrong in ('switch.grid', 'not-an-entity', 12):
             with self.subTest(wrong), self.assertRaises(pm.ManifestError):
                 pm.option_value(option, wrong)
+        # It names the API that brought it, and belongs to a tile only.
+        with self.assertRaises(pm.ManifestError) as older:
+            pm.check({**data, 'api': '0.14'}, ENGLISH)
+        self.assertIn('0.15', str(older.exception))
+        for missing in ({'domains': []}, {'domains': ['Sensor']}):
+            broken = manifest(api='0.15')
+            broken['tiles'][0]['options'].append({'id': 'power', 'kind': 'entity', 'label': 'key', **missing})
+            with self.subTest(missing), self.assertRaises(pm.ManifestError):
+                pm.check(broken, ENGLISH)
 
     def test_the_real_plugins_pass(self):
         plugins = ROOT.parent / 'tessera-plugins'
