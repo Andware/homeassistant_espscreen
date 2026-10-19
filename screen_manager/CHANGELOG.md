@@ -59,6 +59,11 @@
   8-bit bus, FT6336U touch and a dimmable backlight. Run by [@cjd](https://github.com/cjd)
   ([#238](https://github.com/MaxGramser/homeassistant_espscreen/pull/238)), who checked touch, colours, dimming and
   standby, and by [@wiktorschmidt](https://github.com/wiktorschmidt). Choose it under New screen, as WT32.
+- **A new board, experimental: the Waveshare ESP32-P4-WIFI6-Touch-LCD-7B**, the 7-inch ESP32-P4 board with 1024 x 600
+  MIPI-DSI glass, GT911 touch and a dimmable backlight, built for the rev3 silicon Waveshare ships now (a board with the
+  earlier silicon needs one line of Override YAML). Run by [@tomvanoosterwyck](https://github.com/tomvanoosterwyck)
+  ([#271](https://github.com/MaxGramser/homeassistant_espscreen/pull/271)), who checked the picture, touch, brightness,
+  standby and the wake. Its speaker and microphones are not used yet. Choose it under New screen.
 
 ## 0.4.89 (firmware 0.57.0)
 

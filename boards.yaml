@@ -209,3 +209,11 @@ wt32sc01plus:
   model: WT32-SC01 Plus
   status: experimental
   # Wireless-Tag's WT32-SC01 Plus (GitHub #238), named WT32 as people call the series; not the WT32-SC01 without "Plus".
+
+wavesharep47b:
+  file: wavesharep47b.yaml
+  name: Waveshare
+  model: ESP32-P4-WIFI6-Touch-LCD-7B
+  status: experimental
+  # The ESP32-P4 7B with rev3 silicon (GitHub #271), not the ESP32-S3-Touch-LCD-7B. Its speaker and microphones are not
+  # used yet: nobody has tried them with this board file.
