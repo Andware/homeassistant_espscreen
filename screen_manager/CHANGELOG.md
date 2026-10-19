@@ -51,6 +51,10 @@
   [@sillevl](https://github.com/sillevl) ([#277](https://github.com/MaxGramser/homeassistant_espscreen/pull/277)), who
   checked touch, rotation, brightness, standby and a cold start. The DX panel is not covered. Choose it under New
   screen.
+- **A new board, experimental: the Freenove FNK0104S**, a 4-inch ESP32-S3 board with 480 x 320 ST7796 glass over SPI,
+  FT6336 touch and a dimmable backlight. Run by [@bwalshin](https://github.com/bwalshin)
+  ([#285](https://github.com/MaxGramser/homeassistant_espscreen/pull/285)), who checked its colours and the touch in the
+  middle and the corners. Choose it under New screen.
 
 ## 0.4.89 (firmware 0.57.0)
 

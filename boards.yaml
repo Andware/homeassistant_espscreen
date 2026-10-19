@@ -195,3 +195,10 @@ sensecapd1:
   status: experimental
   # Seeed's SenseCAP Indicator D1 series with the GX panel (GitHub #277): the four models share the ESP32-S3 side.
   # Tried on a D1L; the DX panel is not covered.
+
+freenovefnk0104s:
+  file: freenove-fnk0104s.yaml
+  name: Freenove
+  model: FNK0104S
+  status: experimental
+  # The 4-inch board of Freenove's ESP32-S3 display series (GitHub #285); its 2.8 and 3.5-inch boards are other glass.
