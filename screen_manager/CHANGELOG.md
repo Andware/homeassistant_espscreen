@@ -69,6 +69,13 @@
   one line of Override YAML). Run by [@Nulifier](https://github.com/Nulifier)
   ([#274](https://github.com/MaxGramser/homeassistant_espscreen/pull/274)), who checked the picture, rotation, touch,
   the backlight and Wi-Fi. Its speaker and microphones are not part of it yet. Choose it under New screen.
+- **A new board, experimental: the Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1**, the 10.1-inch board of the same series,
+  with 1280 x 800 MIPI-DSI glass, GT911 touch and a dimmable backlight, on the earlier ESP32-P4 silicon. Its display,
+  touch and backlight are those of a configuration Amazingwun runs on the board
+  ([wish 125](https://tessera-maxgramser.on-forge.com/wishlist/125)), in a board file by
+  [@icodeforyou](https://github.com/icodeforyou) ([#281](https://github.com/MaxGramser/homeassistant_espscreen/pull/281)).
+  This board file itself has not been run on one yet, and its speaker and microphones are not used. Choose it under New
+  screen.
 
 ## 0.4.89 (firmware 0.57.0)
 

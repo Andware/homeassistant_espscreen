@@ -6,7 +6,8 @@ and 10.1-inch series: a 720 x 1280 panel with an ILI9881C MIPI-DSI driver, GT927
 runs it lying down at 1280 x 720, a quarter turn of the panel.
 
 It is not the [ESP32-P4-WIFI6-Touch-LCD-7B](WAVESHAREP47B.md) (1024 x 600, another panel) and not the ESP32-S3-Touch-LCD-7.
-The 8 and 10.1-inch boards of the same series share its main board with other glass, and this board file is not for them.
+The 8 and 10.1-inch boards of the same series share its main board with other glass, and this board file is not for
+them; the 10.1-inch has [a board file of its own](WAVESHARE101.md).
 
 A community member ran this board file on the board (see "Who tried what" below). The project has not tried it on one,
 so the board is **experimental**.
