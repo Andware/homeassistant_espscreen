@@ -37,6 +37,14 @@
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.
+- **A new board, experimental: the Waveshare ESP32-S3-Touch-LCD-4 V4.0**, the 4-inch board without the "B" in its
+  revision 4.0, with Waveshare's CH32V003 expander, 480 x 480 glass, GT911 touch and a dimmable backlight. Its board
+  file is the one Simismin ran on such a board ([wish 117](https://tessera-maxgramser.on-forge.com/wishlist/117)),
+  brought in by [@PedanticAvenger](https://github.com/PedanticAvenger)
+  ([#275](https://github.com/MaxGramser/homeassistant_espscreen/pull/275)), who ran it with Home Assistant, rotation
+  and touch; [@leonardospina](https://github.com/leonardospina) ran the same board with a board file of their own
+  ([#213](https://github.com/MaxGramser/homeassistant_espscreen/pull/213)). Earlier revisions of the same name have
+  another expander and are not supported. Choose it under New screen.
 
 ## 0.4.89 (firmware 0.57.0)
 
