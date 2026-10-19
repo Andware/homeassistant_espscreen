@@ -248,6 +248,7 @@ What the boards have today:
 | Waveshare ESP32-P4 86 panel | Volume, Microphone, Microphone gain, Automatic gain, Echo cancellation (AEC transport) | `hardware/wavesharep4-audio/` and the shared audio player |
 | M5Stack Tab5 | Volume, Microphone, Echo cancellation (AEC transport) | `hardware/tab5-audio/` and the shared audio player |
 | CrowPanel Advanced 10.1 | Volume, Microphone | `features/audio.yaml` |
+| Guition JC8012P4A1 (and its V2 and V3), JC1060P470 (and its V2), JC4880P443 | Volume, Microphone | `hardware/guition-p4-audio.yaml` and `features/audio.yaml` |
 
 A plugin's settings work the same way, from its own ESPHome entities, on its own settings page and in its details on
 the screen's Plugins tab (docs/PLUGINS.md); the code that finds and changes them is one module for both.

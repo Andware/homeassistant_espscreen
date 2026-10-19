@@ -58,12 +58,16 @@ jc8012p4a1:
   name: Guition
   model: JC8012P4A1
   status: new
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone]
 
 jc8012p4a1v3:
   file: guition-jc8012p4a1-v3.yaml
   name: Guition
   model: JC8012P4A1 V3
   status: experimental
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone]
 
 waveshare7:
   file: waveshare-esp32s3-7.yaml
@@ -88,12 +92,16 @@ jc1060p470:
   name: Guition
   model: JC1060P470
   status: experimental
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone]
 
 jc1060p470v2:
   file: guition-jc1060p470-v2.yaml
   name: Guition
   model: JC1060P470 V2
   status: experimental
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone]
 
 hosyond40:
   file: hosyond40.yaml
@@ -124,6 +132,8 @@ jc8012p4a1v2:
   name: Guition
   model: JC8012P4A1 V2
   status: experimental
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone]
 
 tab5:
   file: tab5.yaml
@@ -169,6 +179,8 @@ jc4880p443:
   name: Guition
   model: JC4880P443
   status: experimental
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone]
 
 crowpanel101:
   file: crowpanel101.yaml

@@ -1,5 +1,11 @@
 ## Unreleased
 
+- **Speaker and microphone on the Guition ESP32-P4 screens, experimental.** The Guition JC8012P4A1 (10.1 inch, also
+  its V2 and V3), JC1060P470 (7 inch, also its V2) and JC4880P443 (4.3 inch) now use their speaker and microphone, both
+  at once. Such a screen is a media player in Home Assistant for announcements and music, has Volume and Microphone
+  under Settings, Extras, and fits the plugins that need a speaker or a microphone. Thanks to @Eugen417, who runs this
+  audio on a JC8012P4A1 V3 (#259); on the other boards it is untried yet. These screens now build with ESPHome 2026.9.0
+  or newer, the one the app has.
 - **Your music while nothing plays.** A media player's tile on Album cover that is 1 x 2 or 2 x 2 was an empty block
   while nothing played. It now shows the covers of the player's library side by side, darkened, with the player's
   name and state over them: for Spotify the covers of your Liked songs, newest first. Every minute one cover moves on

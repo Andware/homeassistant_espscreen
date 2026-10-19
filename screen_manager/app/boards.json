@@ -646,7 +646,10 @@
    "model": "JC1060P470",
    "name": "Guition",
    "order": 9,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -655,6 +658,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -772,7 +778,10 @@
    "model": "JC1060P470 V2",
    "name": "Guition",
    "order": 10,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -781,6 +790,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -1022,7 +1034,10 @@
    "model": "JC4880P443",
    "name": "Guition",
    "order": 21,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -1031,6 +1046,9 @@
   "dimmable": true,
   "dpi": 217,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -1148,7 +1166,10 @@
    "model": "JC8012P4A1",
    "name": "Guition",
    "order": 4,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "new",
    "touch": "GSL3670"
   },
@@ -1157,6 +1178,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -1274,7 +1298,10 @@
    "model": "JC8012P4A1 V2",
    "name": "Guition",
    "order": 15,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GSL3680"
   },
@@ -1283,6 +1310,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -1400,7 +1430,10 @@
    "model": "JC8012P4A1 V3",
    "name": "Guition",
    "order": 5,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GSL3680"
   },
@@ -1409,6 +1442,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -4243,7 +4279,10 @@
    "model": "JC1060P470",
    "name": "Guition",
    "order": 9,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -4252,6 +4291,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -4369,7 +4411,10 @@
    "model": "JC1060P470 V2",
    "name": "Guition",
    "order": 10,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -4378,6 +4423,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -4619,7 +4667,10 @@
    "model": "JC4880P443",
    "name": "Guition",
    "order": 21,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -4628,6 +4679,9 @@
   "dimmable": true,
   "dpi": 217,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -4745,7 +4799,10 @@
    "model": "JC8012P4A1",
    "name": "Guition",
    "order": 4,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "new",
    "touch": "GSL3670"
   },
@@ -4754,6 +4811,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -4871,7 +4931,10 @@
    "model": "JC8012P4A1 V2",
    "name": "Guition",
    "order": 15,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GSL3680"
   },
@@ -4880,6 +4943,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -4997,7 +5063,10 @@
    "model": "JC8012P4A1 V3",
    "name": "Guition",
    "order": 5,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GSL3680"
   },
@@ -5006,6 +5075,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -5869,7 +5941,10 @@
    "model": "JC1060P470",
    "name": "Guition",
    "order": 9,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -5878,6 +5953,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -5995,7 +6073,10 @@
    "model": "JC1060P470 V2",
    "name": "Guition",
    "order": 10,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -6004,6 +6085,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -6245,7 +6329,10 @@
    "model": "JC4880P443",
    "name": "Guition",
    "order": 21,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -6254,6 +6341,9 @@
   "dimmable": true,
   "dpi": 217,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -6371,7 +6461,10 @@
    "model": "JC8012P4A1",
    "name": "Guition",
    "order": 4,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "new",
    "touch": "GSL3670"
   },
@@ -6380,6 +6473,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -6497,7 +6593,10 @@
    "model": "JC8012P4A1 V2",
    "name": "Guition",
    "order": 15,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GSL3680"
   },
@@ -6506,6 +6605,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -6623,7 +6725,10 @@
    "model": "JC8012P4A1 V3",
    "name": "Guition",
    "order": 5,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone"
+   ],
    "status": "experimental",
    "touch": "GSL3680"
   },
@@ -6632,6 +6737,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
