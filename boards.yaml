@@ -227,8 +227,10 @@ wavesharep47b:
   name: Waveshare
   model: ESP32-P4-WIFI6-Touch-LCD-7B
   status: experimental
-  # The ESP32-P4 7B with rev3 silicon (GitHub #271), not the ESP32-S3-Touch-LCD-7B. Its speaker and microphones are not
-  # used yet: nobody has tried them with this board file.
+  # The ESP32-P4 7B with rev3 silicon (GitHub #271), not the ESP32-S3-Touch-LCD-7B. Its speaker and microphones are the
+  # Waveshare P4 86 panel's audio (docs/WAVESHAREP47B.md).
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone, microphone_gain, automatic_gain, echo_cancellation]
 
 wavesharep47:
   file: wavesharep47.yaml
@@ -236,7 +238,9 @@ wavesharep47:
   model: ESP32-P4-WIFI6-Touch-LCD-7
   status: experimental
   # The 7-inch 720 x 1280 board of the ESP32-P4-WIFI6-Touch-LCD 7, 8 and 10.1-inch series (GitHub #274), pre-v3 silicon.
-  # Not the 7B. Its speaker and microphones are not part of the board file yet (docs/WAVESHAREP47.md).
+  # Not the 7B. Its speaker and microphones are the Waveshare P4 86 panel's audio (docs/WAVESHAREP47.md).
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone, microphone_gain, automatic_gain, echo_cancellation]
 
 waveshare101:
   file: waveshare101.yaml
@@ -244,4 +248,6 @@ waveshare101:
   model: ESP32-P4-WIFI6-Touch-LCD-10.1
   status: experimental
   # The 10.1-inch board of the same series (GitHub #281), pre-v3 silicon, from a community configuration that runs on
-  # one (website wish 125). Its speaker and microphones are not used: nobody has tried them on this board.
+  # one (website wish 125). Its speaker and microphones are the Waveshare P4 86 panel's audio, not yet tried on it.
+  # Its extras under Screen settings, in this order (docs/SETTINGS.md, "A board's own settings").
+  settings: [media_player, microphone, microphone_gain, automatic_gain, echo_cancellation]

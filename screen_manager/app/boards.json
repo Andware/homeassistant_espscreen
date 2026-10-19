@@ -2177,7 +2177,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-10.1",
    "name": "Waveshare",
    "order": 29,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -2186,6 +2192,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -3281,7 +3290,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-7",
    "name": "Waveshare",
    "order": 28,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -3290,6 +3305,9 @@
   "dimmable": true,
   "dpi": 210,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -3407,7 +3425,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-7B",
    "name": "Waveshare",
    "order": 27,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -3416,6 +3440,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -7472,7 +7499,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-10.1",
    "name": "Waveshare",
    "order": 29,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -7481,6 +7514,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -8576,7 +8612,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-7",
    "name": "Waveshare",
    "order": 28,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -8585,6 +8627,9 @@
   "dimmable": true,
   "dpi": 210,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -8702,7 +8747,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-7B",
    "name": "Waveshare",
    "order": 27,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -8711,6 +8762,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -9443,7 +9497,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-10.1",
    "name": "Waveshare",
    "order": 29,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -9452,6 +9512,9 @@
   "dimmable": true,
   "dpi": 149,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -10547,7 +10610,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-7",
    "name": "Waveshare",
    "order": 28,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -10556,6 +10625,9 @@
   "dimmable": true,
   "dpi": 210,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",
@@ -10673,7 +10745,13 @@
    "model": "ESP32-P4-WIFI6-Touch-LCD-7B",
    "name": "Waveshare",
    "order": 27,
-   "settings": [],
+   "settings": [
+    "media_player",
+    "microphone",
+    "microphone_gain",
+    "automatic_gain",
+    "echo_cancellation"
+   ],
    "status": "experimental",
    "touch": "GT911"
   },
@@ -10682,6 +10760,9 @@
   "dimmable": true,
   "dpi": 170,
   "features": [
+   "speaker",
+   "microphone",
+   "media_player",
    "bluetooth"
   ],
   "firmware": "0.57.0",

@@ -43,19 +43,36 @@ The remote package is `packages/wavesharep47.yaml` and the checkout entry `check
 - The touch panel reports pixels, with no calibration.
 - Camera tiles, full-screen snapshots and the live camera of the P4 boards, camera alerts and media artwork use the
   shared PSRAM implementation. The board's own camera connector is not configured.
-- **No sound yet.** The speaker and the microphones are wired as on the [Waveshare ESP32-P4 86 panel](WAVESHAREP4.md),
-  and they worked with that panel's audio in the contributor's tests (below), but they are not part of this board file
-  yet: no media player, no Volume or Microphone setting, and no audio plugins for now.
+- The speaker and the two microphones are the screen's audio, experimental: a media player in Home Assistant for
+  announcements and music, Volume, Microphone, Microphone gain, Automatic gain and Echo cancellation under Screen
+  settings, and what audio plugins (a voice assistant) need. See "Speaker and microphones" below.
 - The microSD slot is not configured.
+
+## Speaker and microphones
+
+Waveshare's schematic of the ESP32-P4-WIFI6-Touch-LCD-X main board, which this 7-inch and the 10.1-inch share, wires
+the audio exactly as on the [Waveshare ESP32-P4 86 panel](WAVESHAREP4.md): an ES8311 for the speaker (its ADC is not
+wired), an ES7210 with the two microphones on its MIC1 and MIC2 and the speaker circuit's output, through an
+attenuator, on its MIC3 as the echo cancellation's reference, one I2S bus for both, and an NS4150B amplifier. So the
+board takes the 86 panel's audio (`packages/hardware/wavesharep4-audio/`): its codecs, its transport with echo
+cancellation by default, and its Extras. [P4_AUDIO.md](P4_AUDIO.md) says how the echo cancellation works and how to
+choose the plain half-duplex transport instead:
+
+```yaml
+substitutions:
+  P4_AUDIO_TRANSPORT: "i2s"
+```
+
+This is **experimental**: the contributor ran the same audio on the board (below), the project has not.
 
 ## Who tried what
 
 [@Nulifier](https://github.com/Nulifier) ran the board file of #274 on the board, with pre-v3 silicon
 ([wish 153](https://tessera-maxgramser.on-forge.com/wishlist/153)): it starts, the picture is right and turns, the touch
-works, the backlight dims and Wi-Fi connects. That file also carried the 86 panel's audio, with which the speaker played
-music, the microphones captured, playback and capture worked together and echo cancellation worked well. This board
-file is the same without the audio. Not tried yet: camera pictures, rev3 silicon, and a full page of tiles over a long
-run.
+works, the backlight dims and Wi-Fi connects. That file also carried the 86 panel's audio, the same codecs, transport
+and amplifier this board file now has: the speaker played music, the microphones captured, playback and capture worked
+together and echo cancellation worked well. Not tried yet: camera pictures, rev3 silicon, and a full page of tiles over
+a long run.
 
 ## Hardware references
 
@@ -68,12 +85,15 @@ run.
 - The pins:
   - Wi-Fi: ESP32-C6 over four-bit SDIO, reset GPIO54, clock GPIO18, command GPIO19, data GPIO14 to GPIO17.
   - The chip's internal regulator on channel 3 at 2.5 V for the MIPI-DSI PHY.
-  - I2C: SDA GPIO7, SCL GPIO8, 400 kHz, for the touch panel (and the audio codecs, ES8311 at 0x18 and ES7210 at 0x40,
-    unused here).
+  - I2C: SDA GPIO7, SCL GPIO8, 400 kHz, for the touch panel and the audio codecs (ES8311 at 0x18, ES7210 at 0x40).
   - Touch: reset GPIO23 and interrupt GPIO33, as on the board this file was run on.
   - Backlight: GPIO26, PWM.
-  - Audio, unused here: I2S MCLK GPIO13, BCLK GPIO12, LRCLK GPIO10, speaker data GPIO9, microphone data GPIO11, amplifier
-    enable GPIO53.
+  - Audio: I2S MCLK GPIO13, BCLK GPIO12, LRCLK GPIO10, speaker data GPIO9, microphone data GPIO11; amplifier enable
+    GPIO53, high for on, with a pull-down that keeps it off at reset.
+- Waveshare's board support package for the series
+  ([Waveshare-ESP32-components](https://github.com/waveshareteam/Waveshare-ESP32-components),
+  `esp32_p4_wifi6_touch_lcd_x`) has the same audio pins.
+- This board needs ESPHome 2026.9.0 or newer for its audio.
 
 ## What to report while testing
 
@@ -82,7 +102,11 @@ run.
    over the air and a cold start.
 3. Taps near each corner, slider drags and edge swipes, lying down and standing up.
 4. The brightness setting across its range, standby after the timeout and the wake by touch, and night mode.
-5. `sensor.<screen>_heap_free` with a full layout, any reset, Wi-Fi drop or I2C error, and how long the screen stayed
+5. A text-to-speech announcement and music on the screen's media player, the Volume setting from low to high, and
+   whether the speaker stays quiet between sounds.
+6. The microphones, with a voice assistant plugin: whether the wake word is heard from across the room, also while
+   music plays, and the **Echo cancellation status** entity (Enabled, Bypass, Starting or Error).
+7. `sensor.<screen>_heap_free` with a full layout, any reset, Wi-Fi drop or I2C error, and how long the screen stayed
    running.
 
 Do not publish Wi-Fi passwords or API/OTA keys with logs.
