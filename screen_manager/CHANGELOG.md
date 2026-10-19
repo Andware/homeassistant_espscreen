@@ -22,6 +22,10 @@
   a picture of its entity, such as a photo of an image entity, got every picture refused. The step now tells the
   screen which entity it belongs to, so its pictures arrive, as they already did on the plugin's tile. Screens out
   there get it with the app, without a new build.
+- **Pictures reach screens on a second network (#276).** When Home Assistant is on two networks, for example the
+  home network and a separate one for devices, screens on the second network got the picture address of the first
+  and showed no camera images, covers or maps. Each screen now gets the address Home Assistant has on its own network.
+  With one network nothing changes.
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.

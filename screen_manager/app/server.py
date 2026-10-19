@@ -1408,6 +1408,10 @@ class Manager:
         inbox = self.aliases.get(inbox, inbox)
         return next((s for s in screens if s['id'] == inbox), None)
 
+    async def link_base(self, screen):
+        """Where `screen` fetches this app's pictures: Home Assistant's address on the screen's own network (GitHub #276)."""
+        return await camera_feed.base_url(self.ha.request, near=(screen or {}).get('ip'))
+
     def device_prefixes(self, device):
         registry = getattr(self.ha, 'registry', [])
         if self._prefix_source is not registry:
@@ -2295,7 +2299,7 @@ class Manager:
             return raw
         raws = await asyncio.gather(*(thumbnail(item) for item in items))
         url = ''
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if base and any(raws):
             image = await asyncio.get_running_loop().run_in_executor(
                 None, lambda: camera_feed.tile_art.encode(list(raws), [ground] * len(raws), atlas, compact=camera_feed.compact_pictures(screen)))
@@ -3365,7 +3369,7 @@ class Manager:
         is the one this screen's glass asks for, which on a board that is not square differs between a screen built
         lying down and one built standing up (camera_feed.box)."""
         url = ''
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         box = box or camera_feed.box(screen, view)
         if not base:
             LOG.warning('Camera images: no address for this app on the LAN; set SCREEN_CAMERA_URL')
@@ -3381,7 +3385,7 @@ class Manager:
         """The screen message for a camera live (live_feed.py): a link to its stream of pictures, for the full view or
         for a live tile (`view` 'live', `fit` the tile's: a picture that fills the card is cut by the screen, a whole one
         is shown on black, and the link says which). `screen` is the inbox that asked."""
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(self.screen(screen) if screen else None)
         if not base:
             LOG.warning('Camera images: no address for this app on the LAN; set SCREEN_CAMERA_URL')
         contain = fit == 'contain'
@@ -3438,7 +3442,7 @@ class Manager:
             # With the camera's sound for a screen with a speaker (firmware dev).
             message = await self.live_message(entity, live_box, sound=request.get('sound') == '1', screen=inbox)
         else:
-            message = await self.cover_message(entity, *cover) if cover else await self.camera_message(
+            message = await self.cover_message(entity, *cover, screen=screen) if cover else await self.camera_message(
                 entity, 'full', screen, box=camera_feed.box(screen, 'full', camera_feed.picture_cap(request)))
         await self.send_auxiliary(inbox, message, action, request)
         LOG.info('%s %s on %s%s', 'Cover of' if cover else 'Camera', entity, screen['name'], '' if message['u'] else ': no image')
@@ -3457,7 +3461,7 @@ class Manager:
         width, height, background = asked
         found = vacuum_card.map_entity(entity, self.device_entries(entity), self.ha.states)
         url = ''
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         dark = camera_feed.live_dark(request)
         if base and found and await self.camera.vacuum_map(found['e'], found['m'], (width, height), background, dark):
             url = f"{base}/camera/{self.camera.link(entity, (width, height), vacuum=(found['e'], found['m'], background, dark))}.bmp"
@@ -3484,7 +3488,7 @@ class Manager:
             if colours and colours != '-':
                 ground = int(colours.split(',')[0], 16)
         url = ''
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if base and await self.camera.saver(entity, box, kind, ground):
             url = f'{base}/camera/{self.camera.link(entity, box, saver=(kind, ground))}.bmp'
         if not url and kind == 'media' and self.camera.cover_pending(entity):
@@ -3526,7 +3530,7 @@ class Manager:
                 return
             token = self.camera.link(screen_saver.PHOTOS_ENTITY, tuple(moving or box), still=image)
             self.photo_links[inbox] = (key, token)
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if not base:
             return
         url = f'{base}/camera/{token}.bmp'
@@ -3625,7 +3629,7 @@ class Manager:
             await asyncio.gather(*(self.thumbnail(tile['entity'], tile['options']['play']['thumb'], tile['options']['play'].get('title'))
                                    for tile in placed if favored(tile)))
         url, listing = '', ','.join(entities)
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if base:
             # A screen whose decoder reads 8-bit colour gets a third of the bytes (app 0.3.8).
             extra = {'compact': camera_feed.compact_pictures(screen), **({'atlas': atlas, 'modes': modes} if atlas else {}),
@@ -3687,7 +3691,7 @@ class Manager:
                                       if url == plugin_pictures.SAVER_PICTURE else
                                       self.plugins.pictures.fetch(url, entry.manifest, kind, of_entity)
                                       for url in question.sources))
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if not base:
             LOG.warning('Plugin pictures: no address for this app on the LAN; set SCREEN_CAMERA_URL')
         elif any(raw is not None for raw in raws):
@@ -3773,7 +3777,7 @@ class Manager:
         extra = {'compact': camera_feed.compact_pictures(screen), 'atlas': (width, height, ((0, 0, width, height, 0, 0),)),
                  'modes': [('fill', False)], 'renders': [render]}
         url = ''
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if base and await self.camera.live([entity], camera_feed.LIVE_SIZES[1], [0], [0], **extra):
             token = self.camera.link(entity, box, live=([entity], camera_feed.LIVE_SIZES[1], [0], [0], extra))
             url = f'{base}/camera/{token}.bmp'
@@ -3898,11 +3902,11 @@ class Manager:
                 out[entity] = self.map_pictures[address]
         return out
 
-    async def cover_message(self, entity, size, background):
+    async def cover_message(self, entity, size, background, screen=None):
         """The screen message with a link to a media player's cover at `size` with `background` behind the corners,
         or an empty link when the player shows no picture (the card keeps its placeholder)."""
         url = ''
-        base = await camera_feed.base_url(self.ha.request)
+        base = await self.link_base(screen)
         if base:
             token = self.camera.link(entity, (size, size), cover=(size, background)) if await self.camera.cover(entity, size, background) else None
             url = f'{base}/camera/{token}.bmp' if token else ''
@@ -3925,8 +3929,10 @@ class Manager:
         picture = await self.camera.snapshot_size(camera) if drawn else None
         groups = {}
         for screen in drawn:
-            groups.setdefault(camera_feed.alert_box(screen, picture), []).append(screen)
-        async def send(box, group):
+            # And by the address the screen fetches from: a Home Assistant on two networks has one for each (#276).
+            groups.setdefault((camera_feed.alert_box(screen, picture), await self.link_base(screen)), []).append(screen)
+        async def send(key, group):
+            box = key[0]
             # A box made for this picture's proportions is filled exactly; the 16:9 frame of older firmware gets the
             # picture fitted inside it, as before.
             exact = picture is not None and box != camera_feed.box(group[0], 'thumb')
@@ -3939,7 +3945,7 @@ class Manager:
 
         # Every size at once, so no screen waits for another board's picture to be made. Each frame() reads the same
         # snapshot before its first await, so every screen shows the same moment.
-        await asyncio.gather(*(send(box, group) for box, group in groups.items()))
+        await asyncio.gather(*(send(key, group) for key, group in groups.items()))
 
     async def broadcast(self, event_type, data):
         """An alert event for every screen, or for the screens its `screen` names (app 0.2.133): the matching action on each

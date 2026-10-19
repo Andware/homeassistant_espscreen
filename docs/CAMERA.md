@@ -363,6 +363,10 @@ board without PSRAM has no room for it.
 - **Home Assistant OS:** the app publishes port 8098 on the Home Assistant host. When another app
   already uses 8098, pick another port in the app's network settings: the app sends the screens
   links on the port you chose (app 0.4.24+). The screens need to reach Home Assistant's address on it.
+- **Home Assistant on more than one network:** each screen gets the address Home Assistant has on the screen's own
+  network, found from the screen's IP address and the networks Home Assistant lists. A screen on a network where Home
+  Assistant has no address of its own (one reached through a router) gets the address of Home Assistant's default
+  network, as every screen did before. It then needs a route to that address.
 - **Docker** (docs/DOCKER.md): the container uses the host network, so 8098 is open as is. When
   the screens reach the host under another address, set `SCREEN_CAMERA_URL`, for example
   `http://192.168.1.20:8098`.
