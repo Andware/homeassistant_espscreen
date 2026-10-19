@@ -45,6 +45,12 @@
   and touch; [@leonardospina](https://github.com/leonardospina) ran the same board with a board file of their own
   ([#213](https://github.com/MaxGramser/homeassistant_espscreen/pull/213)). Earlier revisions of the same name have
   another expander and are not supported. Choose it under New screen.
+- **A new board, experimental: the Seeed SenseCAP Indicator D1 series with the GX panel**, 3.95-inch 480 x 480 glass
+  with FT6336U touch and a dimmable backlight on its ESP32-S3. The D1, D1S, D1L and D1Pro share that side of the board;
+  the RP2040, its sensors and the LoRa radio stay as they are. Run on a D1L by
+  [@sillevl](https://github.com/sillevl) ([#277](https://github.com/MaxGramser/homeassistant_espscreen/pull/277)), who
+  checked touch, rotation, brightness, standby and a cold start. The DX panel is not covered. Choose it under New
+  screen.
 
 ## 0.4.89 (firmware 0.57.0)
 

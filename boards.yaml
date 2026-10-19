@@ -187,3 +187,11 @@ waveshare4v4:
   status: experimental
   # Revision 4.0, with Waveshare's CH32V003 expander (GitHub #275). Earlier revisions of the same name have a TCA9554
   # expander instead, and this board file is not for them.
+
+sensecapd1:
+  file: seeed-sensecap-indicator-d1.yaml
+  name: SenseCAP
+  model: Indicator D1, D1S, D1L, D1Pro (GX)
+  status: experimental
+  # Seeed's SenseCAP Indicator D1 series with the GX panel (GitHub #277): the four models share the ESP32-S3 side.
+  # Tried on a D1L; the DX panel is not covered.
