@@ -1,5 +1,11 @@
 ## Unreleased
 
+- **The camera of the Guition ESP32-P4 screens, experimental.** The Guition JC8012P4A1 (10.1 inch, also its V2 and V3),
+  JC1060P470 V2 (7 inch) and JC4880P443 (4.3 inch) in their camera version (the "C" in the model name) carry an
+  OmniVision OV02C10. Their boards now name the bus it answers on, so the Screen camera plugin fits them: the screen
+  becomes a camera of its device in Home Assistant. Tried on a JC8012P4A1 V3 by
+  [@Heronimonimo](https://github.com/Heronimonimo) and [@ivanfmartinez](https://github.com/ivanfmartinez); on the
+  other boards it is untried yet. It needs the Screen camera plugin's version with the OV02C10.
 - **Speaker and microphone on the Guition and Waveshare ESP32-P4 screens, experimental.** The Guition JC8012P4A1
   (10.1 inch, also its V2 and V3), JC1060P470 (7 inch, also its V2) and JC4880P443 (4.3 inch) now use their speaker and
   microphone, both at once, and the Waveshare ESP32-P4-WIFI6-Touch-LCD-7B, LCD-7 and LCD-10.1 their speaker and two
