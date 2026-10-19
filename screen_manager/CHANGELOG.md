@@ -9,6 +9,12 @@
   Thanks to @Eugen417, who runs this audio on a Guition JC8012P4A1 V3 (#259), and to @Nulifier, who ran it on the
   Waveshare LCD-7 (#274); on the other boards it is untried yet. These screens now build with ESPHome 2026.9.0 or newer,
   the one the app has.
+- **The Guition 7 inch on the yellow board without a case (#289).** The JC1060P470 also comes as a yellow board
+  without a case, sold as a 7-inch CYD, and on that one every tap landed half a turn round: a tap on the top left
+  reached the bottom right. New screen now asks under Board whether it is the black one in a case, as before first, or
+  the yellow one, which gets its touch turned round and the speaker and microphone on its own pins. Screens you already
+  have keep what they have; a yellow one gets the same with `BOARD_VARIANT: "yellow"` under `substitutions:` in its
+  Override YAML. Thanks to [@svenar-nl](https://github.com/svenar-nl), who found it and tried the fix.
 - **Your music while nothing plays.** A media player's tile on Album cover that is 1 x 2 or 2 x 2 was an empty block
   while nothing played. It now shows the covers of the player's library side by side, darkened, with the player's
   name and state over them: for Spotify the covers of your Liked songs, newest first. Every minute one cover moves on

@@ -2775,11 +2775,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Displaycontroller",
-        "FLASH_SIZE": "Flashgeheugen"
+        "FLASH_SIZE": "Flashgeheugen",
+        "BOARD_VARIANT": "Bord"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Begin met de eerste. Kies de andere als het scherm zwart blijft of ruis of een verminkt beeld laat zien.",
-        "FLASH_SIZE": "De meeste van deze borden hebben 16 MB. Kies 8 MB als het scherm na de installatie zwart blijft en steeds opnieuw start."
+        "FLASH_SIZE": "De meeste van deze borden hebben 16 MB. Kies 8 MB als het scherm na de installatie zwart blijft en steeds opnieuw start.",
+        "BOARD_VARIANT": "Kies het bord dat je hebt. Op het gele bord zonder behuizing komt een tik linksboven anders rechtsonder terecht."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Zwart, in een behuizing",
+          "yellow": "Geel, zonder behuizing"
+        }
       },
       "choice_usual": "de meeste",
       "orientation_landscape": "Liggend",

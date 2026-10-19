@@ -3150,11 +3150,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Contrôleur d'affichage",
-        "FLASH_SIZE": "Mémoire flash"
+        "FLASH_SIZE": "Mémoire flash",
+        "BOARD_VARIANT": "Carte"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Commencez par le premier. Prenez l'autre si l'écran reste noir ou affiche du bruit ou une image brouillée.",
-        "FLASH_SIZE": "La plupart de ces cartes ont 16 Mo. Prenez 8 Mo si l'écran reste noir après l'installation et redémarre sans cesse."
+        "FLASH_SIZE": "La plupart de ces cartes ont 16 Mo. Prenez 8 Mo si l'écran reste noir après l'installation et redémarre sans cesse.",
+        "BOARD_VARIANT": "Prenez celle que vous avez. Sur la carte jaune sans boîtier, un appui en haut à gauche arriverait sinon en bas à droite."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Noire, dans un boîtier",
+          "yellow": "Jaune, sans boîtier"
+        }
       },
       "choice_usual": "la plupart",
       "orientation_landscape": "À l'horizontale",

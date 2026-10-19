@@ -193,7 +193,28 @@ class ChoiceAndOverride(unittest.TestCase):
             firmware.save_override('ili.yaml', 'substitutions:\n  DISPLAY_MODEL: "ST7789V"\n')
 
 
+    def test_the_yellow_guition_7_turns_its_touch_and_takes_its_audio_pins(self):
+        # The JC1060P470 on the yellow board without a case (GitHub #289): its GT911 reports the corners half a turn round,
+        # and its audio has the 10.1-inch's pins. The board in the black case keeps what it had.
+        base = {**profiles.raw_substitutions(profiles.CORE), **profiles.raw_substitutions(profiles.BOARDS['jc1060p470'])}
+        for variant, want in (('black', ('false', 'false', 'GPIO48', 'GPIO11')), ('yellow', ('true', 'true', 'GPIO11', 'GPIO20'))):
+            values = profiles.evaluate({**base, 'BOARD_VARIANT': variant})
+            self.assertEqual(tuple(values[key] for key in ('TOUCH_MIRROR_X', 'TOUCH_MIRROR_Y', 'AUDIO_DIN_PIN',
+                                                            'AUDIO_AMPLIFIER_PIN')), want, variant)
+
 class NoBoardInTheEditor(unittest.TestCase):
+    def test_every_choice_has_its_words_in_new_screen(self):
+        # NameStep.vue names a choice by editor.installer.choice.<KEY>, says when to take another under choice_hint, and
+        # names a value by choice_option.<KEY>.<value> where it has words of its own (all of them, then), else as it is.
+        installer = json.loads((ROOT / 'screen_manager/translations/en.json').read_text())['editor']['installer']
+        for board, entry in profiles.CATALOG.items():
+            for key, options in (entry.get('choices') or {}).items():
+                self.assertIn(key, installer['choice'], f'{board}: editor.installer.choice.{key}')
+                self.assertIn(key, installer['choice_hint'], f'{board}: editor.installer.choice_hint.{key}')
+                named = installer.get('choice_option', {}).get(key)
+                if named is not None:
+                    self.assertEqual(set(named), {str(option) for option in options}, f'{board}: choice_option.{key}')
+
     def test_new_screen_and_the_screen_list_name_no_board(self):
         words = [board for board in profiles.CATALOG] + sorted({entry['name'] for entry in profiles.CATALOG.values()})
         for name in ('components/InstallerView.vue', 'components/install/BoardStep.vue', 'components/install/NameStep.vue',

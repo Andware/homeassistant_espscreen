@@ -2775,11 +2775,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Display controller",
-        "FLASH_SIZE": "Flash memory"
+        "FLASH_SIZE": "Flash memory",
+        "BOARD_VARIANT": "Board"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Start with the first. Take the other when the screen stays black or shows noise or a garbled picture.",
-        "FLASH_SIZE": "Most of these boards have 16 MB. Take 8 MB when the screen stays black after the install and keeps starting again."
+        "FLASH_SIZE": "Most of these boards have 16 MB. Take 8 MB when the screen stays black after the install and keeps starting again.",
+        "BOARD_VARIANT": "Take the one you have. On the yellow board without a case, a tap on the top left would otherwise land on the bottom right."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Black, in a case",
+          "yellow": "Yellow, without a case"
+        }
       },
       "choice_usual": "most boards",
       "orientation_landscape": "Lying down",

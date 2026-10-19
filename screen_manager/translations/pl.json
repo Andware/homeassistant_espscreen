@@ -3150,11 +3150,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Kontroler wyświetlacza",
-        "FLASH_SIZE": "Pamięć flash"
+        "FLASH_SIZE": "Pamięć flash",
+        "BOARD_VARIANT": "Płytka"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Zacznij od pierwszego. Wybierz drugi, gdy ekran pozostaje czarny albo pokazuje szum lub zniekształcony obraz.",
-        "FLASH_SIZE": "Większość tych płytek ma 16 MB. Wybierz 8 MB, gdy ekran po instalacji pozostaje czarny i ciągle uruchamia się od nowa."
+        "FLASH_SIZE": "Większość tych płytek ma 16 MB. Wybierz 8 MB, gdy ekran po instalacji pozostaje czarny i ciągle uruchamia się od nowa.",
+        "BOARD_VARIANT": "Wybierz tę, którą masz. Na żółtej płytce bez obudowy dotknięcie w lewym górnym rogu trafiłoby inaczej w prawy dolny."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Czarna, w obudowie",
+          "yellow": "Żółta, bez obudowy"
+        }
       },
       "choice_usual": "większość",
       "orientation_landscape": "Poziomo",

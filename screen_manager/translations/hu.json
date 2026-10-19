@@ -3150,11 +3150,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Kijelzővezérlő",
-        "FLASH_SIZE": "Flash-memória"
+        "FLASH_SIZE": "Flash-memória",
+        "BOARD_VARIANT": "Panel"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Kezdd az elsővel. Ha a kijelző fekete marad, zajos vagy torz képet mutat, válaszd a másikat.",
-        "FLASH_SIZE": "A legtöbb ilyen panelen 16 MB van. Válaszd a 8 MB-ot, ha a kijelző a telepítés után fekete marad és újra meg újra elindul."
+        "FLASH_SIZE": "A legtöbb ilyen panelen 16 MB van. Válaszd a 8 MB-ot, ha a kijelző a telepítés után fekete marad és újra meg újra elindul.",
+        "BOARD_VARIANT": "Válaszd azt, amelyik nálad van. A sárga, ház nélküli panelen a bal felső koppintás különben a jobb alsó sarokba kerülne."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Fekete, házban",
+          "yellow": "Sárga, ház nélkül"
+        }
       },
       "choice_usual": "a legtöbb panel",
       "orientation_landscape": "Fekvő",

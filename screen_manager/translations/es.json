@@ -3150,11 +3150,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Controlador de pantalla",
-        "FLASH_SIZE": "Memoria flash"
+        "FLASH_SIZE": "Memoria flash",
+        "BOARD_VARIANT": "Placa"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Empieza por el primero. Elige el otro si la pantalla se queda negra o muestra ruido o una imagen distorsionada.",
-        "FLASH_SIZE": "La mayoría de estas placas tienen 16 MB. Elige 8 MB si la pantalla se queda negra tras la instalación y se reinicia una y otra vez."
+        "FLASH_SIZE": "La mayoría de estas placas tienen 16 MB. Elige 8 MB si la pantalla se queda negra tras la instalación y se reinicia una y otra vez.",
+        "BOARD_VARIANT": "Elige la que tienes. En la placa amarilla sin carcasa, un toque arriba a la izquierda acabaría si no abajo a la derecha."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Negra, con carcasa",
+          "yellow": "Amarilla, sin carcasa"
+        }
       },
       "choice_usual": "la mayoría",
       "orientation_landscape": "En horizontal",

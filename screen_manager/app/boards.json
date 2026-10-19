@@ -641,7 +641,12 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "BOARD_VARIANT": [
+     "black",
+     "yellow"
+    ]
+   },
    "inch": 7.0,
    "model": "JC1060P470",
    "name": "Guition",
@@ -4301,7 +4306,12 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "BOARD_VARIANT": [
+     "black",
+     "yellow"
+    ]
+   },
    "inch": 7.0,
    "model": "JC1060P470",
    "name": "Guition",
@@ -5963,7 +5973,12 @@
   "can_standby": true,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "BOARD_VARIANT": [
+     "black",
+     "yellow"
+    ]
+   },
    "inch": 7.0,
    "model": "JC1060P470",
    "name": "Guition",

@@ -3150,11 +3150,19 @@
       },
       "choice": {
         "DISPLAY_MODEL": "Display-Controller",
-        "FLASH_SIZE": "Flash-Speicher"
+        "FLASH_SIZE": "Flash-Speicher",
+        "BOARD_VARIANT": "Board"
       },
       "choice_hint": {
         "DISPLAY_MODEL": "Nimm zuerst den ersten. Nimm den anderen, wenn der Bildschirm schwarz bleibt oder Rauschen oder ein verzerrtes Bild zeigt.",
-        "FLASH_SIZE": "Die meisten dieser Boards haben 16 MB. Nimm 8 MB, wenn der Bildschirm nach der Installation schwarz bleibt und immer wieder neu startet."
+        "FLASH_SIZE": "Die meisten dieser Boards haben 16 MB. Nimm 8 MB, wenn der Bildschirm nach der Installation schwarz bleibt und immer wieder neu startet.",
+        "BOARD_VARIANT": "Nimm das Board, das du hast. Auf dem gelben Board ohne Gehäuse landet ein Tippen oben links sonst unten rechts."
+      },
+      "choice_option": {
+        "BOARD_VARIANT": {
+          "black": "Schwarz, im Gehäuse",
+          "yellow": "Gelb, ohne Gehäuse"
+        }
       },
       "choice_usual": "die meisten",
       "orientation_landscape": "Quer",

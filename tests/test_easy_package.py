@@ -153,6 +153,8 @@ class PackageTests(unittest.TestCase):
             # A board with a choice of audio transport (the Waveshare P4, the Tab5: its native I2S bus or the echo-cancelling
             # ES7210 transport, hardware/es7210-aec.yaml) names the choice and the settings hooks of each in its own file.
             own -= {n for n in own if re.match(r'(P4|TAB5)_AUDIO_TRANSPORT$|(P4|TAB5|ES7210)_(AEC|AUDIO)_SETTINGS$', n)}
+            # A choice the board offers in New screen (boards.yaml `choices`) is a name the screen's own YAML sets.
+            own -= set(profiles.CATALOG.get(board, {}).get('choices') or {})
             # What a feature brings (the resistive panel's calibration, the capacitive one's edge swipe, camera images,
             # a battery's voltage, a board's audio and its echo-cancelling transport, hardware/es7210-aec.yaml) and the
             # hardware a screen's own YAML may change on the board that has it (the pins of an ESP32-P4's Wi-Fi link
