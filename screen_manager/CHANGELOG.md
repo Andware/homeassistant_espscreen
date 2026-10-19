@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **Your music while nothing plays.** A media player's tile on Album cover that is 1 x 2 or 2 x 2 was an empty block
+  while nothing played. It now shows the covers of the player's library side by side, darkened, with the player's
+  name and state over them: for Spotify the covers of your Liked songs, newest first. Every minute one cover moves on
+  to the next. A tap opens the player as before. Screens out there get it with the app, without a new build. Music
+  Assistant shows the covers it gets from streaming services; covers of your own files keep the tile as it was.
 - **A new screen swipes out of the box.** A screen set up with New screen now has Swipe between pages on from the
   start, so it swipes through its pages, opens its settings from the top edge and opens the Dock from the bottom edge
   without turning anything on first. Screens you already have keep the setting they have through the update. Turn it

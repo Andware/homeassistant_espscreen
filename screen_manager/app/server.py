@@ -35,6 +35,7 @@ import light_effects
 import light_groups
 import cover_groups
 import media_library
+import rest_mosaic
 import vacuum_card
 import speakers
 import map_card
@@ -1085,6 +1086,9 @@ class Manager:
         self.shelves, self.folders, self.browsable, self.browse_probes = {}, OrderedDict(), {}, {}
         self.grounds, self.ground_reads, self.started = OrderedDict(), {}, {}
         self.thumbnails = OrderedDict()
+        # The covers a player at rest shows on its cover tile (rest_mosaic.py): its folder's covers (entity ->
+        # (monotonic, [(thumbnail, title)])), the reads on their way, the players that showed them last and the turn.
+        self.rest_pools, self.rest_reads, self.resting, self.rest_step = {}, {}, set(), None
         # Where a player plays (speakers.py): the speaker this app started each player's music on, which its card
         # follows, and the top of each player's library as far as it names accounts (entity -> (monotonic, ids)).
         self.outputs, self.accounts, self.account_probes = {}, {}, {}
@@ -2007,6 +2011,60 @@ class Manager:
             self.ha.dirty.add(entity)
             self.ha.changed.set()
 
+    # ----- The covers of a player at rest (rest_mosaic.py) -----
+    def rest_pool(self, entity, widest):
+        """The covers a player at rest shows, [] until its folder is read; read again after POOL_SECONDS."""
+        known = self.rest_pools.get(entity)
+        if (not known or time.monotonic() - known[0] >= rest_mosaic.POOL_SECONDS) and entity not in self.rest_reads \
+                and getattr(self.ha, 'online', False) and self.player_browsable(entity, widest):
+            self.rest_reads[entity] = asyncio.ensure_future(self.read_rest_pool(entity))
+        return known[1] if known else []
+
+    async def read_rest_pool(self, entity):
+        pool = None
+        try:
+            top = await self.read_folder(entity, None)
+            folder = rest_mosaic.folder_for(top)
+            pool = rest_mosaic.pool_of(await self.read_folder(entity, folder) if folder else top)
+            # The first covers fetched at once: a library whose pictures this app may not fetch (a server's own address
+            # in the house) gives no mosaic, rather than a dark card of empty squares.
+            first = await asyncio.gather(*(self.thumbnail(entity, thumb, title) for thumb, title in pool[:rest_mosaic.MIN_COVERS]))
+            if sum(raw is not None for raw in first) <= rest_mosaic.MIN_COVERS // 2:
+                pool = []
+        except Exception as error:
+            LOG.info('No covers at rest for %s (%s)', entity, type(error).__name__)
+        finally:
+            self.rest_reads.pop(entity, None)
+        before = self.rest_pools.get(entity)
+        # A read that failed keeps the covers there were, and is tried again after the same while.
+        self.rest_pools[entity] = (time.monotonic(), pool if pool is not None else (before[1] if before else []))
+        if pool is not None and (not before or before[1] != pool):
+            LOG.info('Covers at rest for %s: %d', entity, len(pool))
+            self.ha.dirty.add(entity)
+            self.ha.changed.set()
+
+    def rest_render(self, entity):
+        """A player's mosaic for the page's strip (camera_feed.live `renders`): its mark now, and the covers of this
+        turn drawn into the card's frame."""
+        pool = (self.rest_pools.get(entity) or (0, []))[1]
+
+        async def draw(width, height):
+            columns, lines, *_ = rest_mosaic.grid_of(width, height)
+            order = rest_mosaic.shown(len(pool), columns * lines, rest_mosaic.step_at(time.time()))
+            raws = await asyncio.gather(*(self.thumbnail(entity, pool[n][0], pool[n][1]) for n in order))
+            return await asyncio.get_running_loop().run_in_executor(None, rest_mosaic.draw, list(raws), width, height)
+        return (lambda: rest_mosaic.mark(pool, rest_mosaic.step_at(time.time())), draw)
+
+    def rest_turn(self, dirty):
+        """Every ROTATE_SECONDS the players that show covers at rest are drawn again: one cover moves on."""
+        step = rest_mosaic.step_at(time.time())
+        if step != self.rest_step:
+            self.rest_step = step
+            if dirty is not None:
+                dirty |= self.resting
+            self.resting = set()
+        return dirty
+
     # ----- Where a player plays (speakers.py) -----
     def platform_lookup(self, entity):
         lookup = getattr(self.ha, 'platform_of', None)
@@ -2902,6 +2960,12 @@ class Manager:
                 started=self.started.get(tile['entity']) if media_library.holds_media(states.get(tile['entity'])) else None
                 word=screen_t(f"addon.screen.media.{play.get('class') or 'music'}") if (play.get('class') or 'music') in FAVORITE_KINDS else ''
                 message.setdefault('x',{}).update(media_library.favorite_extras(play,options.get('speaker'),attributes if state_now in ('playing','paused') else {},started,word))
+            # A cover tile of a player at rest: the covers of its library, as a mosaic the screen asks for by its mark.
+            if rest_mosaic.wants(options):
+                pool=self.rest_pool(tile['entity'],widest) if rest_mosaic.at_rest(states.get(tile['entity'])) else []
+                if pool:
+                    message.setdefault('x',{})['pic']=rest_mosaic.mark(pool,rest_mosaic.step_at(time.time()))
+                    self.resting.add(tile['entity'])
         # Home Assistant's word where the screen would show the raw state (firmware 0.2.58+ shows it).
         state=states.get(tile['entity'],{})
         word=ha_catalogue.screen_word(tile['entity'],message['state'],state.get('attributes'),entry,getattr(self.ha,'state_words',None))
@@ -3165,7 +3229,7 @@ class Manager:
                     LOG.warning('A setting %s reported by %s was not kept (%s)', event.get('key') if isinstance(event, dict) else '?',
                                 event.get('inbox') if isinstance(event, dict) else '?', error)
             if hasattr(self.ha,'setting_events'): self.ha.setting_events.clear()
-            dirty = self.take_dirty()
+            dirty = self.rest_turn(self.take_dirty())
             if self.region.pinned and self.resolve_clock_pin():
                 self.language_changed()
             screens_key = self._screens_key
@@ -3623,7 +3687,10 @@ class Manager:
             dark = camera_feed.live_dark(request)
             shape = camera_feed.shape_of(screen)
             renders = [self.map_render(tile, shape, dark) if mapped(tile) else None for tile in placed]
-        if any(favored(tile) for tile in placed_tiles if tile['entity'] in entities):
+        # A player's cover tile at rest (rest_mosaic.py) is the covers of its library, as the state that tile shows.
+        rested = lambda tile: rest_mosaic.wants(tile.get('options')) and camera_feed.cover_supported(tile['entity']) and \
+            rest_mosaic.at_rest(self.ha.states.get(self.followed(tile['entity']))) and bool((self.rest_pools.get(tile['entity']) or (0, []))[1])
+        if any(favored(tile) or rested(tile) for tile in placed_tiles if tile['entity'] in entities):
             if not atlas:
                 return
             placed = [placed_tiles[own[n]] if own is not None else next(t for t in placed_tiles if t['entity'] == entity and pictured(t))
@@ -3632,6 +3699,8 @@ class Manager:
             for n, tile in enumerate(placed):
                 if favored(tile):
                     renders[n] = self.favorite_render(tile)
+                elif rested(tile):
+                    renders[n] = self.rest_render(tile['entity'])
             # The pictures of a page's favourites at once, not one after the other.
             await asyncio.gather(*(self.thumbnail(tile['entity'], tile['options']['play']['thumb'], tile['options']['play'].get('title'))
                                    for tile in placed if favored(tile)))
