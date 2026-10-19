@@ -45,6 +45,7 @@ body:
         - Waveshare (ESP32-S3-Touch-LCD-4 V4.0)
         - SenseCAP (Indicator D1, D1S, D1L, D1Pro (GX))
         - Freenove (FNK0104S)
+        - WT32 (WT32-SC01 Plus)
         - Other / not listed here
         - Not board-specific (add-on, editor, documentation)
     validations:

@@ -55,6 +55,10 @@
   FT6336 touch and a dimmable backlight. Run by [@bwalshin](https://github.com/bwalshin)
   ([#285](https://github.com/MaxGramser/homeassistant_espscreen/pull/285)), who checked its colours and the touch in the
   middle and the corners. Choose it under New screen.
+- **A new board, experimental: the Wireless-Tag WT32-SC01 Plus**, a 3.5-inch ESP32-S3 board with 480 x 320 glass on an
+  8-bit bus, FT6336U touch and a dimmable backlight. Run by [@cjd](https://github.com/cjd)
+  ([#238](https://github.com/MaxGramser/homeassistant_espscreen/pull/238)), who checked touch, colours, dimming and
+  standby, and by [@wiktorschmidt](https://github.com/wiktorschmidt). Choose it under New screen, as WT32.
 
 ## 0.4.89 (firmware 0.57.0)
 
