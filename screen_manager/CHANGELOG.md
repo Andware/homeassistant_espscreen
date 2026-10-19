@@ -31,6 +31,12 @@
   start, so it swipes through its pages, opens its settings from the top edge and opens the Dock from the bottom edge
   without turning anything on first. Screens you already have keep the setting they have through the update. Turn it
   off under the screen's Settings, Swipe between pages.
+- **A tap stays a tap on the Waveshare 7B.** On the 7-inch Waveshare ESP32-S3-Touch-LCD-7B a short tap could count
+  as holding the tile: a plugin's tile then did nothing and only showed its press, and a large tile could open its
+  card instead of switching. The screen heard a finger let go one step late, and on this large glass the redraw of a
+  pressed tile can take longer than the time that makes a touch a hold. A touch screen now takes the moment the finger
+  lets go from its touch panel as soon as the panel reads it. Holding a tile still opens its card. Comes with the
+  next build of the screen.
 - **A plugin's screensaver follows its options at once.** Changing an option of a plugin's clock or screensaver
   face (a colour, seconds on or off) now shows on the screen right away, as Tessera's own clock does, instead of only
   after the screensaver was turned off and on again. On main since 2026-10-18 for screens that are built again.
