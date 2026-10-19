@@ -2435,14 +2435,21 @@ class Manager:
         device = self.registry_index().get(entity, {}).get('device_id')
         return self._by_device.get(device, []) if device else []
 
-    def related_entities(self, tile):
+    def related_entities(self, tile, inbox=None):
         """Entities a card reads besides its own: a vacuum's cleaning mode and water selects and its battery sensor, a
-        cover's battery sensor."""
+        cover's battery sensor, the entities a plugin tile's entity options chose. `inbox`: the screen it is on, whose
+        own plugin of that id says what its options are."""
         from core import cover_related, vacuum_related
-        # A plugin tile that belongs to an entity (docs/PLUGINS.md) is sent again when that entity changes.
+        # A plugin tile that belongs to an entity (docs/PLUGINS.md) is sent again when that entity changes, and when one
+        # its entity options chose does (plugin API 0.15).
         if plugin_tile(tile['entity']):
-            entity = (tile.get('options') or {}).get('plugin_entity')
-            return (entity,) if entity else ()
+            plugin, tile_id = plugin_tile(tile['entity'])
+            entry = self.plugins.known(plugin, inbox)
+            kind = entry.tile(tile_id) if entry else None
+            options = tile.get('options') or {}
+            chosen = self.plugins.values_of(entry, kind, options.get('plugin')) if kind else {}
+            entity = options.get('plugin_entity')
+            return tuple(dict.fromkeys((([entity] if entity else []) + list(self.plugins.option_entities(kind, chosen)))))
         if tile['entity'].startswith('vacuum.'):
             device = self.device_entries(tile['entity'])
             return tuple(dict.fromkeys((*vacuum_related(tile['entity'], device, self.ha.states).values(),
@@ -2736,7 +2743,7 @@ class Manager:
             watched |= {item['entity'] for record in self.store.records().values() if record['format'] == PAGE_FORMAT
                         for page in record['layout']['pages'] for item in bar_items(page) if item['type'] == 'entity'}
             watched |= {item['entity_id'] for item in self.screen_registry()}
-            watched |= {eid for layout in self.layouts.values() for tile in layout['tiles'] for eid in self.related_entities(tile)}
+            watched |= {eid for inbox, layout in self.layouts.items() for tile in layout['tiles'] for eid in self.related_entities(tile, inbox)}
             watched |= {eid for device in self.setting_index().values() for eid in device.values()}
             watched |= set(savers)
             self._watched_key, self._watched = key, watched
@@ -3049,7 +3056,7 @@ class Manager:
                 header_msg = previous['header']
         states = []
         for i, tile in enumerate(tiles):
-            reuse = not full and i < len(previous['states']) and tile['entity'] not in dirty and dirty.isdisjoint(self.related_entities(tile))
+            reuse = not full and i < len(previous['states']) and tile['entity'] not in dirty and dirty.isdisjoint(self.related_entities(tile, inbox))
             if reuse and tile['entity'].startswith('weather.') and self.forecast_due(tile['entity']):
                 reuse = False
             if reuse and tile['entity'].startswith('calendar.') and self.calendar_due(tile):

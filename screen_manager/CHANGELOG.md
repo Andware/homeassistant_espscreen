@@ -30,6 +30,10 @@
   screen's address, although the app already knew it for the screen's Update. It now fills in the address of a paired
   screen when you choose its profile. An address you type yourself stays as you typed it. Thanks to @woozer for the
   change.
+- **A plugin tile can follow several Home Assistant entities (plugin API 0.15, #288).** A plugin may now ask in a
+  tile's options for entities to choose, each with its own searchable list, such as the grid, the solar panels and
+  the battery of an energy dashboard. Tessera sends each chosen entity's state to the tile and follows it, and a new
+  choice takes effect without building the screen again. Thanks to @vajpeters, who built it for the Victron plugin.
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.
