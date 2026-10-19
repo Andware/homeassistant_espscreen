@@ -23,6 +23,13 @@ substitutions:
   # The language of every text on the screen (app 0.2.90): a file in screen_manager/translations, English for any
   # text it lacks. ESP Screens writes it into the screen's own YAML, from Home Assistant's language or its Settings.
   LANGUAGE: "en"
+  # The letters a language written in another script needs beyond the Latin ones the text fonts always carry
+  # (docs/TRANSLATING.md, "Letters"): only a screen built in such a language carries them, so no other screen spends
+  # flash on them. One list per script with the letters its languages here write (Russian's now), the same letters as
+  # header_bar.SCRIPT_GLYPHS in the add-on (a test keeps the two equal), and the languages that take it, those whose
+  # translation file says `"script": "cyrillic"` (a test as well).
+  SCRIPT_GLYPHS_CYRILLIC: "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяЁё№"
+  SCRIPT_GLYPHS: '${ SCRIPT_GLYPHS_CYRILLIC if LANGUAGE.split("-")[0] in ["ru"] else "" }'
   # Swipe between pages on a screen that has stored no choice of its own: off, as every screen set up before had it, so
   # an update changes nothing there. New screen writes "1" into a new screen's own YAML, which then swipes and opens the
   # Dock out of the box. Once the screen stores a choice (any change of a setting), that choice wins. Keep "0" here.
@@ -886,6 +893,7 @@ font:
   # and the letters European languages write with. Roboto has no heart, so ♡, ♥ and ❤ come from
   # NotoSansSymbols2-hearts.ttf (OFL): Noto Sans Symbols 2 cut to those three with fontTools' pyftsubset, its U+2764 given
   # the U+2665 heart, as Noto's own is a squat one lying on its side. tools/profiles.py glyphs() reads both lists.
+  # The last entry, ${SCRIPT_GLYPHS}, is empty on every screen but one built in a language of another script.
   - file: "${FONT_DIR}/Roboto-500.ttf"
     id: headline
     size: ${FONT_HEADLINE_SIZE}
@@ -902,7 +910,7 @@ font:
              'Ĺ','ĺ','Ľ','ľ','Ŕ','ŕ','Ő','ő','Ű','ű','Ă','ă','Ș','ș','Ț','ț','Đ','đ','Ā','ā','Ē','ē','Ģ','ģ',
              'Ī','ī','Ķ','ķ','Ļ','ļ','Ņ','ņ','Ū','ū','Ė','ė','Į','į','Ų','ų','Ğ','ğ','İ','ı','Ş','ş','Ċ','ċ',
              'Ġ','ġ','Ħ','ħ','Ŵ','ŵ','Ŷ','ŷ','Ŀ','ŀ','Œ','œ','Ÿ','„','“','”','‘','’','«','»','‹','›','¿','¡',
-             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§']
+             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§',"${SCRIPT_GLYPHS}"]
     extras:
       - file: "${FONT_DIR}/NotoSansSymbols2-hearts.ttf"
         glyphs: ['♡','♥','❤']
@@ -923,7 +931,7 @@ font:
              'Ĺ','ĺ','Ľ','ľ','Ŕ','ŕ','Ő','ő','Ű','ű','Ă','ă','Ș','ș','Ț','ț','Đ','đ','Ā','ā','Ē','ē','Ģ','ģ',
              'Ī','ī','Ķ','ķ','Ļ','ļ','Ņ','ņ','Ū','ū','Ė','ė','Į','į','Ų','ų','Ğ','ğ','İ','ı','Ş','ş','Ċ','ċ',
              'Ġ','ġ','Ħ','ħ','Ŵ','ŵ','Ŷ','ŷ','Ŀ','ŀ','Œ','œ','Ÿ','„','“','”','‘','’','«','»','‹','›','¿','¡',
-             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§']
+             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§',"${SCRIPT_GLYPHS}"]
     extras:
       - file: "${FONT_DIR}/NotoSansSymbols2-hearts.ttf"
         glyphs: ['♡','♥','❤']
@@ -974,7 +982,7 @@ font:
              'Ĺ','ĺ','Ľ','ľ','Ŕ','ŕ','Ő','ő','Ű','ű','Ă','ă','Ș','ș','Ț','ț','Đ','đ','Ā','ā','Ē','ē','Ģ','ģ',
              'Ī','ī','Ķ','ķ','Ļ','ļ','Ņ','ņ','Ū','ū','Ė','ė','Į','į','Ų','ų','Ğ','ğ','İ','ı','Ş','ş','Ċ','ċ',
              'Ġ','ġ','Ħ','ħ','Ŵ','ŵ','Ŷ','ŷ','Ŀ','ŀ','Œ','œ','Ÿ','„','“','”','‘','’','«','»','‹','›','¿','¡',
-             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§']
+             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§',"${SCRIPT_GLYPHS}"]
     extras:
       - file: "${FONT_DIR}/NotoSansSymbols2-hearts.ttf"
         glyphs: ['♡','♥','❤']
@@ -995,7 +1003,7 @@ font:
              'Ĺ','ĺ','Ľ','ľ','Ŕ','ŕ','Ő','ő','Ű','ű','Ă','ă','Ș','ș','Ț','ț','Đ','đ','Ā','ā','Ē','ē','Ģ','ģ',
              'Ī','ī','Ķ','ķ','Ļ','ļ','Ņ','ņ','Ū','ū','Ė','ė','Į','į','Ų','ų','Ğ','ğ','İ','ı','Ş','ş','Ċ','ċ',
              'Ġ','ġ','Ħ','ħ','Ŵ','ŵ','Ŷ','ŷ','Ŀ','ŀ','Œ','œ','Ÿ','„','“','”','‘','’','«','»','‹','›','¿','¡',
-             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§']
+             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§',"${SCRIPT_GLYPHS}"]
     extras:
       - file: "${FONT_DIR}/NotoSansSymbols2-hearts.ttf"
         glyphs: ['♡','♥','❤']
@@ -1016,7 +1024,7 @@ font:
              'Ĺ','ĺ','Ľ','ľ','Ŕ','ŕ','Ő','ő','Ű','ű','Ă','ă','Ș','ș','Ț','ț','Đ','đ','Ā','ā','Ē','ē','Ģ','ģ',
              'Ī','ī','Ķ','ķ','Ļ','ļ','Ņ','ņ','Ū','ū','Ė','ė','Į','į','Ų','ų','Ğ','ğ','İ','ı','Ş','ş','Ċ','ċ',
              'Ġ','ġ','Ħ','ħ','Ŵ','ŵ','Ŷ','ŷ','Ŀ','ŀ','Œ','œ','Ÿ','„','“','”','‘','’','«','»','‹','›','¿','¡',
-             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§']
+             '€','£','²','³','µ','–','×','©','®','™','¢','¥','§',"${SCRIPT_GLYPHS}"]
     extras:
       - file: "${FONT_DIR}/NotoSansSymbols2-hearts.ttf"
         glyphs: ['♡','♥','❤']

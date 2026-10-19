@@ -40,6 +40,12 @@
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.
+- **Russian (#259).** The screens, the editor and the app's messages now speak Russian, the first language in another
+  script than Latin. A screen built in Russian carries the Cyrillic letters in its fonts, so names and states in
+  Cyrillic show on it; no screen in another language spends flash on them (a Russian CYD takes about 33 KB more).
+  Choose it under Settings, Language & region, then update the screen; the editor follows the language of your Home
+  Assistant profile. Thanks to [@e2ret](https://github.com/e2ret), who translated the screen's texts. The rest is a
+  first draft that no native speaker has checked yet: corrections are welcome.
 - **A new board, experimental: the Waveshare ESP32-S3-Touch-LCD-4 V4.0**, the 4-inch board without the "B" in its
   revision 4.0, with Waveshare's CH32V003 expander, 480 x 480 glass, GT911 touch and a dimmable backlight. Its board
   file is the one Simismin ran on such a board ([wish 117](https://tessera-maxgramser.on-forge.com/wishlist/117)),

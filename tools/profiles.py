@@ -311,7 +311,8 @@ def glyphs(source, font):
     if not block:
         return None
     lists = [block.group(1)] + re.findall(r'glyphs: ' + flow, block.group(2))
-    return {char for found in lists for char in yaml.safe_load(found)}
+    # "${SCRIPT_GLYPHS}" is the letters of another script, there only on a screen built in such a language.
+    return {char for found in lists for item in yaml.safe_load(found) if '${' not in item for char in item}
 
 
 def merged(name):

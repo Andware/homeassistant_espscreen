@@ -74,6 +74,14 @@ def font_letters():
     return set.intersection(*sets) if sets else set()
 
 
+def script_letters(script):
+    """The letters a screen built in a language of `script` carries beside font_letters(): packages/core.yaml's
+    SCRIPT_GLYPHS_<SCRIPT>, empty for the Latin script and for a script without a list."""
+    found = re.search(r'(?m)^  SCRIPT_GLYPHS_' + re.escape(str(script).upper()) + r': "([^"]*)"',
+                      CORE.read_text(encoding='utf-8'))
+    return set(found.group(1)) if found and script != 'latin' else set()
+
+
 def check():
     gen = generator()
     langs = languages()
@@ -124,7 +132,7 @@ def check():
             # The app's own words for the screens (addon.screen) are drawn by the same fonts.
             if key.startswith(('screen.', 'addon.screen.')) and drawable:
                 shown = PLACEHOLDER.sub('', text).replace('|', '')
-                unknown = sorted(set(shown) - drawable - {'\n'})
+                unknown = sorted(set(shown) - drawable - script_letters(meta.get('script')) - {'\n'})
                 if unknown:
                     problems.append(f'{code}: {key} uses letters the screens can\'t draw: {"".join(unknown)}')
                 # Home Assistant's words and the calendar's are what they are; our own texts should stay about as short.
