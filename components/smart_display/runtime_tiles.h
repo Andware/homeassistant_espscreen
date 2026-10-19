@@ -195,6 +195,9 @@ inline bool prepare_busy() { return preparing.active; }
 inline bool navigation_ready() {
   return protocol_problem == ProtocolProblem::none && transfer.active && model.ready() && !preparing.foreground;
 }
+// A page Home Assistant asked for (show_page) before the layout was ready, 1 up, 0 for none: a layout that came while the
+// screen stood dark is prepared once it is lit, and the page opens then (core.yaml's open_page, from the 1 s interval).
+inline int wanted_page = 0;
 inline uint64_t previous_page_id = 0;
 inline bool had_previous_page = false;
 inline uint32_t history_view_id = 0, options_view_id = 0, camera_view_id = 0, cover_view_id = 0, vacuum_map_view_id = 0;

@@ -495,22 +495,22 @@ api:
     # bring up the page with its full-page player. The screen wakes, a card or the settings page closes,
     # and Back to page 1 counts from now, as after a touch. `page` is the number the editor shows, 1 up;
     # a number past the last page opens the last page. An alert that is showing stays in front of it.
+    # The screen wakes first: a layout that came while it stood dark is prepared only once it is lit, and before it is
+    # ready the page waits (runtime_tiles::wanted_page) and opens then, from the 1 s interval below.
     - action: show_page
       variables:
         page: int
       then:
         - lambda: |-
-            if (!runtime_tiles::navigation_ready()) {
-              ESP_LOGI("navigation", "show page ignored: configuration not ready");
-              return;
-            }
             id(last_use_ms) = millis();
             id(wake_display).execute();
-            settings_screen::close();
-            const int pages = runtime_tiles::enabled ? std::max(1, (int) runtime_tiles::page_count())
-                                                     : (runtime_tiles::model.count > 6 ? 2 : 1);
-            runtime_tiles::go_to_page(std::clamp((int) page, 1, pages) - 1, false);
-            ESP_LOGI("navigation", "page %d of %d open from Home Assistant", id(tile_page) + 1, pages);
+            if (!runtime_tiles::navigation_ready()) {
+              runtime_tiles::wanted_page = std::max(1, (int) page);
+              ESP_LOGI("navigation", "show page %d waits until the pages are ready", runtime_tiles::wanted_page);
+              return;
+            }
+            runtime_tiles::wanted_page = 0;
+            id(open_page).execute(page);
 
     # Diagnostics: the busy sheet of a tile, without touching the glass or Home Assistant.
     - action: preview_busy
@@ -761,6 +761,13 @@ interval:
           then:
             - script.execute: dim_display
       - script.execute: back_to_page_1_when_due
+      # A page Home Assistant asked for while the pages were being prepared (show_page) opens once they are ready.
+      - lambda: |-
+          if (runtime_tiles::wanted_page > 0 && runtime_tiles::navigation_ready()) {
+            const int page = runtime_tiles::wanted_page;
+            runtime_tiles::wanted_page = 0;
+            id(open_page).execute(page);
+          }
 
 time:
   - platform: homeassistant
@@ -2311,6 +2318,20 @@ lvgl:
                   styles: ${TOUCH_TEST_PAINT}
 
 script:
+  # A page opened for someone to look at (show_page, which also starts Back to page 1's clock): the settings page and
+  # every card close, as go_home does, and the page is drawn the way a swipe draws it. 1 is the first page, and a number
+  # past the last page lands on the last page, never outside.
+  - id: open_page
+    parameters:
+      page: int
+    then:
+      - lambda: |-
+          settings_screen::close();
+          const int pages = runtime_tiles::enabled ? std::max(1, (int) runtime_tiles::page_count())
+                                                   : (runtime_tiles::model.count > 6 ? 2 : 1);
+          runtime_tiles::go_to_page(std::clamp((int) page, 1, pages) - 1, false);
+          ESP_LOGI("navigation", "page %d of %d open from Home Assistant", id(tile_page) + 1, pages);
+
   - id: show_tile_page
     then:
       - lambda: |-

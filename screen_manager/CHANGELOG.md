@@ -34,6 +34,9 @@
   tile's options for entities to choose, each with its own searchable list, such as the grid, the solar panels and
   the battery of an energy dashboard. Tessera sends each chosen entity's state to the tile and follows it, and a new
   choice takes effect without building the screen again. Thanks to @vajpeters, who built it for the Victron plugin.
+- **Opening a page from Home Assistant wakes a screen that is still preparing.** A layout that reaches a screen in
+  standby is prepared once the screen is lit, and the Show page action did nothing in between. It now wakes the screen
+  first, and the page it asked for opens as soon as the pages are ready.
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.
