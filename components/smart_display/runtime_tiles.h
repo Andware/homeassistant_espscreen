@@ -5725,10 +5725,9 @@ inline std::string last_run_text(uint32_t epoch, bool compact) {
 // that should not say "Page 3" says nothing at all.
 inline bool chosen_subtitle(const Tile &t, std::string &out) {
   const std::string &choice = t.subtitle;
-  if (choice.empty() || choice == "auto") return false;
+  if (!tile_controls::subtitle_by_hand(choice)) return false;
   if (choice == "none") { out.clear(); return true; }
   if (choice.compare(0, 5, "text:") == 0) { out = choice.substr(5); return true; }
-  if (choice.compare(0, 5, "attr:") != 0) return false;
   // A value of the entity: the app sends the finished line, or seconds for a moment in time, which the screen
   // says in its own words and its own clock.
   const Extra &x = t.extra();
@@ -8655,6 +8654,7 @@ inline void render_slot(size_t slot) {
   // but not over the two that say the screen cannot answer: an unavailable entity and a refused tap still say so.
   std::string chosen;
   const bool set_by_hand = chosen_subtitle(t, chosen);
+  const bool refused = t.refused_at && esphome::millis() - t.refused_at < 4000;
   // A tile of a plugin this screen does not have (docs/PLUGINS.md) is a plain card that says so; one it has draws itself.
   if (t.is_plugin())
     value = plugin_host::known(t) ? std::string() : std::string(tr(txt::plugin_missing));
@@ -8664,7 +8664,7 @@ inline void render_slot(size_t slot) {
           : t.is_settings() ? std::string(tr(txt::tile_tap_to_open))
           : fill(txt::tile_page, "n", t.page_target());
   else if (!fresh() || !t.available()) value = tr(txt::ha_unavailable);
-  else if (t.refused_at && esphome::millis() - t.refused_at < 4000) value = tr(t.unanswered ? txt::tile_no_answer : txt::tile_refused);
+  else if (refused) value = tr(t.unanswered ? txt::tile_no_answer : txt::tile_refused);
   else if (set_by_hand) value = chosen;
   else if (d == "light" && t.state == "on" && tile_controls::effect_running(t.extra().effect)) value = t.extra().effect;
   else if (d == "light" && t.state == "on" && std::isfinite(t.brightness)) value = screen_text::percent(static_cast<int>(std::lround(std::clamp(t.brightness, 0.0f, 255.0f) * 100 / 255)));
@@ -8716,7 +8716,8 @@ inline void render_slot(size_t slot) {
   if(t.runs() && !t.running && t.state=="on")value_short=last_run_text(t.last_run,true);
   // A lock-only tile's word where the whole of it does not fit.
   if(d=="lock"&&lock_noting(t))value_short=tr(txt::lock_lock_only_short);
-  if(d=="vacuum" && std::isfinite(t.battery)){value_tail=" / "+screen_text::percent((int)t.battery);value+=value_tail;}
+  // A vacuum's status ends on its battery; the unavailable and refused words and a line chosen by hand do not (#293).
+  if(fresh() && t.available() && !refused){value_tail=tile_controls::vacuum_tail(t);value+=value_tail;}
   // A humidifier's humidity stays readable when its action word does not fit ("Humidif… · 38%").
   if(d=="humidifier" && fresh() && t.available() && std::isfinite(t.current) && !set_by_hand)value_tail=" · "+tile_controls::humidity_text(t.current);
   // Direct controls: only a wide card in the standard layout has room for the panel.

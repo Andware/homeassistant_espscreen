@@ -5,6 +5,13 @@
   name and state over them: for Spotify the covers of your Liked songs, newest first. Every minute one cover moves on
   to the next. A tap opens the player as before. Screens out there get it with the app, without a new build. Music
   Assistant shows the covers it gets from streaming services; covers of your own files keep the tile as it was.
+- **Plugins fit a 4 MB screen again (#292).** Since 0.4.88 the app refused every plugin for a CYD, a CYD ILI9342 or
+  a Hosyond 4 inch once it had built that screen, and said the screen had room for about 0 KB more. The app kept a
+  plugin under 93 % of the screen's update slot, and the firmware of these boards alone is now past that. Plugins may
+  now fill the slot up to 97 %, which leaves about 50 KB for plugins on a CYD.
+- **A vacuum's second line set to Nothing shows nothing (#293).** A vacuum tile with Second line "Nothing" still
+  showed " / 100 %" under its name, and its own text or a value of the entity got the battery added after it too. The
+  battery now ends only the automatic line ("Docked / 100 %"), and not the Unavailable word either.
 - **A new screen swipes out of the box.** A screen set up with New screen now has Swipe between pages on from the
   start, so it swipes through its pages, opens its settings from the top edge and opens the Dock from the bottom edge
   without turning anything on first. Screens you already have keep the setting they have through the update. Turn it
