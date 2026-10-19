@@ -3149,10 +3149,12 @@
         "calibration": "Touch-Kalibrierung beim ersten Start"
       },
       "choice": {
-        "DISPLAY_MODEL": "Display-Controller"
+        "DISPLAY_MODEL": "Display-Controller",
+        "FLASH_SIZE": "Flash-Speicher"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Nimm zuerst den ersten. Nimm den anderen, wenn der Bildschirm schwarz bleibt oder Rauschen oder ein verzerrtes Bild zeigt."
+        "DISPLAY_MODEL": "Nimm zuerst den ersten. Nimm den anderen, wenn der Bildschirm schwarz bleibt oder Rauschen oder ein verzerrtes Bild zeigt.",
+        "FLASH_SIZE": "Die meisten dieser Boards haben 16 MB. Nimm 8 MB, wenn der Bildschirm nach der Installation schwarz bleibt und immer wieder neu startet."
       },
       "choice_usual": "die meisten",
       "orientation_landscape": "Quer",

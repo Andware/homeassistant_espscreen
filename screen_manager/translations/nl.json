@@ -2774,10 +2774,12 @@
         "calibration": "Touch-kalibratie bij de eerste start"
       },
       "choice": {
-        "DISPLAY_MODEL": "Displaycontroller"
+        "DISPLAY_MODEL": "Displaycontroller",
+        "FLASH_SIZE": "Flashgeheugen"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Begin met de eerste. Kies de andere als het scherm zwart blijft of ruis of een verminkt beeld laat zien."
+        "DISPLAY_MODEL": "Begin met de eerste. Kies de andere als het scherm zwart blijft of ruis of een verminkt beeld laat zien.",
+        "FLASH_SIZE": "De meeste van deze borden hebben 16 MB. Kies 8 MB als het scherm na de installatie zwart blijft en steeds opnieuw start."
       },
       "choice_usual": "de meeste",
       "orientation_landscape": "Liggend",

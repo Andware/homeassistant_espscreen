@@ -93,10 +93,12 @@ def chain(path, *, all_variants=False):
 
 def flash_mb(board):
     """The flash chip a board's firmware is built for, in MB: the `flash_size` of the `esp32:` block in the board's
-    files, the last one that says it, and ESPHome's own 4 MB when none does (the CYD's esp32dev)."""
+    files, the last one that says it, and ESPHome's own 4 MB when none does (the CYD's esp32dev). A size named by a
+    substitution (the Waveshare 4.3's FLASH_SIZE, a choice of New screen) is the board file's own value of it."""
     found = 4
     for path in chain(BOARDS[board]):
         block = re.search(r'(?m)^esp32:[ \t]*\n((?:[ \t]+.*\n|[ \t]*\n)*)', path.read_text())
+        block = [None, resolve(block[1], board_values(board))] if block and '${' in block[1] else block
         size = re.search(r'(?m)^  flash_size:[ \t]*"?(\d+)MB"?', block[1]) if block else None
         if size:
             found = int(size[1])

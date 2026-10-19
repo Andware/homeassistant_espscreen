@@ -3149,10 +3149,12 @@
         "calibration": "Calibração do toque no primeiro arranque"
       },
       "choice": {
-        "DISPLAY_MODEL": "Controlador do ecrã"
+        "DISPLAY_MODEL": "Controlador do ecrã",
+        "FLASH_SIZE": "Memória flash"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Comece pelo primeiro. Escolha o outro se o ecrã ficar preto ou mostrar ruído ou uma imagem distorcida."
+        "DISPLAY_MODEL": "Comece pelo primeiro. Escolha o outro se o ecrã ficar preto ou mostrar ruído ou uma imagem distorcida.",
+        "FLASH_SIZE": "A maioria destas placas tem 16 MB. Escolha 8 MB se o ecrã ficar preto após a instalação e reiniciar uma e outra vez."
       },
       "choice_usual": "a maioria",
       "orientation_landscape": "Na horizontal",

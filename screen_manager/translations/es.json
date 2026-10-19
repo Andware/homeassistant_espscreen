@@ -3149,10 +3149,12 @@
         "calibration": "Calibración táctil al primer arranque"
       },
       "choice": {
-        "DISPLAY_MODEL": "Controlador de pantalla"
+        "DISPLAY_MODEL": "Controlador de pantalla",
+        "FLASH_SIZE": "Memoria flash"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Empieza por el primero. Elige el otro si la pantalla se queda negra o muestra ruido o una imagen distorsionada."
+        "DISPLAY_MODEL": "Empieza por el primero. Elige el otro si la pantalla se queda negra o muestra ruido o una imagen distorsionada.",
+        "FLASH_SIZE": "La mayoría de estas placas tienen 16 MB. Elige 8 MB si la pantalla se queda negra tras la instalación y se reinicia una y otra vez."
       },
       "choice_usual": "la mayoría",
       "orientation_landscape": "En horizontal",

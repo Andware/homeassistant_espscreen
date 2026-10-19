@@ -3149,10 +3149,12 @@
         "calibration": "Kalibracja dotyku przy pierwszym uruchomieniu"
       },
       "choice": {
-        "DISPLAY_MODEL": "Kontroler wyświetlacza"
+        "DISPLAY_MODEL": "Kontroler wyświetlacza",
+        "FLASH_SIZE": "Pamięć flash"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Zacznij od pierwszego. Wybierz drugi, gdy ekran pozostaje czarny albo pokazuje szum lub zniekształcony obraz."
+        "DISPLAY_MODEL": "Zacznij od pierwszego. Wybierz drugi, gdy ekran pozostaje czarny albo pokazuje szum lub zniekształcony obraz.",
+        "FLASH_SIZE": "Większość tych płytek ma 16 MB. Wybierz 8 MB, gdy ekran po instalacji pozostaje czarny i ciągle uruchamia się od nowa."
       },
       "choice_usual": "większość",
       "orientation_landscape": "Poziomo",

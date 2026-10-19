@@ -49,6 +49,9 @@ waveshare43:
   name: Waveshare
   model: ESP32-S3-Touch-LCD-4.3
   status: stable
+  choices:
+    # Some of these boards carry 8 MB of flash instead of 16 MB (GitHub #265).
+    FLASH_SIZE: [16MB, 8MB]
 
 jc8012p4a1:
   file: guition-jc8012p4a1.yaml

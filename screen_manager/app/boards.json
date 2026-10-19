@@ -2042,7 +2042,12 @@
   "can_standby": false,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "FLASH_SIZE": [
+     "16MB",
+     "8MB"
+    ]
+   },
    "inch": 4.3,
    "model": "ESP32-S3-Touch-LCD-4.3",
    "name": "Waveshare",
@@ -6352,7 +6357,12 @@
   "can_standby": false,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "FLASH_SIZE": [
+     "16MB",
+     "8MB"
+    ]
+   },
    "inch": 4.3,
    "model": "ESP32-S3-Touch-LCD-4.3",
    "name": "Waveshare",
@@ -7598,7 +7608,12 @@
   "can_standby": false,
   "catalog": {
    "calibrate": false,
-   "choices": {},
+   "choices": {
+    "FLASH_SIZE": [
+     "16MB",
+     "8MB"
+    ]
+   },
    "inch": 4.3,
    "model": "ESP32-S3-Touch-LCD-4.3",
    "name": "Waveshare",

@@ -2774,10 +2774,12 @@
         "calibration": "Touch calibration on first start"
       },
       "choice": {
-        "DISPLAY_MODEL": "Display controller"
+        "DISPLAY_MODEL": "Display controller",
+        "FLASH_SIZE": "Flash memory"
       },
       "choice_hint": {
-        "DISPLAY_MODEL": "Start with the first. Take the other when the screen stays black or shows noise or a garbled picture."
+        "DISPLAY_MODEL": "Start with the first. Take the other when the screen stays black or shows noise or a garbled picture.",
+        "FLASH_SIZE": "Most of these boards have 16 MB. Take 8 MB when the screen stays black after the install and keeps starting again."
       },
       "choice_usual": "most boards",
       "orientation_landscape": "Lying down",

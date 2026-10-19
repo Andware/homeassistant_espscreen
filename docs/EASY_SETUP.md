@@ -16,7 +16,7 @@ ESPHome Device Builder is optional:
 | CYD, 2.8 inch | ESP32-2432S028, 320×240, ILI9341 and XPT2046 |
 | CYD, 2.8 inch ILI9342 (experimental) | ESP32-2432S028 with an ILI9342 display controller, 320×240, XPT2046 |
 | Guition, 4 inch | ESP32-S3-4848S040, 480×480, ST7701S and GT911 |
-| Waveshare, 4.3 inch | ESP32-S3-Touch-LCD-4.3, 800×480, ST7262 and GT911 |
+| Waveshare, 4.3 inch | ESP32-S3-Touch-LCD-4.3, 800×480, ST7262 and GT911, 16 MB or 8 MB flash (New screen asks which) |
 | Waveshare, 5 inch (new) | ESP32-S3-Touch-LCD-5 (not the 5B), 800×480, RGB and GT911 ([details](WAVESHARE5.md)) |
 | Guition, 5 inch (experimental) | JC8048W550C_I (the capacitive variant only), 800×480, ST7262 RGB and GT911 ([details](JC8048W550.md)) |
 | Waveshare, 7 inch (experimental) | ESP32-S3-Touch-LCD-7, 800×480, RGB and GT911 |
@@ -384,6 +384,7 @@ that screen and says where it is set.
 | `DISPLAY_MODEL` | CYD, Hosyond, Tab5 | the display controller: ESPHome's `mipi_spi` model on the CYD and the Hosyond (`ILI9341`, `ST7789V`, ...), `ST7121` or `ST7123` on the Tab5 |
 | `DISPLAY_DATA_RATE` | CYD, Hosyond | the display's SPI clock (`40MHz`; some boards want `20MHz`) |
 | `DISPLAY_INVERT_COLORS` | CYD, Hosyond | `true` for a panel that shows its colours inverted |
+| `FLASH_SIZE` | Waveshare 4.3 | the flash chip (`16MB`, or `8MB` on boards that carry an N8R8). Set it when the screen is installed over USB: an update over the air keeps the flash's partition table |
 | `GRID_COLS`, `GRID_ROWS` | every board | the grid a screen starts with lying down (`GRID_COLS_PORTRAIT` and `GRID_ROWS_PORTRAIT` standing up). New screen writes them when **Advanced** chose another grid. Since firmware 0.53.0 the editor changes columns and rows beside the mockup without a build, and the screen keeps the grid it was given |
 | `GRID_MAX_COLUMNS`, `GRID_MAX_ROWS` | every board | the most columns and rows the editor offers lying down (`GRID_MAX_COLUMNS_PORTRAIT` and `GRID_MAX_ROWS_PORTRAIT` standing up), at most `8`; worked out from the glass (docs/RESPONSIVE.md, "The grid a screen is given") |
 | `GRID_MIN_COLUMNS`, `GRID_MIN_ROWS` | every board | the fewest columns and rows the editor offers (`1`) |
