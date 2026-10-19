@@ -195,6 +195,21 @@ def bounded(value, limit=3200):
     return None
 
 
+def plugin_entities(entries, states, most=500):
+    """The entities of every domain a plugin names (a tile's `entity`, an input of kind entity, a screensaver step of
+    an entity) that the editor's own list lacks, for its pickers and its check of tiles whose entity is gone: that list
+    has the domains Tessera draws tiles for and the top bar's (core.discover), and a plugin may add one it does not (a
+    plant, GitHub #262). Those the editor has stay out, so the `most` here go to the plugins' own domains alone."""
+    entries = list(entries)
+    domains = {d for entry in entries for tile in entry.manifest['tiles'] for d in tile['domains']}
+    domains |= {d for entry in entries for item in entry.manifest['inputs'] for d in item['domains']}
+    domains |= {d for entry in entries for saver in entry.manifest.get('savers', []) for d in saver.get('domains', [])}
+    domains -= core.DOMAINS | core.HEADER_ONLY_DOMAINS
+    return sorted(({'id': eid, 'name': (state.get('attributes') or {}).get('friendly_name') or eid}
+                   for eid, state in states.items() if isinstance(eid, str) and eid.split('.')[0] in domains),
+                  key=lambda e: e['name'].lower())[:most]
+
+
 def trimmed(data, budget=X_BUDGET):
     """A tile's data within `budget` bytes (X_BUDGET, or less beside large options): the last items go first."""
     if not isinstance(data, dict):
@@ -945,14 +960,7 @@ class Plugins:
                 if item['kind'] == 'secret':
                     secrets.setdefault(entry.id, {})[item['id']] = self.secrets.has(
                         entry.id, item['id'], origin=None if entry.source == 'folder' else entry.origin)
-        # The entities of every domain a plugin names (a tile's `entity`, an input of kind entity): the editor's own list
-        # has only the domains Tessera draws tiles for, and a plugin may add one it does not (a calendar).
-        domains = {d for entry in listed.values() for tile in entry.manifest['tiles'] for d in tile['domains']}
-        domains |= {d for entry in listed.values() for item in entry.manifest['inputs'] for d in item['domains']}
-        states = getattr(self.manager.ha, 'states', {}) or {}
-        entities = sorted(({'id': eid, 'name': (state.get('attributes') or {}).get('friendly_name') or eid}
-                           for eid, state in states.items() if isinstance(eid, str) and eid.split('.')[0] in domains),
-                          key=lambda e: e['name'].lower())[:500]
+        entities = plugin_entities(listed.values(), getattr(self.manager.ha, 'states', {}) or {})
         # Per screen: the features its board and its plugins bring, and why a plugin cannot go on it when that is
         # something only the app knows (a feature nothing brings, a plugin it needs that does not fit, ESPHome too old).
         # The editor works out the board, PSRAM and room itself.
@@ -1771,7 +1779,15 @@ class Plugins:
             return None
         if isinstance(when, dict) and (states.get(entity) or {}).get('state') not in when['state']:
             return None
-        return trimmed({**(part or {}), **(data or {})}, room)
+        step = {**(part or {}), **(data or {})}
+        # The step's entity in its words (#286): the screen asks for the step's pictures `for` it, and the app shows
+        # Home Assistant's own only for the entity chosen for the step. On a step of an entity it is always the app's,
+        # so a field of the fetch's answer cannot stand in for it, and none while an entity of another domain waits.
+        if kind['domains']:
+            step.pop('entity', None)
+            if 'wait' not in part:
+                step['entity'] = entity
+        return trimmed(step, room)
 
     def saver_steps(self):
         """Every plugin step of a screensaver with a fetch, on a screen whose screensaver is on: [(inbox, key, entry,

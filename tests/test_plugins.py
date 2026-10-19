@@ -737,6 +737,51 @@ class EntityTile(unittest.IsolatedAsyncioTestCase):
         _, wrong = service.entity_part(kind, {'options': {'plugin_entity': 'light.kitchen'}})
         self.assertEqual(wrong, {'wait': 'wrong_entity'})
 
+    async def test_a_screensaver_step_names_its_entity(self):
+        # #286: the screen asks for a step's pictures `for` its x.entity, and the app shows Home Assistant's pictures
+        # only for the entity chosen for the step, so the step's x names it, after its fetch's answer.
+        import plugins as plugin_service
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        states = {'sensor.photo': {'state': '/api/image_proxy/image.holiday?v=1', 'attributes': {'friendly_name': 'Photo'}},
+                  'light.kitchen': {'state': 'on', 'attributes': {}}}
+
+        class FakeManager:
+            ha = type('HA', (), {'states': states, 'time_zone': 'UTC', 'changed': asyncio.Event(), 'dirty': set()})()
+            page_senders = {}
+        service = plugin_service.Plugins(FakeManager(), Path(tmp.name) / 'data', Path(tmp.name) / 'esphome')
+        kind = {'id': 'slideshow', 'domains': ['sensor'], 'attributes': [], 'options': [], 'data': True}
+        step = lambda entity: service.saver_step('hall', 'plugin:photos.slideshow', None, kind, {'entity': entity}, states)
+        service.saver_cache[('hall', 'plugin:photos.slideshow')] = {'entity': 'sensor.other', 'caption': 'Beach'}
+        x = step('sensor.photo')
+        self.assertEqual((x['entity'], x['state'], x['caption']), ('sensor.photo', states['sensor.photo']['state'], 'Beach'))
+        self.assertEqual(step('light.kitchen'), {'wait': 'wrong_entity', 'caption': 'Beach'})
+        self.assertIsNone(step(''))
+        # A step without an entity sends its fetch's answer as it is.
+        bare = {**kind, 'domains': []}
+        self.assertEqual(service.saver_step('hall', 'plugin:photos.slideshow', None, bare, {}, states),
+                         {'entity': 'sensor.other', 'caption': 'Beach'})
+
+
+class PluginEntities(unittest.TestCase):
+    def test_only_the_domains_the_editor_has_not(self):
+        # GitHub #262: a plugin's tile of a plant was called gone, as the editor's list has only Tessera's own domains.
+        # The add-on lists the entities of the domains plugins name that the editor lacks: a tile's, an input's and a
+        # screensaver step's, and none it already has (sensors, a top bar's counter), so a plant is never cut off.
+        import plugins as plugin_service
+        entry = lambda **manifest: type('Entry', (), {'manifest': {'tiles': [], 'inputs': [], **manifest}})()
+        states = {'plant.monstera': {'state': 'ok', 'attributes': {'friendly_name': 'Monstera'}},
+                  'todo.shopping': {'state': '2', 'attributes': {'friendly_name': 'Shopping'}},
+                  'schedule.heating': {'state': 'on', 'attributes': {}}, 'calendar.bins': {'state': 'off', 'attributes': {}},
+                  'sensor.moisture': {'state': '40', 'attributes': {}}, 'counter.visits': {'state': '3', 'attributes': {}}}
+        listed = [entry(tiles=[{'domains': ['sensor', 'plant']}], inputs=[{'domains': ['todo', 'counter', 'calendar']}]),
+                  entry(savers=[{'domains': ['schedule']}, {'step': 'clock', 'domains': []}])]
+        self.assertEqual(plugin_service.plugin_entities(listed, states),
+                         [{'id': 'plant.monstera', 'name': 'Monstera'}, {'id': 'schedule.heating', 'name': 'schedule.heating'},
+                          {'id': 'todo.shopping', 'name': 'Shopping'}])
+        self.assertEqual(len(plugin_service.plugin_entities(listed, states, most=1)), 1)
+        self.assertEqual(plugin_service.plugin_entities([entry()], states), [])
+
 
 class BlamedBuilds(unittest.TestCase):
     """A screen's update that stops on a plugin's code says which plugin, and its update when one is on offer."""

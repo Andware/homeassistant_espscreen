@@ -397,7 +397,7 @@ added; within major 0 none is renamed or taken away.
 | media | `entity`, `name`, `title`, `artist`, `album`, `state`, `features` (Home Assistant's `supported_features`), `muted`, `volume` (0 to 1), `duration`, `position`, `position_at` (seconds since 1970), `picture` (`saver:picture` while there is a cover), `mark` (the cover's mark), `colour` (`#rrggbb`) |
 | clock | `temperature` (`21°`, `""` for none), `items` (`[{icon, text, since?}]`: a codepoint of Tessera's set, its words, or the moment it counts from) |
 | photos | `picture` (`saver:picture`), `mark`, `index`, `count`, `album` |
-| own | the fetch's answer and the entity's `state`, `name`, `attributes` and fields, as a plugin tile's `x` |
+| own | the fetch's answer and the entity's `state`, `name`, `attributes` and fields, as a plugin tile's `x`, and `entity`, the entity chosen for the step: the screen asks for the step's Home Assistant pictures for it, so a field of the fetch's answer called `entity` gives way to it |
 
 **On the screen** (`plugin_host.cpp`, "A plugin's screensaver"): runtime_tiles makes the black glass on LVGL's top layer
 (`saver_glass`) and hands it to `plugin_host::saver_show` when `saver_plugin_draws` (the screen has that saver). The

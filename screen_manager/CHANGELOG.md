@@ -15,6 +15,16 @@
   and the wrong one leaves the screen black. New screen now asks which one the Tab5 has, with the ST7121 as before
   first. Tab5 screens you already have keep the ST7121. Thanks to @pedromfa and @the-make-r, who found and tested the
   ST7123.
+- **The Waveshare 4.3 inch with 8 MB of flash (#265).** Some Waveshare ESP32-S3-Touch-LCD-4.3 boards carry 8 MB of
+  flash instead of 16 MB, and a screen built for 16 MB started over and over on them with a black glass. New screen
+  now asks how much flash the board has, with 16 MB as before first. Screens you already have keep what they have.
+- **A plugin's screensaver step shows its entity's picture (#286).** A plugin's own step of the screensaver that shows
+  a picture of its entity, such as a photo of an image entity, got every picture refused. The step now tells the
+  screen which entity it belongs to, so its pictures arrive, as they already did on the plugin's tile. Screens out
+  there get it with the app, without a new build.
+- **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
+  Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
+  entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.
 
 ## 0.4.89 (firmware 0.57.0)
 
