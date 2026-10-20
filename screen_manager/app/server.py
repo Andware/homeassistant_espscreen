@@ -17,7 +17,12 @@ import math
 from urllib.parse import urlsplit
 import calendar_feed
 import durations
-import camera_feed
+import picture_legacy
+import picture_links
+import picture_paint
+import picture_question
+import picture_service
+import picture_sources
 import live_feed
 import claude_skill
 import screen_hang
@@ -672,21 +677,50 @@ class HomeAssistant:
         result = await self.request('call_service', domain=domain, service=service, service_data=data, return_response=True)
         return (result or {}).get('response') if isinstance(result, dict) else None
 
-    async def camera_image(self, entity):
-        """The picture of a camera or image entity as Home Assistant hands it to its own frontend."""
-        path = 'camera_proxy' if entity.startswith('camera.') else 'image_proxy'
-        async with self.session.get(f'{self.base}/{path}/{entity}', headers={'Authorization': 'Bearer ' + self.token},
-                                    timeout=ClientTimeout(total=camera_feed.FETCH_SECONDS)) as response:
+    # ----- pictures from Home Assistant (docs/PICTURES.md): one way to read them -----
+    # The most bytes one picture may be, by what it is: a camera's snapshot or a player's cover, an entity's own picture
+    # (a person's), a thumbnail of a player's library, a photo of the screensaver's folder.
+    PICTURE_LIMITS = {'snapshot': 8 * 1024 * 1024, 'entity': 4 * 1024 * 1024, 'thumbnail': 2 * 1024 * 1024,
+                      'photo': saver_photos.MAX_PHOTO_BYTES}
+
+    async def picture_bytes(self, url, headers, kind, timeout=None, **options):
+        """The bytes at `url`, never more than the limit of its `kind` (PICTURE_LIMITS), never through a redirect."""
+        limit = self.PICTURE_LIMITS[kind]
+        async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=timeout or picture_sources.FETCH_SECONDS),
+                                    allow_redirects=False, **options) as response:
             response.raise_for_status()
-            if (response.content_length or 0) > camera_feed.MAX_SNAPSHOT_BYTES:
-                raise ValueError('image too large')
+            if (response.content_length or 0) > limit:
+                raise ValueError('picture too large')
             raw = bytearray()
             async for chunk in response.content.iter_chunked(65536):
                 raw += chunk
-                if len(raw) > camera_feed.MAX_SNAPSHOT_BYTES:
-                    raise ValueError('image too large')
+                if len(raw) > limit:
+                    raise ValueError('picture too large')
+            return bytes(raw)
+
+    async def picture_address(self, address, allowed, what='picture'):
+        """(url, headers) of a picture's address: a path of Home Assistant's own that `allowed(path)` takes, with the
+        app's token, or a public address on the internet without it (never a private one, _allow_media_url). Any other
+        address raises: never a redirect, never a path out of what is allowed (app 0.4.15, GitHub #77, thanks
+        @EmanueleBenedettini)."""
+        root = self.base[:-4] if self.base.endswith('/api') else self.base
+        if address.startswith('/'):
+            parsed = urlsplit(address)
+            if parsed.netloc or '..' in parsed.path or address.startswith('//') or not allowed(parsed.path):
+                raise ValueError(f'unsafe {what} address')
+            return f'{root}{address}', {'Authorization': 'Bearer ' + self.token}
+        if address.startswith(('http://', 'https://')):
+            if not await self._allow_media_url(address):
+                raise ValueError(f'unsafe {what} address')
+            return address, {}
+        raise ValueError(f'unknown {what} address')
+
+    async def camera_image(self, entity):
+        """The picture of a camera or image entity as Home Assistant hands it to its own frontend."""
+        path = 'camera_proxy' if entity.startswith('camera.') else 'image_proxy'
+        raw = await self.picture_bytes(f'{self.base}/{path}/{entity}', {'Authorization': 'Bearer ' + self.token}, 'snapshot')
         # A Valetudo robot's map camera hands out a placeholder with the map inside: the app draws that map, once per map.
-        return await valetudo_map.prepared(bytes(raw))
+        return await valetudo_map.prepared(raw)
 
     def media_picture(self, entity):
         """The address of a media player's cover as its state carries it right now (core.media_cover: Home Assistant's
@@ -711,104 +745,41 @@ class HomeAssistant:
             return bytes(raw)
 
     async def entity_picture(self, picture):
-        """An entity's picture (`entity_picture`) for a marker on a map (app 0.4.36), from where Home Assistant's own map
-        takes it: its own address through Home Assistant (a person's uploaded picture), or a public address on the
-        internet; never a private one, never a redirect, as a media cover (media_image)."""
-        root = self.base[:-4] if self.base.endswith('/api') else self.base
-        if picture.startswith('/'):
-            parsed = urlsplit(picture)
-            if parsed.netloc or not parsed.path.startswith(('/api/image/serve/', '/api/image_proxy/', '/local/')) or '..' in parsed.path:
-                raise ValueError('unsafe picture address')
-            url, headers = f'{root}{picture}', {'Authorization': 'Bearer ' + self.token}
-        elif picture.startswith(('http://', 'https://')):
-            if not await self._allow_media_url(picture):
-                raise ValueError('unsafe picture address')
-            url, headers = picture, {}
-        else:
-            raise ValueError('unknown picture address')
-        async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=camera_feed.FETCH_SECONDS),
-                                    allow_redirects=False) as response:
-            response.raise_for_status()
-            raw = bytearray()
-            async for chunk in response.content.iter_chunked(65536):
-                raw += chunk
-                if len(raw) > 4 * 1024 * 1024:
-                    raise ValueError('picture too large')
-            return bytes(raw)
+        """An entity's own picture (`entity_picture`: a person's for a marker on a map, app 0.4.36, and a plugin's place
+        of an entity), from where Home Assistant's own frontend takes it: one of Home Assistant's own pictures
+        (picture_question.HA_PICTURES), or a public address on the internet."""
+        url, headers = await self.picture_address(picture, lambda path: path.startswith(picture_question.HA_PICTURES))
+        return await self.picture_bytes(url, headers, 'entity')
 
     async def media_image(self, entity):
-        """The cover of a media player (app 0.2.77), fetched only from trusted Home Assistant local routes or from a
-        non-private external URL. We do not follow redirects, and we reject private/loopback addresses and path traversal
-        (app 0.4.15, GitHub #77, thanks @EmanueleBenedettini). Home Assistant's proxy comes first (media_cover), so a
-        picture on the internet or in the house reaches the screen through Home Assistant, which fetches it itself."""
+        """The cover of a media player (app 0.2.77): Home Assistant's proxy for that very player, which fetches the
+        picture itself wherever it lies, or a public address on the internet (core.media_cover takes the proxy first)."""
         picture = self.media_picture(entity)
         if not picture:
             raise ValueError('no picture')
-        root = self.base[:-4] if self.base.endswith('/api') else self.base
-        if picture.startswith('/'):
-            parsed = urlsplit(picture)
-            if parsed.netloc or parsed.path != f'/api/media_player_proxy/{entity}':
-                raise ValueError('unsafe picture address')
-            url, headers = f'{root}{picture}', {'Authorization': 'Bearer ' + self.token}
-        elif picture.startswith(('http://', 'https://')):
-            if not await self._allow_media_url(picture):
-                raise ValueError('unsafe picture address')
-            url, headers = picture, {}
-        else:
-            raise ValueError('unknown picture address')
-        async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=camera_feed.FETCH_SECONDS),
-                                   allow_redirects=False) as response:
-            response.raise_for_status()
-            if (response.content_length or 0) > camera_feed.MAX_SNAPSHOT_BYTES:
-                raise ValueError('picture too large')
-            raw = bytearray()
-            async for chunk in response.content.iter_chunked(65536):
-                raw += chunk
-                if len(raw) > camera_feed.MAX_SNAPSHOT_BYTES:
-                    raise ValueError('picture too large')
-            return bytes(raw)
+        url, headers = await self.picture_address(picture, lambda path: path == f'/api/media_player_proxy/{entity}')
+        return await self.picture_bytes(url, headers, 'snapshot')
 
     async def media_file(self, address):
         """A photo of the screensaver's folder (saver_photos.py), at the address Home Assistant's own
         `media_source/resolve_media` named for it: a path of Home Assistant (/media/..., an integration's own view such as
-        Immich's) with the app's token, or a public address on the internet; never a private one, never a redirect."""
-        root = self.base[:-4] if self.base.endswith('/api') else self.base
+        Immich's) with the app's token, or a public address on the internet."""
+        url, headers = await self.picture_address(address, lambda path: True, 'photo')
         options = {}
-        if address.startswith('/'):
-            parsed = urlsplit(address)
-            if parsed.netloc or '..' in parsed.path or address.startswith('//'):
-                raise ValueError('unsafe photo address')
-            url, headers = f'{root}{address}', {'Authorization': 'Bearer ' + self.token}
-            # Under the Supervisor its proxy passes /api/ alone, and a media source serves its files elsewhere
-            # (/media/local/..., /immich/...): the photo comes from Home Assistant itself, at the internal address it
-            # names, by the signature resolve_media gave the path (`authSig`), with no token of the app's.
-            if self.base == 'http://supervisor/core/api' and not parsed.path.startswith('/api/'):
-                direct = await self.internal_url()
-                if not direct or 'authSig=' not in (parsed.query or ''):
-                    raise ValueError('no way to Home Assistant for this photo')
-                url, headers = f'{direct}{address}', {}
-                # A home on https with its own certificate: the request carries no secret (the signature is the
-                # photo's own, from Home Assistant), so the certificate is not checked here, as a browser in the
-                # house would need telling to.
-                if direct.startswith('https://'):
-                    options['ssl'] = False
-        elif address.startswith(('http://', 'https://')):
-            if not await self._allow_media_url(address):
-                raise ValueError('unsafe photo address')
-            url, headers = address, {}
-        else:
-            raise ValueError('unknown photo address')
-        async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=saver_photos.FETCH_SECONDS),
-                                    allow_redirects=False, **options) as response:
-            response.raise_for_status()
-            if (response.content_length or 0) > saver_photos.MAX_PHOTO_BYTES:
-                raise ValueError('photo too large')
-            raw = bytearray()
-            async for chunk in response.content.iter_chunked(65536):
-                raw += chunk
-                if len(raw) > saver_photos.MAX_PHOTO_BYTES:
-                    raise ValueError('photo too large')
-            return bytes(raw)
+        parsed = urlsplit(address)
+        # Under the Supervisor its proxy passes /api/ alone, and a media source serves its files elsewhere
+        # (/media/local/..., /immich/...): the photo comes from Home Assistant itself, at the internal address it names,
+        # by the signature resolve_media gave the path (`authSig`), with no token of the app's.
+        if address.startswith('/') and self.base == 'http://supervisor/core/api' and not parsed.path.startswith('/api/'):
+            direct = await self.internal_url()
+            if not direct or 'authSig=' not in (parsed.query or ''):
+                raise ValueError('no way to Home Assistant for this photo')
+            url, headers = f'{direct}{address}', {}
+            # A home on https with its own certificate: the request carries no secret (the signature is the photo's own,
+            # from Home Assistant), so the certificate is not checked here, as a browser in the house would need telling to.
+            if direct.startswith('https://'):
+                options['ssl'] = False
+        return await self.picture_bytes(url, headers, 'photo', timeout=saver_photos.FETCH_SECONDS, **options)
 
     async def internal_url(self):
         """Home Assistant's own internal address (websocket network/url, its Network settings), without a trailing slash,
@@ -822,30 +793,11 @@ class HomeAssistant:
         return self._internal_url
 
     async def browse_image(self, entity, picture):
-        """A thumbnail of a player's library (app 0.4.42): a public address on the internet (Spotify's), or Home
-        Assistant's own proxy for that player's library (Sonos, Music Assistant); never a private address, never a
-        redirect, as a cover (media_image)."""
-        root = self.base[:-4] if self.base.endswith('/api') else self.base
-        if picture.startswith('/'):
-            parsed = urlsplit(picture)
-            if parsed.netloc or not parsed.path.startswith(f'/api/media_player_proxy/{entity}/browse_media/') or '..' in parsed.path:
-                raise ValueError('unsafe picture address')
-            url, headers = f'{root}{picture}', {'Authorization': 'Bearer ' + self.token}
-        elif picture.startswith(('http://', 'https://')):
-            if not await self._allow_media_url(picture):
-                raise ValueError('unsafe picture address')
-            url, headers = picture, {}
-        else:
-            raise ValueError('unknown picture address')
-        async with self.session.get(url, headers=headers, timeout=ClientTimeout(total=camera_feed.FETCH_SECONDS),
-                                    allow_redirects=False) as response:
-            response.raise_for_status()
-            raw = bytearray()
-            async for chunk in response.content.iter_chunked(65536):
-                raw += chunk
-                if len(raw) > 2 * 1024 * 1024:
-                    raise ValueError('picture too large')
-            return bytes(raw)
+        """A thumbnail of a player's library (app 0.4.42): Home Assistant's proxy for that player's library (Sonos, Music
+        Assistant), or a public address on the internet (Spotify's)."""
+        prefix = f'/api/media_player_proxy/{entity}/browse_media/'
+        url, headers = await self.picture_address(picture, lambda path: path.startswith(prefix))
+        return await self.picture_bytes(url, headers, 'thumbnail')
 
     async def fire(self, event_type, data):
         """One Home Assistant event of our own, such as the answer to a tile event."""
@@ -1032,7 +984,6 @@ class Manager:
         self.photos = saver_photos.Photos(lambda kind, **data: self.ha.request(kind, **data),
                                           lambda address: self.ha.media_file(address))
         self.photos.changed = lambda: self.ha.changed.set()
-        self.photo_links = {}  # inbox -> (mark, box, fit, token) of the photo link a screen got last
         # Settings -> Language & region (app 0.2.90): the language, clock and numbers of every screen.
         self.region = Region(self.path.parent / 'language.json', ha_language=lambda: getattr(self.ha, 'ha_language', None))
         self.ha.language_of = self.region.language
@@ -1063,15 +1014,19 @@ class Manager:
         self.retry_at, self.retries, self.no_answers = {}, {}, set()
         # History for detail cards (firmware 0.2.51+): (entity, hours) -> (monotonic, message), and the fetches under way.
         self.card_histories, self.card_history_fetches = {}, {}
-        # Camera images (firmware 0.2.57+): the feed behind the camera port, and the cameras of recent alerts
-        # (entity -> monotonic time) that a screen may open full screen without a tile.
-        self.camera = camera_feed.CameraFeed(lambda entity: self.ha.camera_image(entity),
-                                             fetch_cover=lambda entity: self.ha.media_image(self.followed(entity)),
-                                             picture=lambda entity: self.ha.media_picture(self.followed(entity)))
+        # Pictures (docs/PICTURES.md): the cameras' snapshots and the players' covers, once for every screen; the links on
+        # the camera port; the rules and the getting of every source; and the service that answers every question. And
+        # the cameras of recent alerts (entity -> monotonic time) that a screen may open full screen without a tile.
+        self.snapshots = picture_sources.Snapshots(lambda entity: self.camera_snapshot(entity),
+                                                   fetch_cover=lambda entity: self.ha.media_image(self.followed(entity)),
+                                                   picture=lambda entity: self.ha.media_picture(self.followed(entity)))
         self.alert_cameras = {}
-        # A camera live, full screen, on a P4 (live_feed.py): its links and the sources behind them, on the camera port.
+        # A camera live on a P4 (live_feed.py): its links and the sources behind them, on the camera port.
         self.live = live_feed.LiveFeed(lambda entity: self.ha.camera_image(entity), lambda: self.ha.websocket(),
                                        lambda entity: self.ha.camera_streams(entity))
+        self.links = picture_links.Links()
+        self.sources = picture_sources.Sources(self, self.snapshots)
+        self.pictures = picture_service.Service(self, self.sources, self.links, self.live)
         # The streets of the map cards (app 0.4.33): one tile source for every screen, through Home Assistant. And the
         # last maps drawn, by their mark, frame and look: a screen in dark mode and one in light mode each have their
         # own, and a page that loads again for its camera does not draw its map again.
@@ -1414,7 +1369,7 @@ class Manager:
 
     async def link_base(self, screen):
         """Where `screen` fetches this app's pictures: Home Assistant's address on the screen's own network (GitHub #276)."""
-        return await camera_feed.base_url(self.ha.request, near=(screen or {}).get('ip'))
+        return await picture_links.base_url(self.ha.request, near=(screen or {}).get('ip'))
 
     def device_prefixes(self, device):
         registry = getattr(self.ha, 'registry', [])
@@ -1955,7 +1910,7 @@ class Manager:
     # ----- A media player's library (app 0.4.42, firmware 0.24.0+, media_library.py) -----
     def player_ground(self, entity, attrs):
         """The two colours of a player's cover ('RRGGBB,RRGGBB'), or None until they are read or when it has none. Read
-        once per picture, from the same cover the screens load (camera_feed.cover_raw); the screen gets them with the
+        once per picture, from the same cover the screens load (picture_sources.Snapshots.cover); the screen gets them with the
         player's next state, so the card is whole before any picture comes."""
         mark = (media_extras(attrs) or {}).get('pic')
         if not mark:
@@ -1970,7 +1925,7 @@ class Manager:
     async def read_ground(self, entity, mark):
         colours = None
         try:
-            raw = await self.camera.cover_raw(entity, camera_feed.FETCH_SECONDS)
+            raw = await self.snapshots.cover_raw(entity, picture_sources.FETCH_SECONDS)
             if raw:
                 colours = await asyncio.get_running_loop().run_in_executor(None, media_library.ground_colours, raw)
         except Exception as error:
@@ -2044,7 +1999,7 @@ class Manager:
             self.ha.changed.set()
 
     def rest_render(self, entity):
-        """A player's mosaic for the page's strip (camera_feed.live `renders`): its mark now, and the covers of this
+        """A player's mosaic for the page's strip (picture_sources, a cover tile's source): its mark now, and the covers of this
         turn drawn into the card's frame."""
         pool = (self.rest_pools.get(entity) or (0, []))[1]
 
@@ -2317,55 +2272,14 @@ class Manager:
         if steps or follow is not None:
             LOG.info('%s of %s from %s: %s', op, request.get('speaker'), entity, screen['name'])
 
-    async def library_art(self, inbox, screen, request):
-        """The covers of one page of a folder as one picture (an atlas, tile_art), in the screen's frames: the items by
-        their numbers, each thumbnail Home Assistant names fetched once and kept a while."""
-        entity = request.get('entity')
-        found = self.player_request({**request, 'entity': entity})
-        if not found or not camera_feed.can_show_cover(screen):
-            return
-        _, _, entity, action = found
-        tokens = [self.media_token(part) for part in str(request.get('lib') or '').split(',')]
-        shape = camera_feed.shape_of(screen) or {}
-        atlas = camera_feed.tile_art.parse(request.get('atlas'), (shape.get('width', 0), shape.get('height', 0)), len(tokens))
-        try:
-            ground = int(str(request.get('bg') or '0'), 16) & 0xFFFFFF
-        except ValueError:
-            ground = 0
-        if atlas is None or None in tokens:
-            return
-        shelf = self.shelves.get(inbox, media_library.Shelf())
-        items = [shelf.get(entity, token) for token in tokens]
-        limit = asyncio.Semaphore(6)
+    async def preview_picture(self, source, box=(512, 512)):
+        """(etag, BMP) of a camera's or a player's picture for the editor's mockup, at its own proportions within `box`:
+        prepared pixels only, never a Home Assistant token or address. None when there is none."""
+        question = picture_question.Question(picture_question.Owner('view'), (source,), box,
+                                             (picture_question.Place(0, 0, *box, fit='shrink'),), formats=('bmp24',))
+        found = await self.pictures.picture('', None, question)
+        return (found.etag, found.body) if found is not None and found.state == 'ok' else None
 
-        async def thumbnail(item):
-            url = (item or {}).get('thumb')
-            if not url:
-                return None
-            if url in self.thumbnails:
-                self.thumbnails.move_to_end(url)
-                return self.thumbnails[url]
-            async with limit:
-                try:
-                    raw = await self.ha.browse_image(entity, url)
-                except Exception as error:
-                    LOG.info('No cover for %s (%s)', item['title'], type(error).__name__)
-                    return None
-            self.thumbnails[url] = raw
-            while len(self.thumbnails) > 96:
-                self.thumbnails.popitem(last=False)
-            return raw
-        raws = await asyncio.gather(*(thumbnail(item) for item in items))
-        url = ''
-        base = await self.link_base(screen)
-        if base and any(raws):
-            image = await asyncio.get_running_loop().run_in_executor(
-                None, lambda: camera_feed.tile_art.encode(list(raws), [ground] * len(raws), atlas, compact=camera_feed.compact_pictures(screen)))
-            url = f'{base}/camera/{self.camera.link(entity, atlas[:2], still=image)}.bmp'
-        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'lib', 'e': entity, 'u': url}, action, request)
-        LOG.info('Covers of %d items of %s on %s%s', len(tokens), entity, screen['name'], '' if url else ': none')
-
-    # ----- History on a detail card (firmware 0.2.51+) -----
     async def card_history_loop(self):
         """Answer the history a screen asks for when a card opens, a few at a time."""
         limit = asyncio.Semaphore(3)
@@ -2582,10 +2496,10 @@ class Manager:
         grid = (given or self.grid_of(screen)).for_firmware(self.firmware_version(inbox, screen))
         layout = validate_layout(data, grid=grid)
         # A CYD has no memory for camera images, whatever its firmware; say so before asking for an update.
-        if any(t['entity'].split('.')[0] in CAMERA_DOMAINS for t in layout['tiles']) and board_of(screen) not in camera_feed.BOXES:
+        if any(t['entity'].split('.')[0] in CAMERA_DOMAINS for t in layout['tiles']) and board_of(screen) not in picture_question.BOXES:
             raise ValueError(t('addon.errors.layout.camera_unsupported'))
         # A map is a picture too (app 0.4.33).
-        if any((t.get('options') or {}).get('display') == 'map' for t in layout['tiles']) and board_of(screen) not in camera_feed.BOXES:
+        if any((t.get('options') or {}).get('display') == 'map' for t in layout['tiles']) and board_of(screen) not in picture_question.BOXES:
             raise ValueError(t('addon.errors.layout.map_unsupported'))
         needed = self.needs_firmware(inbox, layout, screen)
         if needed:
@@ -2917,7 +2831,7 @@ class Manager:
                     extra={**(extra or {}),'vc':card}
                     # The map read ahead, so the card that opens only waits for its own size (vacuum_map_warm).
                     if isinstance(card.get('map'),dict):
-                        self.camera.vacuum_map_warm(card['map']['e'],card['map']['m'])
+                        self.snapshots.vacuum_warm(card['map']['e'],card['map']['m'])
         if tile['entity'].startswith('calendar.'):
             extra = {**(extra or {}), 'cal': await self.calendar_extras(tile)}
         message=state_message(index,tile,states,extra,
@@ -3356,14 +3270,24 @@ class Manager:
             request = await queue.get()
             asyncio.ensure_future(answer(request))
 
+    def layout_tiles(self, inbox):
+        """The tiles of a screen's saved layout; for the editor's firmware preview (preview_images.INBOX), the tiles of
+        the page it compiled last."""
+        if inbox == preview_images.INBOX:
+            return self.preview_tiles
+        return self.layouts.get(inbox, {}).get('tiles', [])
+
     def camera_allowed(self, inbox, entity):
-        """A camera on the screen's own layout, or one a recent alert showed."""
+        """A camera on the screen's own layout, or one a recent alert showed; for the editor's preview any entity Home
+        Assistant has."""
+        if inbox == preview_images.INBOX:
+            return entity in self.ha.states
         seen = self.alert_cameras.get(entity)
-        if seen is not None and time.monotonic() - seen < camera_feed.STILL_SECONDS:
+        if seen is not None and time.monotonic() - seen < picture_links.STILL_SECONDS:
             return True
         if entity in self.saver_entities(inbox):
             return True
-        return entity in {tile['entity'] for tile in self.layouts.get(inbox, {}).get('tiles', [])}
+        return entity in {tile['entity'] for tile in self.layout_tiles(inbox)}
 
     def saver_entities(self, inbox):
         """The player and camera a screen's screensaver follows (app 0.4.48)."""
@@ -3373,14 +3297,14 @@ class Manager:
     def saver_message(self, screen):
         """What this screen's screensaver shows now (screen_saver.message), for a board that draws pictures or not."""
         choice = self.savers.get(screen.get('device_id')) if screen.get('device_id') else dict(screen_saver.DEFAULT)
-        pictures = bool(camera_feed.box(screen, 'full'))
+        pictures = bool(picture_question.box(screen, 'full'))
         # A screen whose screensaver has keys (firmware 0.33.0+) also shows a player paused a short while ago.
         sender = self.page_senders.get(screen.get('id'))
         keys = screen_saver.KEYS_FEATURE in (getattr(sender, 'features', None) or ())
         # The player it shows keeps the glass for a while after a pause (screen_saver.HELD_SECONDS).
         row = screen_saver.ITEMS_FEATURE in (getattr(sender, 'features', None) or ())
         # A player whose cover could not be fetched gives way to the next step (GitHub #229).
-        broken = {entity for entity in screen_saver.players(choice) if self.camera.cover_broken(entity)}
+        broken = {entity for entity in screen_saver.players(choice) if self.snapshots.cover_broken(entity)}
         # A face other than the digital clock, for a screen whose hello says it draws them (module clock_faces).
         faces = screen_saver.FACES_FEATURE in (getattr(sender, 'features', None) or ())
         # The photos step (app 0.4.89): only for a screen whose hello names it, and only while it may show.
@@ -3435,179 +3359,113 @@ class Manager:
             self.saver_shown[inbox] = message.get('e', '') if message['k'] == 'media' else ''
             LOG.info('Screensaver on %s: %s', screen.get('name', inbox), message['k'] or 'dark')
 
-    async def camera_message(self, entity, view, screen, still=None, box=None):
-        """The screen message for one camera view: a link to its image, or an empty link when there is none. The size
-        is the one this screen's glass asks for, which on a board that is not square differs between a screen built
-        lying down and one built standing up (camera_feed.box)."""
-        url = ''
-        base = await self.link_base(screen)
-        box = box or camera_feed.box(screen, view)
-        if not base:
-            LOG.warning('Camera images: no address for this app on the LAN; set SCREEN_CAMERA_URL')
-        elif box:
-            if view == 'thumb':
-                token = self.camera.link(entity, box, still) if still else None
-            else:
-                token = self.camera.link(entity, box) if await self.camera.frame(entity, box) else None
-            url = f'{base}/camera/{token}.bmp' if token else ''
-        return {'v': 1, 'op': 'camera', 't': 'alert' if view == 'thumb' else 'full', 'e': entity, 'u': url}
-
-    async def live_message(self, entity, box, view='full', fit=None, sound=False, screen=None):
-        """The screen message for a camera live (live_feed.py): a link to its stream of pictures, for the full view or
-        for a live tile (`view` 'live', `fit` the tile's: a picture that fills the card is cut by the screen, a whole one
-        is shown on black, and the link says which). `screen` is the inbox that asked."""
-        base = await self.link_base(self.screen(screen) if screen else None)
-        if not base:
-            LOG.warning('Camera images: no address for this app on the LAN; set SCREEN_CAMERA_URL')
-        contain = fit == 'contain'
-        tile = view == 'live'
-        token = self.live.link(entity, box, cover=tile and not contain, sound=sound and not tile, warm=sound and tile,
-                               screen=screen, tile=tile) if base else ''
-        url = f'{base}/camera/{token}.mjpeg' + ('?fit=contain' if contain else '') if base else ''
-        return {'v': 1, 'op': 'camera', 't': view, 'e': entity, 'u': url}
-
+    # ----- pictures (docs/PICTURES.md): every question a screen asks, answered by one service -----
     async def answer_camera(self, request):
-        """One screen's request: a camera it may show, on a screen that draws camera images."""
+        """One screen's question for a picture: the new shape (`q` with its number `n`, firmware with the feature
+        `pictures`) or a shape of older firmware (picture_legacy), answered by the one service (picture_service)."""
         if not isinstance(request, dict):
             return
         inbox = self.aliases.get(request.get('inbox'), request.get('inbox'))
-        entity = request.get('entity')
         screen = self.screen(inbox) if isinstance(inbox, str) else None
-        # The covers of a page of a player's library (app 0.4.42, firmware 0.24.0+): one atlas for all of them.
-        if 'lib' in request:
-            await self.library_art(inbox, screen, request)
-            return
-        # The screensaver's picture (app 0.4.48, firmware 0.29.0+): the screen's whole box, darkened, of its own choice.
-        if request.get('saver') in ('media', 'camera', 'photos'):
-            await self.answer_saver(inbox, screen, request)
-            return
-        # The pictures of a plugin tile's places (plugin API 0.10): one atlas for all of them.
-        if isinstance(request.get('tiles'), str) and core.plugin_tile(request['tiles']):
-            await self.answer_plugin_pictures(inbox, screen, request)
-            return
-        # The live pictures of a page's camera tiles (app 0.2.91, firmware 0.2.77+): one strip for all of them.
-        if 'tiles' in request:
-            await self.answer_live(inbox, screen, request)
-            return
-        # A vacuum card's map (vacuum_card.py, vacuum_map.py), at the size and on the colour the card asks for.
-        if 'vmap' in request:
-            await self.answer_vacuum_map(inbox, screen, request)
-            return
-        # A map tapped open over the whole glass (app 0.4.36, firmware 0.21.0+), as a camera opens.
-        if camera_feed.map_supported(entity) and not request.get('size'):
-            await self.answer_map_full(inbox, screen, request)
-            return
-        # A media player's cover (app 0.2.77, firmware 0.2.64+) comes the same way, at the size the card asks for.
-        cover = camera_feed.cover_request(request) if camera_feed.cover_supported(entity) else None
-        if cover:
-            if not camera_feed.can_show_cover(screen) or not screen.get('online'):
-                return
-        elif not camera_feed.supported(entity) or not camera_feed.can_show(screen) or not screen.get('online'):
-            return
-        action = self.transport(inbox, screen)
-        if not action or not self.camera_allowed(inbox, entity):
-            return
-        # A P4 takes a camera live (firmware dev): it names the room below its top bar, and gets a stream of pictures.
-        live_box = live_feed.parse_box(request.get('live')) if not cover and entity.startswith('camera.') else None
-        if live_box:
-            # With the camera's sound for a screen with a speaker (firmware dev).
-            message = await self.live_message(entity, live_box, sound=request.get('sound') == '1', screen=inbox)
-        else:
-            message = await self.cover_message(entity, *cover, screen=screen) if cover else await self.camera_message(
-                entity, 'full', screen, box=camera_feed.box(screen, 'full', camera_feed.picture_cap(request)))
-        await self.send_auxiliary(inbox, message, action, request)
-        LOG.info('%s %s on %s%s', 'Cover of' if cover else 'Camera', entity, screen['name'], '' if message['u'] else ': no image')
-
-    async def answer_vacuum_map(self, inbox, screen, request):
-        """A link to the map of a vacuum on the screen's layout, cleaned up and in the screen's look (vacuum_map.py), at
-        exactly the box the card asks for; an empty link when the robot has no map that can be had."""
-        entity = request.get('entity')
-        asked = camera_feed.vacuum_map_request(request)
-        if not asked or not isinstance(entity, str) or not entity.startswith('vacuum.') or not screen or not screen.get('online') \
-                or not camera_feed.can_show(screen) or not self.camera_allowed(inbox, entity):
+        if not screen or not screen.get('online') or not picture_question.draws_pictures(screen):
             return
         action = self.transport(inbox, screen)
         if not action:
             return
-        width, height, background = asked
-        found = vacuum_card.map_entity(entity, self.device_entries(entity), self.ha.states)
-        url = ''
-        base = await self.link_base(screen)
-        dark = camera_feed.live_dark(request)
-        if base and found and await self.camera.vacuum_map(found['e'], found['m'], (width, height), background, dark):
-            url = f"{base}/camera/{self.camera.link(entity, (width, height), vacuum=(found['e'], found['m'], background, dark))}.bmp"
-        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'vmap', 'e': entity, 'u': url}, action, request)
-        LOG.info('Map of %s on %s%s', entity, screen['name'], '' if url else ': none')
-
-    async def answer_saver(self, inbox, screen, request):
-        """A link to the screensaver's picture (camera_feed.encode_saver) of the player or camera this screen's
-        screensaver follows, at the screen's full box; an empty link while there is none."""
-        kind, entity = request.get('saver'), request.get('entity')
-        if kind == 'photos':
-            await self.answer_photo(inbox, screen, request)
-            return
-        if not screen or not screen.get('online') or entity not in self.saver_entities(inbox):
-            return
-        if (kind == 'media') != (entity.split('.')[0] == 'media_player'):
-            return
-        box, action = camera_feed.box(screen, 'full', camera_feed.picture_cap(request)), self.transport(inbox, screen)
-        if not box or not action:
-            return
-        ground = 0
-        if kind == 'media':
-            colours = self.player_ground(entity, (self.ha.states.get(entity) or {}).get('attributes') or {})
-            if colours and colours != '-':
-                ground = int(colours.split(',')[0], 16)
-        url = ''
-        base = await self.link_base(screen)
-        if base and await self.camera.saver(entity, box, kind, ground):
-            url = f'{base}/camera/{self.camera.link(entity, box, saver=(kind, ground))}.bmp'
-        if not url and kind == 'media' and self.camera.cover_pending(entity):
-            # The cover is still on its way: no answer, so the screen asks again (camera_view::ASK_AGAIN_MS) and gets it
-            # then. A screen told there is none keeps a black glass until the next track.
-            LOG.info('Screensaver picture of %s on %s: still on its way', entity, screen['name'])
-            return
-        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'saver', 'e': entity, 'u': url}, action, request)
-        LOG.info('Screensaver picture of %s on %s%s', entity, screen['name'], '' if url else ': none')
-        if not url and kind == 'media':
+        if 'q' in request:
+            try:
+                number = int(request.get('n'))
+            except (TypeError, ValueError):
+                return
+            shape = picture_question.shape_of(screen)
+            question = picture_question.parse(request['q'], number, (shape.get('width', 0), shape.get('height', 0)))
+            if question is None:
+                LOG.info('A picture question from %s that cannot be read', screen['name'])
+                return
+            kind, entity = 'q', ''
+        else:
+            legacy = picture_legacy.read(request, screen, self.sources.index_of(inbox))
+            if legacy is None:
+                # A shape this app does not answer, or tiles that are not pictured tiles of the screen's layout.
+                LOG.info('A picture request from %s that cannot be read: %s', screen['name'],
+                         str(request.get('tiles') or request.get('entity') or '?')[:120])
+                return
+            question, kind, entity = legacy.question, legacy.kind, legacy.entity
+        answer = await self.pictures.answer(inbox, screen, question)
+        if answer is None:
+            return  # on its way: the screen asks again (camera_view::ASK_AGAIN_MS)
+        # An older screen's page of tiles reads which of them got a picture from the answer: '' where one got none.
+        listing = ','.join(answer.shown) if kind == 'live' and len(question.places) > 1 and answer.url else entity
+        message = picture_question.answer(question, answer.url, kind, listing, answer.meta or None)
+        await self.send_auxiliary(inbox, message, action, request)
+        what = ', '.join(source.text for source in dict.fromkeys(question.sources))
+        LOG.info('Picture of %s on %s%s', what, screen['name'], ' (stream)' if answer.stream else '' if answer.url else ': none')
+        if kind == 'saver' and not answer.url and question.sources[0].kind == 'cover':
             # The cover did not come: a pass right away, which gives the glass to the next step (cover_broken).
             self.ha.changed.set()
 
-    async def answer_photo(self, inbox, screen, request):
-        """A link to the photo this screen's photos step shows now (camera_feed.encode_photo), at the screen's full box: a
-        still link, made once per photo and size. No answer while the photo is not here: the screen asks again."""
-        if not screen or not screen.get('online') or request.get('entity') != screen_saver.PHOTOS_ENTITY:
-            return
-        box, action = camera_feed.box(screen, 'full', camera_feed.picture_cap(request)), self.transport(inbox, screen)
-        if not box or not action:
-            return
-        choice = self.savers.get(screen.get('device_id')) if screen.get('device_id') else dict(screen_saver.DEFAULT)
-        fit = choice['photos'].get('fit', 'auto')
-        # A photo that moves is cut a little larger, where that fits the screen's picture memory (picture_motion.h).
-        moving = camera_feed.motion_box(tuple(box), camera_feed.picture_cap(request)) \
-            if choice['photos'].get('motion') == 'slow' else None
-        raw = self.photos.raw(inbox)
-        if raw is None:
-            return
-        state = self.photos.state(inbox, choice['photos'])
-        key = (state.get('mark'), tuple(box), fit, moving)
-        made = self.photo_links.get(inbox)
-        token = made[1] if made and made[0] == key and made[1] in self.camera.links else None
-        if token is None:
+    async def camera_snapshot(self, entity):
+        """A camera's picture of now: the newest frame of its stream while one runs for a screen (one source per camera
+        for stills and streams, docs/PICTURES.md), else Home Assistant's snapshot."""
+        frame = await self.live.latest(entity)
+        return frame if frame is not None else await self.ha.camera_image(entity)
+
+    def saver_choice(self, screen):
+        """What a screen's screensaver shows, as chosen for its device (screen_saver)."""
+        return self.savers.get(screen.get('device_id')) if (screen or {}).get('device_id') else dict(screen_saver.DEFAULT)
+
+    def plugin_saver_kind(self, inbox, key):
+        """The manifest's screensaver of a plugin key (plugin:<plugin>.<saver>) on this screen, or {}."""
+        return (self.plugins.saver_kinds(inbox).get(key, (None, None))[1]) or {}
+
+    def plugin_place(self, inbox, screen, question):
+        """(manifest entry, the manifest's tile, card or screensaver, of_entity) of a plugin's question: of_entity says
+        whether its card or step shows an entity whose Home Assistant pictures it may have (None for a tile: its manifest
+        says). (None, None, False) for a plugin or place this screen does not run."""
+        owner = question.owner
+        placed = self.layouts.get(inbox, {}).get('tiles', [])
+        if owner.kind == 'plugin_saver':
+            entry, kind = self.plugins.saver_kinds(inbox).get(owner.key, (None, None))
+            chosen = ((self.saver_choice(screen).get('plugins') or {}).get(owner.key) or {}).get('entity', '')
+            return entry, kind, bool(owner.of) and owner.of == chosen
+        parts = core.plugin_tile(owner.key)
+        if not parts:
+            return None, None, False
+        if owner.kind == 'plugin_card':
+            entry = self.plugins.known(parts[0], inbox) if self.plugins.store.get(inbox, parts[0]) else None
+            of = bool(owner.of) and any(owner.of in (t['entity'], (t.get('options') or {}).get('plugin_entity')) for t in placed)
+            return entry, (entry.card(parts[1]) if entry else None), of
+        if not (0 <= owner.index < len(placed) and placed[owner.index]['entity'] == owner.key):
+            return None, None, False
+        entry = self.plugins.known(parts[0], inbox)
+        return entry, (entry.tile(parts[1]) if entry else None), None
+
+    def plugin_picture_refused(self, inbox, screen, question, source):
+        """Why a plugin's place may not show `source`, as a sentence for the log; None when it may (plugin_pictures)."""
+        entry, kind, of = self.plugin_place(inbox, screen, question)
+        return plugin_pictures.refused_source(source, len(question.sources), entry.manifest if entry else None, kind, of)
+
+    async def plugin_picture(self, inbox, screen, question, source):
+        """The bytes of a plugin place's address (`url`, `ha`) or of its entity's own picture (`entity`), or None."""
+        entry, kind, of = self.plugin_place(inbox, screen, question)
+        if not entry:
+            return None
+        if source.kind == 'entity':
+            picture = ((self.ha.states.get(source.ref) or {}).get('attributes') or {}).get('entity_picture') or ''
             try:
-                image = await asyncio.get_running_loop().run_in_executor(None, camera_feed.encode_photo, raw, tuple(box), fit, moving)
-            except Exception as error:  # noqa: BLE001 - a photo that cannot be read is passed over at the next turn
-                LOG.info('Screensaver photo on %s cannot be read (%s)', screen['name'], type(error).__name__)
-                return
-            token = self.camera.link(screen_saver.PHOTOS_ENTITY, tuple(moving or box), still=image)
-            self.photo_links[inbox] = (key, token)
-        base = await self.link_base(screen)
-        if not base:
-            return
-        url = f'{base}/camera/{token}.bmp'
-        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'saver', 'e': screen_saver.PHOTOS_ENTITY, 'u': url},
-                                  action, request)
-        LOG.info('Screensaver photo on %s', screen['name'])
+                return await self.ha.entity_picture(picture) if picture else None
+            except Exception as error:  # noqa: BLE001 - an entity without a picture that can be had
+                LOG.info('No picture for %s (%s)', source.ref, type(error).__name__)
+                return None
+        return await self.plugins.pictures.fetch(source.text, entry.manifest, kind, of)
+
+    async def map_meta(self, mark, width, height, focus):
+        """What a map opened over the whole glass brings beside its picture: where its markers are, the one a finger
+        picked, and that one's card. Pixels and words, never a place."""
+        sheet = {'h': self.map_hits.get((mark, width, height), [])[:16], 'f': focus}
+        if focus:
+            sheet['c'] = await self.map_sheet(focus)
+        return sheet
 
     async def photo_loop(self):
         """A pass when a screen's next photo is due (the passes otherwise follow Home Assistant's changes)."""
@@ -3615,173 +3473,6 @@ class Manager:
             await asyncio.sleep(2)
             if self.photos.due():
                 self.ha.changed.set()
-
-    async def answer_live(self, inbox, screen, request):
-        """The strip for a page's live camera tiles: every tile the screen names must be a camera tile of its layout
-        set to a live picture; the pace of each comes from that tile's own setting."""
-        atlas = None
-        if 'atlas' in request:
-            shape = camera_feed.shape_of(screen) if screen else {}
-            count = len(request.get('tiles', '').split(',')) if isinstance(request.get('tiles'), str) else 0
-            atlas = camera_feed.tile_art.parse(request['atlas'], (shape.get('width', 0), shape.get('height', 0)), count)
-            if atlas is None:
-                return
-        live = camera_feed.live_request(request, atlas=atlas is not None)
-        if not live or not camera_feed.can_show_live(screen) or not screen.get('online'):
-            return
-        action = self.transport(inbox, screen)
-        if not action:
-            return
-        entities, size, grounds = live
-        # The same entity may have a cover on one page and an ordinary tile on
-        # another. Authorize against any configured pictured tile, not the last
-        # occurrence of an entity in the document.
-        placed_tiles = self.layouts.get(inbox, {}).get('tiles', [])
-        # A map (app 0.4.33) is a person's tile set to it, drawn here from that saved tile alone.
-        mapped = lambda tile: (tile.get('options') or {}).get('display') == 'map' and camera_feed.map_supported(tile['entity'])
-        # A favourite (app 0.4.42) is the picture of what it plays, from its own saved choice.
-        favored = lambda tile: (tile.get('options') or {}).get('display') == 'favorite' and camera_feed.cover_supported(tile['entity']) and \
-            bool(((tile.get('options') or {}).get('play') or {}).get('thumb'))
-        pictured = lambda tile: mapped(tile) or favored(tile) or (tile.get('options') or {}).get('display') in ('live', 'cover') and \
-            ((tile.get('options') or {}).get('display') == 'cover') == camera_feed.cover_supported(tile['entity'])
-        tiles = {}
-        for tile in placed_tiles:
-            if pictured(tile):
-                tiles.setdefault(tile['entity'], []).append(tile.get('options') or {})
-        if any(entity not in tiles for entity in entities):
-            LOG.info('Live pictures for %s: not the pictured tiles of %s', ', '.join(entities), screen['name'])
-            return
-        # A tile set to Live (pace 0) streams where it can; its still keeps the default pace.
-        paces = [min((option.get('refresh') or camera_feed.LIVE_REFRESH_DEFAULT) if option.get('display') == 'live' else 0
-                     for option in tiles[entity]) for entity in entities]
-        # Each square's own tile (firmware 0.16.0+ names them by index, `idx`): an entity may be on several tiles, each
-        # with its own fit and overlay. A screen without it has an entity on one tile at most, so its first is its own.
-        own = camera_feed.live_indexes(request, entities)
-        if own is not None and not all(i < len(placed_tiles) and placed_tiles[i]['entity'] == entity and pictured(placed_tiles[i])
-                                       for i, entity in zip(own, entities)):
-            LOG.info('Live pictures for %s: not the tiles %s of %s', ', '.join(entities), request.get('idx'), screen['name'])
-            return
-        options_of = (lambda n, entity: placed_tiles[own[n]].get('options') or {}) if own is not None else \
-            (lambda n, entity: next((o for o in tiles[entity] if o.get('display') == 'live'), None))
-        # A live tile on a P4 (firmware dev): its stream at the card's size, which the screen lays out as its card.
-        live_box = live_feed.parse_box(request.get('live'))
-        if live_box and len(entities) == 1 and entities[0].startswith('camera.') and own is not None:
-            options = options_of(0, entities[0]) or {}
-            if options.get('display') == 'live':
-                message = await self.live_message(entities[0], live_box, 'live', options.get('fit'), request.get('sound') == '1',
-                                                  screen=inbox)
-                await self.send_auxiliary(inbox, message, action, request)
-                LOG.info('Live tile %s on %s%s', entities[0], screen['name'], '' if message['u'] else ': no link')
-                return
-        # How each picture fills its card (app 0.3.8). A favourite is dimmed whole, as an album cover over a card is: the
-        # screen asks for that in its frame.
-        modes = camera_feed.picture_modes(screen, options_of, entities) if atlas else None
-        # The maps of the page (app 0.4.33), each its own saved tile, drawn in the look the screen is in.
-        renders = None
-        if any(camera_feed.map_supported(entity) for entity in entities):
-            if not atlas or not camera_feed.can_show_map(screen):
-                LOG.info('A map for %s: %s cannot draw one yet', ', '.join(entities), screen['name'])
-                return
-            placed = [placed_tiles[own[n]] if own is not None else next(t for t in placed_tiles if t['entity'] == entity and mapped(t))
-                      for n, entity in enumerate(entities)]
-            dark = camera_feed.live_dark(request)
-            shape = camera_feed.shape_of(screen)
-            renders = [self.map_render(tile, shape, dark) if mapped(tile) else None for tile in placed]
-        # A player's cover tile at rest (rest_mosaic.py) is the covers of its library, as the state that tile shows.
-        rested = lambda tile: rest_mosaic.wants(tile.get('options')) and camera_feed.cover_supported(tile['entity']) and \
-            rest_mosaic.at_rest(self.ha.states.get(self.followed(tile['entity']))) and bool((self.rest_pools.get(tile['entity']) or (0, []))[1])
-        if any(favored(tile) or rested(tile) for tile in placed_tiles if tile['entity'] in entities):
-            if not atlas:
-                return
-            placed = [placed_tiles[own[n]] if own is not None else next(t for t in placed_tiles if t['entity'] == entity and pictured(t))
-                      for n, entity in enumerate(entities)]
-            renders = [r for r in (renders or [None] * len(entities))]
-            for n, tile in enumerate(placed):
-                if favored(tile):
-                    renders[n] = self.favorite_render(tile)
-                elif rested(tile):
-                    renders[n] = self.rest_render(tile['entity'])
-            # The pictures of a page's favourites at once, not one after the other.
-            await asyncio.gather(*(self.thumbnail(tile['entity'], tile['options']['play']['thumb'], tile['options']['play'].get('title'))
-                                   for tile in placed if favored(tile)))
-        url, listing = '', ','.join(entities)
-        base = await self.link_base(screen)
-        if base:
-            # A screen whose decoder reads 8-bit colour gets a third of the bytes (app 0.3.8).
-            extra = {'compact': camera_feed.compact_pictures(screen), **({'atlas': atlas, 'modes': modes} if atlas else {}),
-                     **({'renders': renders} if renders else {})}
-            found = await self.camera.live(entities, size, grounds, paces, **extra)
-            if found:
-                listing = ','.join(found[2])
-                token = self.camera.link(listing, atlas[:2] if atlas else (size, size), live=(entities, size, grounds, paces, extra))
-                url = f'{base}/camera/{token}.bmp'
-        else:
-            LOG.warning('Live pictures: no address for this app on the LAN; set SCREEN_CAMERA_URL')
-        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'live', 'e': listing, 'u': url}, action, request)
-        LOG.info('Live pictures of %s on %s%s', ', '.join(entities), screen['name'], '' if url else ': no image')
-
-    async def answer_plugin_pictures(self, inbox, screen, request):
-        """The pictures of a plugin tile's places (plugin API 0.10, plugin_pictures): the tile must be a plugin tile of
-        the screen's layout whose manifest gives it places, and every address one the manifest allows. A card's (0.13)
-        is a card of a plugin the screen runs whose manifest gives it places. The answer is a
-        link to one picture of all its frames, as a camera tile gets; an empty link says there is none now (the screen
-        asks again later, each time after a longer while)."""
-        if not screen or not screen.get('online') or not camera_feed.can_show_live(screen):
-            return
-        shape = camera_feed.shape_of(screen)
-        question = plugin_pictures.parse(request, (shape.get('width', 0), shape.get('height', 0)))
-        action = self.transport(inbox, screen) if question else None
-        if not action:
-            return
-        placed = self.layouts.get(inbox, {}).get('tiles', [])
-        of_entity = None
-        if question.saver:
-            # A screensaver of a plugin (plugin API 0.14): one this screen runs and shows, answered as "psaver". Home
-            # Assistant's own pictures for a step of an entity: the entity chosen for it.
-            answer = {'v': 1, 'op': 'camera', 't': 'psaver', 'e': question.entity, 'u': ''}
-            entry, kind = self.plugins.saver_kinds(inbox).get(question.entity, (None, None))
-            choice = self.savers.get(screen.get('device_id')) if screen.get('device_id') else {}
-            chosen = ((choice.get('plugins') or {}).get(question.entity) or {}).get('entity', '')
-            of_entity = bool(question.of) and question.of == chosen
-        elif question.card:
-            # A card over the page (plugin API 0.13): of a plugin this screen runs, answered as "pcard". Home
-            # Assistant's own pictures only for a card shown for an entity of the screen's layout.
-            answer = {'v': 1, 'op': 'camera', 't': 'pcard', 'e': question.entity, 'u': ''}
-            entry = self.plugins.known(question.plugin, inbox) if self.plugins.store.get(inbox, question.plugin) else None
-            kind = entry.card(question.tile) if entry else None
-            of_entity = bool(question.of) and any(question.of in (tile['entity'], (tile.get('options') or {}).get('plugin_entity'))
-                                                  for tile in placed)
-        else:
-            answer = {'v': 1, 'op': 'camera', 't': 'live', 'e': question.entity, 'u': ''}
-            if not (question.index < len(placed) and placed[question.index]['entity'] == question.entity):
-                LOG.info('Pictures for %s: not tile %d of %s', question.entity, question.index, screen['name'])
-                return
-            entry = self.plugins.known(question.plugin, inbox)
-            kind = entry.tile(question.tile) if entry else None
-        problem = plugin_pictures.refused(question, entry.manifest if entry else None, kind, of_entity)
-        if problem:
-            LOG.info('Pictures for %s on %s refused: %s', question.entity, screen['name'], problem)
-            await self.send_auxiliary(inbox, answer, action, request)
-            return
-        raws = await asyncio.gather(*(self.saver_picture(inbox, screen, kind)
-                                      if url == plugin_pictures.SAVER_PICTURE else
-                                      self.plugins.pictures.fetch(url, entry.manifest, kind, of_entity)
-                                      for url in question.sources))
-        base = await self.link_base(screen)
-        if not base:
-            LOG.warning('Plugin pictures: no address for this app on the LAN; set SCREEN_CAMERA_URL')
-        elif any(raw is not None for raw in raws):
-            try:
-                body = await self.plugins.pictures.atlas(question, raws, camera_feed.compact_pictures(screen))
-            except Exception as error:
-                LOG.info('Pictures for %s on %s cannot be painted (%s)', question.entity, screen['name'], type(error).__name__)
-                body = None
-            if body:
-                token = self.camera.link(question.entity, question.atlas[:2], still=body)
-                answer['u'] = f'{base}/camera/{token}.bmp'
-        await self.send_auxiliary(inbox, answer, action, request)
-        LOG.info('Pictures of %s on %s: %d of %d%s', question.entity, screen['name'], sum(raw is not None for raw in raws),
-                 len(raws), '' if answer['u'] else ', no picture')
 
     async def saver_picture(self, inbox, screen, kind):
         """The picture of the step a plugin's screensaver face draws (plugin API 0.14, 'saver:picture'): the cover of the
@@ -3791,7 +3482,7 @@ class Manager:
         if kind.get('step') == 'media':
             entity = self.saver_shown.get(inbox, '')
             if entity:
-                return await self.camera.cover_raw(entity)
+                return await self.snapshots.cover_raw(entity)
         return None
 
     async def thumbnail(self, entity, url, title=''):
@@ -3808,61 +3499,6 @@ class Manager:
                 self.thumbnails.popitem(last=False)
         self.thumbnails.move_to_end(url)
         return self.thumbnails[url]
-
-    def favorite_render(self, tile):
-        """A favourite's picture for the page's strip (camera_feed.live `renders`): its saved thumbnail. The strip draws
-        its pictures one after the other, so answer_live fetches the favourites' together first."""
-        play = tile['options']['play']
-
-        async def draw(width, height):
-            return await self.thumbnail(tile['entity'], play['thumb'], play.get('title'))
-        return (lambda: 'favorite:' + play['thumb'], draw)
-
-    async def answer_map_full(self, inbox, screen, request):
-        """A map tile tapped open (app 0.4.36, firmware 0.21.0+): the same map drawn as large as the board takes a
-        camera (camera_feed.box 'full'), from that tile's saved choices (`idx`), in the screen's look. Its link draws
-        again on every load the screen makes, from what is kept unless someone moved."""
-        entity = request.get('entity')
-        if not camera_feed.can_show_map(screen) or not screen.get('online'):
-            return
-        if entity == map_card.MAP_TILE and (screen_firmware(screen) or (0, 0, 0)) < MAP_TILE_MIN_FIRMWARE:
-            return
-        action = self.transport(inbox, screen)
-        if not action:
-            return
-        tiles = self.layouts.get(inbox, {}).get('tiles', [])
-        mapped = lambda tile: tile['entity'] == entity and (tile.get('options') or {}).get('display') == 'map'
-        try:
-            index = int(request.get('idx'))
-        except (TypeError, ValueError):
-            index = -1
-        tile = tiles[index] if 0 <= index < len(tiles) and mapped(tiles[index]) else next((t for t in tiles if mapped(t)), None)
-        # A person's own tile tapped (firmware 0.21.0+): where that person is, on a map of them alone, opened on them.
-        if tile is None and entity.startswith('person.') and 0 <= index < len(tiles) and tiles[index]['entity'] == entity:
-            tile = {'entity': entity, 'name': tiles[index].get('name', ''), 'options': {'display': 'map', 'distance': 'neighbourhood'}}
-        box = camera_feed.box(screen, 'full', camera_feed.picture_cap(request))
-        if tile is None or not box:
-            LOG.info('A map for %s: not a map tile of %s', entity, screen['name'])
-            return
-        width, height = box
-        # A finger on a marker (firmware 0.21.0+): that one in the middle, closer in, with its card over the bottom.
-        focus = request.get('focus') if request.get('focus') in map_card.shown(tile, self.ha.states, self.registry_index()) else ''
-        # Zoomed and moved by the screen's own keys (dev): the same picture drawn around another middle.
-        move = map_card.move_of(request.get('move'))
-        render = self.map_render(tile, camera_feed.shape_of(screen), camera_feed.live_dark(request), full=True, focus=focus, move=move)
-        extra = {'compact': camera_feed.compact_pictures(screen), 'atlas': (width, height, ((0, 0, width, height, 0, 0),)),
-                 'modes': [('fill', False)], 'renders': [render]}
-        url = ''
-        base = await self.link_base(screen)
-        if base and await self.camera.live([entity], camera_feed.LIVE_SIZES[1], [0], [0], **extra):
-            token = self.camera.link(entity, box, live=([entity], camera_feed.LIVE_SIZES[1], [0], [0], extra))
-            url = f'{base}/camera/{token}.bmp'
-        # Where each marker is on that picture, and the card of the one picked: pixels and words, never a place.
-        sheet = {'h': self.map_hits.get((render[0](), width, height), [])[:16], 'f': focus}
-        if focus:
-            sheet['c'] = await self.map_sheet(focus)
-        await self.send_auxiliary(inbox, {'v': 1, 'op': 'camera', 't': 'full', 'e': entity, 'u': url, 'm': sheet}, action, request)
-        LOG.info('Map of %s full screen on %s%s%s', entity, screen['name'], f' around {focus}' if focus else '', '' if url else ': no image')
 
     async def map_sheet(self, entity):
         """The card of a person or tracker picked on a full map, as Home Assistant's own map shows a selected one
@@ -3978,49 +3614,44 @@ class Manager:
                 out[entity] = self.map_pictures[address]
         return out
 
-    async def cover_message(self, entity, size, background, screen=None):
-        """The screen message with a link to a media player's cover at `size` with `background` behind the corners,
-        or an empty link when the player shows no picture (the card keeps its placeholder)."""
-        url = ''
-        base = await self.link_base(screen)
-        if base:
-            token = self.camera.link(entity, (size, size), cover=(size, background)) if await self.camera.cover(entity, size, background) else None
-            url = f'{base}/camera/{token}.bmp' if token else ''
-        else:
-            LOG.warning('Covers: no address for this app on the LAN; set SCREEN_CAMERA_URL')
-        return {'v': 1, 'op': 'camera', 't': 'cover', 'e': entity, 'u': url}
-
     async def alert_images(self, camera, screens):
         """The picture of an alert's camera at that moment, on every screen that draws it."""
         self.alert_cameras[camera] = time.monotonic()
-        for old in [entity for entity, moment in self.alert_cameras.items() if time.monotonic() - moment > camera_feed.STILL_SECONDS]:
+        for old in [entity for entity, moment in self.alert_cameras.items() if time.monotonic() - moment > picture_links.STILL_SECONDS]:
             del self.alert_cameras[old]
         # One snapshot of this moment for every screen, measured once: each screen's alert card makes a frame for a
         # picture of its proportions (firmware 0.2.103+), and the picture goes out at exactly that frame's size, made
-        # from the same snapshot (camera_feed.alert_box). Grouped by that size, not by the board: two screens of the
+        # from the same snapshot (picture_question.alert_box). Grouped by that size, not by the board: two screens of the
         # same board hang different ways when one was built standing up. Screens whose board draws no picture at all
         # fall out here, as they always did.
-        drawn = [screen for screen in screens if camera_feed.box(screen, 'thumb')]
+        drawn = [screen for screen in screens if picture_question.box(screen, 'thumb')]
         scopes = {screen['id']: self.page_scope(screen['id']) for screen in drawn}
-        picture = await self.camera.snapshot_size(camera) if drawn else None
+        picture = await self.snapshots.size(camera) if drawn else None
         groups = {}
         for screen in drawn:
             # And by the address the screen fetches from: a Home Assistant on two networks has one for each (#276).
-            groups.setdefault((camera_feed.alert_box(screen, picture), await self.link_base(screen)), []).append(screen)
+            groups.setdefault((picture_question.alert_box(screen, picture), await self.link_base(screen)), []).append(screen)
+
         async def send(key, group):
-            box = key[0]
+            box, base = key
             # A box made for this picture's proportions is filled exactly; the 16:9 frame of older firmware gets the
             # picture fitted inside it, as before.
-            exact = picture is not None and box != camera_feed.box(group[0], 'thumb')
-            found = await self.camera.frame(camera, box, fresh=False, exact=exact) if picture else None
-            message = await self.camera_message(camera, 'thumb', group[0], found[1] if found else None, box)
+            exact = picture is not None and box != picture_question.box(group[0], 'thumb')
+            question = picture_question.Question(
+                picture_question.Owner('alert'), (picture_question.Source('camera', camera),), box,
+                (picture_question.Place(0, 0, *box, fit='exact' if exact else 'shrink'),), formats=('bmp24',))
+            found = await self.pictures.picture(group[0]['id'], group[0], question) if picture and base else None
+            url = f'{base}/camera/{self.links.add(still=found.body)}.bmp' if found and found.state == 'ok' else ''
+            if not base:
+                LOG.warning('Camera images: no address for this app on the LAN; set SCREEN_CAMERA_URL')
+            message = {'v': 1, 'op': 'camera', 't': 'alert', 'e': camera, 'u': url}
             results = await asyncio.gather(*(self.send_auxiliary(screen['id'], message, self.transport(screen['id'], screen), scopes.get(screen['id'], {})) for screen in group),
                                            return_exceptions=True)
             failed = sum(isinstance(result, BaseException) for result in results)
-            LOG.info('Alert image of %s: %d of %d screens%s', camera, len(group) - failed, len(group), '' if message['u'] else ' (no image)')
+            LOG.info('Alert image of %s: %d of %d screens%s', camera, len(group) - failed, len(group), '' if url else ' (no image)')
 
-        # Every size at once, so no screen waits for another board's picture to be made. Each frame() reads the same
-        # snapshot before its first await, so every screen shows the same moment.
+        # Every size at once, so no screen waits for another board's picture to be made. Each reads the snapshot
+        # measured above, so every screen shows the same moment.
         await asyncio.gather(*(send(key, group) for key, group in groups.items()))
 
     async def broadcast(self, event_type, data):
@@ -4063,7 +3694,7 @@ class Manager:
                 return {'sent': 0, 'skipped': 0, 'failed': 0, 'unknown': unknown}
         ready, skipped = alert_targets(screens)
         # A screen that draws the image hears about it before the alert, so the card opens with room for it.
-        viewers = [screen for screen in ready if camera and camera_feed.can_show(screen) and self.transport(screen['id'], screen)]
+        viewers = [screen for screen in ready if camera and picture_question.draws_pictures(screen) and self.transport(screen['id'], screen)]
         if viewers:
             pending = {'v': 1, 'op': 'camera', 't': 'alert', 'e': camera, 'u': ''}
             scopes = {screen['id']: self.page_scope(screen['id']) for screen in viewers}
@@ -4310,7 +3941,7 @@ def create_app(manager, development=False):
             # draws pictures (else the clock alone) and whether it goes into standby at all.
             screen['screensaver'] = {**manager.savers.get(screen.get('device_id')),
                                      'ready': (manager.firmware_version(screen['id'], screen) or (0, 0, 0)) >= SCREENSAVER_MIN_FIRMWARE,
-                                     'pictures': bool(camera_feed.box(screen, 'full')), 'standby': can_standby(screen),
+                                     'pictures': bool(picture_question.box(screen, 'full')), 'standby': can_standby(screen),
                                      # The clock's faces where the board has their module (docs/MODULES.md).
                                      'faces': has_module(screen, screen_saver.MODULE),
                                      # The photos step where the screen's firmware takes it (app 0.4.89); `photos` is the
@@ -4362,7 +3993,7 @@ def create_app(manager, development=False):
             # Whether the board draws pictures (camera tiles, an alert's snapshot, an album cover): the boards with
             # memory for them say so with their camera sizes (boards.json); the firmware that draws them is a
             # separate question the editor asks by version, so an older screen still learns what an update brings.
-            screen['pictures'] = board_of(screen) in camera_feed.BOXES
+            screen['pictures'] = board_of(screen) in picture_question.BOXES
             screen['alert_action'] = alert_service(screen.get('node'))
             screen['dismiss_action'] = alert_service(screen.get('node'), 'dismiss_alert')
             # What the editor may offer this screen, by the firmware the app's own checks go by (app 0.2.78) and the
@@ -4699,9 +4330,9 @@ def create_app(manager, development=False):
     async def media_art_preview(request):
         # The browser receives only prepared pixels, never HA tokens or source URLs.
         entity = request.query.get('entity', '')
-        if not camera_feed.cover_supported(entity) or entity not in manager.ha.states:
+        if not picture_question.valid_entity(entity, picture_question.COVER_DOMAINS) or entity not in manager.ha.states:
             raise web.HTTPNotFound()
-        result = await manager.camera.cover_preview(entity)
+        result = await manager.preview_picture(picture_question.Source('cover', entity))
         if result is None:
             raise web.HTTPNotFound()
         tag, body = result
@@ -4791,9 +4422,9 @@ def create_app(manager, development=False):
     async def camera_preview(request):
         # A camera that fills a taller card on the mockup (app 0.3.8): prepared pixels only, as for a cover.
         entity = request.query.get('entity', '')
-        if not camera_feed.supported(entity) or entity not in manager.ha.states:
+        if not picture_question.valid_entity(entity, picture_question.CAMERA_DOMAINS) or entity not in manager.ha.states:
             raise web.HTTPNotFound()
-        result = await manager.camera.frame(entity, (512, 512), fresh=False)
+        result = await manager.preview_picture(picture_question.Source('camera', entity))
         if result is None:
             raise web.HTTPNotFound()
         tag, body = result
@@ -4874,8 +4505,8 @@ def create_app(manager, development=False):
         return await preview_events.stream(manager.ha.state_events, request)
 
     async def firmware_preview_pixels(request):
-        status, body, tag = await manager.camera.serve(request.match_info['token'])
-        return web.Response(status=status, body=body, content_type=camera_feed.CONTENT_TYPE,
+        status, body, tag, kind = await manager.links.serve(request.match_info['token'])
+        return web.Response(status=status, body=body, content_type=kind or 'image/bmp',
                             headers={'Cache-Control': 'no-store', **({'ETag': tag} if tag else {})})
 
     async def firmware_preview_action(request):
@@ -5369,13 +5000,13 @@ async def main():
         await runner.setup()
         await web.TCPSite(runner, '127.0.0.1' if development else '0.0.0.0', 8099).start()
         # Camera images for the screens: their own port on the LAN, not the ingress page (docs/CAMERA.md).
-        cameras = web.AppRunner(camera_feed.web_app(manager.camera, manager.live), access_log=None)
+        cameras = web.AppRunner(picture_links.web_app(manager.links, manager.live), access_log=None)
         await cameras.setup()
         try:
-            await web.TCPSite(cameras, '0.0.0.0', camera_feed.port()).start()
+            await web.TCPSite(cameras, '0.0.0.0', picture_links.port()).start()
         except OSError as error:
             # Everything else still works; only camera images stay away.
-            LOG.error('Camera images are off: port %d is not available (%s)', camera_feed.port(), error)
+            LOG.error('Camera images are off: port %d is not available (%s)', picture_links.port(), error)
         try:
             await asyncio.gather(ha.run(), manager.run(), manager.history_loop(), manager.updates.run(),
                                  manager.alert_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(),

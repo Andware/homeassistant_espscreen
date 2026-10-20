@@ -163,7 +163,7 @@ alone, and a board with more memory takes larger pictures: one picture may be a 
 2048 pixels a side (`picture_store::cap_for`). The P4 boards with 32 MB keep 6 MB of pictures, so 2 MB a picture: the
 10-inch glass gets a camera over its whole page, its full view, a map and the screensaver at its own 1280 x 800. The
 screen says so with `cap` (the bytes) when it asks for a picture of the whole glass, and the app honours up to 4 MB
-(`camera_feed.picture_cap`); an older app keeps the common cap. A picture that is still smaller than its place sits in
+(`picture_question.cap_of`); an older app keeps the common cap. A picture that is still smaller than its place sits in
 the middle of its card on a dark ground, so the name under it stays readable.
 
 A screen with firmware 0.3.3 or newer gets its live pictures in 8-bit colour: a palette of the picture's own
@@ -207,7 +207,7 @@ The screen never talks to Home Assistant about images, and it never holds a Home
    at most the board's canvas (`camera.full` in boards.json: 480×480 on the 4-inch Guition, 800×480 on
    the Waveshare 4.3, 5 and 7, 1024×600 on the JC1060P470), an alert card at its frame (`camera.thumb`,
    392×220 on the 4-inch Guition), proportions kept. Neither is ever larger than the cap above
-   (`camera_feed.PICTURE_MAX_SIDE` and `PICTURE_MAX_BYTES`): the JC8012P4A1's 1280×800 canvas gets a
+   (`picture_question.MAX_SIDE` and `MAX_BYTES`): the JC8012P4A1's 1280×800 canvas gets a
    full-screen picture of at most 1024×640, shown in the middle.
 3. It serves the result as an uncompressed BMP on **port 8098** under a random link, and sends the
    link to the screen. The screen downloads it in a task of its own, beside its main loop
@@ -222,7 +222,7 @@ The screen never talks to Home Assistant about images, and it never holds a Home
 
 While a camera is open, the screen loads its link every four seconds, one image at a time. Each load sets the
 camera's next fetch for just before the next load: four seconds on, less the time the camera took to answer last
-time and half a second (`camera_feed.CameraFeed.ahead`), so the next load finds a snapshot a fraction of a second old
+time and half a second (`picture_sources.Snapshots.ahead`), so the next load finds a snapshot a fraction of a second old
 and the picture changes at the screen's steady pace. A load whose fetch is still on its way waits up to 1.5 seconds
 for it, then takes the last snapshot. (Firmware before 0.52.0 got the snapshot fetched at the load before, a picture
 four seconds old; a fetch on its own clock next to the screen's made the picture change after 1.5 s one time and 6 s
@@ -427,9 +427,11 @@ through, how much it matters, and how the app is asked for it. One loader decide
 
 ## For developers
 
-- `screen_manager/app/camera_feed.py`: fetching, sizing, links and the port; `CameraFeed.live` makes a tile's picture
-  (with `tile_art.encode`) and an older screen's strip (`encode_live`); `Manager.answer_live` in `server.py` checks the
-  tiles against the layout.
+- The app's side is one picture system, docs/PICTURES.md: `picture_question.py` (the question and its answer),
+  `picture_legacy.py` (an older screen's fields read as the same question), `picture_sources.py` (what each address
+  is, fetched once per camera and checked against the layout), `picture_paint.py` (sizing, cutting, the shade and the
+  corners), `picture_links.py` (the links and the port) and `picture_service.py` (the question in, the link out);
+  `Manager.answer_camera` in `server.py` hands a screen's question to it.
 - `components/smart_display/camera_view.h`: when to ask for a link and when to load again
   (`tests/test_camera_view.cpp`).
 - `components/smart_display/picture_loader.h`: the one route every picture goes (`tests/test_picture_loader.cpp`

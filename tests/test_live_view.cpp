@@ -120,7 +120,7 @@ static void cutting() {
   assert(!cut(0, 10, 100, 100, false).ok && !cut(10, 10, 0, 100, true).ok);
 }
 
-// What a live tile lays over its picture, as tile_art.py does: the shade, the corners, the name.
+// What a live tile lays over its picture, as picture_paint.py does: the shade, the corners, the name.
 static void composing() {
   const int w = 40, h = 20;
   std::vector<uint16_t> px(w * h, 0xFFFF);  // white

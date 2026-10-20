@@ -710,6 +710,9 @@ api:
                     // live: a P4 that streams (live_view.h): a camera tile set to Live gets pace 0 and streams on the
                     // glass, and ESP Screens makes Live the default for camera tiles here.
                     if (live_view::available()) features.add("live");
+                    // pictures (docs/PICTURES.md): this screen asks for every picture as one question (picture_question.h)
+                    // once the app's hello says it reads them, and the fields an older app reads until then.
+                    if (runtime_tiles::camera_supported()) features.add("pictures");
                     // bar_cards (firmware 0.56.0): an entity's item in the top bar opens its tile's card (hold_card), so ESP
                     // Screens names that tile in the item (`d`) and sends a tile without a cell for an entity on no tile.
                     features.add("bar_cards");

@@ -164,9 +164,9 @@ inline Rect fit(int w, int h, const Rect &area, int &sixteenths) {
 inline std::string box_text(const Rect &area) { return std::to_string(area.w) + "x" + std::to_string(area.h); }
 
 // ---- A live tile (firmware dev): the picture fills its card, rounded, shaded under its name, the name over it ----
-// A tile's still comes from the app with all of that baked in (tile_art.py); a live tile's pictures come plain, at the
+// A tile's still comes from the app with all of that baked in (picture_paint.py); a live tile's pictures come plain, at the
 // card's size, and the screen lays the same over each of them before it reaches the glass, so the app on a Raspberry
-// Pi does nothing per picture a screen can do itself. The shade is tile_art's: the bottom FADE_PERCENT of the card,
+// Pi does nothing per picture a screen can do itself. The shade is picture_paint's: the bottom FADE_PERCENT of the card,
 // from clear to FADE_DEPTH / 255 black.
 constexpr int FADE_PERCENT = 42;
 constexpr int FADE_DEPTH = 150;
@@ -279,7 +279,7 @@ inline void lay_over(uint16_t *px, int stride, int w, int h, const uint32_t *arg
     }
   }
 }
-// Everything a live tile lays over its picture, in the order tile_art.py does it: the shade, the corners, the name.
+// Everything a live tile lays over its picture, in the order picture_paint.py does it: the shade, the corners, the name.
 inline void compose(uint16_t *px, int stride, int w, int h, const Look &look) {
   if (!look.tile) return;
   if (look.fade) fade(px, stride, w, h);
@@ -327,7 +327,12 @@ void close(Handle handle);
 void tick(const std::function<void(Handle, Event)> &tell);
 // How often the panel ran dry since boot (a frame of blue: live_view.cpp, "The panel's share of the memory bus").
 uint32_t misses();
+// What the streams that run hold of the board's memory, about (docs/PICTURES.md: the streams take their share of the one
+// picture budget while they run): each stream's input and its decoded picture of its room, from what the main loop
+// set when it opened, so never read under a task.
+size_t held_bytes();
 #else
+inline size_t held_bytes() { return 0; }
 inline bool available() { return false; }
 inline Handle open(const std::string &, const Rect &, const Look & = Look{}, bool = false) { return -1; }
 inline bool has_speaker() { return false; }

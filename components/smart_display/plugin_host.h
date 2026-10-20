@@ -4,8 +4,10 @@
 #include <cstdint>
 #include <string>
 #include <ArduinoJson.h>
+#include "picture_loader.h"
 #include "tile_picture.h"
 #include "lvgl.h"
+namespace esphome::camera { class Camera; }
 #include "roomy.h"
 
 namespace runtime_tiles {
@@ -49,7 +51,13 @@ bool pictured(const runtime_tiles::Widgets &w);
 bool picture_ask(const runtime_tiles::Widgets &w, const runtime_tiles::Tile &t, tile_picture::Ask &a);
 // The card's picture (an lv_image_dsc_t of the store, or nullptr for none) onto its places, each its own piece; a
 // place whose piece is not in it shows its block again.
+// The screen's own camera (docs/PICTURES.md "Capture"): the core watches the camera a plugin brings as ts_camera (the
+// feature `camera`, smart_display.register_plugin calls this) and shows its dot while Home Assistant uses it.
+void watch_camera(esphome::camera::Camera *camera);
+void camera_dot_update(uint32_t now_ms);
 void picture_place(runtime_tiles::Widgets &w, void *picture);
+// What came of a plugin tile's picture when it did not come (0.17, Tile::on_picture): NONE or FAILED to its places.
+void picture_outcome(runtime_tiles::Widgets &w, picture_loader::Outcome outcome);
 // The picture the card's places draw now (its last atlas), nullptr for none: while the next one comes, a card whose
 // addresses changed keeps showing it (tile_picture_place), as a tile's own picture keeps its last.
 const void *picture_drawn(const runtime_tiles::Widgets &w);

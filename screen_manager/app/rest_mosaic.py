@@ -5,7 +5,7 @@ name and state on top (firmware 0.3.1). While nothing plays, Home Assistant give
 block. Now this app gives the tile a picture of its own then: the covers of a folder of the player's library, side by
 side, darkened as much as the firmware asks for a cover (tile_picture SHADE), and every ROTATE_SECONDS one of them moves
 on to the next of the folder. Nothing in the firmware changes: the tile asks for its picture by a mark (`pic`), as it
-does for a cover, and the page's strip is drawn here (camera_feed.live `renders`).
+does for a cover, and the page's strip is drawn here (picture_sources, a cover tile at rest).
 
 - What is at rest: a state without a song (idle, on, off, standby, a pause with nothing in it) and no picture of the
   player's own. A player that plays without a picture (a radio stream) keeps its card: the mosaic never stands for

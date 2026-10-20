@@ -17,6 +17,9 @@
 #include <memory>
 #include <string_view>
 #include <vector>
+#ifdef USE_CAMERA
+#include "esphome/components/camera/camera.h"
+#endif
 
 // The documents the host parses a plugin tile's options and data into, and builds a question in: PSRAM first, as the
 // texts they come from (roomy.h).
@@ -31,6 +34,75 @@ RoomyJson json_memory;
 
 namespace rt = runtime_tiles;
 namespace plugin_host { extern tessera::Point tapped; }
+
+// ---- The screen's own camera in use (docs/PICTURES.md "Capture", plugin API 0.17) ----
+// A dot in the glass's top right corner, on top of everything (LVGL's system layer: pages, cards, the full view, the
+// screensaver), while the screen's own camera is in use: Home Assistant taking pictures or a stream of it, which the core
+// sees by itself on the camera with the id ts_camera (the feature `camera`, smart_display.register_plugin binds it), or a
+// plugin that uses it on the screen itself (tessera::capturing). No plugin or setting takes it away. It lies in the top
+// bar's row, so it never lies over a live picture (live_view.h stops one under anything LVGL draws).
+namespace plugin_host {
+// A picture keeps the camera in use this long: Home Assistant's dashboards ask for a new one every ten seconds. A
+// stream is in use while its pictures come; at five a second, a gap this long means it ended.
+constexpr uint32_t PICTURE_IN_USE_MS = 12000;
+constexpr uint32_t STREAM_QUIET_MS = 3000;
+std::vector<const tessera::Plugin *> &camera_users() {
+  static std::vector<const tessera::Plugin *> list;
+  return list;
+}
+static uint32_t camera_picture_at = 0;   // millis() of the camera's last picture to Home Assistant, 0 before the first
+static bool camera_streaming = false;
+static lv_obj_t *camera_dot = nullptr;
+static bool camera_dot_dark = false;
+static bool camera_in_use(uint32_t now) {
+  if (!camera_users().empty()) return true;
+  if (!camera_picture_at) return false;
+  return now - camera_picture_at < (camera_streaming ? STREAM_QUIET_MS : PICTURE_IN_USE_MS);
+}
+void camera_dot_update(uint32_t now) {
+  const bool on = camera_in_use(now);
+  if (!on) {
+    if (camera_dot) { lv_obj_delete(camera_dot); camera_dot = nullptr; ESP_LOGI("plugins", "the camera is no longer in use"); }
+    return;
+  }
+  if (!camera_dot) {
+    const int d = std::max(6, ::ui::mm(2));
+    camera_dot = lv_obj_create(lv_layer_sys());
+    lv_obj_remove_style_all(camera_dot);
+    lv_obj_remove_flag(camera_dot, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(camera_dot, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(camera_dot, d, d);
+    lv_obj_set_style_radius(camera_dot, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_bg_opa(camera_dot, LV_OPA_COVER, 0);
+    lv_obj_align(camera_dot, LV_ALIGN_TOP_RIGHT, -std::max(3, ::ui::mm(1)), std::max(3, ::ui::mm(1)));
+    camera_dot_dark = !theme::dark;  // coloured below
+    ESP_LOGI("plugins", "the camera is in use: the dot shows");
+  }
+  if (camera_dot_dark != theme::dark) {
+    camera_dot_dark = theme::dark;
+    lv_obj_set_style_bg_color(camera_dot, lv_color_hex(theme::foreground(theme::ha::GREEN)), 0);
+  }
+}
+#ifdef USE_CAMERA
+// The camera as Home Assistant uses it, heard as ESPHome's API hears it: a picture, a stream that starts or stops.
+class CameraWatch : public esphome::camera::CameraListener {
+ public:
+  void on_camera_image(const std::shared_ptr<esphome::camera::CameraImage> &) override { seen(); }
+  void on_stream_start() override { camera_streaming = true; seen(); }
+  void on_stream_stop() override { camera_streaming = false; camera_dot_update(esphome::millis()); }
+
+ private:
+  static void seen() {
+    camera_picture_at = esphome::millis() | 1;
+    camera_dot_update(camera_picture_at);
+  }
+};
+void watch_camera(esphome::camera::Camera *camera) {
+  static CameraWatch watch;
+  if (camera) camera->add_listener(&watch);
+}
+#endif
+}  // namespace plugin_host
 // ---- The register (plugin_api.h) ----
 namespace tessera {
 
@@ -391,6 +463,21 @@ void wake(const Plugin *plugin) {
   if (plugin_host::wake) plugin_host::wake(std::string("plugin ") + (plugin ? plugin->plugin_id() : "?"));
 }
 
+// A plugin that uses the screen's own camera on the screen itself says so (0.17): the core's dot shows while one does.
+void capturing(const Plugin *plugin, Capture what, bool on) {
+  if (what != Capture::CAMERA || !plugin) return;
+  auto &using_it = plugin_host::camera_users();
+  const auto found = std::find(using_it.begin(), using_it.end(), plugin);
+  if (on && found == using_it.end()) {
+    using_it.push_back(plugin);
+    ESP_LOGI("plugins", "%s uses the camera on the screen", plugin->plugin_id());
+  } else if (!on && found != using_it.end()) {
+    using_it.erase(found);
+    ESP_LOGI("plugins", "%s no longer uses the camera", plugin->plugin_id());
+  }
+  plugin_host::camera_dot_update(esphome::millis());
+}
+
 namespace ui {
 // The screen's fixed fonts (docs/RESPONSIVE.md, "Fonts"), the ones packages/core.yaml hands runtime_tiles at boot: the
 // same ids on every board, sized by its look. Nothing here depends on which tiles happen to stand on the glass.
@@ -494,6 +581,9 @@ struct Place {
   bool contain = false;
   uint8_t turn = 0;      // tessera::Turn
   bool mirror = false;
+  bool block = true;     // tessera::Placeholder::BLOCK: its soft block shows until its picture is here (0.17)
+  bool laid = false;     // its piece of the atlas is on it now
+  int8_t told = -1;      // the PictureState the plugin last heard for this address (0.17, on_picture), -1 none yet
 };
 struct Card : tessera::InPsram {   // PSRAM first, as the plugin's own objects (roomy.h)
   std::unique_ptr<tessera::Tile> tile;
@@ -684,7 +774,7 @@ bool picture_ask(const rt::Widgets &w, const rt::Tile &t, tile_picture::Ask &a) 
   return true;
 }
 
-// A place without its picture: its block again, drawing nothing of the store.
+// A place without its picture: its block again (or nothing, for a place without one), drawing nothing of the store.
 static void place_clear(Place &p) {
 #if LV_USE_IMAGE
   if (p.image) {
@@ -692,7 +782,28 @@ static void place_clear(Place &p) {
     lv_obj_add_flag(p.image, LV_OBJ_FLAG_HIDDEN);
   }
 #endif
-  if (p.place) rt::set_number(p.place, LV_STYLE_BG_OPA, LV_OPA_COVER);
+  p.laid = false;
+  if (p.place) rt::set_number(p.place, LV_STYLE_BG_OPA, p.block ? LV_OPA_COVER : LV_OPA_TRANSP);
+}
+
+// What came of each place's picture (0.17, on_picture), told once per address: SHOWN for a place its picture lies on, and
+// `missing` (NONE, FAILED) for a place with an address whose picture did not come. `on` calls the tile, card or saver.
+template <typename On> static void tell_shown(std::vector<Place> &places, On &&on) {
+  for (auto &p : places) {
+    if (!p.place || p.url.empty() || !p.laid || p.told == static_cast<int8_t>(tessera::PictureState::SHOWN)) continue;
+    p.told = static_cast<int8_t>(tessera::PictureState::SHOWN);
+    on(p.place, tessera::PictureState::SHOWN);
+  }
+}
+template <typename On> static void tell_missing(std::vector<Place> &places, tessera::PictureState missing, On &&on) {
+  for (auto &p : places) {
+    if (!p.place || p.url.empty() || p.laid || p.told == static_cast<int8_t>(missing)) continue;
+    p.told = static_cast<int8_t>(missing);
+    on(p.place, missing);
+  }
+}
+static tessera::PictureState missing_of(picture_loader::Outcome o) {
+  return o == picture_loader::Outcome::FAILED ? tessera::PictureState::FAILED : tessera::PictureState::NONE;
 }
 
 // The places back where the tile laid them out, the moment another picture (or none) takes the place of what they
@@ -733,6 +844,7 @@ static void lay(lv_obj_t *frame, std::vector<Place> &places, void *picture) {
     lv_obj_remove_flag(p.image, LV_OBJ_FLAG_HIDDEN);
     // The block goes under its picture: the piece carries the card's colour behind its corners already.
     rt::set_number(p.place, LV_STYLE_BG_OPA, LV_OPA_TRANSP);
+    p.laid = true;
     lv_obj_invalidate(p.image);
   }
 #else
@@ -763,6 +875,17 @@ void picture_place(rt::Widgets &w, void *picture) {
   if (!w.plugin) return;
   if (picture != picture_drawn(w)) slide_back(w.plugin->places);
   lay(w.tile, w.plugin->places, picture);
+  Card *card = w.plugin;
+  Making call(card);
+  tell_shown(card->places, [card](lv_obj_t *place, tessera::PictureState s) { card->tile->on_picture(place, s); });
+}
+
+void picture_outcome(rt::Widgets &w, picture_loader::Outcome outcome) {
+  if (!w.plugin || rt::shows(outcome)) return;
+  Card *card = w.plugin;
+  Making call(card);
+  tell_missing(card->places, missing_of(outcome),
+               [card](lv_obj_t *place, tessera::PictureState s) { card->tile->on_picture(place, s); });
 }
 
 const void *picture_drawn(const rt::Widgets &w) { return w.plugin ? drawn(w.plugin->places) : nullptr; }
@@ -1018,20 +1141,9 @@ static bool card_ask(OpenCard &open, tile_picture::Ask &a) {
 }
 static void card_request(const tile_picture::Ask &a, const std::string &entity) {
   if (rt::inbox.empty() || !esphome::api::global_api_server) return;
-  esphome::api::HomeassistantActionRequest request;
-  request.service = esphome::StringRef("esphome.screen_camera");
-  request.is_event = true;
-  auto fields = tile_picture::card_fields(a, entity);
-  fields.insert(fields.begin(), {{"inbox", rt::inbox}, {"session", rt::protocol_key(rt::transfer.lease)},
-                                 {"rev", rt::layout_rev}, {"view", std::to_string(++card_number)}});
-  request.data.init(fields.size());
-  for (const auto &field : fields) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef(field.first);
-    entry.value = esphome::StringRef(field.second);
-    request.data.push_back(entry);
-  }
-  esphome::api::global_api_server->send_homeassistant_action(request);
+  auto q = tile_picture::question(a, picture_question::Owner::PLUGIN_CARD, a.entity, entity);
+  q.cap = rt::picture_cap().bytes;
+  rt::picture_ask(q, "pcard", a.entity, ++card_number);
   ESP_LOGI("camera", "asked for the pictures of the card %s", a.entity.c_str());
 }
 // The card's picture onto its places, when it is the one they want now. Until the next is here, the places keep the
@@ -1042,6 +1154,15 @@ static void card_place(OpenCard &open) {
   if (src != drawn(open.places)) slide_back(open.places);
   lay(open.room, open.places, src);
   ESP_LOGI("picture", "card %s: its pictures are shown", open.key.c_str());
+  // Last: the card may close itself from on_picture, and `open` is gone after that.
+  call(&open, [&open](tessera::Card &card) {
+    tell_shown(open.places, [&card](lv_obj_t *place, tessera::PictureState s) { card.on_picture(place, s); });
+  });
+}
+static void card_missing(OpenCard &open, picture_loader::Outcome outcome) {
+  call(&open, [&open, outcome](tessera::Card &card) {
+    tell_missing(open.places, missing_of(outcome), [&card](lv_obj_t *place, tessera::PictureState s) { card.on_picture(place, s); });
+  });
 }
 
 void card_picture_want() {
@@ -1068,7 +1189,11 @@ void card_picture_want() {
   want.drawn = true;  // the app fetches them: an answer without a picture (a slow host) is asked again, later each time
   const std::string entity = open->entity;
   want.ask = [a, entity] { card_request(a, entity); };
-  want.done = [](picture_loader::Outcome o) { if (rt::shows(o) && shown) card_place(*shown); };
+  want.done = [](picture_loader::Outcome o) {
+    if (!shown) return;
+    if (rt::shows(o)) card_place(*shown);
+    else card_missing(*shown, o);
+  };
   rt::loader.want(CARD_OWNER, std::move(want));
 }
 
@@ -1302,21 +1427,9 @@ static bool saver_ask(OpenSaver &open, tile_picture::Ask &a) {
 }
 static void saver_request(const tile_picture::Ask &a, const std::string &entity) {
   if (rt::inbox.empty() || !esphome::api::global_api_server) return;
-  esphome::api::HomeassistantActionRequest request;
-  request.service = esphome::StringRef("esphome.screen_camera");
-  request.is_event = true;
-  auto fields = tile_picture::card_fields(a, entity);
-  for (auto &field : fields) if (field.first == "card") field.first = "saver";
-  fields.insert(fields.begin(), {{"inbox", rt::inbox}, {"session", rt::protocol_key(rt::transfer.lease)},
-                                 {"rev", rt::layout_rev}, {"view", std::to_string(++saver_number)}});
-  request.data.init(fields.size());
-  for (const auto &field : fields) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef(field.first);
-    entry.value = esphome::StringRef(field.second);
-    request.data.push_back(entry);
-  }
-  esphome::api::global_api_server->send_homeassistant_action(request);
+  auto q = tile_picture::question(a, picture_question::Owner::PLUGIN_SAVER, a.entity, entity);
+  q.cap = rt::picture_cap().bytes;
+  rt::picture_ask(q, "psaver", a.entity, ++saver_number);
   ESP_LOGI("camera", "asked for the pictures of the screensaver %s", a.entity.c_str());
 }
 static void saver_place(OpenSaver &open) {
@@ -1324,6 +1437,16 @@ static void saver_place(OpenSaver &open) {
   if (!src) return;
   if (src != drawn(open.places)) slide_back(open.places);
   lay(open.stage, open.places, src);
+  auto &places = open.places;
+  saver_call([&places](tessera::Saver &saver) {
+    tell_shown(places, [&saver](lv_obj_t *place, tessera::PictureState s) { saver.on_picture(place, s); });
+  });
+}
+static void saver_missing(OpenSaver &open, picture_loader::Outcome outcome) {
+  auto &places = open.places;
+  saver_call([&places, outcome](tessera::Saver &saver) {
+    tell_missing(places, missing_of(outcome), [&saver](lv_obj_t *place, tessera::PictureState s) { saver.on_picture(place, s); });
+  });
 }
 void saver_picture_want() {
   OpenSaver *open = saver_open;
@@ -1347,7 +1470,11 @@ void saver_picture_want() {
   want.drawn = true;
   const std::string entity = open->step == tessera::SaverStep::OWN ? open->entity : std::string();
   want.ask = [a, entity] { saver_request(a, entity); };
-  want.done = [](picture_loader::Outcome o) { if (rt::shows(o) && saver_open) saver_place(*saver_open); };
+  want.done = [](picture_loader::Outcome o) {
+    if (!saver_open) return;
+    if (rt::shows(o)) saver_place(*saver_open);
+    else saver_missing(*saver_open, o);
+  };
   rt::loader.want(SAVER_OWNER, std::move(want));
 }
 void saver_picture_answer(const std::string &key, const std::string &url, uint32_t number) {
@@ -1545,6 +1672,8 @@ void ready() {
 }
 void tick(uint32_t now_ms, bool dimmed) {
   if (!set_up()) return;
+  // The camera's dot goes once its last picture is old and no plugin uses it, and takes the look's colour.
+  camera_dot_update(now_ms);
   static bool was_dimmed = false;
   if (dimmed != was_dimmed) {
     was_dimmed = dimmed;
@@ -1619,10 +1748,16 @@ void takes_taps(lv_obj_t *part) {
   lv_obj_add_event_cb(part, plugin_host::saver_touch, LV_EVENT_SHORT_CLICKED, reinterpret_cast<void *>(spot));
 }
 
-lv_obj_t *picture(lv_obj_t *parent) {
+lv_obj_t *picture(lv_obj_t *parent) { return picture(parent, Placeholder::BLOCK); }
+
+lv_obj_t *picture(lv_obj_t *parent, Placeholder placeholder) {
   lv_obj_t *place = block(parent, theme::TRACK);
   lv_obj_remove_flag(place, LV_OBJ_FLAG_SCROLLABLE);
-  if (plugin_host::placing) plugin_host::placing->push_back({place});
+  plugin_host::Place p;
+  p.place = place;
+  p.block = placeholder == Placeholder::BLOCK;
+  if (!p.block) rt::set_number(place, LV_STYLE_BG_OPA, LV_OPA_TRANSP);
+  if (plugin_host::placing) plugin_host::placing->push_back(p);
   else ESP_LOGW("plugins", "ui::picture outside a call of a tile, a card or a screensaver: the place shows no picture");
   return place;
 }
@@ -1657,6 +1792,7 @@ void set_picture(lv_obj_t *place, const std::string &url, Fit fit, Turn turn, bo
   const bool contain = fit == Fit::CONTAIN;
   const uint8_t turned = static_cast<uint8_t>(turn);
   if (p->url == url && p->contain == contain && p->turn == turned && p->mirror == mirror) return;
+  if (p->url != url) p->told = -1;  // another address: what comes of it is told anew (on_picture)
   p->url = url;
   p->contain = contain;
   p->turn = turned;
@@ -1684,6 +1820,7 @@ uint16_t bytes(const std::string &) { return PLACEHOLDER_BYTES; }
 bool pictured(const runtime_tiles::Widgets &) { return false; }
 bool picture_ask(const runtime_tiles::Widgets &, const runtime_tiles::Tile &, tile_picture::Ask &) { return false; }
 void picture_place(runtime_tiles::Widgets &, void *) {}
+void picture_outcome(runtime_tiles::Widgets &, picture_loader::Outcome) {}
 const void *picture_drawn(const runtime_tiles::Widgets &) { return nullptr; }
 bool picture_draws(const runtime_tiles::Widgets &, const void *) { return false; }
 bool picture_let_go(runtime_tiles::Widgets &, const void *) { return false; }

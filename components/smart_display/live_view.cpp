@@ -631,6 +631,13 @@ static void speak(Stream &s, bool on) {
 #endif
 }
 
+size_t held_bytes() {
+  size_t held = 0;
+  for (auto *s : streams)
+    if (s && !s->stopping) held += s->input_size + static_cast<size_t>(std::max(0, s->area.w)) * std::max(0, s->area.h) * 2;
+  return held;
+}
+
 void close(Handle handle) {
   if (handle < 0 || handle >= MAX_STREAMS || !streams[handle]) return;
   Stream &s = *streams[handle];

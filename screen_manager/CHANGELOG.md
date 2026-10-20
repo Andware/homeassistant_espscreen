@@ -1,5 +1,29 @@
 ## Unreleased
 
+- **Pictures in one system (docs/PICTURES.md).** Every picture a screen shows now goes one way: the camera full
+  screen, a camera's or a cover's tile, a map, the media card's cover, a player's library, a vacuum's map, the
+  screensaver's cover, camera and photos, an alert's picture and a plugin's places. A screen asks for each as one
+  question (its places, what each is of, how it is painted, whether it may stream), and the app answers every question
+  with the same rules, the same fetching and the same painting, where it used to have a way of its own for each. What you
+  see stays as it was, with these differences: an album cover's rounded corners are smooth, a vacuum's map and a page of a
+  player's library come within the screen's picture memory like every other picture, no picture is held twice in a
+  screen's memory any more, and a live camera's stream takes its share of the screen's picture memory while it runs.
+  A camera's still on a tile, in an alert or on the screensaver is the newest frame of its stream while one runs, not
+  another snapshot from Home Assistant. Screens with older firmware keep working with this app, and screens with this
+  firmware keep working with an older app.
+- **The screen shows when its own camera is in use.** A small green dot in the top right corner, on top of everything,
+  while Home Assistant takes pictures or a stream from the screen's own camera (the Screen camera plugin) or a plugin
+  uses the camera on the screen itself. No plugin or setting can hide it.
+- **A live camera no longer goes black every few seconds before its stream starts** (the P4 screens). While Home
+  Assistant's stream of a camera had not given its first frame yet, the screen got the camera's picture once and then
+  nothing, closed the stream after six silent seconds and asked again, black in between, for up to a minute. It now
+  gets the camera's picture every two seconds until the stream comes, and a camera Home Assistant has no such stream for
+  (one with HLS alone) goes over to its pictures at once instead of after 20 seconds.
+- **Plugin API 0.17**: a picture's place without its grey block, a call when a place's picture came or did not, a
+  media player's cover, a camera's picture and an entity's own picture as a place's address, and `capturing()` for a
+  plugin that uses the screen's own camera (docs/PLUGINS.md). Tessera's own Cinema, New music and Picture frame use it:
+  no more grey bars in a cover flow after the screen fetched its pictures again, and Picture frame shows what a player
+  plays.
 - **Speaker and microphone on the Guition and Waveshare ESP32-P4 screens, experimental.** The Guition JC8012P4A1
   (10.1 inch, also its V2 and V3), JC1060P470 (7 inch, also its V2) and JC4880P443 (4.3 inch) now use their speaker and
   microphone, both at once, and the Waveshare ESP32-P4-WIFI6-Touch-LCD-7B, LCD-7 and LCD-10.1 their speaker and two

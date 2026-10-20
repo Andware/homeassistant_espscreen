@@ -28,7 +28,7 @@ from core import validate_layout  # noqa: E402
 HAS_PIL = importlib.util.find_spec('PIL') is not None
 HAS_AIOHTTP = importlib.util.find_spec('aiohttp') is not None
 if HAS_AIOHTTP:
-    import camera_feed
+    import picture_links
     from server import Manager
 
 PLAYER = 'media_player.spotify'
@@ -170,7 +170,7 @@ class TheMosaic(unittest.TestCase):
 @unittest.skipUnless(HAS_AIOHTTP and HAS_PIL, 'aiohttp and Pillow')
 class TheApp(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        camera_feed.base_url.__defaults__[0].clear()
+        picture_links.base_url.__defaults__[0].clear()
 
     def ha(self, refuse=False):
         class HA:
@@ -234,7 +234,7 @@ class TheApp(unittest.IsolatedAsyncioTestCase):
         (sent,) = [entry[2] for entry in ha.log if entry[0] == 'send']
         if not sent['u']:
             return None
-        status, raw, _ = await m.camera.serve(sent['u'].rsplit('/', 1)[1][:-4])
+        status, raw, _, _ = await m.links.serve(sent['u'].rsplit('/', 1)[1][:-4])
         self.assertEqual(status, 200)
         from PIL import Image
         with Image.open(io.BytesIO(raw)) as image:

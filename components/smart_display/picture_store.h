@@ -34,13 +34,13 @@ constexpr size_t ENTRIES = 48;
 // its own (tile_picture.h), so only a tile larger than the cap, a camera over a whole 10-inch page, comes smaller and
 // is shown in the middle of its place. 1024x640 keeps every board up to the
 // 7-inch and the 1024x600 glass at its own pixels. ESP Screen Manager caps the pictures it sizes itself with the same
-// numbers (camera_feed.PICTURE_MAX_SIDE and PICTURE_MAX_BYTES, tests/test_camera.py keeps them equal).
+// numbers (picture_question.MAX_SIDE and MAX_BYTES, tests/test_camera.py keeps them equal).
 constexpr int MAX_SIDE = 1024;
 constexpr size_t MAX_BYTES = 1024 * 640 * 2;
 // A board whose store has the room takes larger pictures (GitHub #183): one picture may be a third of the store's
 // budget, at most LARGE_SIDE either way. The 32 MB of the P4 boards keep 6 MB, so one picture of 2 MB: the 10-inch
 // glass's 1280x800 at its own pixels, for a camera over the whole page, the full view and the screensaver. A board with
-// 8 MB keeps the cap above. ESP Screen Manager honours the same side (camera_feed.PICTURE_LARGE_SIDE).
+// 8 MB keeps the cap above. ESP Screen Manager honours the same side (picture_question.LARGE_SIDE).
 constexpr int LARGE_SIDE = 2048;
 struct Cap {
   int side = MAX_SIDE;
@@ -49,6 +49,9 @@ struct Cap {
 inline Cap cap_for(size_t budget) {
   Cap cap;
   if (budget / 3 > MAX_BYTES) { cap.side = LARGE_SIDE; cap.bytes = budget / 3; }
+  // Never more than the store can keep at all (a board whose PSRAM gives a store under MAX_BYTES): a picture over its
+  // budget could only be drawn from its download, outside every budget.
+  else if (budget > 0 && budget < cap.bytes) cap.bytes = budget;
   return cap;
 }
 // A scale in 1/SCALE_ONE, so the screen and its request round a picture's frames the same way.

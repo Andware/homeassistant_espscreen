@@ -51,7 +51,7 @@ def builtin_name(entity, text=screen_t):
     if entity == ENERGY_TILE:
         return text('addon.screen.builtin.energy')
     return text('screen.settings.title' if entity == 'screen.settings' else 'addon.screen.builtin.clock')
-# A camera or an image entity opens full screen on a Guition with firmware 0.2.57+ (camera_feed.py).
+# A camera or an image entity opens full screen on a Guition with firmware 0.2.57+ (docs/PICTURES.md).
 CAMERA_DOMAINS = frozenset(('camera', 'image'))
 CAMERA_MIN_FIRMWARE = (0, 2, 57)
 # A live picture on a camera tile ("display": "live", app 0.2.91): firmware from here asks for the page's strip.
@@ -687,7 +687,7 @@ def board_of(screen):
 # settings_screen::features() on the firmware side; the sensor, the reading of it and the fallback stay as they are.
 # Nothing asks about a word that is not in this table, so a screen may report one an older app has never heard of,
 # and a word may be retired here without the firmware having to stop sending it. Whether a board draws pictures is
-# the obvious next one: it is still read from boards.json alone (camera_feed.BOXES), because the memory for a
+# the obvious next one: it is still read from boards.json alone (picture_question.BOXES), because the memory for a
 # picture is the board's and not this screen's.
 FEATURES = {
     # The backlight takes levels, not just lit or dark (app 0.2.105). One board so far says no: the Waveshare's

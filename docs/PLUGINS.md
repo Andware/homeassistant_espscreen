@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.16 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.17 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -24,7 +24,7 @@ adds is not listed, so a 0.10 plugin builds on 0.11. A test keeps the number equ
 | Firmware | `components/smart_display/plugin_api.h` | What a plugin uses: `tessera::Plugin`, `tessera::Tile`, `TileContext`, the drawing helpers, the clock. The API's version, `PLUGIN_API_MAJOR/MINOR`. |
 | Firmware | `components/smart_display/roomy.h` | Memory that takes PSRAM first: `roomy::Text`, `roomy::List`, the allocator behind `tessera::Text`, `tessera::List` and the plugin host's documents (below, "Rules a change keeps"). |
 | Firmware | `components/smart_display/plugin_host.h`, `plugin_host.cpp` | The core's side: the register, a plugin tile in a card, its places for pictures, the moments, the hello. |
-| Add-on | `screen_manager/app/plugin_pictures.py` | The pictures of a plugin tile (0.10): the question, where a picture may come from, the cache by address, the atlas. |
+| Add-on | `screen_manager/app/plugin_pictures.py` | What a plugin's places may show (0.10 a tile, 0.13 a card, 0.14 a screensaver): the manifest's rules for its addresses and the fetching of them, kept by address. The question, the painting and the link are the one picture system's (docs/PICTURES.md). |
 | Firmware | `components/smart_display/__init__.py` | `register_plugin()`, which a plugin's `__init__.py` calls: id, version, tile memory and screen texts from its manifest. `PLUGIN_API`. |
 | Add-on | `screen_manager/app/plugin_manifest.py` | Reads and checks a manifest. Standalone: the plugins repository's `tools/check.py` runs this file. `PLUGIN_API`. |
 | Add-on | `screen_manager/app/plugin_fetch.py` | The building block `fetch`: fill in, ask, map, cache, back off. |
@@ -228,6 +228,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | Settings rows | `settings(SettingsPage&)`; `settings_screen::plugin_pages` | `Plugins.settings_for`, `set_setting`: the manifest's `settings` (switch, number, select, text, button with its `status`), entities of the screen's own device found in the entity registry (`_setting_entities`) | in the plugin's details on the screen's Plugins tab (`PluginSettings.vue`), with its inputs and parts; Screen settings links there |
 | A question to Home Assistant | `tessera::send`, `on_message` (op `plugin`) | `Plugins.answer`: only `permissions.ha_commands`, logged; an answer the manifest's `answers` maps goes as its fields, the rest as it came; both bounded (`bounded`, 3.2 KB, by bytes) | the commands under "What it may do" |
 | The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`), `on_press` and `on_step(Step)` (0.11, "Touch feedback" below) | | |
+| Pictures in one system (0.17) | `ui::picture(parent, Placeholder::NONE)`, a place without its block; `on_picture(place, PictureState)` on a `Tile`, a `Card` and a `Saver` (`plugin_host::picture_outcome`, from `tile_picture_done`); the core's own sources as an address; `slide_pictures` from any call; `tessera::capturing` and the camera's dot (`plugin_host::camera_dot_update`); "Pictures on a plugin tile" below | `plugin_pictures.py` reads `cover:`, `camera:`, `entity:` and `step:`; `Manager.plugin_picture` | nothing |
 | Waking the screen (0.16) | `tessera::wake(plugin)`: `plugin_host::wake`, which `packages/core.yaml` points at the script `wake_from`, the one way Home Assistant's Wake button and a board's sensor take; "Waking the screen" below | nothing | nothing |
 | Entities chosen per tile (0.15) | nothing new: the tile reads `x.entities.<option id>` (state, name, attributes, updated) from its data | an option of kind `entity` (`plugin_manifest.check_option`, `option_value`); `Plugins.tile_message` puts each chosen entity's `state_part` under `entities`, `related_entities` follows them | the tile's inspector: a searchable entity picker per option (`PluginOptions.vue`) |
 | A screensaver (0.14) | `Saver`, `add_saver(id, step, make)`, `SaverContext`; `ui::takes_taps` (only for `taps: true`, `Plugin::set_taps`); `wish()`; `drift()`; "A screensaver" below | the manifest's `savers`; `Plugins.saver_kinds`, `saver_plugins`, `saver_step`, `refresh_savers`; `screen_saver.message`'s `pf`; `answer_plugin_pictures` with `question.saver` and `saver:picture` | the Screensaver card: a face per step, a step of its own in the order, its options |
@@ -374,17 +375,18 @@ file from GitHub at the plugin's commit, checks it is a PNG of at most 1 MB and 
 ## Pictures on a plugin tile
 
 A plugin never fetches: its tile lays out places (`ui::picture`) and names an address for each (`ui::set_picture`), and
-the core takes them the way every picture of the screen comes (docs/CAMERA.md, "A picture per tile"). The places of one
-card are the parts of one picture (`tile_picture.h`, `Part`, `set_parts`): the card asks `esphome.screen_camera` as a
-page of one tile, with an `atlas` of the places' frames from the card's top left, `src` their addresses and `fit`
-(`cover` or `contain`) in the same order; the mark of the key is a digest of the places and addresses, so another
-address, a place that moved, or the other look is another picture, and the same address again costs nothing. The app
-(`server.answer_plugin_pictures`, `plugin_pictures.py`) answers only for a plugin tile of the screen's layout whose
+the core takes them the way every picture of the screen comes (docs/PICTURES.md). The places of one card are the parts
+of one picture (`tile_picture.h`, `Part`, `set_parts`): the card asks one question with a place for each, from the
+card's top left, with its address and its fit (`cover` or `contain`) in the same order (an older app gets the same as
+a page of one tile with an `atlas`, `src` and `fit`); the mark of the key is a digest of the places and addresses, so
+another address, a place that moved, or the other look is another picture, and the same address again costs nothing.
+The app (`Manager.plugin_picture`, `plugin_pictures.py`) answers only for a plugin tile of the screen's layout whose
 manifest gives the tile `pictures`, and only addresses the manifest allows: a host of `permissions.network` (as a
 fetch, through the plugins' own session: public hosts, no redirects, 2 MB) or, for a tile of an entity, a picture of
 Home Assistant's own (`/api/image/serve/`, `/api/image_proxy/`, `/local/`, the paths a map marker takes, with the app's
-token). It keeps each picture by address for six hours, paints the frames as it paints every tile picture
-(`tile_art.encode`, `within` is contain on the card's own colour) and serves the atlas as a still link. On the screen
+token), or one of the core's own sources (below). It keeps each picture by address for six hours, paints the places as
+it paints every picture (`picture_paint`, `within` is contain on the card's own colour) and serves the atlas as a
+still link. On the screen
 the atlas is one entry of the store under the tile's key, within the same cap as a camera over the card, and each place
 draws its piece of it (`plugin_host::picture_place`); a frame the app had no picture for stays the card's colour, and
 an answer without a picture is asked for again later, each time after a longer while (`drawn`). A board without
@@ -394,15 +396,34 @@ longest ago hold for a plugin's atlas as for every picture.
 
 **Layers, turns and reflections.** The places of one card may overlap: they are its layers, and a place made later
 lies over one made earlier. The screen draws them in that order, and the app paints the atlas in the same order
-(`tile_art.layers`): each frame over what the ones before it left, on the card's colour where nothing lies yet, so a
-rounded corner shows the poster under it. Covers of different tiles still never overlap (`tile_art.parse`). A place may
+(`picture_paint.picture`): each place over what the ones before it left, on the card's colour where nothing lies yet,
+so a rounded corner shows the poster under it. Covers of different tiles still never overlap. A place may
 also ask for its picture turned (`tessera::Turn`, `turn` in the question: `left` faces the left, its left edge far) and
 with a reflection (`mirror`, the lower `MIRROR_PERCENT` of the place under the picture); the app draws both into the
-atlas with Pillow (`tile_art.layer`), so the screen pays nothing for them. The question names `turn` and `mirror` only
+atlas with Pillow (`picture_paint`), so the screen pays nothing for them. The question names `turn` and `mirror` only
 when a place asks for them, and an older app ignores them and draws the pictures flat. A place keeps the picture it
 shows while the next one comes (`set_picture` no longer clears it, and `tile_picture_place` keeps the last atlas while
 the store holds it), so a cover flow turns without a flash of blocks; the render host with `KEPT_PAGES_HOST=1` has a
 picture store of a 4-inch Guition's size, so its renders show every picture of a page as a board with PSRAM does.
+
+**The core's sources (0.17).** Besides a web address, a place may name what the core already shows: `cover:<entity>`,
+a media player's cover, `camera:<entity>`, a camera's picture, and `entity:<entity>`, an entity's own picture, each
+only for the entity the tile, card or step shows (`picture_sources`, `_plugin_entities`), and `step:`, the screensaver
+step's own picture (`saver:picture` is still read). The app answers them as it answers a tile of that entity: the same
+fetching, the same newest frame of a camera's stream while one runs, no permission of the network needed.
+
+**What came (0.17).** A plugin hears whether a place's picture came: `on_picture(place, PictureState)` on its tile, card
+or saver, `SHOWN` when it is on the place, `NONE` when the app has no picture at that address now (asked again later,
+each time after a longer while), `FAILED` when the download broke off. A place made with `Placeholder::NONE` shows
+nothing of its own until then, so places that lie over each other (a cover flow) show no grey bars between pictures; a
+plugin that wants a word where no picture came draws it itself on `NONE` or `FAILED`.
+
+**The screen's own camera (0.17).** A plugin that uses the screen's own camera on the screen itself (to sense light or
+motion) says so with `tessera::capturing(this, Capture::CAMERA, true)` while it does, and `false` after. The core shows a
+small green dot in the top right corner, on the system layer over everything, while any plugin says so or Home
+Assistant takes pictures or a stream of the camera (the core hears that by itself on the camera `ts_camera`, which
+`register_plugin` binds when a manifest provides `camera`). No plugin and no setting hides it. docs/PICTURES.md,
+"Capture", has the rest.
 
 ## A screensaver (0.14)
 
@@ -455,9 +476,9 @@ stays in standby. Everything else of the saver lets the finger through to `dim_w
 and `saver_woke` keeps that touch from reaching a tile.
 
 **Pictures.** A saver's places are asked for as a card's (`saver_picture_want`, `SAVER_OWNER`, `Kind::CARD` 2), with
-`saver` instead of `card` and `for` the entity of a step of its own; the answer is `psaver`. The address `saver:picture`
-is the step's own picture: the app answers it with the cover of the player on the glass or the photo of the photos step
-(`server.saver_picture`), cut to the place. Its key carries the step's `mark`, so the next cover or photo is another
+the owner `plugin_saver` and the entity of a step of its own (an older app gets `saver` instead of `card`, `for`, and
+answers `psaver`). The address `step:` (`saver:picture` before 0.17) is the step's own picture: the app answers it
+with the cover of the player on the glass or the photo of the photos step (`Manager.saver_picture`), cut to the place. Its key carries the step's `mark`, so the next cover or photo is another
 picture under the same address. The store counts a saver's places as on the glass (`card_draws`, `card_letgo`).
 
 **wish().** `tessera::wish(entity, Wish, value)`: for the player on the screensaver `rt::saver_wish` (the core's own

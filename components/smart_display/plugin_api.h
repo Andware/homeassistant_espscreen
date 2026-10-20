@@ -67,7 +67,14 @@ namespace tessera {
 // 0.15: an option of kind `entity`; the add-on follows its selected Home Assistant entity and puts the bounded state
 // under `entities.<option id>` in the tile's data. This adds no firmware-side symbols.
 // 0.16: wake(), the screen wakes as Home Assistant's Wake button does, for a plugin that senses someone come.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 16;
+// 0.17 (docs/PICTURES.md): pictures in one system. ui::picture(parent, Placeholder::NONE), a place without its soft
+// block (places that lie over each other, a cover flow); on_picture(place, PictureState) on a tile, a card and a
+// screensaver, whether a place's picture came; the core's sources as a place's address (`cover:<entity>`,
+// `camera:<entity>`, `entity:<entity>` for a place of that entity, `step:` for the screensaver step's own picture, the
+// old `saver:picture` still read); slide_pictures from any call of a tile or a card; and capturing(), a plugin that uses
+// the screen's own camera on the screen itself, which the core then shows with its dot (the core shows Home
+// Assistant's own use of the camera by itself).
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 17;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -76,6 +83,9 @@ constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 16;
 // icon set only. DIGITS (0.9) is the largest: a climate card's setpoint, with the digits and - . , ° % alone, so a
 // tile takes it only for a value ui::covers() and steps down to VALUE for any other (a word, a unit, a letter).
 enum class Font : uint8_t { VALUE, HEADLINE, TITLE, BODY_LARGE, BODY, ICON, ICON_SMALL, DIGITS };
+// What came of a place's picture (0.17, on_picture): SHOWN, it is on its place; NONE, the app has no picture at that
+// address now (it asks again later, each time after a longer while); FAILED, it did not come (the download broke off).
+enum class PictureState : uint8_t { SHOWN, NONE, FAILED };
 
 // What a tile gets when its card is made. It is valid during create() only: `name`, `entity` and `options` point into
 // the core's own storage and the JSON document of the call, so a tile copies what it needs into members of its own.
@@ -132,6 +142,10 @@ class Tile : public InPsram {
   virtual void on_theme() {}
   // A tap on the tile that the touch filter let through (tap_point() says where).
   virtual void on_tap() {}
+  // What came of the picture of one of its places (0.17): once when it is on its place, or when it did not come, and
+  // again when that changes (a new address, a picture that comes after all). A place shows its block, or nothing (its
+  // Placeholder), until then: show something of your own where it stays NONE or FAILED.
+  virtual void on_picture(lv_obj_t *place, PictureState state) {}
 };
 
 // What a card gets when it opens. A card is a screen of its own over the page: Tessera draws its frame (the page's
@@ -164,6 +178,8 @@ class Card : public InPsram {
   // so a tap on them comes here; an LVGL object of the plugin's own that is clickable takes the tap itself. Back is
   // on_back, never this. The card may close itself or open another from here.
   virtual void on_tap() {}
+  // What came of the picture of one of its places (0.17), as Tile::on_picture.
+  virtual void on_picture(lv_obj_t *place, PictureState state) {}
 };
 
 // A tap action on a tile of Home Assistant's own (a thermostat that opens the plugin's schedule): what it was tapped on.
@@ -233,6 +249,10 @@ enum class Fit : uint8_t { COVER, CONTAIN };
 // draws the whole picture in perspective within the place, its near edge the place's height and its far edge 70 % of
 // it. LEFT faces the left (its left edge far: a cover right of the middle), RIGHT faces the right (a cover left of it).
 enum class Turn : uint8_t { NONE, LEFT, RIGHT };
+// What a place shows until its picture is there (0.17, ui::picture): BLOCK, the soft block of a key's colour (TRACK);
+// NONE, nothing, so what lies under the place shows (places that lie over each other, a reflection that reaches past
+// its picture).
+enum class Placeholder : uint8_t { BLOCK, NONE };
 // A reflection under a picture (0.10, ui::set_picture's `mirror`): it takes this share of the picture's height under it,
 // within the place, so a place for a picture of height h with its reflection is h * (100 + MIRROR_PERCENT) / 100 high.
 constexpr int MIRROR_PERCENT = 30;
@@ -305,6 +325,8 @@ class Saver : public InPsram {
   virtual void on_tap() {}
   // A finger held on such a part for a second and a half (as volume down held mutes on Tessera's own player face).
   virtual void on_hold() {}
+  // What came of the picture of one of its places (0.17), as Tile::on_picture.
+  virtual void on_picture(lv_obj_t *place, PictureState state) {}
 };
 struct SaverType {
   Plugin *plugin;
@@ -477,6 +499,14 @@ void refresh();
 // and at most once a second or two while what it senses goes on. A plugin that wakes the screen by what it senses has
 // a setting for it, off until someone turns it on (docs/PLUGINS.md, "Waking the screen").
 void wake(const Plugin *plugin);
+// What a plugin captures on the screen itself (0.17): its own camera.
+enum class Capture : uint8_t { CAMERA };
+// A plugin uses the screen's own camera on the screen itself (0.17, docs/PICTURES.md "Capture"), for what never leaves
+// it (a light level, motion): true while it does, false once it stops. The core shows a dot in the glass's top right
+// corner, on top of everything, while anything uses the camera, and no plugin or setting can take it away: Home
+// Assistant taking pictures or a stream of the camera (`ts_camera`, the feature `camera`) the core sees by itself; what a
+// plugin does on the screen it must say here. Call it from the plugin's own calls (the screen's loop).
+void capturing(const Plugin *plugin, Capture what, bool on);
 // A Home Assistant action on an entity, as a tile's tap sends it: action("light.toggle", entity), or with one field
 // (action("climate.set_temperature", entity, "temperature", "21")). The screen must be allowed to perform actions.
 // The plugin's manifest names every action it calls under permissions.home_assistant_actions so that a person can read
@@ -548,7 +578,11 @@ lv_obj_t *text(lv_obj_t *parent, Font font, theme::Role role = theme::INK);
 // card draws each place its frame. Pictures come only while the tile is on the glass or on a kept page, and leave the
 // store when the tile does. An address is on a host the plugin's manifest names under permissions.network, or a
 // picture of Home Assistant's own for a tile of an entity (its entity_picture: /api/image/serve/..., /api/image_proxy/...,
-// /local/...); the app fetches nothing else. The manifest's `pictures` of the tile says how many places it has at most.
+// /local/...), or (0.17) one of the core's own sources for a place of that entity: `cover:<entity>` what a media player
+// plays (through Home Assistant's own proxy for it, as the media card's cover), `camera:<entity>` a camera's or image
+// entity's still, `entity:<entity>` an entity's own picture (a person's); and `step:` the screensaver step's own picture
+// (docs/PICTURES.md "Sources"). The app fetches nothing else. The manifest's `pictures` of the tile says how many places
+// it has at most.
 // A card (0.13) does the same in its room (CardContext::parent): its places, made in open(), come as one picture while it
 // is open, the way Tessera's own media card shows its cover, and leave the store when it closes. The manifest's
 // `pictures` of the card says how many it has; Home Assistant's own pictures only for a card opened for an entity. The
@@ -559,8 +593,10 @@ bool pictures();
 // A place for a picture in `parent`, sized and placed by the plugin as any object (lv_obj_set_size, lv_obj_set_pos):
 // a soft block (theme::TRACK) until its picture is there. Its corners are a key's; a radius of the plugin's own
 // (lv_obj_set_style_radius) is taken over by the picture. Call it in create() of a tile or open() of a card, as every
-// object.
+// object. The place is the core's: size and place it, never style it (0.17: Placeholder::NONE for a place without its
+// block, which stays so whatever comes of its picture).
 lv_obj_t *picture(lv_obj_t *parent);
+lv_obj_t *picture(lv_obj_t *parent, Placeholder placeholder);
 // The picture a place shows, by its address, COVER or CONTAIN (Fit). The same address again does nothing (call it on
 // every on_state for free); another address asks the app again; "" takes the picture away and shows the block. A
 // place that lies outside the card, or has no size, gets no picture.
@@ -572,7 +608,7 @@ void set_picture(lv_obj_t *place, const std::string &url, Fit fit, Turn turn, bo
 // Slide every place of the tile `dx` pixels sideways over `ms` (0.10), and keep them there until the tile's next
 // picture is here: then they are back where the tile laid them out, with it, in the same frame. Call it beside the
 // set_picture calls of a change (a cover flow that turns), so the change shows which way it goes while the next picture
-// comes. Call it in a call of the tile or the card (on_tap, on_tick).
+// comes. Call it in any call of the tile or the card (on_state, on_tap, on_tick).
 void slide_pictures(int dx, uint32_t ms = 300);
 }  // namespace ui
 

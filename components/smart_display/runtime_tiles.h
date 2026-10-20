@@ -1085,6 +1085,44 @@ inline void library_event(const char *service, std::initializer_list<std::pair<c
   }
   esphome::api::global_api_server->send_homeassistant_action(request);
 }
+// ---- The one question for a picture (picture_question.h, docs/PICTURES.md) ----
+// Every owner asks the same way: the question, how an older app would have answered it (`kind`, `entity`) and the
+// owner's own number of it. To an app whose hello says `pictures` it goes as the question (`q`) with one number for every
+// owner (`n`); to an older app as the fields that app reads, with the owner's number (`view`). The answer finds its owner
+// either way (page_receiver, op "camera").
+inline bool app_reads_questions = false;
+inline picture_question::Numbers picture_numbers;
+inline void picture_ask(const picture_question::Question &q, const char *kind, const std::string &entity, uint32_t own) {
+#if defined(USE_ESP32) && !defined(SCREEN_PICTURES)
+  // A board without pictures (the CYD, picture_store.h) never shows one, so it asks for none, and the question's text
+  // (json, legacy) stays out of its flash. The host builds (the render, the WASM preview) ask as a board with pictures.
+  (void) q; (void) kind; (void) entity; (void) own;
+#else
+  if (inbox.empty() || !esphome::api::global_api_server) return;
+  // The values live until the request is sent: the request holds references to them.
+  picture_question::Fields data = {{"inbox", inbox}, {"session", protocol_key(transfer.lease)}, {"rev", layout_rev}};
+  if (app_reads_questions) {
+    data.emplace_back("n", std::to_string(picture_numbers.ask(kind, entity, own)));
+    data.emplace_back("q", picture_question::json(q));
+  } else {
+    data.emplace_back("view", std::to_string(own));
+    for (auto &field : picture_question::legacy(q)) data.push_back(std::move(field));
+  }
+  esphome::api::HomeassistantActionRequest request;
+  request.service = esphome::StringRef("esphome.screen_camera");
+  request.is_event = true;
+  request.data.init(data.size());
+  for (const auto &pair : data) {
+    esphome::api::HomeassistantServiceMap entry;
+    entry.key = esphome::StringRef(pair.first);
+    entry.value = esphome::StringRef(pair.second);
+    request.data.push_back(entry);
+  }
+  esphome::api::global_api_server->send_homeassistant_action(request);
+  ESP_LOGD("picture", "asked %s %s as %s", picture_question::owner_text(q.owner),
+           q.sources.empty() ? "" : q.sources.front().c_str(), app_reads_questions ? "a question" : kind);
+#endif
+}
 inline void library_request(const std::string &entity, uint32_t folder, unsigned page) {
   library_event("esphome.screen_browse", {{"entity", entity}, {"folder", std::to_string(folder)}, {"page", std::to_string(page)}, {"view", std::to_string(++library_view_id)}});
   ESP_LOGI("library", "Asked for folder %u of %s, page %u", (unsigned) folder, entity.c_str(), page);
@@ -1098,13 +1136,6 @@ inline void speaker_request(const std::string &entity, const std::string &speake
 inline void play_request(const std::string &entity, uint32_t item, const std::string &source) {
   library_event("esphome.screen_play", {{"entity", entity}, {"item", std::to_string(item)}, {"source", source}});
   ESP_LOGI("library", "Play %u on %s%s%s", (unsigned) item, entity.c_str(), source.empty() ? "" : " on ", source.c_str());
-}
-// The covers of a page: the items by their numbers, the frames they fill (tile_art) and the page's colour behind them.
-inline void library_art_request(const std::string &entity, const std::string &items, const std::string &atlas, uint32_t ground) {
-  char bg[8];
-  snprintf(bg, sizeof(bg), "%06X", (unsigned) ground);  // a theme colour, six digits
-  library_event("esphome.screen_camera", {{"entity", entity}, {"lib", items}, {"atlas", atlas}, {"bg", bg}, {"view", std::to_string(++library_art_view_id)}});
-  ESP_LOGI("library", "Asked for the covers of %s", items.c_str());
 }
 // A detail card asks the manager for its history (app 0.2.59+ answers with op "history"). An event, like
 // setting_event: it needs no permission to call Home Assistant actions.
@@ -10901,6 +10932,8 @@ inline bool camera_visible() { return camera_root != nullptr; }
 // and a camera shows its last picture at once when its page comes back. A board without PSRAM stores nothing and draws
 // from the download as before.
 inline picture_store::Store<lv_image_dsc_t> pictures;
+// The whole picture budget of this board; the streams that run take their share of it (pictures_share, docs/PICTURES.md).
+inline size_t pictures_budget_whole = 0;
 inline bool pictures_kept() {
   if (!pictures.allocate) {
 #ifdef USE_ESP32
@@ -10915,6 +10948,7 @@ inline bool pictures_kept() {
     // Without it the host keeps one download at a time, and a page of several pictured tiles shows only the last.
     pictures.budget = 1200u << 10;
 #endif
+    pictures_budget_whole = pictures.budget;
     pictures.allocate = kept_allocate;
     pictures.release = kept_free;
     // With every slot taken, a new picture takes the place of the one used longest ago that no card draws.
@@ -11220,22 +11254,17 @@ inline bool tile_ask(const Widgets &w, const Tile &t, tile_picture::Ask &a) {
 }
 // Asks the app for a tile's picture: `esphome.screen_camera` as a page of one tile (tile_picture::fields), numbered so
 // the answer finds its tile.
+// A tile's question (tile_picture::question): a tile's own picture, or a plugin tile's places (plugin API 0.10).
+inline picture_question::Question tile_question(const tile_picture::Ask &a) {
+  const bool plugin = !a.parts.empty();
+  auto q = tile_picture::question(a, plugin ? picture_question::Owner::PLUGIN_TILE : picture_question::Owner::TILE,
+                                  plugin ? a.entity : std::string());
+  q.cap = picture_cap().bytes;
+  return q;
+}
 inline void tile_picture_request(const tile_picture::Ask &a) {
   if (inbox.empty()) return;
-  esphome::api::HomeassistantActionRequest request;
-  request.service = esphome::StringRef("esphome.screen_camera");
-  request.is_event = true;
-  auto fields = tile_picture::fields(a);
-  fields.insert(fields.begin(), {{"inbox", inbox}, {"session", protocol_key(transfer.lease)}, {"rev", layout_rev},
-                                 {"view", std::to_string(tile_questions.ask(a.index))}});
-  request.data.init(fields.size());
-  for (const auto &field : fields) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef(field.first);
-    entry.value = esphome::StringRef(field.second);
-    request.data.push_back(entry);
-  }
-  esphome::api::global_api_server->send_homeassistant_action(request);
+  picture_ask(tile_question(a), "live", a.entity, tile_questions.ask(a.index));
   ESP_LOGI("camera", "asked for the picture of tile %u, %s", (unsigned) a.index, a.entity.c_str());
 }
 // Whether a card on the glass waits for its picture: until the tile's first try at it (here, failed, or the app has
@@ -11341,7 +11370,11 @@ inline void tile_picture_done(size_t index, picture_loader::Outcome outcome) {
   // A plugin card that kept its last picture while asking lets go of it when the next one did not come: its places show
   // their blocks, not a picture of the addresses before.
   if (!shows(outcome) && index < model.count)
-    each_card([&](Widgets &w) { if (w.index == index && w.plugin) plugin_host::picture_place(w, nullptr); });
+    each_card([&](Widgets &w) {
+      if (w.index != index || !w.plugin) return;
+      plugin_host::picture_place(w, nullptr);
+      plugin_host::picture_outcome(w, outcome);  // the plugin hears it (0.17, Tile::on_picture)
+    });
   if (shows(outcome) && index < model.count)
     each_card([&](Widgets &w) {
       if (w.index != index || !w.tile) return;
@@ -11535,23 +11568,12 @@ inline bool tile_ask(const Widgets &w, const Tile &t, tile_picture::Ask &a);
 inline void live_tile_ask(LiveTile &l, const Widgets &w, const Tile &t) {
   tile_picture::Ask a;
   if (inbox.empty() || !tile_ask(w, t, a)) return;
-  esphome::api::HomeassistantActionRequest request;
-  request.service = esphome::StringRef("esphome.screen_camera");
-  request.is_event = true;
-  auto fields = tile_picture::fields(a);
-  fields.insert(fields.begin(), {{"inbox", inbox}, {"session", protocol_key(transfer.lease)}, {"rev", layout_rev},
-                                 {"view", std::to_string(tile_questions.ask(l.index))}});
-  fields.emplace_back("live", live_view::box_text(l.room));
+  auto q = tile_question(a);
+  q.live_w = l.room.w;
+  q.live_h = l.room.h;
   // A board with a speaker: the app takes the camera's sound along already, so the full view has it at once.
-  if (live_view::has_speaker()) fields.emplace_back("sound", "1");
-  request.data.init(fields.size());
-  for (const auto &field : fields) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef(field.first);
-    entry.value = esphome::StringRef(field.second);
-    request.data.push_back(entry);
-  }
-  esphome::api::global_api_server->send_homeassistant_action(request);
+  q.sound = live_view::has_speaker();
+  picture_ask(q, "live", t.entity, tile_questions.ask(l.index));
   l.asked = true;
   l.asked_at = esphome::millis();
   ESP_LOGI("camera", "asked for tile %u live, %s at %dx%d", (unsigned) l.index, t.entity.c_str(), l.room.w, l.room.h);
@@ -11715,66 +11737,76 @@ inline void live_tick() {
   });
 }
 
-// Asks ESP Screen Manager for a link (app 0.2.66+ answers with op "camera"). An event, like history_request.
-// A cover (firmware 0.2.64+) adds the size it wants and the colour behind its rounded corners; the app bakes both in.
+// Asks ESP Screen Manager for the full view's picture (app 0.2.66+ answers with op "camera"): a camera, a map tile
+// opened over the glass (firmware 0.21.0+), the screensaver's picture (firmware 0.29.0+); or, with a `size`, a media
+// card's cover (firmware 0.2.64+) of that side with rounded corners over `background`. One question (picture_question.h).
 inline void camera_request(const std::string &entity, int size, uint32_t background) {
   if (inbox.empty()) return;
-  esphome::api::HomeassistantActionRequest request;
-  request.service = esphome::StringRef("esphome.screen_camera");
-  request.is_event = true;
-  char size_text[12] = "", background_text[8] = "";
-  if (size > 0) { snprintf(size_text, sizeof(size_text), "%d", size); snprintf(background_text, sizeof(background_text), "%06X", (unsigned) background); }
-  // A map's full view (firmware 0.21.0+) adds its tile's index and the look, which the app draws it in; an older app
-  // reads the keys it knows.
-  const bool map = size <= 0 && camera_map_index >= 0;
-  // The screensaver's picture (firmware 0.29.0+): the full view's request with what it shows, "camera" or "media".
-  const bool saver = size <= 0 && saver_camera;
-  // `move` (dev): the zoom steps and the move of the map's own keys, "" for the view the app frames.
-  const std::string keys[] = {"inbox", "entity", "size", "bg", "session", "rev", "view", "idx", "dark", "focus", "move"}, values[] = {inbox, entity, size_text, background_text, protocol_key(transfer.lease), layout_rev, std::to_string(size > 0 ? ++cover_view_id : ++camera_view_id), std::to_string(camera_map_index), theme::dark ? "1" : "0", map_focus, map_move.text()};
-  const int count = map ? 11 : 7;
-  // A board that takes larger pictures than the cap every screen takes says how large (picture_cap, GitHub #183): the
-  // full view, a map's and the screensaver's picture come at its own pixels. An older app reads the keys it knows.
+  using picture_question::Fit;
+  picture_question::Question q;
+  picture_question::Place place;
+  q.dark = theme::dark;
   const auto cap = picture_cap();
-  const std::string cap_text = std::to_string(cap.bytes);
-  const bool larger = size <= 0 && cap.bytes > picture_store::MAX_BYTES;
-  // A P4 takes the camera live (live_view.h): it asks for a stream of pictures for the room below the top bar. An app
-  // without streams reads the keys it knows and answers with a still.
-  const bool live = size <= 0 && live_wanted();
-  const std::string live_text = live ? live_view::box_text(live_area()) : std::string();
-  // With the camera's sound where the board has a speaker (features/audio.yaml binds it).
-  const bool sound = live && live_view::has_speaker();
-  request.data.init(count + (saver ? 1 : 0) + (larger ? 1 : 0) + (live ? 1 : 0) + (sound ? 1 : 0));
-  if (saver) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef("saver");
-    entry.value = esphome::StringRef(saver_now.kind);
-    request.data.push_back(entry);
+  q.cap = cap.bytes;
+  if (size > 0) {
+    q.owner = picture_question::Owner::CARD;
+    q.sources = {picture_question::cover_source(entity)};
+    q.w = q.h = place.w = place.h = size;
+    place.radius = media_card::radius_for(size);
+    place.ground = background;
+    q.places = {place};
+    picture_ask(q, "cover", entity, ++cover_view_id);
+    ESP_LOGI("camera", "asked for the cover of %s", entity.c_str());
+    return;
   }
-  if (larger) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef("cap");
-    entry.value = esphome::StringRef(cap_text);
-    request.data.push_back(entry);
+  // The whole glass, within the board's cap (picture_cap, GitHub #183): a board with the memory gets its own pixels.
+  const int scale = picture_store::fit_scale(overlay_card::screen_width(), overlay_card::screen_height(), cap);
+  q.w = place.w = std::max(1, picture_store::scaled(overlay_card::screen_width(), scale));
+  q.h = place.h = std::max(1, picture_store::scaled(overlay_card::screen_height(), scale));
+  const char *kind = "full";
+  if (saver_camera) {
+    // The screensaver's picture: the player's cover over the glass, a camera, or the photo of the photos step, darkened
+    // under the words it carries (not the photo); a photo that moves slowly comes a little larger (picture_motion.h).
+    q.owner = picture_question::Owner::SAVER;
+    kind = "saver";
+    if (saver_now.kind == "photos") {
+      q.sources = {picture_question::PHOTOS_SOURCE};
+      q.of = SAVER_PHOTOS;
+      place.fit = Fit::AUTO;
+      place.move = saver_now.motion ? 8 : 0;
+    } else if (saver_now.kind == "media") {
+      q.sources = {picture_question::cover_source(entity)};
+      place.fit = Fit::SAVER;
+      place.dim = 30;
+    } else {
+      q.sources = {picture_question::camera_source(entity)};
+      place.dim = 30;
+      q.pace = camera.every;  // SAVER_CAMERA_MS, set as the screensaver opens
+    }
+    q.formats = {"bmp8", "bmp24"};
+  } else if (camera_map_index >= 0) {
+    // A map's full view, drawn in the screen's look, with a person a finger picked and the moves of its own keys.
+    q.owner = picture_question::Owner::VIEW;
+    q.of = entity;
+    q.sources = {picture_question::map_source(camera_map_index, map_focus, map_move.text())};
+    place.fit = Fit::EXACT;
+    q.formats = {"bmp8", "bmp24"};
+  } else {
+    // A camera: at its own proportions within the glass, at the view's pace. A P4 streams it into the room below its
+    // top bar (live_view.h), with its sound where the board has a speaker; an app without streams answers with a still.
+    q.owner = picture_question::Owner::VIEW;
+    q.sources = {picture_question::camera_source(entity)};
+    place.fit = Fit::SHRINK;
+    q.pace = camera.every;
+    if (live_wanted()) {
+      const auto room = live_area();
+      q.live_w = room.w;
+      q.live_h = room.h;
+      q.sound = live_view::has_speaker();
+    }
   }
-  if (live) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef("live");
-    entry.value = esphome::StringRef(live_text);
-    request.data.push_back(entry);
-  }
-  if (sound) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef("sound");
-    entry.value = esphome::StringRef("1");
-    request.data.push_back(entry);
-  }
-  for (int i = 0; i < count; ++i) {
-    esphome::api::HomeassistantServiceMap entry;
-    entry.key = esphome::StringRef(keys[i]);
-    entry.value = esphome::StringRef(values[i]);
-    request.data.push_back(entry);
-  }
-  esphome::api::global_api_server->send_homeassistant_action(request);
+  q.places = {place};
+  picture_ask(q, kind, saver_camera && saver_now.kind == "photos" ? SAVER_PHOTOS : entity, ++camera_view_id);
   ESP_LOGI("camera", "asked for %s", entity.c_str());
 }
 
@@ -12347,11 +12379,12 @@ inline void picture_done(picture_loader::Slot slot, bool ok, bool cached) {
     }
     if (!kept) { slot_key[s] = key; slot_at[s] = now; }
     if (src) picture_memory("after", key.substr(0, key.find('|')).c_str(), src->header.w * src->header.h);
-    // A tile's picture the store keeps needs its download no more: the slot's buffer goes now, not with the next
-    // picture of another size (one per tile, so most are). The full view keeps its own, which its next refresh reuses.
-    if (kept && slot == picture_loader::Slot::LIVE && hooks.release) {
+    // A picture the store keeps needs its download no more: the slot's buffer goes now, so no picture is held twice
+    // (docs/PICTURES.md). The full view's next refresh decodes into a buffer of its own again; a slot whose picture the
+    // store could not keep holds on to it, since the card draws the download itself then.
+    if (kept && hooks.release) {
       hooks.release();
-      ESP_LOGD("picture", "the tiles' download let go of %s", key.c_str());
+      ESP_LOGD("picture", "the download let go of %s: the store has it", key.c_str());
     }
     loader.arrived(key, cached);
   }
@@ -12508,6 +12541,9 @@ inline void pictures_round() {
   pictures_rounding = true;
   if (!loader.load) loader_bind();
   const uint32_t now = esphome::millis();
+  // One budget for every picture (docs/PICTURES.md): while streams run (live_view.h) they hold their share of it, at
+  // most half, and the store keeps the rest. A store over its budget lets go of what no card draws as it needs room.
+  if (pictures_kept()) pictures.budget = pictures_budget_whole - std::min(pictures_budget_whole / 2, live_view::held_bytes());
   loader.begin();
   alert_want();
   camera_want();
@@ -12536,7 +12572,7 @@ inline void pictures_round() {
 // clock. The app decides which (screen_manager/app/screen_saver.py) and says so in a small message whenever that
 // changes; the screen keeps the last word and shows it the next time it goes into standby. A cover and a camera are the
 // camera's full view without its keys, holding one picture of the whole glass the app made for it (darkened, the cover
-// in its colour on long glass, camera_feed.encode_saver) with a line or two of words over it (saver_view.h); the clock
+// in its colour on long glass, picture_paint's fit `saver`) with a line or two of words over it (saver_view.h); the clock
 // takes the bedside clock's digits. Nothing on it takes a tap: it lies on the top layer without one clickable object,
 // so a finger falls through to dim_wake_overlay and only wakes the screen, the way it always did in standby (and
 // wake_tap leaves the tile it lay over alone).

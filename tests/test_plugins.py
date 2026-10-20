@@ -16,10 +16,27 @@ from build_queue import BuildQueue  # noqa: E402
 import page_layout  # noqa: E402
 import plugin_fetch  # noqa: E402
 import plugin_manifest as pm  # noqa: E402
+import picture_legacy  # noqa: E402
+import picture_paint  # noqa: E402
+import picture_question as pq  # noqa: E402
 import plugin_pictures  # noqa: E402
-import tile_art  # noqa: E402
 from firmware import Firmware  # noqa: E402
 from page_delivery import plugins_of  # noqa: E402
+
+SCREEN = {'board': 'guition', 'firmware': '0.50.0'}   # 480 x 480 glass
+
+
+def refused(question, manifest, tile, of_entity=None):
+    """Why a plugin place's question is not answered with pictures (plugin_pictures.refused_source for each of its
+    sources, the first that may not be), or None."""
+    return next((problem for problem in (plugin_pictures.refused_source(source, len(question.sources), manifest, tile, of_entity)
+                                         for source in question.sources) if problem), None)
+
+
+def styles(question):
+    """How each place of a plugin's question is painted: its fit, its turn and whether a reflection goes under it."""
+    return [(place.fit, place.turn, place.mirror) for place in question.places]
+
 
 ENGLISH = {'app': {'name': 'Bus', 'summary': 'Next bus.', 'tile': 'Next', 'stop': 'Stop', 'line': 'Line',
                    'walk': 'Walk', 'key': 'Key'}, 'screen': {'now': 'now'}}
@@ -210,18 +227,27 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
     SRC = '["https://api.example.org/a.jpg","https://api.example.org/b.jpg"]'
 
     def question(self, **changes):
+        """The question a plugin tile asks (picture_legacy: plugin API 0.10's shape), or None."""
         request = {'tiles': 'plugin:bus.next', 'idx': '3', 'bg': '202020', 'dark': '1', 'atlas': self.ATLAS, 'src': self.SRC,
-                   'fit': '["cover","contain"]'}
+                   'fit': '["cover","contain"]', 'view': '12'}
         request.update(changes)
-        return plugin_pictures.parse(request, (480, 480))
+        found = picture_legacy.read(request, SCREEN)
+        return found.question if found else None
 
     def test_the_question_names_the_tile_its_frames_and_their_addresses(self):
-        q = self.question()
-        self.assertEqual((q.entity, q.plugin, q.tile, q.index, q.ground, q.dark), ('plugin:bus.next', 'bus', 'next', 3, 0x202020, True))
-        self.assertEqual(q.atlas, (130, 90, ((0, 0, 60, 90, 6, 0), (70, 0, 60, 90, 6, 0))))
-        self.assertEqual(q.sources, ['https://api.example.org/a.jpg', 'https://api.example.org/b.jpg'])
-        self.assertEqual(q.fits, ['cover', 'contain'])
-        self.assertEqual(self.question(fit=None).fits, ['cover', 'cover'])   # cover without a word
+        found = picture_legacy.read({'tiles': 'plugin:bus.next', 'idx': '3', 'bg': '202020', 'dark': '1', 'atlas': self.ATLAS,
+                                     'src': self.SRC, 'fit': '["cover","contain"]', 'view': '12'}, SCREEN)
+        q = found.question
+        self.assertEqual((found.kind, found.entity, q.owner.kind, q.owner.key, q.owner.index, q.dark, q.number),
+                         ('live', 'plugin:bus.next', 'plugin_tile', 'plugin:bus.next', 3, True, 12))
+        self.assertEqual(core.plugin_tile(q.owner.key), ('bus', 'next'))
+        self.assertEqual({place.ground for place in q.places}, {0x202020})
+        self.assertEqual((q.box, [(p.x, p.y, p.w, p.h, p.radius, p.shade) for p in q.places]),
+                         ((130, 90), [(0, 0, 60, 90, 6, 0), (70, 0, 60, 90, 6, 0)]))
+        self.assertEqual([source.text for source in q.sources], ['https://api.example.org/a.jpg', 'https://api.example.org/b.jpg'])
+        # A plugin's `contain` shows the picture whole on what lies under its place (`within`).
+        self.assertEqual([place.fit for place in q.places], ['cover', 'within'])
+        self.assertEqual([place.fit for place in self.question(fit=None).places], ['cover', 'cover'])   # cover without a word
         for bad in (dict(tiles='camera.front'), dict(idx='x'), dict(bg='red'), dict(src='["one"]'), dict(src='[1,2]'),
                     dict(fit='["cover"]'), dict(fit='["fill","cover"]'), dict(atlas='[[0,0,60,90,6,0]]'), dict(src='[]'),
                     dict(src='[' + ','.join(['"https://api.example.org/x.jpg"'] * 9) + ']'), dict(atlas='[[0,0,600,90,6,0],[70,0,60,90,6,0]]')):
@@ -230,17 +256,17 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
     def test_places_may_overlap_turn_and_mirror(self):
         """The places of one card are its layers (0.10): their frames may overlap, each may turn and have a reflection."""
         q = self.question(atlas='[[0,0,60,90,6,0],[40,0,60,90,6,0]]', turn='["right",""]', mirror='[0,1]')
-        self.assertEqual((q.turns, q.mirrors), (['right', ''], [False, True]))
-        self.assertEqual(q.styles(), [('fill', 'right', False), ('within', '', True)])
-        self.assertEqual(self.question().turns, ['', ''])   # a flat card asks without them
+        self.assertEqual(([p.turn for p in q.places], [p.mirror for p in q.places]), (['right', ''], [False, True]))
+        self.assertEqual(styles(q), [('cover', 'right', False), ('within', '', True)])
+        self.assertEqual([p.turn for p in self.question().places], ['', ''])   # a flat card asks without them
         for bad in (dict(turn='["up",""]'), dict(turn='["left"]'), dict(mirror='[2,0]'), dict(mirror='{}'), dict(turn='x')):
             self.assertIsNone(self.question(**bad), bad)
         # Covers of different tiles still never overlap.
-        self.assertIsNone(tile_art.parse('[[0,0,60,90,6,0],[40,0,60,90,6,0]]', (480, 480), 2))
+        self.assertIsNone(picture_legacy.frames('[[0,0,60,90,6,0],[40,0,60,90,6,0]]', (480, 480), 2))
 
     def test_the_reflection_is_the_screens_share(self):
         header = (ROOT / 'components/smart_display/plugin_api.h').read_text()
-        self.assertIn(f'constexpr int MIRROR_PERCENT = {tile_art.MIRROR_PERCENT};', header)
+        self.assertIn(f'constexpr int MIRROR_PERCENT = {picture_paint.MIRROR_PERCENT};', header)
 
     @unittest.skipUnless(__import__('importlib').util.find_spec('PIL'), 'Pillow')
     def test_layers_overlap_turn_and_mirror(self):
@@ -251,8 +277,15 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
             Image.new('RGB', (100, 150), colour).save(raw, 'PNG')
             return raw.getvalue()
         red, blue = picture((255, 0, 0)), picture((0, 0, 255))
-        atlas = tile_art.parse('[[0,0,60,90,8,0],[40,0,60,117,8,0]]', (480, 480), 2, overlap=True)
-        body = tile_art.layers([red, blue], 0x202020, atlas, [('fill', '', False), ('fill', '', True)])
+
+        def layers(raws, frames, styles):
+            atlas = picture_legacy.frames(frames, (480, 480), len(raws), overlap=True)
+            places = tuple(pq.Place(*frame[:5], 0, 'cover', 0x202020, turn=turn, mirror=mirror)
+                           for frame, (turn, mirror) in zip(atlas[2], styles))
+            question = pq.Question(pq.Owner('plugin_tile', 0, 'plugin:bus.next'), (pq.Source('url', 'https://x'),) * len(raws),
+                                   atlas[:2], places)
+            return picture_paint.paint(question, raws, 'bmp24')
+        body = layers([red, blue], '[[0,0,60,90,8,0],[40,0,60,117,8,0]]', [('', False), ('', True)])
         with Image.open(io.BytesIO(body)) as image:
             rgb = image.convert('RGB')
             self.assertEqual(rgb.getpixel((20, 45)), (255, 0, 0))      # the first, where nothing lies over it
@@ -263,8 +296,7 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(below[2] > 0x40 and below[2] < 160 and below[0] < 0x30, below)
             self.assertTrue(all(abs(c - 0x20) <= 3 for c in rgb.getpixel((70, 116))))   # faded out at its foot
         # Turned to face the right: the left edge near (full height), the right edge far (lower and shorter).
-        atlas = tile_art.parse('[[0,0,40,100,0,0]]', (480, 480), 1)
-        body = tile_art.layers([red], 0x202020, atlas, [('fill', 'right', False)])
+        body = layers([red], '[[0,0,40,100,0,0]]', [('right', False)])
         with Image.open(io.BytesIO(body)) as image:
             rgb = image.convert('RGB')
             self.assertEqual(rgb.getpixel((1, 2))[0], 255)
@@ -290,11 +322,17 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
         # A tile without places shows nothing, whatever the address.
         self.assertIsNone(allowed('https://api.example.org/a.jpg', dict(tile, pictures=0)))
         q = self.question()
-        self.assertIsNone(plugin_pictures.refused(q, checked, tile))
-        self.assertIn('allows 1', plugin_pictures.refused(q, checked, dict(tile, pictures=1)))
-        self.assertIn('no pictures', plugin_pictures.refused(q, checked, checked['tiles'][0]))
-        self.assertIn('not an address', plugin_pictures.refused(self.question(src='["https://x.org/a","https://api.example.org/b"]'), checked, tile))
-        self.assertIn('does not run', plugin_pictures.refused(q, None, None))
+        self.assertIsNone(refused(q, checked, tile))
+        self.assertIn('allows 1', refused(q, checked, dict(tile, pictures=1)))
+        self.assertIn('no pictures', refused(q, checked, checked['tiles'][0]))
+        self.assertIn('not an address', refused(self.question(src='["https://x.org/a","https://api.example.org/b"]'), checked, tile))
+        self.assertIn('does not run', refused(q, None, None))
+        # The core's sources of an entity (plugin API 0.17): only on a place of an entity (Sources.may then checks that
+        # it is the place's own entity).
+        cover = pq.Source('cover', 'media_player.kitchen')
+        self.assertIn('shows no entity', plugin_pictures.refused_source(cover, 1, checked, tile))
+        self.assertIsNone(plugin_pictures.refused_source(cover, 1, checked, entity_tile))
+        self.assertIsNone(plugin_pictures.refused_source(cover, 1, checked, tile, True))
 
     async def test_a_picture_is_fetched_once_and_a_failure_waits(self):
         checked = pm.check(manifest(), ENGLISH)
@@ -341,8 +379,7 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
         q = self.question()
         wide = io.BytesIO()
         Image.new('RGB', (200, 100), (255, 0, 0)).save(wide, 'PNG')
-        pictures = plugin_pictures.Pictures(None)
-        body = await pictures.atlas(q, [wide.getvalue(), wide.getvalue()])
+        body = picture_paint.paint(q, [wide.getvalue(), wide.getvalue()], 'bmp24')
         with Image.open(io.BytesIO(body)) as atlas:
             self.assertEqual(atlas.size, (130, 90))
             rgb = atlas.convert('RGB')
@@ -352,7 +389,7 @@ class Pictures(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(rgb.getpixel((100, 4)), (0x20, 0x20, 0x20))   # on the card's own colour, not black
             self.assertTrue(all(abs(c - 0x20) <= 2 for c in rgb.getpixel((0, 0))))  # a corner, rounded over the card's colour
         # Without any picture the frames stay the card's colour.
-        body = await pictures.atlas(q, [None, None])
+        body = picture_paint.paint(q, [None, None], 'bmp24')
         with Image.open(io.BytesIO(body)) as atlas:
             self.assertEqual(atlas.convert('RGB').getpixel((30, 45)), (0x20, 0x20, 0x20))
 
@@ -1955,10 +1992,12 @@ class CardPictures(unittest.TestCase):
         return pm.check(data, ENGLISH)
 
     def question(self, **changes):
+        """The question a plugin's card asks (picture_legacy: plugin API 0.13's shape), or None."""
         request = {'tiles': 'plugin:bus.release', 'idx': '0', 'card': '1', 'for': '', 'bg': '202020', 'dark': '0',
                    'atlas': '[[300,0,160,160,8,0]]', 'src': '["https://api.example.org/cover.jpg"]', 'fit': '["cover"]'}
         request.update(changes)
-        return plugin_pictures.parse(request, (480, 480))
+        found = picture_legacy.read(request, SCREEN)
+        return found.question if found else None
 
     def test_a_card_may_have_places(self):
         self.assertEqual(self.checked(pictures=1)['cards'][0]['pictures'], 1)
@@ -1969,14 +2008,17 @@ class CardPictures(unittest.TestCase):
 
     def test_the_question_names_the_card_and_what_it_shows(self):
         q = self.question()
-        self.assertEqual((q.card, q.plugin, q.tile, q.index, q.of), (True, 'bus', 'release', None, ''))
-        self.assertEqual(self.question(**{'for': 'media_player.kitchen'}).of, 'media_player.kitchen')
-        self.assertEqual(self.question(idx='').index, None)                    # a card has no index of its own
-        for bad in ({'for': 'screen.clock'}, {'for': 'not an entity'}, {'tiles': 'media_player.kitchen'}):
+        self.assertEqual((q.owner.kind, core.plugin_tile(q.owner.key), q.owner.index, q.owner.of),
+                         ('plugin_card', ('bus', 'release'), -1, ''))
+        self.assertEqual(self.question(**{'for': 'media_player.kitchen'}).owner.of, 'media_player.kitchen')
+        self.assertEqual(self.question(idx='').owner.index, -1)                    # a card has no index of its own
+        self.assertEqual(picture_legacy.read({'tiles': 'plugin:bus.release', 'card': '1', 'bg': '202020', 'src': '["https://api.example.org/cover.jpg"]',
+                                              'atlas': '[[300,0,160,160,8,0]]'}, SCREEN).kind, 'pcard')
+        for bad in ({'for': 'screen.clock'}, {'for': 'not an entity'}, {'tiles': 'media_player.kitchen'}, {'saver': '1'}):
             self.assertIsNone(self.question(**bad), bad)
-        tile = plugin_pictures.parse({'tiles': 'plugin:bus.next', 'idx': '3', 'bg': '202020', 'atlas': '[[0,0,60,90,6,0]]',
-                                      'src': '["https://api.example.org/a.jpg"]'}, (480, 480))
-        self.assertFalse(tile.card)   # a tile's question as before
+        tile = picture_legacy.read({'tiles': 'plugin:bus.next', 'idx': '3', 'bg': '202020', 'atlas': '[[0,0,60,90,6,0]]',
+                                    'src': '["https://api.example.org/a.jpg"]'}, SCREEN)
+        self.assertEqual((tile.kind, tile.question.owner.kind), ('live', 'plugin_tile'))   # a tile's question as before
 
     def test_where_a_cards_picture_may_come_from(self):
         checked = self.checked(pictures=1)
@@ -1988,9 +2030,9 @@ class CardPictures(unittest.TestCase):
         self.assertEqual(plugin_pictures.allowed('/api/image_proxy/media_player.kitchen', checked, card, True), 'home_assistant')
         self.assertIsNone(plugin_pictures.allowed('https://api.example.org/cover.jpg', checked, self.checked()['cards'][0], False))
         q = self.question()
-        self.assertIsNone(plugin_pictures.refused(q, checked, card, False))
-        self.assertIn('no pictures', plugin_pictures.refused(q, self.checked(), self.checked()['cards'][0], False))
-        self.assertIn('no such card', plugin_pictures.refused(q, checked, None, False))
-        self.assertIn('allows 1', plugin_pictures.refused(self.question(atlas='[[0,0,60,60,0,0],[100,0,60,60,0,0]]',
-                                                                        src='["https://api.example.org/a.jpg","https://api.example.org/b.jpg"]',
-                                                                        fit='["cover","cover"]'), checked, card, False))
+        self.assertIsNone(refused(q, checked, card, False))
+        self.assertIn('no pictures', refused(q, self.checked(), self.checked()['cards'][0], False))
+        self.assertIn('no such place', refused(q, checked, None, False))
+        self.assertIn('allows 1', refused(self.question(atlas='[[0,0,60,60,0,0],[100,0,60,60,0,0]]',
+                                                        src='["https://api.example.org/a.jpg","https://api.example.org/b.jpg"]',
+                                                        fit='["cover","cover"]'), checked, card, False))
