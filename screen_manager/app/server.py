@@ -4384,6 +4384,8 @@ def create_app(manager, development=False):
                                       'versions': manager.feedback_versions(screen), 'privacy': feedback.PRIVACY_URL}
             else:
                 screen['feedback'] = None
+            # How a plugin it runs works for you (docs/PLUGINS.md, "Likes, ratings and counting"): the stars card.
+            screen['plugin_ask'] = manager.plugins.ask_card(screen) if editor_features['plugins'] else None
         return {'csrf': csrf, 'connected': manager.ha.online, 'screens': screens,
                 'editor_features': editor_features,
                 'pending': manager.pending_profiles(screens, profiles),
@@ -4394,6 +4396,8 @@ def create_app(manager, development=False):
                 'builds': manager.builds(screens, profiles),
                 # The build server: paired or not, there or not, on or off, what it builds (build_server.py).
                 'build_server': manager.build_server.view(),
+                # What this app shares about plugins (plugin_likes.py): the likes' yes, counting, whether cards ask.
+                'plugin_sharing': manager.plugins.liker.view() if editor_features['plugins'] else None,
                 'language': manager.region.view()}
     async def seen_pending(payload):
         """Marks each screen that waits for pairing that Home Assistant has found on the network (`seen`); the rest is
@@ -5202,6 +5206,49 @@ def create_app(manager, development=False):
         app.router.add_post('/api/plugins/{plugin}/choices/{fetch}', plugins_choices)
         app.router.add_post('/api/screens/{inbox}/plugins/plan', plugins_plan)
         app.router.add_put('/api/plugins/{plugin}/like', plugins_like)
+
+        # Stars for a plugin a screen runs, the stars card's Later and Never, and counting (plugin_likes.py).
+        async def plugins_rate(request):
+            data = await request.json()
+            stars = data.get('stars') if isinstance(data, dict) else 'no'
+            if not (stars is None or (isinstance(stars, int) and not isinstance(stars, bool) and 1 <= stars <= 5)):
+                raise ValueError(t('addon.errors.plugins.request'))
+            screen = data.get('screen') if isinstance(data.get('screen'), str) else None
+            result = await manager.plugins.rate(request.match_info['plugin'], stars, screen)
+            manager.notify()
+            return web.json_response(result)
+
+        async def plugins_ask(request):
+            data = await request.json()
+            if not isinstance(data, dict):
+                raise ValueError(t('addon.errors.plugins.request'))
+            result = manager.plugins.card_answer(request.match_info['plugin'], data.get('action'))
+            manager.notify()
+            return web.json_response({'likes': result})
+
+        async def plugins_counting(request):
+            data = await request.json()
+            if not isinstance(data, dict) or not isinstance(data.get('on'), bool):
+                raise ValueError(t('addon.errors.plugins.request'))
+            result = await manager.plugins.set_counting(data['on'])
+            manager.notify()
+            return web.json_response({'likes': result})
+
+        app.router.add_put('/api/plugins/{plugin}/rating', plugins_rate)
+        app.router.add_post('/api/plugins/{plugin}/ask', plugins_ask)
+        app.router.add_put('/api/plugins/counting', plugins_counting)
+
+        async def plugins_counting_start(app):
+            manager.plugins.counting_task = asyncio.create_task(manager.plugins.counting())
+
+        async def plugins_counting_stop(app):
+            task = getattr(manager.plugins, 'counting_task', None)
+            if task and not task.done():
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+        app.on_startup.append(plugins_counting_start)
+        app.on_cleanup.append(plugins_counting_stop)
 
         async def plugins_preview(request):
             options, screen, data = await plugin_body(request)
