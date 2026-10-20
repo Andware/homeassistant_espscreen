@@ -31,7 +31,6 @@ import core  # noqa: E402
 import media_art  # noqa: E402
 import media_library  # noqa: E402
 import rest_mosaic  # noqa: E402
-import tile_art  # noqa: E402
 from camera_tiles import NEIGHBOURS as HOUSE  # noqa: E402
 from PIL import Image, ImageDraw, ImageFont  # noqa: E402
 
@@ -84,34 +83,34 @@ def covers():
 class Study(run.Run):
 
     def answer(self, call):
-        if call.service != 'esphome.screen_camera' or 'tiles' not in call.data:
+        if call.service != 'esphome.screen_camera':
             return
-        task = asyncio.get_running_loop().create_task(self.strip(dict(call.data)))
+        asked = run.asked(dict(call.data), self.screen)
+        if asked is None:
+            self.warnings.append(f'a question the add-on cannot read: {dict(call.data)}')
+            return
+        if asked.owner.kind != 'tile':
+            return
+        task = asyncio.get_running_loop().create_task(self.strip(asked))
         task.add_done_callback(lambda t: t.exception() and 'superseded' not in str(t.exception()) and self.warnings.append(f'answer failed: {t.exception()!r}'))
 
-    async def strip(self, data):
-        """The page's pictures as the app answers them (server.answer_live): every frame filled, 8-bit colour, the
-        frame's own shade baked in."""
-        entities = data['tiles'].split(',')
-        atlas = tile_art.parse(data.get('atlas', ''), self.canvas, len(entities))
-        if atlas is None:
-            self.warnings.append(f'no atlas in {data}')
+    async def strip(self, asked):
+        """The page's pictures as the app answers them (picture_sources.Sources._tile_picture, picture_paint): each place
+        filled, in the format the screen names first (8-bit colour), its own shade baked in. The covers at rest are drawn
+        at their place's size, as Manager.rest_render draws them."""
+        raws = [self.art.get(int(source.ref)) for source in asked.question.sources]
+        if all(raw is None for raw in raws):
+            # A player without a picture now: the add-on answers that it has none.
+            async with self.turn:
+                await self.reply(asked, '')
             return
-        indexes = [int(n) for n in data['idx'].split(',')]
-        width, height, frames = atlas
-        raws, shaped = [], []
-        for index, frame in zip(indexes, frames):
-            art = self.art.get(index)
-            raws.append(art(frame[2], frame[3]) if callable(art) else art)
-            shaped.append(frame)
-        grounds = [int(g, 16) for g in data['bg'].split(',')]
-        body = tile_art.encode(raws, grounds, (width, height, tuple(shaped)), [('fill', False)] * len(frames), compact=True)
-        # What the firmware asked for (each frame's size and shade) and what goes over the wire, beside the renders.
-        self.asked = {'frames': [list(frame[2:4]) + [frame[5]] for frame in frames], 'bytes': len(body)}
+        body, _ = run.painted(asked.question, raws)
+        # What the firmware asked for (each place's size and shade) and what goes over the wire, beside the renders.
+        self.asked = {'frames': [[place.w, place.h, place.shade] for place in asked.question.places], 'bytes': len(body)}
         self.served += 1
         url = self.pictures.url(f'{self.item.key}-rest-{self.served}.bmp', body)
         async with self.turn:
-            await self.send({'v': 1, 'op': 'camera', 't': 'live', 'e': data['tiles'], 'u': url, 'view': int(data['view'])})
+            await self.reply(asked, url)
 
     async def picture(self, what, tries=4):
         for attempt in range(tries):
