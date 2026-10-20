@@ -11515,11 +11515,15 @@ inline void camera_sound_show() {
   }, LV_EVENT_SHORT_CLICKED, nullptr);
 }
 // Until the camera is live (live_view.h, "Until it is live"): from its first picture, a still, the firmware's spinner
-// turns in the view's top bar, where the sound key comes or beside it once that is there, and goes with the first live
-// picture (Event::LIVE). LVGL draws it: the bar lies above the stream's room, so nothing of it is over the picture.
+// turns at the right of the view's top bar, and goes with the first live picture (Event::LIVE). One place for the two:
+// the sound key comes there once the spinner has gone (its sound comes with the live stream anyway), so neither moves
+// the other aside; a stream that starts again while the key is there turns no spinner. LVGL draws it: the bar lies
+// above the stream's room, so nothing of it is over the picture.
 inline lv_obj_t *camera_warm_spinner = nullptr;
+inline bool camera_sound_waiting = false;  // the sound came while the spinner turned: its key follows at LIVE
+inline bool camera_warming() { return camera_warm_spinner && !lv_obj_has_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN); }
 inline void camera_warm(bool on) {
-  if (!on || !camera_root || !camera_title) {
+  if (!on || !camera_root || !camera_title || camera_sound_key) {
     if (camera_warm_spinner) lv_obj_add_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN);
     return;
   }
@@ -11530,7 +11534,7 @@ inline void camera_warm(bool on) {
     if (!camera_warm_spinner) return;
     lv_obj_set_style_arc_color(camera_warm_spinner, theme::color(theme::CAMERA_TRACK), LV_PART_MAIN);
   }
-  const auto slot = detail_bar::right_slot(camera_root, camera_sound_key ? 1 : 0);
+  const auto slot = detail_bar::right_slot(camera_root);
   lv_obj_set_pos(camera_warm_spinner, slot.x + (slot.w - size) / 2, slot.y + (slot.h - size) / 2);
   lv_obj_remove_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN);
 }
@@ -11893,6 +11897,7 @@ inline void live_stop_covered() {
       camera.live = false;
       camera.live_handle = -1;
       camera_warm(false);
+      camera_sound_waiting = false;
     }
   }
 }
@@ -11912,11 +11917,14 @@ inline void live_tick() {
         camera_warm(true);     // in the top bar until the camera is live (LIVE, at once for a picture that is)
       } else if (event == live_view::Event::LIVE) {
         camera_warm(false);
+        if (camera_sound_waiting) camera_sound_show();  // its place is free now
+        camera_sound_waiting = false;
       } else if (event == live_view::Event::SOUND) {
-        camera_sound_show();
-        if (camera_warm_spinner && !lv_obj_has_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN)) camera_warm(true);
+        if (camera_warming()) camera_sound_waiting = true;
+        else camera_sound_show();
       } else if (event == live_view::Event::FAILED || event == live_view::Event::TURNED) {
         camera_warm(false);
+        camera_sound_waiting = false;  // a new stream tells its sound again
         // Asked again: a new stream for the glass as it is now, or after TRIES failures the stills.
         if (event == live_view::Event::FAILED) ++camera.live_failures;
         ESP_LOGI("camera", "live %s for %s", event == live_view::Event::FAILED ? "failed" : "turned", camera.entity.c_str());
@@ -12046,6 +12054,7 @@ inline void camera_close() {
   lv_obj_delete(camera_root);
   camera_root = camera_picture = camera_note = camera_back = camera_title = camera_spinner = map_card_obj = nullptr;
   camera_sound_key = camera_warm_spinner = nullptr;  // they went with the view
+  camera_sound_waiting = false;
   map_zoom_keys = map_pad = map_waiting = nullptr;
   saver_first = saver_second = nullptr;  // they went with the view
   saver_keys = {};

@@ -294,7 +294,8 @@ Home Assistant's LL-HLS was 0.6 to 1.2 seconds behind the same camera and came i
 
 **Until it is live.** The stills before WebRTC's first frame show at once, but they stand still, so the screen says
 they are not live yet: a live tile (and a plugin's live place) turns the firmware's spinner, small, in its top right
-corner on a round shade, and the full view turns it in its top bar. The stream's task draws the tile's loader itself,
+corner on a round shade, and the full view turns it at the right of its top bar, the place its sound key takes once
+the picture is live (the sound comes with the live stream). The stream's task draws the tile's loader itself,
 over the picture it composed and every 50 ms between the stills, since LVGL draws nothing over a stream; the full
 view's is LVGL's, beside the picture. The first part without the mark ends it, and `live_view` tells its owner
 (`Event::LIVE`, logged as "stream N: live after ... ms"). A camera without a stream sends no marks, so it is live from
