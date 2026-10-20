@@ -32,6 +32,10 @@
 - **One picture after the next without a third copy in memory.** When a picture changed (the next screensaver photo,
   another track's cover, a map that moved) the screen held the old one, the download and a copy of it for a moment; it
   now takes the download as it is. A map or cover that did not change comes as "not changed" again instead of whole.
+- **Plugin API 0.18: popups.** A plugin can show a popup over the screen, the card an alert shows, as high as what it
+  says and as wide as the screen allows, for a moment that wants your eye: the Voice assistant shows what it heard and
+  its answer as it speaks, with rings that ripple while it listens and an arc that turns while it thinks
+  (docs/PLUGINS.md, "A popup").
 - **Plugin API 0.17**: a picture's place without its grey block, a call when a place's picture came or did not, a
   media player's cover, a camera's picture and an entity's own picture as a place's address, `ui::live` for a place
   whose camera streams on a P4 screen as a live tile does, and `capturing()` for a plugin that uses the screen's own
