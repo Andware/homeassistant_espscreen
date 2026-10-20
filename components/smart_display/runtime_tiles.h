@@ -10489,8 +10489,11 @@ inline bool warm_page(int page) {
   }
   warming = false;
   lv_display_enable_invalidation(display, true);
-  // The page bar was set for the other page and back: drawn again, the rest of the glass never changed.
-  if (nav_prev && lv_obj_get_parent(nav_prev)) lv_obj_invalidate(lv_obj_get_parent(nav_prev));
+  // The page bar was set for the other page and back: drawn again, the rest of the glass never changed. Its own keys,
+  // never their parent: that is the whole screen, and a freshen drew the whole glass again each time (300 ms on a
+  // 10-inch, and the sound that played meanwhile stuttered).
+  for (lv_obj_t *part : {nav_prev, nav_next, nav_number})
+    if (part) lv_obj_invalidate(part);
   return visit.entry != kept_pages::NONE;
 }
 // The next page to work on: first one that is neither on the glass nor kept (while there is room to keep it), then,
