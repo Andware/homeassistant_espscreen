@@ -78,6 +78,11 @@
 - **A plugin tile of a plant is no longer called gone (#262).** The editor said that a plugin's tile of an entity
   Tessera has no tile of its own for, such as a plant, showed an entity that no longer exists. It now knows those
   entities from the plugins' own list, and calls one gone only when Home Assistant really no longer has it.
+- **The editor finds its way back after hours in the background.** Opened again in the Home Assistant app on a phone
+  after a few hours, Tessera said that ESP Screen Manager could not be reached and kept saying so for minutes, until
+  you went to another page of Home Assistant and back. Home Assistant renews the app's access within a minute of
+  coming back, but the editor waited up to five minutes before it asked again. It now asks every ten seconds until it
+  gets an answer, and opens its live connection again when that connection has gone quiet.
 - **Russian (#259).** The screens, the editor and the app's messages now speak Russian, the first language in another
   script than Latin. A screen built in Russian carries the Cyrillic letters in its fonts, so names and states in
   Cyrillic show on it; no screen in another language spends flash on them (a Russian CYD takes about 33 KB more).

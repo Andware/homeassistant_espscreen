@@ -4523,7 +4523,9 @@ def create_app(manager, development=False):
                     await response.write(f'data: {body}\n\n'.encode())
                     sent = body
                 else:
-                    await response.write(b': keepalive\n\n')
+                    # A ping the page hears (a comment it would not), so it knows a stream gone silent is dead
+                    # (web/src/stores/inventory.ts SILENT_MS); an older page's onmessage never sees it.
+                    await response.write(b'event: ping\ndata: {}\n\n')
         except (ConnectionResetError, asyncio.CancelledError):
             pass
         finally:
