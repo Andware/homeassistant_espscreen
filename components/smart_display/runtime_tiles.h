@@ -1555,6 +1555,9 @@ inline std::string detail_state(const Tile &t){
   if(t.state=="idle")return tr(txt::ha_vacuum_idle);
   if(t.state=="error")return tr(txt::vacuum_check_robot);
   if(!t.available())return tr(txt::ha_unavailable);
+  // A weather's condition is Home Assistant's key ("clear-night"), never a word: the screen says it in its own
+  // language, as the weather cards and the editor do.
+  if(t.domain()=="weather"){const std::string word=weather_text(t.state);if(word!=t.state)return word;}
   // Home Assistant's word where the screen has none of its own (firmware 0.2.58+).
   if(!t.extra().state_word.empty())return t.extra().state_word;
   return t.unit.empty()?t.state:screen_text::localize(t.state);
