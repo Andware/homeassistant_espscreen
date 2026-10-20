@@ -1105,6 +1105,7 @@ inline void picture_ask(const picture_question::Question &q, const char *kind, c
     data.emplace_back("n", std::to_string(picture_numbers.ask(kind, entity, own)));
     data.emplace_back("q", picture_question::json(q));
   } else {
+    // An app from before the feature `pictures`. To remove one day, with picture_question::legacy (see there).
     data.emplace_back("view", std::to_string(own));
     for (auto &field : picture_question::legacy(q)) data.push_back(std::move(field));
   }
