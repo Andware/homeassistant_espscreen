@@ -27,6 +27,7 @@
 // The link, the answer's head and the BMP are parsed here, free of sockets, LVGL and ESPHome, so
 // tests/test_picture_fetch.cpp checks them on a PC; picture_fetch.cpp has the task and the sockets (BSD sockets on the
 // ESP32's lwIP and on the host renders alike).
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -332,6 +333,34 @@ class Decoder {
 // frame and the live strip. Its `done` is bound once at boot (the hooks in packages/features/camera.yaml) and called on
 // the main loop, from tick(), when a load ends: `ok` with the picture in source(), or `cached` when the add-on answered
 // 304 and the picture there is still the right one.
+// ---- a JPEG answer, gathered whole (a P4: docs/PICTURES.md, "Formats") ----
+// The P4's hardware decoder takes a JPEG at once, so its bytes are kept, as many as the answer's Content-Length says
+// and at most MAX_JPEG (a busy camera over the 10-inch glass is 150 to 250 KB), in a buffer the decoder reads. Every
+// other picture is a BMP and decoded as it streams (Decoder).
+constexpr size_t MAX_JPEG = 1536u * 1024;
+inline bool is_jpeg(const uint8_t *data, size_t size) { return size >= 2 && data[0] == 0xFF && data[1] == 0xD8; }
+struct Gather {
+  using Allocate = std::function<uint8_t *(size_t bytes, size_t *got)>;
+  uint8_t *buffer = nullptr;
+  size_t want = 0, have = 0;
+  // False without a length, over MAX_JPEG, or without a buffer: the picture is not one this screen takes.
+  bool start(bool has_length, size_t length, const Allocate &allocate) {
+    if (!has_length || length < 2 || length > MAX_JPEG || !allocate) return false;
+    size_t room = 0;
+    buffer = allocate(length, &room);
+    if (!buffer || room < length) return false;
+    want = length;
+    return true;
+  }
+  // The answer's next bytes; what comes past its length is not the picture's.
+  void feed(const uint8_t *data, size_t size) {
+    const size_t take = std::min(size, want - have);
+    std::memcpy(buffer + have, data, take);
+    have += take;
+  }
+  bool done() const { return want && have == want; }
+};
+
 struct Slot;
 using Done = std::function<void(bool ok, bool cached)>;
 Slot &full();

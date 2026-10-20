@@ -301,7 +301,7 @@ class Firmware(unittest.TestCase):
         ask = tiles[tiles.index('inline void picture_ask('):]
         ask = ask[:ask.index('\n}\n')]
         self.assertIn('#if defined(USE_ESP32) && !defined(SCREEN_PICTURES)', ask)
-        self.assertLess(ask.index('#if defined(USE_ESP32) && !defined(SCREEN_PICTURES)'), ask.index('picture_question::json(q)'))
+        self.assertLess(ask.index('#if defined(USE_ESP32) && !defined(SCREEN_PICTURES)'), ask.index('picture_question::json(asked)'))
         store = (ROOT / 'components/smart_display/picture_store.h').read_text()
         self.assertIn('#if defined(USE_ESP32) && !defined(SCREEN_PICTURES)', store)
 
@@ -888,15 +888,19 @@ class EverySource(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual((width, height), (box[0] // len(sources), box[1]), what)
 
     async def test_a_jpeg_where_the_screen_takes_one(self):
+        # A P4 names JPEG first: photographs come as JPEG, a drawn map (lines and words) as the screen's first BMP.
         from PIL import Image
+        drawn = {'tile:2', 'tile:8', 'map:2?focus=person.alex&move=0', 'vacuum:vacuum.robo'}
         for owner, sources, box, fit in self.CASES:
             with self.subTest(owner=owner.kind, sources=sources):
-                manager, body, kind = await self.answer(P4, owner, sources, box, fit, ('jpeg', 'bmp24'))
-                self.assertEqual(kind, 'image/jpeg')
+                manager, body, kind = await self.answer(P4, owner, sources, box, fit, ('jpeg', 'bmp8', 'bmp24'))
                 with Image.open(io.BytesIO(body)) as image:
                     self.assertTrue(self.size(image, box, fit), image.size)
-                    self.assertEqual(image.format, 'JPEG')
-                    self.assertFalse(image.info.get('progressive'), 'the P4 decoder takes baseline JPEG only')
+                    if drawn & set(sources):
+                        self.assertEqual((kind, image.format, image.mode), ('image/bmp', 'BMP', 'P'))
+                    else:
+                        self.assertEqual((kind, image.format), ('image/jpeg', 'JPEG'))
+                        self.assertFalse(image.info.get('progressive'), 'the P4 decoder takes baseline JPEG only')
 
 
 if __name__ == '__main__':

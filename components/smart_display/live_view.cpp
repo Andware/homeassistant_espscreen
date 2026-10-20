@@ -525,17 +525,77 @@ static void task_main(void *arg) {
   vTaskDelete(nullptr);
 }
 
+// The decoder and the lock of the 2D-DMA, made once on the main loop; both stay for good.
+static bool decoder_ready() {
+  if (!glass) glass = xSemaphoreCreateRecursiveMutex();
+  if (!decoder) {
+    jpeg_decode_engine_cfg_t engine{.intr_priority = 0, .timeout_ms = 200};
+    if (jpeg_new_decoder_engine(&engine, &decoder) != ESP_OK) decoder = nullptr;
+  }
+  return glass && decoder;
+}
+
+// ---- Stills as JPEG (docs/PICTURES.md, "Formats") ----
+// A still decodes the way a stream's picture does (show, above): whole MCUs into a buffer of the decoder's own, RGB565
+// in LVGL's order, while the decode holds the glass. From then on LVGL holds the glass while it refreshes, as after a
+// first stream: a decode and LVGL's copy to the panel never run on the 2D-DMA at once.
+static std::atomic<bool> stills_on{false};
+bool prepare_stills() {
+  if (stills_on.load(std::memory_order_acquire)) return true;
+  if (!lv_display_get_default() || !decoder_ready()) return false;
+  if (!holding) {
+    lv_display_add_event_cb(lv_display_get_default(), hold_glass, LV_EVENT_REFR_START, nullptr);
+    lv_display_add_event_cb(lv_display_get_default(), release_glass, LV_EVENT_REFR_READY, nullptr);
+    holding = true;
+  }
+  stills_on.store(true, std::memory_order_release);
+  return true;
+}
+uint8_t *still_input(size_t bytes, size_t *got) {
+  jpeg_decode_memory_alloc_cfg_t in{.buffer_direction = JPEG_DEC_ALLOC_INPUT_BUFFER};
+  size_t size = 0;
+  auto *buffer = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(bytes, &in, &size));
+  if (got) *got = buffer ? size : 0;
+  return buffer;
+}
+uint8_t *decode_still(const uint8_t *jpeg, size_t length, Still &out) {
+  if (!stills_on.load(std::memory_order_acquire)) return nullptr;
+  jpeg_decode_picture_info_t info{};
+  if (jpeg_decoder_get_info(jpeg, length, &info) != ESP_OK) return nullptr;
+  const bool wide = info.sample_method == JPEG_DOWN_SAMPLING_YUV420 || info.sample_method == JPEG_DOWN_SAMPLING_YUV422;
+  const bool tall = info.sample_method == JPEG_DOWN_SAMPLING_YUV420;
+  const int stride_w = (info.width + (wide ? 15 : 7)) & ~(wide ? 15 : 7);
+  const int rows = (info.height + (tall ? 15 : 7)) & ~(tall ? 15 : 7);
+  jpeg_decode_memory_alloc_cfg_t o{.buffer_direction = JPEG_DEC_ALLOC_OUTPUT_BUFFER};
+  size_t size = 0;
+  auto *pixels = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(static_cast<size_t>(stride_w) * rows * 2, &o, &size));
+  if (!pixels) return nullptr;
+  jpeg_decode_cfg_t cfg{};
+  cfg.output_format = JPEG_DECODE_OUT_FORMAT_RGB565;
+  cfg.rgb_order = JPEG_DEC_RGB_ELEMENT_ORDER_BGR;  // little-endian RGB565, as LVGL's own pixels
+  cfg.conv_std = JPEG_YUV_RGB_CONV_STD_BT601;
+  uint32_t written = 0;
+  xSemaphoreTakeRecursive(glass, portMAX_DELAY);
+  const esp_err_t decoded = jpeg_decoder_process(decoder, &cfg, jpeg, length, pixels, size, &written);
+  xSemaphoreGiveRecursive(glass);
+  if (decoded != ESP_OK) {
+    free(pixels);
+    return nullptr;
+  }
+  out.w = info.width;
+  out.h = info.height;
+  out.stride = stride_w;
+  out.bytes = size;
+  return pixels;
+}
+
 Handle open(const std::string &url, const Rect &area, const Look &look, bool sound) {
   if (!available() || area.empty()) return -1;
   int slot = -1;
   for (int i = 0; i < MAX_STREAMS && slot < 0; ++i)
     if (!streams[i]) slot = i;
   if (slot < 0) return -1;
-  if (!glass) glass = xSemaphoreCreateRecursiveMutex();
-  if (!decoder) {
-    jpeg_decode_engine_cfg_t engine{.intr_priority = 0, .timeout_ms = 200};
-    if (jpeg_new_decoder_engine(&engine, &decoder) != ESP_OK) decoder = nullptr;
-  }
+  decoder_ready();
   if (!frame_buffer && esp_lcd_dpi_panel_get_frame_buffer(panel, 1, &frame_buffer) != ESP_OK) frame_buffer = nullptr;
   if (!glass || !decoder || !frame_buffer) {
     ESP_LOGW(TAG, "cannot stream on this panel");

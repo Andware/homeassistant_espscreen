@@ -134,8 +134,17 @@ store let go meanwhile is loaded whole again (`runtime_tiles::picture_done`).
 - **Two presenters**: LVGL draws a still from the store; `live_view` writes a stream past LVGL into the panel's frame
   buffer, with the rules of docs/CAMERA.md ("Nothing of LVGL's under a live picture", "One writer on the glass").
 
-The question names the formats a screen's decoder takes (`fmt`); every screen reads BMP today. The ESP32-P4's hardware
-JPEG decoder serves the streams; stills as JPEG on a P4 are the next step this leaves room for.
+### Formats
+
+The question names the formats the screen takes, best first (`fmt`), and the app picks per picture
+(`picture_service.format_for`). Every board takes BMP: 8-bit where the owner allows it (a palette of the picture's own
+256 colours, dithered), 24-bit otherwise; the screen decodes it row by row as it comes, without a copy. An ESP32-P4 also takes JPEG (`live_view::STILLS_JPEG`, added by `runtime_tiles::picture_ask`): it gathers the
+whole JPEG (`picture_fetch::Gather`, at most `MAX_JPEG`) and decodes it with the hardware decoder its streams use
+(`live_view::decode_still`, under the same lock of the 2D-DMA), about a tenth of a BMP's bytes on the network. A
+photograph (a camera, a cover, a photo, a poster) goes in the format the screen named first, JPEG on a P4; a drawn picture
+(a map, a vacuum's map: lines, words and flat colours, which JPEG blurs) goes as the first BMP the screen takes. Streams
+are JPEG on every P4 (`live_view`); the P4 has a hardware H.264 encoder but no decoder, so the app decodes a camera's
+H.264 and sends JPEG (`live_feed.py`).
 
 ## Capture: the screen's own camera
 

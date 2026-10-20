@@ -163,5 +163,35 @@ int main() {
     px = decode(longer, 17);
     assert(px.size() == 6 && px[0] == expect(rgb[0]));
   }
+
+  // A JPEG (a P4): told by its first two bytes, gathered whole as long as the answer says, in pieces of any size.
+  {
+    const uint8_t start[] = {0xFF, 0xD8, 0xFF, 0xE0};
+    assert(is_jpeg(start, 4) && !is_jpeg(start, 1) && !is_jpeg(reinterpret_cast<const uint8_t *>("BM"), 2));
+    std::vector<uint8_t> room;
+    size_t asked = 0;
+    const Gather::Allocate allocate = [&](size_t bytes, size_t *got) {
+      asked = bytes;
+      room.assign(bytes + 64, 0);  // the decoder's buffers come rounded up
+      *got = room.size();
+      return room.data();
+    };
+    // Without a length, over MAX_JPEG, or without memory: not one this screen takes.
+    assert(!Gather().start(false, 100, allocate));
+    assert(!Gather().start(true, MAX_JPEG + 1, allocate));
+    assert(!Gather().start(true, 100, [](size_t, size_t *got) -> uint8_t * { *got = 0; return nullptr; }));
+    assert(!Gather().start(true, 100, [](size_t, size_t *got) -> uint8_t * { static uint8_t small[10]; *got = 10; return small; }));
+    std::vector<uint8_t> picture(1000);
+    for (size_t i = 0; i < picture.size(); ++i) picture[i] = static_cast<uint8_t>(i * 7);
+    picture[0] = 0xFF, picture[1] = 0xD8;
+    Gather jpeg;
+    assert(jpeg.start(true, picture.size(), allocate) && asked == picture.size());
+    for (size_t at = 0; at < picture.size(); at += 333) jpeg.feed(picture.data() + at, std::min<size_t>(333, picture.size() - at));
+    assert(jpeg.done() && std::memcmp(jpeg.buffer, picture.data(), picture.size()) == 0);
+    // Bytes past its length are not the picture's.
+    const uint8_t more[] = {1, 2, 3};
+    jpeg.feed(more, 3);
+    assert(jpeg.have == picture.size() && jpeg.done());
+  }
   return 0;
 }

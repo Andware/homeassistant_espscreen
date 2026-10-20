@@ -301,8 +301,16 @@ enum class Event : uint8_t {
   ENDED,   // closed by its owner, and gone
   SOUND,   // its first sound came (a full view with sound): its owner shows the mute key
 };
+// A still decoded from a JPEG (decode_still): `stride` pixels a row (the decoder writes whole MCUs, 8 or 16 wide), its
+// buffer `bytes` long, freed with free().
+struct Still {
+  int w = 0, h = 0, stride = 0;
+  size_t bytes = 0;
+};
 // A P4 (USE_LIVE_VIEW, smart_display/__init__.py) that shows pictures at all (SCREEN_PICTURES, features/camera.yaml).
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
+// Its stills come as JPEG too (docs/PICTURES.md, "Formats"): its questions name `jpeg` (runtime_tiles::picture_ask).
+constexpr bool STILLS_JPEG = true;
 }  // namespace live_view
 namespace esphome::lvgl {
 class LvglComponent;
@@ -331,7 +339,18 @@ uint32_t misses();
 // picture budget while they run): each stream's input and its decoded picture of its room, from what the main loop
 // set when it opened, so never read under a task.
 size_t held_bytes();
+// Stills as JPEG, with the decoder the streams use. prepare_stills runs on the main loop (it has LVGL hold the glass
+// while it refreshes, as a stream does, since the decoder and LVGL's copy to the panel share the 2D-DMA); false while
+// the decoder cannot start. still_input gives a buffer the decoder may read (free() it). decode_still, from a
+// download's task, decodes a whole JPEG into a new buffer of RGB565 as LVGL draws it (free() it), or nullptr.
+bool prepare_stills();
+uint8_t *still_input(size_t bytes, size_t *got);
+uint8_t *decode_still(const uint8_t *jpeg, size_t length, Still &out);
 #else
+constexpr bool STILLS_JPEG = false;
+inline bool prepare_stills() { return false; }
+inline uint8_t *still_input(size_t, size_t *got) { if (got) *got = 0; return nullptr; }
+inline uint8_t *decode_still(const uint8_t *, size_t, Still &) { return nullptr; }
 inline size_t held_bytes() { return 0; }
 inline bool available() { return false; }
 inline Handle open(const std::string &, const Rect &, const Look & = Look{}, bool = false) { return -1; }
