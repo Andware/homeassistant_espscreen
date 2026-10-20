@@ -591,6 +591,27 @@ class Service(unittest.IsolatedAsyncioTestCase):
     def read(self, request):
         return picture_legacy.read(request, self.manager.player, self.manager.sources.index_of('text.hall')).question
 
+    async def test_a_vacuums_map_is_drawn_at_its_place(self):
+        # The whole way of a vacuum card's map: its map entity, the map read once (Snapshots.vacuum), drawn at the place
+        # on the card's colour (vacuum_map.render) and painted; the drawing function once had another name.
+        import vacuum_map
+        from PIL import Image
+        drawing = vacuum_map.read(png((80, 80), (40, 160, 90)))  # square: the card beside it
+        manager = self.manager
+        manager.device_entries = lambda entity: [{'entity_id': 'image.robo_map'}]
+
+        async def held(entity, mark):
+            return drawing, 'abc123'
+        manager.snapshots.vacuum = held
+        question = picture_legacy.read({'entity': 'vacuum.robo', 'vmap': '300x200', 'bg': 'FFFFFF', 'dark': '0'},
+                                       manager.player).question
+        with mock.patch('vacuum_card.map_entity', return_value={'e': 'image.robo_map', 'm': '1'}):
+            found = await self.service.picture('text.hall', manager.player, question)
+        self.assertEqual(found.state, 'ok')
+        image = Image.open(io.BytesIO(found.body))
+        self.assertEqual(image.size, (300, 200))
+        self.assertEqual(image.convert('RGB').getpixel((2, 100)), (255, 255, 255), 'the card\'s colour beside the map')
+
     async def test_a_camera_that_streams(self):
         found = await self.service.answer('text.hall', self.manager.player, self.read({'entity': 'camera.porch', 'live': '1280x744', 'sound': '1'}))
         self.assertEqual((found.url, found.stream, found.shown), (f'http://192.168.1.57:8098/camera/{"S" * 24}.mjpeg', True, ('camera.porch',)))

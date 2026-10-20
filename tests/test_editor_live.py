@@ -349,6 +349,37 @@ class Endpoints(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status, 200, await response.text())
         self.assertEqual((await response.json())['u'], '')
 
+    async def test_each_preview_on_a_page_has_its_own_layout(self):
+        # The overview shows a mockup of every screen: each compiled its own layout, and its questions name its revision
+        # (`rev`). A tile is checked against the layout of that revision, not the one compiled last.
+        import io
+        import json
+        from PIL import Image
+        from unittest.mock import AsyncMock
+        self.ha.states['media_player.test'] = {'state': 'playing', 'attributes': {}}
+        self.ha.states['light.hall'] = {'state': 'on', 'attributes': {}}
+        self.manager.snapshots.picture = lambda entity: '/private'
+        source = io.BytesIO()
+        Image.new('RGB', (160, 80), (50, 120, 200)).save(source, 'PNG')
+        self.manager.snapshots.fetch_cover = AsyncMock(return_value=source.getvalue())
+        cover = [{'entity': 'media_player.test', 'name': '', 'options': {'display': 'cover', 'size': 'wide'}}]
+        lamp = [{'entity': 'light.hall', 'name': '', 'options': {}}]
+        self.manager.preview_layouts['aaaaaaaaaaaaaaaa'] = cover
+        self.manager.preview_layouts['bbbbbbbbbbbbbbbb'] = lamp
+        self.manager.preview_tiles = lamp  # the one compiled last
+
+        async def ask(rev):
+            fields = {'tiles': 'media_player.test', 'idx': '0', 'size': '64', 'bg': '123456', 'session': '1111111111111111',
+                      'rev': rev, 'view': '4', 'atlas': json.dumps([[0, 0, 120, 80, 8, 0]])}
+            body = {'request': {'service': 'esphome.screen_camera', 'event': True, 'data': fields},
+                    'shape': {'width': 720, 'height': 720}}
+            response = await self.client.post('/api/firmware-preview/image', json=body, headers=self.headers)
+            self.assertEqual(response.status, 200, await response.text())
+            return (await response.json())['u']
+        self.assertTrue(await ask('aaaaaaaaaaaaaaaa'), 'the cover of the mockup whose layout has it')
+        self.assertEqual(await ask('bbbbbbbbbbbbbbbb'), '', 'a lamp is no pictured tile')
+        self.assertEqual(await ask('cccccccccccccccc'), '', 'an unknown revision: the layout compiled last')
+
     async def test_states_give_the_value_word_and_attributes_per_entity(self):
         response = await self.client.get('/api/states?entity=light.a&entity=sensor.t&entity=light.nope&entity=screen.clock')
         states = (await response.json())['states']

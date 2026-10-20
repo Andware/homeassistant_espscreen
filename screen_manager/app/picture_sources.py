@@ -539,7 +539,8 @@ class Sources:
         dark, w, h, ground = question.dark, place.w, place.h, place.ground
 
         async def draw(width, height):
-            return await asyncio.get_running_loop().run_in_executor(None, vacuum_map.picture, drawing, (width, height), ground, dark)
+            # The map fitted in the middle of its place, on the card's colour (a BMP, read by the painter as any picture).
+            return await asyncio.get_running_loop().run_in_executor(None, vacuum_map.render, drawing, (width, height), ground, dark)
         return Resolved(_Drawn(draw), f'vacuum:{digest}:{"d" if dark else "l"}')
 
 

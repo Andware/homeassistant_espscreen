@@ -1047,7 +1047,9 @@ class Manager:
         # Where a player plays (speakers.py): the speaker this app started each player's music on, which its card
         # follows, and the top of each player's library as far as it names accounts (entity -> (monotonic, ids)).
         self.outputs, self.accounts, self.account_probes = {}, {}, {}
-        self.preview_tiles = []
+        # The editor's firmware previews (preview_images): the tiles of each layout one compiled, by its revision (the
+        # `rev` its questions carry), the last few kept, and the last one for a question without a known revision.
+        self.preview_tiles, self.preview_layouts = [], OrderedDict()
         self.map_pictures = OrderedDict()
         self.map_hits = {}
         # The action behind an alert's button (app 0.2.91): node -> (key, action, data) of the alert on that screen.
@@ -3271,16 +3273,16 @@ class Manager:
             asyncio.ensure_future(answer(request))
 
     def layout_tiles(self, inbox):
-        """The tiles of a screen's saved layout; for the editor's firmware preview (preview_images.INBOX), the tiles of
-        the page it compiled last."""
-        if inbox == preview_images.INBOX:
-            return self.preview_tiles
+        """The tiles of a screen's saved layout; for a firmware preview of the editor (preview_images.inbox_of), the tiles
+        of the layout it compiled, by its revision, or of the last one compiled."""
+        if preview_images.is_preview(inbox):
+            return self.preview_layouts.get(preview_images.revision_of(inbox), self.preview_tiles)
         return self.layouts.get(inbox, {}).get('tiles', [])
 
     def camera_allowed(self, inbox, entity):
         """A camera on the screen's own layout, or one a recent alert showed; for the editor's preview any entity Home
         Assistant has."""
-        if inbox == preview_images.INBOX:
+        if preview_images.is_preview(inbox):
             return entity in self.ha.states
         seen = self.alert_cameras.get(entity)
         if seen is not None and time.monotonic() - seen < picture_links.STILL_SECONDS:
@@ -4497,7 +4499,12 @@ def create_app(manager, development=False):
                 for page in record['layout']['pages']]
         region = manager.page_region()
         begin, initial_tiles, initial_bars, states = page_delivery.prepare('', record, region, values, bars)
-        return web.json_response({'revision': page_delivery.configuration(record, region),
+        revision = page_delivery.configuration(record, region)
+        manager.preview_layouts[revision] = tiles
+        manager.preview_layouts.move_to_end(revision)
+        while len(manager.preview_layouts) > preview_images.LAYOUTS:
+            manager.preview_layouts.popitem(last=False)
+        return web.json_response({'revision': revision,
             'configuration': [begin, *initial_bars, *initial_tiles, {'op': 'commit'}],
             'values': [*states, *[page_delivery.page_message(page, index, items, initial=False)
                 for index, (page, items) in enumerate(zip(record['layout']['pages'], bars))]]})
