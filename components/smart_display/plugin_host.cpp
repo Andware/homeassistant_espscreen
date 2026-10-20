@@ -584,6 +584,7 @@ struct Place {
   bool block = true;     // tessera::Placeholder::BLOCK: its soft block shows until its picture is here (0.17)
   bool laid = false;     // its piece of the atlas is on it now
   int8_t told = -1;      // the PictureState the plugin last heard for this address (0.17, on_picture), -1 none yet
+  bool live = false;     // a tile's place that streams its camera on a P4 (0.17, ui::live; runtime_tiles live places)
 };
 struct Card : tessera::InPsram {   // PSRAM first, as the plugin's own objects (roomy.h)
   std::unique_ptr<tessera::Tile> tile;
@@ -752,6 +753,13 @@ static int measure(lv_obj_t *frame, std::vector<Place> &places, std::vector<tile
 static int measure(const rt::Widgets &w, std::vector<tile_picture::Part> &parts, std::vector<Place *> &owners) {
   if (!w.plugin || !w.tile) { parts.clear(); owners.clear(); return picture_store::SCALE_ONE; }
   return measure(w.tile, w.plugin->places, parts, owners);
+}
+
+void live_places(const rt::Widgets &w, const std::function<void(lv_obj_t *, const std::string &, bool)> &each) {
+  if (!w.plugin) return;
+  for (const auto &p : w.plugin->places)
+    if (p.live && p.place && !lv_obj_has_flag(p.place, LV_OBJ_FLAG_HIDDEN) && p.url.rfind("camera:", 0) == 0)
+      each(p.place, p.url.substr(7), p.contain);
 }
 
 bool pictured(const rt::Widgets &w) {
@@ -1802,6 +1810,17 @@ void set_picture(lv_obj_t *place, const std::string &url, Fit fit, Turn turn, bo
   // picture away at once, and a place that showed none keeps its block.
   if (url.empty()) plugin_host::place_clear(*p);
 }
+
+void live(lv_obj_t *place, bool on) {
+  plugin_host::Place *p = plugin_host::find_place(place);
+  if (!p) return;
+  // A tile's places only: a card over the page and a screensaver have every stream stop (nothing lies over one).
+  if (!plugin_host::making || plugin_host::placing != &plugin_host::making->places) {
+    ESP_LOGW("plugins", "ui::live on a place that is not a tile's: it shows its stills");
+    return;
+  }
+  p->live = on;
+}
 }  // namespace tessera::ui
 #else
 #include <cstdio>
@@ -1818,6 +1837,7 @@ void tap(runtime_tiles::Widgets &, int, int) {}
 void tick_cards(uint32_t) {}
 uint16_t bytes(const std::string &) { return PLACEHOLDER_BYTES; }
 bool pictured(const runtime_tiles::Widgets &) { return false; }
+void live_places(const runtime_tiles::Widgets &, const std::function<void(lv_obj_t *, const std::string &, bool)> &) {}
 bool picture_ask(const runtime_tiles::Widgets &, const runtime_tiles::Tile &, tile_picture::Ask &) { return false; }
 void picture_place(runtime_tiles::Widgets &, void *) {}
 void picture_outcome(runtime_tiles::Widgets &, picture_loader::Outcome) {}

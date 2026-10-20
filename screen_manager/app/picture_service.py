@@ -112,6 +112,12 @@ class Service:
                 token = self.stream.link(tile['entity'], question.live, cover=not contain, warm=question.sound, screen=inbox,
                                          tile=True)
                 return url_of(token, 'mjpeg') + ('?fit=contain' if contain else '')
+        # A plugin tile's place set to live (plugin API 0.17, ui::live): the camera of its own entity (may() checked it),
+        # into the place's room, filled or whole as the place's fit says.
+        if source.kind == 'camera' and owner.kind == 'plugin_tile' and source.ref.startswith('camera.'):
+            contain = question.places[0].fit in ('contain', 'within', 'whole')
+            token = self.stream.link(source.ref, question.live, cover=not contain, screen=inbox, tile=True)
+            return url_of(token, 'mjpeg') + ('?fit=contain' if contain else '')
         return ''
 
     # ----- painting -----

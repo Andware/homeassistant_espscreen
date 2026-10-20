@@ -130,6 +130,7 @@ struct Stream {
   std::atomic<uint32_t> shown{0}, bytes{0}, decode_us{0}, copy_us{0}, skipped{0};
   // When the way to the first picture went by (ms after start, written once by the task, read after `shown`).
   uint32_t started_at = 0, connected_ms = 0, answered_ms = 0, first_bytes_ms = 0;
+  uint32_t live_ms = 0;  // its first live picture (written once by the task, read after `live`)
   ppa_client_handle_t ppa = nullptr;
   uint8_t *input = nullptr, *picture = nullptr;
   uint16_t *canvas = nullptr;
@@ -141,8 +142,14 @@ struct Stream {
   uint8_t *sound_piece = nullptr;  // what the speaker took part of, the rest of it next tick
   size_t piece_left = 0, piece_at = 0;
   std::atomic<bool> muted{false}, heard{false};
-  // The main loop's own: the report of the last REPORT_MS, the first picture and sound told, the speaker started.
-  bool told_first = false, told_sound = false, speaking = false;
+  // Until it is live (live_view.h): the picture on the glass is a still (the task turns a tile's loader over it), and a
+  // live one was shown. `under` holds the loader's square of the card as composed, its last turn drawn at `turned_at`.
+  std::atomic<bool> warming{false}, live{false};
+  uint16_t *under = nullptr;
+  uint32_t turned_at = 0;
+  // The main loop's own: the report of the last REPORT_MS, the first picture, its first live one and sound told, the
+  // speaker started.
+  bool told_first = false, told_live = false, told_sound = false, speaking = false;
   uint32_t reported_at = 0, reported_shown = 0, reported_bytes = 0, reported_decode = 0, reported_copy = 0;
 };
 static Stream *streams[MAX_STREAMS] = {};
@@ -298,6 +305,7 @@ static void free_stream(Stream *s) {
   if (s->picture) free(s->picture);
   if (s->canvas) free(s->canvas);
   if (s->name) free(s->name);
+  if (s->under) free(s->under);
   if (s->ppa) ppa_unregister_client(s->ppa);
   delete s;
 }
@@ -332,8 +340,44 @@ static esp_err_t copy(Stream &s, const void *in, int stride_w, int rows, int bx,
   return ppa_do_scale_rotate_mirror(s.ppa, &srm);
 }
 
-// One picture of `length` bytes in the stream's input: decoded, laid out, and copied onto the glass.
-static void show(Stream &s, size_t length) {
+// A tile's loader over a still (live_view.h, "Until it is live"): its square of the card as composed kept in `under`,
+// and the loader drawn over it as it stands now.
+static bool lay_loader(Stream &s) {
+  int lx = 0, ly = 0;
+  if (!s.under || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return false;
+  const int cw = s.area.w, size = s.look.loader;
+  for (int j = 0; j < size; ++j)
+    memcpy(s.under + static_cast<size_t>(j) * size, s.canvas + static_cast<size_t>(ly + j) * cw + lx,
+           static_cast<size_t>(size) * 2);
+  s.turned_at = esphome::millis();
+  draw_loader(s.canvas, cw, lx, ly, s.look, s.turned_at);
+  return true;
+}
+// Its next turn, between the stills: the square as composed again, the loader over it, and that square alone onto the
+// glass, every LOADER_STEP_MS while the task waits for the stream's next bytes.
+static void turn_loader(Stream &s) {
+  const uint32_t now = esphome::millis();
+  int lx = 0, ly = 0;
+  if (!s.warming || now - s.turned_at < LOADER_STEP_MS || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return;
+  s.turned_at = now;
+  const int cw = s.area.w, ch = s.area.h, size = s.look.loader;
+  for (int j = 0; j < size; ++j)
+    memcpy(s.canvas + static_cast<size_t>(ly + j) * cw + lx, s.under + static_cast<size_t>(j) * size,
+           static_cast<size_t>(size) * 2);
+  draw_loader(s.canvas, cw, lx, ly, s.look, now);
+  const Rect target = on_panel(Rect{s.area.x + lx, s.area.y + ly, size, size}, s.turn, panel_w, panel_h);
+  esp_err_t err = ESP_OK;
+  xSemaphoreTakeRecursive(glass, portMAX_DELAY);
+  if (!s.stopping && s.armed)
+    err = copy(s, s.canvas, cw, ch, lx, ly, size, size, frame_buffer, static_cast<size_t>(panel_w) * panel_h * 2,
+               panel_w, panel_h, target.x, target.y, 16, s.turn);
+  xSemaphoreGiveRecursive(glass);
+  if (err != ESP_OK) s.warming = false;  // the loader stops where it stands; the pictures go on
+}
+
+// One picture of `length` bytes in the stream's input: decoded, laid out, and copied onto the glass. `still`: the
+// camera's still from before its stream came, with the loader over it on a tile.
+static void show(Stream &s, size_t length, bool still) {
   jpeg_decode_picture_info_t info{};
   if (jpeg_decoder_get_info(s.input, length, &info) != ESP_OK) {
     s.skipped++;
@@ -397,6 +441,7 @@ static void show(Stream &s, size_t length) {
              where.x, where.y);
   const size_t glass_size = static_cast<size_t>(panel_w) * panel_h * 2;
   esp_err_t err = ESP_OK;
+  bool loading = false;
   if (s.look.tile) {
     // The card: the picture cut or fitted into it, on black where it leaves room, then the shade, corners and name.
     const int cw = s.area.w, ch = s.area.h;
@@ -420,6 +465,7 @@ static void show(Stream &s, size_t length) {
     xSemaphoreGiveRecursive(glass);
     if (err == ESP_OK) {
       compose(s.canvas, cw, cw, ch, s.look);
+      loading = still && lay_loader(s);
       const Rect target = on_panel(s.area, s.turn, panel_w, panel_h);
       xSemaphoreTakeRecursive(glass, portMAX_DELAY);
       if (!s.stopping) {
@@ -450,6 +496,11 @@ static void show(Stream &s, size_t length) {
   }
   s.decode_us += static_cast<uint32_t>(t1 - t0);
   s.copy_us += static_cast<uint32_t>(esp_timer_get_time() - t1);
+  s.warming = loading;
+  if (!still && !s.live) {
+    s.live_ms = esphome::millis() - s.started_at;
+    s.live = true;
+  }
   s.shown++;
 }
 
@@ -474,18 +525,25 @@ static void stream(Stream &s) {
     s.failed = true;
     return;
   }
+  // A tile with a loader reads in short waits, so its loader turns between the stills.
+  if (s.under) {
+    timeval step{0, static_cast<suseconds_t>(LOADER_STEP_MS * 1000)};
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &step, sizeof(step));
+  }
   Reader reader;
   uint32_t heard = esphome::millis();
   while (!s.stopping) {
     const int n = recv(fd, chunk, CHUNK, 0);
-    if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+    const int error = errno;
+    turn_loader(s);
+    if (n < 0 && (error == EAGAIN || error == EWOULDBLOCK)) {
       if (esphome::millis() - heard < QUIET_MS) continue;
       ESP_LOGW(TAG, "the stream went quiet");
       s.failed = true;
       break;
     }
     if (n <= 0) {
-      ESP_LOGW(TAG, "the stream ended (%d, errno %d)", n, errno);
+      ESP_LOGW(TAG, "the stream ended (%d, errno %d)", n, error);
       s.failed = true;
       break;
     }
@@ -498,9 +556,9 @@ static void stream(Stream &s) {
           if (audio) return s.sound && length <= SOUND_PART ? s.sound_part : nullptr;
           return length <= s.input_size ? s.input : nullptr;
         },
-        [&s](size_t length, bool audio) {
+        [&s, &reader](size_t length, bool audio) {
           if (!audio) {
-            show(s, length);
+            show(s, length, reader.still());
             return;
           }
           // Sound: into the buffer the main loop plays from; none of it while muted, and none when it is full.
@@ -639,6 +697,11 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     free_stream(s);
     return -1;
   }
+  // The loader's square of the card, kept under it while it turns; without the memory the tile simply has none.
+  int lx = 0, ly = 0;
+  if (loader_spot(look, area.w, area.h, lx, ly))
+    s->under = static_cast<uint16_t *>(
+        heap_caps_malloc(static_cast<size_t>(look.loader) * look.loader * 2, MALLOC_CAP_SPIRAM));
   streams[slot] = s;
   if (xTaskCreatePinnedToCore(task_main, "live_view", 6144, s, 5, nullptr, 1) != pdPASS) {
     streams[slot] = nullptr;
@@ -777,6 +840,11 @@ void tick(const std::function<void(Handle, Event)> &tell) {
                "answered after %u, its first bytes after %u)", slot, (unsigned) (now - s->started_at),
                (unsigned) s->connected_ms, (unsigned) s->answered_ms, (unsigned) s->first_bytes_ms);
       tell(slot, Event::FIRST);
+    }
+    if (s->told_first && !s->told_live && s->live.load()) {
+      s->told_live = true;
+      ESP_LOGI(TAG, "stream %d: live %u ms after it started", slot, (unsigned) s->live_ms);
+      tell(slot, Event::LIVE);
     }
   }
 }

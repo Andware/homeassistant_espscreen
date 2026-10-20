@@ -185,7 +185,16 @@ H.264 and sends JPEG (`live_feed.py`).
 - The core's sources (`cover:<entity>`, `camera:<entity>`, `entity:<entity>`, `step:`) for a place of that entity, under
   the same rules as the core's own pictures. `saver:picture` stays as another name for `step:`.
 - `slide_pictures` may be called from any call of a tile or card, `on_state` included.
+- `ui::live(place)`: a tile's place with the address `camera:<entity>` of its own entity streams on a screen that
+  streams, exactly as a camera tile set to Live (`runtime_tiles` live places: on the glass, the page still, nothing over
+  it; its stills under it until the first live picture). Its question names the owner `plugin_tile` and `live`; the app
+  answers with a stream into the place's room (`picture_service._stream`). A card's and a saver's places show stills.
 - `tessera::capturing(plugin, Capture::CAMERA, on)` for a plugin that uses the screen's own camera on the screen itself.
+
+A plugin never writes the glass itself: `live_view` is the one writer past LVGL, and a plugin's video goes into a place
+it laid out. A plugin with video of its own one day (an intercom's caller over SIP and RTP, for instance) gets the same
+way in: the stream's renderer stays apart from where its pictures come from, so frames a plugin receives can be handed
+to a place as the app's stream is now. Its camera going out is a capture (`capturing`), with the dot.
 
 ## How it is tested
 

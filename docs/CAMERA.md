@@ -258,7 +258,9 @@ often a Raspberry Pi, so each kind of camera takes the cheapest road:
   software decoder takes only the baseline profile most cameras do not send), so Home Assistant's host does, once per
   camera however many screens watch it. The JPEG is made straight from the decoder's YUV with FFmpeg's encoder, at the
   camera's own size where that fits the room, or scaled down to it. Until the first frame (WebRTC waits for the
-  camera's next key frame, a few seconds on some cameras) the screen gets the camera's still.
+  camera's next key frame, a few seconds on some cameras) the screen gets the camera's still, again every two seconds,
+  each such part marked `X-Picture: still` (see "Until it is live" below). The app offers WebRTC without a STUN server:
+  it and Home Assistant share a network, and gathering a STUN candidate first cost about five seconds.
 - Any other camera (a snapshot camera, an ESPHome camera, a picture an integration draws) gives its snapshot, asked again
   as soon as the last one came, at most 15 a second. A JPEG the P4 decodes as it is (baseline, at most 1920 pixels a
   side) goes out untouched, which costs the app nothing; anything else is made into one.
@@ -289,6 +291,14 @@ Measured on the reTerminal D1001 (2026-10-10):
 | 1920 x 1080, sent as 1264 x 704 | 15 a second, the camera's pace | 10 ms | 48 ms |
 
 Home Assistant's LL-HLS was 0.6 to 1.2 seconds behind the same camera and came in bursts of a second; its WebRTC 0.12.
+
+**Until it is live.** The stills before WebRTC's first frame show at once, but they stand still, so the screen says
+they are not live yet: a live tile (and a plugin's live place) turns the firmware's spinner, small, in its top right
+corner on a round shade, and the full view turns it in its top bar. The stream's task draws the tile's loader itself,
+over the picture it composed and every 50 ms between the stills, since LVGL draws nothing over a stream; the full
+view's is LVGL's, beside the picture. The first part without the mark ends it, and `live_view` tells its owner
+(`Event::LIVE`, logged as "stream N: live after ... ms"). A camera without a stream sends no marks, so it is live from
+its first picture, and so is everything an older app sends; an older screen reads the mark as a header it does not know.
 
 **Live tiles.** A camera tile with **Display → Live picture** has one more pace on a P4: **Live**, its first and default
 one, so a camera tile on a P4 is live unless its pace says otherwise. The editor offers it for a screen that streams

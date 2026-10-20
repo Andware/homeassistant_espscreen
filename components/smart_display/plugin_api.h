@@ -71,7 +71,8 @@ namespace tessera {
 // block (places that lie over each other, a cover flow); on_picture(place, PictureState) on a tile, a card and a
 // screensaver, whether a place's picture came; the core's sources as a place's address (`cover:<entity>`,
 // `camera:<entity>`, `entity:<entity>` for a place of that entity, `step:` for the screensaver step's own picture, the
-// old `saver:picture` still read); slide_pictures from any call of a tile or a card; and capturing(), a plugin that uses
+// old `saver:picture` still read); slide_pictures from any call of a tile or a card; ui::live, a tile's place that
+// streams its camera on a P4 as a camera tile set to Live does; and capturing(), a plugin that uses
 // the screen's own camera on the screen itself, which the core then shows with its dot (the core shows Home
 // Assistant's own use of the camera by itself).
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 17;
@@ -610,6 +611,12 @@ void set_picture(lv_obj_t *place, const std::string &url, Fit fit, Turn turn, bo
 // set_picture calls of a change (a cover flow that turns), so the change shows which way it goes while the next picture
 // comes. Call it in any call of the tile or the card (on_state, on_tap, on_tick).
 void slide_pictures(int dx, uint32_t ms = 300);
+// A tile's place shows its camera live (0.17): a place whose address is `camera:<entity>` of the tile's own entity
+// streams on a screen that streams (the ESP32-P4 boards) while it is on the glass, the page stands still and nothing
+// lies over it, exactly as a camera tile set to Live does (docs/PICTURES.md); everywhere else, and until its first live
+// picture, it shows its stills. Lay nothing over a live place (a label, another place): LVGL's drawing there stops the
+// stream. Only on a tile's places; a card's and a saver's places show stills. Call it in create() or on_state.
+void live(lv_obj_t *place, bool on = true);
 }  // namespace ui
 
 }  // namespace tessera

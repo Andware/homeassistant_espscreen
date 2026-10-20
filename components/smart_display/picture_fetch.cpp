@@ -227,6 +227,17 @@ static void download(Slot &slot) {
     // The whole JPEG: decoded into a buffer of its own, which tick() swaps in as it does a BMP of a new size.
     live_view::Still still;
     uint8_t *pixels = live_view::decode_still(jpeg.buffer, jpeg.have, still);
+    // Shown at its own size (the rows and columns past it, made to fill whole MCUs, lie unseen in the stride), with
+    // its places' corners exact again (jpeg_notes).
+    JpegNotes notes;
+    if (pixels && jpeg_notes(jpeg.buffer, jpeg.have, notes)) {
+      if (notes.width <= still.w && notes.height <= still.h) {
+        still.w = notes.width;
+        still.h = notes.height;
+      }
+      for (const auto &corner : notes.corners)
+        mask_corners(reinterpret_cast<uint16_t *>(pixels), still.stride, still.w, still.h, corner);
+    }
     if (pixels) {
       slot.fresh = reinterpret_cast<uint16_t *>(pixels);
       slot.fresh_bytes = still.bytes;

@@ -19,11 +19,24 @@
   nothing, closed the stream after six silent seconds and asked again, black in between, for up to a minute. It now
   gets the camera's picture every two seconds until the stream comes, and a camera Home Assistant has no such stream for
   (one with HLS alone) goes over to its pictures at once instead of after 20 seconds.
+- **A live camera starts sooner, and says when it is live** (the P4 screens). The app started each stream from Home
+  Assistant by asking a server on the internet for its address first (STUN), about five seconds before anything else,
+  which no stream between the app and Home Assistant needs. Until the stream's first frame the camera's picture stands
+  still, so a live tile now turns a small spinner in its top right corner, and the camera full screen one in its top
+  bar, until the picture is live.
+- **Pictures as JPEG on the ESP32-P4 screens.** A camera's tile and full view, the screensaver's photos, a cover and a
+  plugin's pictures now reach a P4 screen as JPEG, about a tenth of the bytes of the BMP it got before, and its hardware
+  decoder unpacks them. A map and a vacuum's map stay BMP (JPEG blurs their lines and words), as does every picture for
+  the other screens and the editor.
+- **One picture after the next without a third copy in memory.** When a picture changed (the next screensaver photo,
+  another track's cover, a map that moved) the screen held the old one, the download and a copy of it for a moment; it
+  now takes the download as it is. A map or cover that did not change comes as "not changed" again instead of whole.
 - **Plugin API 0.17**: a picture's place without its grey block, a call when a place's picture came or did not, a
-  media player's cover, a camera's picture and an entity's own picture as a place's address, and `capturing()` for a
-  plugin that uses the screen's own camera (docs/PLUGINS.md). Tessera's own Cinema, New music and Picture frame use it:
-  no more grey bars in a cover flow after the screen fetched its pictures again, and Picture frame shows what a player
-  plays.
+  media player's cover, a camera's picture and an entity's own picture as a place's address, `ui::live` for a place
+  whose camera streams on a P4 screen as a live tile does, and `capturing()` for a plugin that uses the screen's own
+  camera (docs/PLUGINS.md). Tessera's own Cinema, New music and Picture frame use it: no more grey bars in a cover flow
+  after the screen fetched its pictures again, Picture frame shows what a player plays, and a camera in Picture frame
+  is live on a P4 screen.
 - **Stars for plugins, and a heart for any plugin.** A few days after a screen first runs a plugin from the Plugins
   page, a card above the screen asks how it works for you: one to five stars, then Send. Later asks again in two
   weeks; Don't ask again, what is shared and the privacy page are behind the card's ⋯ menu. A plugin's details take

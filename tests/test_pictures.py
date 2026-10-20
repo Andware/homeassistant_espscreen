@@ -612,6 +612,21 @@ class Service(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(image.size, (300, 200))
         self.assertEqual(image.convert('RGB').getpixel((2, 100)), (255, 255, 255), 'the card\'s colour beside the map')
 
+    async def test_a_plugin_tiles_live_place_streams_its_own_camera(self):
+        # A plugin tile's place set live (plugin API 0.17, ui::live): its own camera streams into the place, filled or
+        # whole as the place's fit says; another camera is not the place's to show, live or not.
+        self.manager.tiles[6]['options']['plugin_entity'] = 'camera.porch'
+        owner = Owner('plugin_tile', 6, 'plugin:bus.next')
+        for fit, suffix in (('cover', '.mjpeg'), ('contain', '.mjpeg?fit=contain')):
+            question = Question(owner, (Source('camera', 'camera.porch'),), (320, 180), (Place(0, 0, 320, 180, radius=12, fit=fit),),
+                                live=(320, 180))
+            found = await self.service.answer('text.hall', self.manager.player, question)
+            self.assertTrue(found.stream and found.url.endswith(suffix), (fit, found))
+        self.assertEqual(self.stream.calls[-1], ('camera.porch', (320, 180), {'cover': False, 'screen': 'text.hall', 'tile': True}))
+        other = Question(owner, (Source('camera', 'camera.drive'),), (320, 180), (Place(0, 0, 320, 180),), live=(320, 180))
+        found = await self.service.answer('text.hall', self.manager.player, other)
+        self.assertTrue(found.problem and not found.url)
+
     async def test_a_camera_that_streams(self):
         found = await self.service.answer('text.hall', self.manager.player, self.read({'entity': 'camera.porch', 'live': '1280x744', 'sound': '1'}))
         self.assertEqual((found.url, found.stream, found.shown), (f'http://192.168.1.57:8098/camera/{"S" * 24}.mjpeg', True, ('camera.porch',)))
@@ -895,12 +910,16 @@ class EverySource(unittest.IsolatedAsyncioTestCase):
             with self.subTest(owner=owner.kind, sources=sources):
                 manager, body, kind = await self.answer(P4, owner, sources, box, fit, ('jpeg', 'bmp8', 'bmp24'))
                 with Image.open(io.BytesIO(body)) as image:
-                    self.assertTrue(self.size(image, box, fit), image.size)
                     if drawn & set(sources):
+                        self.assertTrue(self.size(image, box, fit), image.size)
                         self.assertEqual((kind, image.format, image.mode), ('image/bmp', 'BMP', 'P'))
                     else:
+                        # Whole MCUs for the P4's decoder, shown at the size its APP15 segment names (picture_paint).
                         self.assertEqual((kind, image.format), ('image/jpeg', 'JPEG'))
                         self.assertFalse(image.info.get('progressive'), 'the P4 decoder takes baseline JPEG only')
+                        self.assertEqual((image.size[0] % 16, image.size[1] % 16), (0, 0))
+                        shown = picture_paint.jpeg_size(body)
+                        self.assertTrue(self.size(types.SimpleNamespace(size=shown), box, fit), shown)
 
 
 if __name__ == '__main__':
