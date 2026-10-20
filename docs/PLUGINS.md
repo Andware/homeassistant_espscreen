@@ -552,8 +552,9 @@ scrim, with what the plugin draws in it.
   restarts the standby time of a lit one: a popup is something to see. A plugin that shows one unasked, without a
   person in front of the screen, has a setting for it, as a plugin that wakes the screen does.
 - **A close key in its corner.** Every popup has the round key of every card's top bar (`detail_bar::key`, its size
-  and paint) with the close glyph in the card's top right corner. It floats over the room; `PopupContext::corner` says
-  how far the room's first row keeps from the right.
+  and paint) with the close glyph in the room's top right corner, as far from the card's top and side as the room is.
+  It floats over the room; `PopupContext::key` is its size (a plugin's own disc or icon of that size in the top left
+  corner stands on one line with it) and `PopupContext::corner` how far the room's first row keeps from the right.
 - **How it goes.** Its plugin closes it (`close_popup`) or shows another; it goes by itself on its close key, a tap
   beside the card,
   when the screen goes dark, before an update and when an alert comes, and then hears `on_dismiss` first. A popup may
