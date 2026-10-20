@@ -356,14 +356,44 @@ offered and built only where the screen has them. `Plugins.plan` says what a cha
 (the editor's "Comes along", the tray's rows); `apply` carries it out in one build and marks what came along (`auto`).
 A plugin another one needs only goes together with it, and what only came along is offered to go as well.
 
-## Finding a plugin, and likes
+## Finding a plugin
 
 The Plugins page has a tab per type, read from the manifest (`plugin_type`: tiles, functions, hardware) and one for
 what is in use; the maker's `topics` are the chips under it. What fits none of the screens folds away under the list.
-One bar holds the search (what narrows the list shows in it as pills), the tabs, a Filter menu (topics, maker, only what fits) and the order: most liked by default, `featured.yaml` in the plugins repository breaking a tie, or newest, or by name. A like is a heart a person gives a plugin of the index
-that runs on one of their screens (`plugin_likes.py`): it goes to the Tessera website with a random key of this app
-installation, only on a tap and after one yes that it counts in a public number; the plugins repository copies the
-counts into `likes.json` every hour, which the app reads from GitHub.
+One bar holds the search (what narrows the list shows in it as pills), the tabs, a Filter menu (topics, maker, only
+what fits) and the order: most liked by default, `featured.yaml` in the plugins repository breaking a tie, or best
+rated, most used, newest, or by name.
+
+## Likes, ratings and counting
+
+What a person shares about plugins, so others find the good ones and a maker sees that the work is used
+(`plugin_likes.py`). Each is one per installation of the app, sent only when the person chooses to, under a random key
+of the app (not a board's feedback key), and only for a plugin of the index from the index's own origin: one from a
+link, a branch or a folder is not the plugin others count.
+
+- **A like** is a heart for any plugin of the index, also one that runs on none of the screens: a thank-you. The heart
+  sits on the plugin's card and in its details. The first one asks once that it counts in a public number.
+- **A rating** is one to five stars for a plugin one of the screens runs, with its version and the screen's model
+  (a board key of `boards.yaml`). The stars card asks for it above a screen five days after that screen first ran the
+  plugin (its hello), one plugin at a time and never while the board's own card asks: its picture, its name and maker,
+  the stars, and Send and Later. Later asks again after 14 days, a second Later ends it for that plugin; Don't ask again
+  (behind the card's menu, with what is shared and the privacy page) ends it for every plugin, until Settings turns it
+  on again. After the stars the card offers a heart for four or five, and for one or two the plugin's issues on GitHub,
+  filled in with its version and the screen's model. Stars can be given, changed and taken back in the plugin's details
+  at any time.
+- **Counting** is off until the person turns it on: on the first stars card, on the In use tab, or in Settings. Then,
+  like Home Assistant's own analytics for integrations, the app tells the website once a day, and within a minute of a
+  change, which plugins of the index its screens have: each id, its version and the screen models. Turning it off
+  deletes what was counted there.
+
+The website counts them: a rating shows from three, a home counts while it was seen in the last 30 days, and one home
+network adds at most two of each to a plugin (more is held until an administrator looks). It shows them on the
+plugin's page there. The plugins repository copies the numbers every hour into `likes.json` (the likes, for apps from
+before ratings) and `stats.json` (likes, rating, ratings and homes), and the app reads those from GitHub with the index,
+so looking at plugins never asks the website anything. The routes: `PUT api/plugins/<id>/like`,
+`PUT api/plugins/<id>/rating` (`{"stars": 1-5 or null, "screen": inbox}`), `POST api/plugins/<id>/ask` (`later`,
+`never`, `ask`, `asked_counting`) and `PUT api/plugins/counting` (`{"on": bool}`); the screen's `plugin_ask` in the
+inventory is the card, `plugin_sharing` what this app shares.
 
 A plugin can have a picture, `store.png` beside its manifest (the plugins repository's docs/PUBLISHING.md, "The picture
 on the Plugins page", and its `tools/store_image.py`). The index names it (`image`), a link finds it in the plugin's

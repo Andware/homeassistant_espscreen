@@ -84,6 +84,10 @@ export type Plugin = {
   featured?: boolean;                 // one Tessera recommends to start with (the index's featured.yaml)
   likes?: number;                     // how many like it (the website's count, copied hourly into likes.json)
   liked?: boolean;                    // this app likes it
+  rating?: number | null;             // its average stars (stats.json), none below three ratings
+  ratings?: number;                   // how many rated it
+  homes?: number;                     // how many homes run it, of those who agreed to be counted
+  stars?: number | null;              // this app's own stars for it
   boards: string[] | "any";
   board_names?: string[];             // how a person knows those boards; the add-on fills it from boards.json
   // What it needs: PSRAM, other plugins (they come along), features of the screen (a speaker), an ESPHome to build with.

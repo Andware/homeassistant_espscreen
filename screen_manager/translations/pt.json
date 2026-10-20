@@ -915,12 +915,15 @@
         "choose": "Escolha que plugin traz o {feature} para {name}.",
         "other_origin": "Este ecrã usa outro plugin chamado {name}, de {origin}. Mude para este nos seus detalhes.",
         "misfit_esphome": "{name} precisa do ESPHome {version} ou mais recente para compilar.",
-        "like_not_installed": "Coloque primeiro o plugin num dos seus ecrãs, depois pode dar gosto.",
         "like_consent": "Aceite primeiro que o seu gosto conte num número público.",
         "like_off": "Os gostos estão desligados: uma versão mais recente da app gere-os.",
         "like_failed": "O gosto não foi enviado. Tente de novo daqui a pouco.",
         "misfit_built_in": "{name} traz o que esta placa já tem.",
-        "offline": "A app ainda não sabe onde está {screen} na rede. Ligue-o, espere até aparecer online e tente de novo."
+        "offline": "A app ainda não sabe onde está {screen} na rede. Ligue-o, espere até aparecer online e tente de novo.",
+        "like_not_listed": "Só os plugins do catálogo do Tessera podem receber um gosto.",
+        "rate_not_installed": "Ponha primeiro o plugin num dos seus ecrãs e depois pode avaliá-lo.",
+        "rate_failed": "As estrelas não foram enviadas. Tente de novo daqui a pouco.",
+        "count_failed": "Não foi possível desligar a contagem: o Tessera não estava acessível. Tente de novo daqui a pouco."
       },
       "extras": {
         "request": "Esta alteração de um extra não é possível neste ecrã."
@@ -2111,7 +2114,9 @@
         "label": "Ordenar por",
         "popular": "Mais gostados",
         "new": "Mais recentes",
-        "name": "Nome"
+        "name": "Nome",
+        "rated": "Mais bem avaliados",
+        "used": "Mais usados"
       },
       "none_in_tab": {
         "tiles": "Ainda não há plugins com mosaicos.",
@@ -2124,8 +2129,8 @@
         "count": "{n} pessoa gosta | {n} pessoas gostam",
         "like": "Gosto",
         "unlike": "Retirar o seu gosto",
-        "install_first": "Coloque-o primeiro num ecrã, depois pode dar gosto",
-        "ask": "O seu gosto conta num número público por plugin. Só o número é público: nada sobre si, o Home Assistant ou os seus ecrãs é enviado."
+        "ask": "O seu gosto conta num número público por plugin. Só o número é público: nada sobre si, o Home Assistant ou os seus ecrãs é enviado.",
+        "like_hint": "Dê um gosto, mesmo que não esteja em nenhum dos seus ecrãs: um obrigado a quem o fez."
       },
       "along": {
         "title": "Vem junto",
@@ -2178,7 +2183,55 @@
         "history": "Todas as versões"
       },
       "failed_update": "A versão {version} não compilou para {screen}, por isso voltou à {current}, a que está a correr. O registo está em Firmware e USB.",
-      "interrupted": "A app reiniciou durante a compilação."
+      "interrupted": "A app reiniciou durante a compilação.",
+      "stars": {
+        "label": "Estrelas para {name}",
+        "of_five": "{n} de 5 estrelas",
+        "say": {
+          "1": "Não funciona",
+          "2": "Fraco",
+          "3": "Razoável",
+          "4": "Bom",
+          "5": "Ótimo"
+        },
+        "yours": "As suas estrelas",
+        "give": "Como funciona para si?",
+        "clear": "Retirar"
+      },
+      "numbers": {
+        "rating": "{rating} de {n} avaliação | {rating} de {n} avaliações",
+        "few": "{n} avaliação até agora | {n} avaliações até agora",
+        "homes": "usado em {n} casa | usado em {n} casas"
+      },
+      "counting": {
+        "label": "Contar os meus plugins na loja",
+        "hint": "Uma vez por dia, os nomes e versões dos seus plugins e o modelo de cada ecrã. Mais nada.",
+        "on_hint": "Ligado: uma vez por dia, os nomes e versões dos seus plugins e o modelo de cada ecrã vão para o Tessera. Desligar remove-os lá."
+      },
+      "rate_card": {
+        "by": "{maker} · {version}",
+        "question": "{name} está a correr há {days} dia em {screen}. O que acha? | {name} está a correr há {days} dias em {screen}. O que acha?",
+        "send": "Enviar",
+        "what_title": "O que é partilhado?",
+        "what": {
+          "plugin": "O plugin e a sua versão: {name} {version}",
+          "board": "O modelo do ecrã: {board}",
+          "stars": "As suas estrelas",
+          "counting": "Com a contagem ligada: uma vez por dia, que plugins os seus ecrãs usam, as versões e os modelos dos ecrãs",
+          "nothing_else": "Mais nada: nem nome, nem conta, nem entidades, nem definições do Home Assistant. A app partilha com uma chave aleatória própria."
+        },
+        "thanks": "Obrigado! As suas estrelas estão em {name}.",
+        "heart_hint": "Gosta muito? Dê também um gosto a {maker}. Conta num número público por plugin; nada sobre si é enviado.",
+        "hearted": "Obrigado pelo seu gosto",
+        "issue_hint": "Que pena. Quer que seja corrigido? Abra um issue para {maker}, com a versão e o modelo do seu ecrã já preenchidos.",
+        "issue_open": "Abrir um issue no GitHub"
+      },
+      "sharing": {
+        "title": "Loja de plugins",
+        "text": "Ajude outros a encontrar bons plugins. Gostos e estrelas só seguem quando os dá, a contagem só enquanto estiver ligada.",
+        "asking": "Pedir estrelas alguns dias depois de um plugin novo",
+        "asking_hint": "Um cartão por cima do ecrã, um plugin de cada vez."
+      }
     },
     "plugin_tile": {
       "from": "Um mosaico do plugin {plugin}",

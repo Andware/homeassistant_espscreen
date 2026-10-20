@@ -29,6 +29,7 @@ import yaml
 import build_cache
 import core
 import entity_settings
+import feedback
 import page_delivery
 import plugin_fetch
 import plugin_likes
@@ -44,6 +45,8 @@ INDEX_URL = 'https://raw.githubusercontent.com/MaxGramser/tessera-plugins/{branc
 # How many people like each plugin: the website counts the likes, the plugins repository copies the counts every hour, so
 # reading them is a request to GitHub like the index's, never to the website (plugin_likes.py sends a like).
 LIKES_URL = 'https://raw.githubusercontent.com/MaxGramser/tessera-plugins/main/likes.json'
+# Each plugin's likes, rating (from three ratings), ratings and the homes that use it, copied with the likes.
+STATS_URL = 'https://raw.githubusercontent.com/MaxGramser/tessera-plugins/main/stats.json'
 LIKES_MAX = 256 * 1024
 # How old the index may be before the next editor visit asks GitHub again: a conditional request (ETag) that costs
 # nothing when it did not change, so a new release shows as an update within minutes.
@@ -333,6 +336,8 @@ class Plugins:
         # likes.json: how many like each plugin; `fresh`: the website's own answer to a like from this app, which counts
         # until likes.json has caught up (it is copied once an hour).
         self.likes = {'counts': {}, 'etag': None, 'checked': 0.0, 'fresh': {}}
+        # stats.json: per plugin its likes, rating, ratings and homes; `fresh` as for likes, from this app's own rating.
+        self.stats = {'numbers': {}, 'etag': None, 'fresh': {}}
         self.folders = {}           # id -> Entry, from tessera-plugins/<id>/
         self.folder_errors = {}     # folder name -> what is wrong with it
         self.snapshots = {}         # (id, ref) -> Entry of an installed release
@@ -570,38 +575,73 @@ class Plugins:
             return fresh[0]
         return count
 
-    async def refresh_likes(self):
-        """likes.json from the plugins repository, with the index, at most every INDEX_TTL."""
-        if time.monotonic() - self.likes['checked'] < INDEX_TTL and self.likes['checked']:
-            return
-        self.likes['checked'] = time.monotonic()
+    def numbers(self, plugin):
+        """A plugin's rating (None below three ratings), ratings and homes from stats.json, or this app's own rating's
+        answer until stats.json has caught up."""
+        found = self.stats['numbers'].get(plugin) or {}
+        numbers = {'rating': found.get('rating'), 'ratings': int(found.get('ratings') or 0), 'homes': int(found.get('homes') or 0)}
+        fresh = self.stats['fresh'].get(plugin)
+        if fresh and time.monotonic() - fresh[1] < 2 * 3600 and fresh[0]['ratings'] != numbers['ratings']:
+            numbers.update(rating=fresh[0]['rating'], ratings=fresh[0]['ratings'])
+        return numbers
+
+    async def _read_repository_file(self, url, kept):
+        """A JSON file of the plugins repository (likes.json, stats.json) with its ETag: the data, or None when it did
+        not change or could not be read."""
         import aiohttp
         try:
             if self.http is None or self.http.closed:
                 self.http = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15),
                                                   headers={'User-Agent': self.fetcher.user_agent})
-            headers = {'If-None-Match': self.likes['etag']} if self.likes['etag'] else {}
-            async with self.http.get(LIKES_URL, headers=headers) as response:
+            headers = {'If-None-Match': kept['etag']} if kept['etag'] else {}
+            async with self.http.get(url, headers=headers) as response:
                 if response.status == 304:
-                    return
+                    return None
                 response.raise_for_status()
                 data = json.loads(await read_whole(response, LIKES_MAX))
-                etag = response.headers.get('ETag')
+                kept['etag'] = response.headers.get('ETag')
+                return data
         except Exception as error:
-            LOG.info('Plugin likes not read (%s)', error)
+            LOG.info('Plugin %s not read (%s)', url.rsplit('/', 1)[-1], error)
+            return None
+
+    async def refresh_likes(self):
+        """likes.json and stats.json from the plugins repository, with the index, at most every INDEX_TTL."""
+        if time.monotonic() - self.likes['checked'] < INDEX_TTL and self.likes['checked']:
             return
+        self.likes['checked'] = time.monotonic()
+        data = await self._read_repository_file(LIKES_URL, self.likes)
         counts = (data or {}).get('likes') if isinstance(data, dict) and data.get('format') == 1 else None
         if isinstance(counts, dict):
-            self.likes.update(etag=etag, counts={k: v for k, v in counts.items()
-                                                 if isinstance(k, str) and isinstance(v, int) and v >= 0})
+            self.likes['counts'] = {k: v for k, v in counts.items() if isinstance(k, str) and isinstance(v, int) and v >= 0}
+        data = await self._read_repository_file(STATS_URL, self.stats)
+        found = (data or {}).get('plugins') if isinstance(data, dict) and data.get('format') == 1 else None
+        if isinstance(found, dict):
+            count = lambda value: isinstance(value, int) and not isinstance(value, bool) and value >= 0
+            self.stats['numbers'] = {
+                plugin: {'rating': value['rating'] if isinstance(value.get('rating'), (int, float))
+                         and not isinstance(value.get('rating'), bool) else None,
+                         'ratings': value['ratings'] if count(value.get('ratings')) else 0,
+                         'homes': value['homes'] if count(value.get('homes')) else 0}
+                for plugin, value in found.items() if isinstance(plugin, str) and isinstance(value, dict)}
+
+    def _index_records(self, plugin=None):
+        """{inbox: [record]} of the plugins of the index this app's screens have from the index's own origin (one from
+        a link, a branch or a folder is not the plugin others count), active: what a rating and counting speak of."""
+        out = {}
+        for inbox, records in self.store.everywhere().items():
+            for record in records:
+                entry = self.index.get(record['id'])
+                if (plugin is None or record['id'] == plugin) and entry and record_origin(record) == entry.origin \
+                        and record.get('state', 'active') == 'active':
+                    out.setdefault(inbox, []).append(record)
+        return out
 
     async def like(self, plugin, like, consent=False):
-        """Like a plugin that runs on one of this app's screens, or take the like back (plugin_likes.py). Only a plugin
-        of the index: one from a link or a folder is not the plugin others count."""
-        entry = self.index.get(plugin)
-        installed = [r for records in self.store.everywhere().values() for r in records if r['id'] == plugin]
-        if not entry or (like and not any(record_origin(r) == entry.origin for r in installed)):
-            raise ValueError(t('addon.errors.plugins.like_not_installed'))
+        """Like a plugin of the index, also one that runs on none of this app's screens, or take the like back
+        (plugin_likes.py). Only a plugin of the index: one from a link or a folder is not the plugin others count."""
+        if not self.index.get(plugin) and like:
+            raise ValueError(t('addon.errors.plugins.like_not_listed'))
         try:
             result = await self.liker.send(plugin, like, consent)
         except ValueError as error:
@@ -612,6 +652,102 @@ class Plugins:
         if result['likes'] is not None:
             self.likes['fresh'][plugin] = (result['likes'], time.monotonic())
         return {'liked': result['liked'], 'likes': self.like_count(plugin)}
+
+    # ---- Ratings and counting (plugin_likes.py) ----
+
+    def _board(self, inbox):
+        screen = next((s for s in self.screens() if s.get('id') == inbox), None)
+        board = core.board_of(screen) if screen else None
+        return board if board in core.SHAPES else None
+
+    async def rate(self, plugin, stars, inbox=None):
+        """Rate a plugin of the index that runs on one of this app's screens (`inbox` names the screen whose model goes
+        along, else the first that has it), or take the rating back (stars None)."""
+        places = self._index_records(plugin)
+        if stars is not None and not places:
+            raise ValueError(t('addon.errors.plugins.rate_not_installed'))
+        inbox = inbox if inbox in places else next(iter(places), None)
+        record = next(iter(places.get(inbox) or []), {})
+        try:
+            result = await self.liker.rate(plugin, stars, record.get('version'), self._board(inbox) if inbox else None)
+        except ValueError as error:
+            texts = {'rate_off': 'addon.errors.plugins.like_off', 'request': 'addon.errors.plugins.request'}
+            raise ValueError(t(texts.get(str(error), 'addon.errors.plugins.rate_failed'))) from None
+        if result['ratings'] is not None:
+            self.stats['fresh'][plugin] = ({'rating': result['rating'], 'ratings': result['ratings']}, time.monotonic())
+        return {'stars': result['stars'], **self.numbers(plugin)}
+
+    def ask_card(self, screen):
+        """The card above a screen that asks for a plugin's stars (docs/PLUGINS.md, "Likes, ratings and counting"), or
+        None: a plugin of the index this screen has run ASK_AFTER, not yet rated, the cards not told to stop."""
+        inbox = screen.get('id')
+        records = {r['id']: r for r in self._index_records().get(inbox, [])}
+        reported = {item.get('id') for item in self.running().get(inbox) or []}
+        self.liker.saw(inbox, sorted(set(records) & reported))
+        found = self.liker.ask_for(inbox, sorted(records))
+        if not found:
+            return None
+        plugin, days = found
+        entry = self.index[plugin]
+        words = lambda key: dict(entry.texts.get(key) or {'en': key})
+        return {'plugin': plugin, 'name': words('name'), 'version': records[plugin].get('version'), 'days': days,
+                'maintainer': entry.manifest['maintainer'], 'tessera': entry.label == 'tessera',
+                # Where a problem with it goes: its repository's issues on GitHub, opened and posted by the person.
+                'issues': f"{entry.repo.rstrip('/').removesuffix('.git')}/issues/new"
+                if str(entry.repo or '').startswith('https://github.com/') else None,
+                'image': self.image_url(entry), 'board': self._board(inbox),
+                'ask_counting': not self.liker.view()['counting_asked'], 'privacy': feedback.PRIVACY_URL}
+
+    def card_answer(self, plugin, action):
+        """Later (this plugin, again after a while) or never (no plugin's card again) on the stars card."""
+        if action == 'later' and plugin_likes.ID.match(str(plugin or '')):
+            self.liker.later(plugin)
+        elif action == 'never':
+            self.liker.never()
+        elif action == 'ask':
+            self.liker.never(asking=True)
+        elif action == 'asked_counting':
+            self.liker.asked_counting()
+        else:
+            raise ValueError(t('addon.errors.plugins.request'))
+        return self.liker.view()
+
+    async def set_counting(self, on):
+        try:
+            await self.liker.set_counting(on)
+        except ValueError as error:
+            raise ValueError(t('addon.errors.plugins.count_failed' if str(error) == 'count_failed'
+                               else 'addon.errors.plugins.like_off')) from None
+        if on:
+            await self.count_tick()
+        return self.liker.view()
+
+    def usage(self):
+        """What counting says: each plugin of the index this app's screens run, its version and the screen models."""
+        found = {}
+        for inbox, records in self._index_records().items():
+            board = self._board(inbox)
+            for record in records:
+                item = found.setdefault(record['id'], {'id': record['id'], 'version': record.get('version') or None, 'boards': []})
+                if board and board not in item['boards']:
+                    item['boards'].append(board)
+        return [{**item, 'boards': sorted(item['boards'])} for _, item in sorted(found.items())]
+
+    async def count_tick(self):
+        """Counting's turn: send what the screens run when a day has passed or it changed (plugin_likes.usage_due)."""
+        plugins = self.usage()
+        if self.liker.usage_due(plugins):
+            if await self.liker.send_usage(plugins):
+                LOG.info('Plugins counted at Tessera: %d', len(plugins))
+
+    async def counting(self):
+        """The app's counting loop: a look every minute, a request only when count_tick says so."""
+        while True:
+            await asyncio.sleep(60)
+            try:
+                await self.count_tick()
+            except Exception as error:   # the next minute tries again
+                LOG.info('Plugin counting skipped (%s)', error)
 
     # ---- Adding with a link ----
 
@@ -787,6 +923,9 @@ class Plugins:
             'type': pm.plugin_type(manifest), 'topics': manifest['topics'],
             'featured': entry.id in self.index_state['featured'] and entry.source == 'index',
             'likes': self.like_count(entry.id), 'liked': self.liker.liked(entry.id),
+            # Its rating (None below three), ratings and homes (stats.json), and this app's own stars for it.
+            **(self.numbers(entry.id) if entry.source == 'index' else {}),
+            'stars': self.liker.stars(entry.id) if entry.source == 'index' else None,
             'stage': manifest['stage'], 'boards': manifest['boards'],
             'board_names': None if manifest['boards'] == 'any' else [board_name(key) for key in manifest['boards']],
             'requires': {'psram': manifest['requires']['psram'], 'plugins': manifest['requires']['plugins'],
@@ -976,7 +1115,7 @@ class Plugins:
         return {'api': api_text(), 'plugins': [self.editor_plugin(entry, language) for entry in listed.values()],
                 'entities': entities,
                 'installed': installed, 'running': running, 'secrets': secrets,
-                'features': features, 'fit': fit, 'likes': {'consented': self.liker.consented()},
+                'features': features, 'fit': fit, 'likes': self.liker.view(),
                 'index': {'at': self.index_state['at'], 'error': self.index_state['error']},
                 'folders': {'path': str(self.folder_root()), 'errors': self.folder_errors},
                 'fetch': self.fetcher.status()}

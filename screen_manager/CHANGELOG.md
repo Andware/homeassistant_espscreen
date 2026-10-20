@@ -24,6 +24,16 @@
   plugin that uses the screen's own camera (docs/PLUGINS.md). Tessera's own Cinema, New music and Picture frame use it:
   no more grey bars in a cover flow after the screen fetched its pictures again, and Picture frame shows what a player
   plays.
+- **Stars for plugins, and a heart for any plugin.** A few days after a screen first runs a plugin from the Plugins
+  page, a card above the screen asks how it works for you: one to five stars, then Send. Later asks again in two
+  weeks; Don't ask again, what is shared and the privacy page are behind the card's ⋯ menu. A plugin's details take
+  stars at any time too, and its card and details show its rating and how many homes use it. You can now give a heart
+  to any plugin of the Plugins page, also one that is on none of your screens, right on its card. On the first card,
+  on the In use tab or in Settings you can let the app count your plugins in the store, as Home Assistant's analytics
+  counts integrations: once a day the names and versions of your plugins and your screen models go to Tessera, nothing
+  else, and turning it off removes them there. The Plugins page sorts by best rated and most used, and every plugin
+  has its own page on the Tessera website with these numbers per screen model.
+- **A weather card that fills a cell says its condition in the screen's language (#298).** A weather card on a page of its own showed Home Assistant's key, `clear-night`, under the temperature, where the editor said "Klare Nacht" (Home Assistant sends the key in every language and only its frontend translates it). The card's state line (`detail_state`) now says the condition with the same words the weather cards and the editor use, in the screen's language; a condition the screen has no word for keeps Home Assistant's word or the key, as before. Reaches the preview and the screen after the firmware is rebuilt. Not tried on a screen yet.
 - **Speaker and microphone on the Guition and Waveshare ESP32-P4 screens, experimental.** The Guition JC8012P4A1
   (10.1 inch, also its V2 and V3), JC1060P470 (7 inch, also its V2) and JC4880P443 (4.3 inch) now use their speaker and
   microphone, both at once, and the Waveshare ESP32-P4-WIFI6-Touch-LCD-7B, LCD-7 and LCD-10.1 their speaker and two

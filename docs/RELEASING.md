@@ -135,7 +135,7 @@ does the steps that can go wrong by hand, and refuses when something is missing.
    needs a newer plugin API waits on the plugins repository's dev, and would fit no screen of main before this release.
    So before anything is published, `publish` checks that the plugins' check is green on their dev, that every plugin
    of dev's index fits this release's plugin API, and that their dev merges into their main without a conflict outside
-   `index.json` and `likes.json`; any of these refuses the release. Right after main moved, it merges their dev into
+   `index.json`, `likes.json` and `stats.json`; any of these refuses the release. Right after main moved, it merges their dev into
    their main, runs their index workflow on main (built against the released core), and checks main's index: it names
    this plugin API, every plugin in it fits, every plugin dev offered is there in at least that version, and their check
    is green on main. Then their dev moves up to main, so every app offers the plugins the same day. A step that fails

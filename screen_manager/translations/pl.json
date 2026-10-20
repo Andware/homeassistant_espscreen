@@ -915,12 +915,15 @@
         "choose": "Wybierz, która wtyczka zapewnia {feature} dla {name}.",
         "other_origin": "Ten ekran używa innej wtyczki o nazwie {name}, z {origin}. Przejdź na tę w jej szczegółach.",
         "misfit_esphome": "{name} do kompilacji potrzebuje ESPHome {version} lub nowszego.",
-        "like_not_installed": "Najpierw dodaj wtyczkę do jednego z ekranów, potem możesz ją polubić.",
         "like_consent": "Najpierw zgódź się, aby polubienie liczyło się w publicznej liczbie.",
         "like_off": "Polubienia są wyłączone: obsługuje je nowsza wersja aplikacji.",
         "like_failed": "Polubienie nie zostało wysłane. Spróbuj za chwilę.",
         "misfit_built_in": "{name} daje to, co ta płytka ma już sama.",
-        "offline": "Aplikacja nie wie jeszcze, gdzie w sieci jest {screen}. Włącz go, poczekaj, aż będzie online, i spróbuj ponownie."
+        "offline": "Aplikacja nie wie jeszcze, gdzie w sieci jest {screen}. Włącz go, poczekaj, aż będzie online, i spróbuj ponownie.",
+        "like_not_listed": "Polubić można tylko wtyczki z katalogu Tessery.",
+        "rate_not_installed": "Najpierw dodaj wtyczkę do jednego z ekranów, wtedy możesz ją ocenić.",
+        "rate_failed": "Gwiazdki nie zostały wysłane. Spróbuj za chwilę.",
+        "count_failed": "Nie udało się wyłączyć liczenia: Tessera była nieosiągalna. Spróbuj za chwilę."
       },
       "extras": {
         "request": "Tej zmiany dodatku nie można wprowadzić na tym ekranie."
@@ -2111,7 +2114,9 @@
         "label": "Sortuj według",
         "popular": "Najbardziej lubiane",
         "new": "Najnowsze",
-        "name": "Nazwa"
+        "name": "Nazwa",
+        "rated": "Najlepiej oceniane",
+        "used": "Najczęściej używane"
       },
       "none_in_tab": {
         "tiles": "Nie ma jeszcze wtyczek z kafelkami.",
@@ -2124,8 +2129,8 @@
         "count": "Lubi to {n} osoba | Lubią to {n} osoby | Lubi to {n} osób",
         "like": "Lubię to",
         "unlike": "Cofnij polubienie",
-        "install_first": "Najpierw dodaj ją do ekranu, potem możesz ją polubić",
-        "ask": "Twoje polubienie liczy się w publicznej liczbie dla wtyczki. Publiczna jest tylko liczba: nic o tobie, Home Assistant ani twoich ekranach nie jest wysyłane."
+        "ask": "Twoje polubienie liczy się w publicznej liczbie dla wtyczki. Publiczna jest tylko liczba: nic o tobie, Home Assistant ani twoich ekranach nie jest wysyłane.",
+        "like_hint": "Polub ją, nawet jeśli nie ma jej na żadnym z twoich ekranów: to podziękowanie dla twórcy."
       },
       "along": {
         "title": "Dochodzi",
@@ -2178,7 +2183,55 @@
         "history": "Wszystkie wersje"
       },
       "failed_update": "Wersja {version} nie skompilowała się dla {screen}, więc wrócił do {current}, którą uruchamia. Log znajdziesz w sekcji „Firmware i USB”.",
-      "interrupted": "Aplikacja uruchomiła się ponownie podczas kompilacji."
+      "interrupted": "Aplikacja uruchomiła się ponownie podczas kompilacji.",
+      "stars": {
+        "label": "Gwiazdki dla {name}",
+        "of_five": "{n} z 5 gwiazdek",
+        "say": {
+          "1": "Nie działa",
+          "2": "Słabo",
+          "3": "Może być",
+          "4": "Dobrze",
+          "5": "Świetnie"
+        },
+        "yours": "Twoje gwiazdki",
+        "give": "Jak u ciebie działa?",
+        "clear": "Cofnij"
+      },
+      "numbers": {
+        "rating": "{rating} z {n} oceny | {rating} z {n} ocen | {rating} z {n} ocen",
+        "few": "na razie {n} ocena | na razie {n} oceny | na razie {n} ocen",
+        "homes": "używana w {n} domu | używana w {n} domach | używana w {n} domach"
+      },
+      "counting": {
+        "label": "Licz moje wtyczki w sklepie",
+        "hint": "Raz dziennie nazwy i wersje twoich wtyczek oraz model każdego ekranu. Nic więcej.",
+        "on_hint": "Włączone: raz dziennie nazwy i wersje twoich wtyczek oraz model każdego ekranu trafiają do Tessery. Wyłączenie usuwa je tam."
+      },
+      "rate_card": {
+        "by": "{maker} · {version}",
+        "question": "{name} działa na {screen} od {days} dnia. Jak się sprawdza? | {name} działa na {screen} od {days} dni. Jak się sprawdza? | {name} działa na {screen} od {days} dni. Jak się sprawdza?",
+        "send": "Wyślij",
+        "what_title": "Co jest udostępniane?",
+        "what": {
+          "plugin": "Wtyczka i jej wersja: {name} {version}",
+          "board": "Model ekranu: {board}",
+          "stars": "Twoje gwiazdki",
+          "counting": "Przy włączonym liczeniu: raz dziennie, jakie wtyczki działają na twoich ekranach, ich wersje i modele ekranów",
+          "nothing_else": "Nic więcej: bez nazwy, konta, encji i ustawień Home Assistant. Aplikacja udostępnia pod własnym losowym kluczem."
+        },
+        "thanks": "Dziękujemy! Twoje gwiazdki trafiły do {name}.",
+        "heart_hint": "Bardzo ci się podoba? Daj {maker} także polubienie. Liczy się w publicznej liczbie dla każdej wtyczki; nic o tobie nie jest wysyłane.",
+        "hearted": "Dzięki za polubienie",
+        "issue_hint": "Szkoda. Chcesz, żeby to naprawiono? Otwórz zgłoszenie dla {maker}, z już wpisaną wersją i modelem ekranu.",
+        "issue_open": "Otwórz zgłoszenie na GitHubie"
+      },
+      "sharing": {
+        "title": "Sklep z wtyczkami",
+        "text": "Pomóż innym znaleźć dobre wtyczki. Polubienia i gwiazdki wysyłane są tylko, gdy je dajesz, a liczenie tylko, gdy jest włączone.",
+        "asking": "Proś o gwiazdki kilka dni po nowej wtyczce",
+        "asking_hint": "Karta nad ekranem, po jednej wtyczce."
+      }
     },
     "plugin_tile": {
       "from": "Kafelek wtyczki {plugin}",
