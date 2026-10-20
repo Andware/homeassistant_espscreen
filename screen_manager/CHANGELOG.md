@@ -28,6 +28,7 @@
   plugin's pictures now reach a P4 screen as JPEG, about a tenth of the bytes of the BMP it got before, and its hardware
   decoder unpacks them. A map and a vacuum's map stay BMP (JPEG blurs their lines and words), as does every picture for
   the other screens and the editor.
+- **The album cover behind a tile of one row too.** A player's tile set to Album cover had the cover in the icon's place on a tile of one row; now the cover lies dimmed behind the whole card, as on a taller tile, with the name and what plays in light letters over it. While nothing plays, it shows the covers of your library there as one strip, as the taller tiles show them as a mosaic. Needs the screen's Update.
 - **One picture after the next without a third copy in memory.** When a picture changed (the next screensaver photo,
   another track's cover, a map that moved) the screen held the old one, the download and a copy of it for a moment; it
   now takes the download as it is. A map or cover that did not change comes as "not changed" again instead of whole.

@@ -733,7 +733,9 @@ inline bool tile_picture_marquee_ready(const Widgets &w, const Tile &t);
 // tile since 0.3.3, on every size since 0.3.7 (the small square in the icon's place said too little to be of use).
 // A map (firmware 0.20.0) fills its card on every size too, with its name drawn into the picture by the app.
 // A favourite (firmware 0.24.0+) fills its card with what it plays on every size, as a live camera does.
-inline bool card_art(const Tile &t) {return (t.row_span()>1 && !t.full && t.cover_tile()) || t.live() || t.is_map() || (t.favorite() && t.pictured());}
+// A player's album cover over the whole card on every size (a card of one row since the picture system; taller ones
+// since firmware 0.3.1, when it stood in the icon's place on one row), as a camera's and a favourite's picture are.
+inline bool card_art(const Tile &t) {return (!t.full && t.cover_tile()) || t.live() || t.is_map() || (t.favorite() && t.pictured());}
 // All icon fonts carry the same generated glyph set, so the first bound one answers for all.
 inline bool has_icon_glyph(uint32_t codepoint) {
   for (auto &w : widgets) if (w.icon_font) { lv_font_glyph_dsc_t dsc; return lv_font_get_glyph_dsc(w.icon_font, &dsc, codepoint, 0); }
@@ -8546,6 +8548,15 @@ inline void style_tall(Widgets &w,const Tile &t){
       set_color(w.parts[0],LV_STYLE_BG_COLOR,theme::color(photo?theme::CAMERA_NOTE:theme::ACCENT_PRESSED),LV_STATE_PRESSED);
       if(auto *icon=lv_obj_get_child(w.parts[0],0))set_color(icon,LV_STYLE_TEXT_COLOR,theme::color(photo?theme::CAMERA_PAGE:theme::ON_ACCENT));
     }
+    return;
+  }
+  // An album cover over a card of one row (card_art): light words on the dimmed picture and the icon in a dark circle,
+  // as on a taller card; while the picture is on its way, or for a player without one, the card's own colours.
+  if(w.extra_mode!="tall"&&t.cover_tile()&&t.row_span()==1&&!t.full){
+    if(!card_art(t)||!w.picture||lv_obj_has_flag(w.picture,LV_OBJ_FLAG_HIDDEN))return;
+    const auto ink=theme::color(theme::CAMERA_INK);
+    set_color(w.title,LV_STYLE_TEXT_COLOR,ink);set_color(w.value,LV_STYLE_TEXT_COLOR,ink);
+    set_color(w.circle,LV_STYLE_BG_COLOR,theme::color(theme::CAMERA_TRACK));set_color(w.icon,LV_STYLE_TEXT_COLOR,ink);
     return;
   }
   if(w.extra_mode!="tall"||(!t.live()&&!t.is_map()&&(t.row_span()<2||t.full)))return;

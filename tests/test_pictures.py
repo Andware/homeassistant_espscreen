@@ -795,7 +795,8 @@ class FullManager(Manager):
     def map_render(self, tile, shape, dark, full=False, focus='', move=None):
         return self.drawer('map')
 
-    def rest_render(self, entity):
+    def rest_render(self, entity, rows=2):
+        self.rest_rows = rows
         return self.drawer('mosaic')
 
     def map_meta(self, mark, width, height, focus):
