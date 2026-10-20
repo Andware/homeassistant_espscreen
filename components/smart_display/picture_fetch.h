@@ -343,6 +343,10 @@ void bind(Slot &slot, Done done);
 void load(Slot &slot, const std::string &url);
 // Frees the picture; a download on its way is cancelled and reports nothing.
 void release(Slot &slot);
+// The store took the picture over (picture_store::adopt): the slot forgets its pixels without freeing them, and
+// keeps its link and its ETag, so an unchanged picture still answers 304 and costs no bytes. Called from the slot's
+// `done`, where no download runs.
+void hand_over(Slot &slot);
 bool loading(const Slot &slot);
 // Hands finished downloads to their `done`, on the main loop (every 50 ms, packages/features/camera.yaml).
 void tick();

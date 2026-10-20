@@ -10805,6 +10805,9 @@ struct ImageHooks {
   std::function<void(const std::string &)> load;  // set the online_image's URL and download it
   std::function<void()> release;                  // free the decoded image
   std::function<lv_image_dsc_t *()> source;       // the decoded image for LVGL
+  // The store took the decoded image's buffer over (picture_store::adopt): the slot lets go of it without freeing it.
+  // Empty for a slot that cannot give its buffer away (the editor's WASM preview): the store gets a copy of its own.
+  std::function<void()> hand_over;
 };
 // The page's strip (firmware 0.2.77+) comes through the third.
 inline ImageHooks camera_full, camera_thumb, camera_live;
@@ -10953,11 +10956,10 @@ inline bool pictures_kept() {
     pictures.budget = 1200u << 10;
 #endif
     pictures_budget_whole = pictures.budget;
-    pictures.allocate = kept_allocate;
     pictures.release = kept_free;
     // With every slot taken, a new picture takes the place of the one used longest ago that no card draws.
     pictures.shown = [](const lv_image_dsc_t *image) { return picture_shown(image); };
-    // Each copy's life, for a diagnosis (`logger: level: DEBUG`): kept, renewed, retired, freed and why.
+    // Each picture's life, for a diagnosis (`logger: level: DEBUG`): taken, retired, freed and why.
     pictures.log = [](const char *what, const picture_store::Store<lv_image_dsc_t>::Entry &e) {
       ESP_LOGD("picture", "store %s %s (%ux%u, %u KB)", what, e.key.c_str(), (unsigned) e.image.header.w,
                (unsigned) e.image.header.h, (unsigned) (e.bytes >> 10));
@@ -12365,31 +12367,49 @@ inline void slot_letgo(picture_loader::Slot slot) {
   media_library::art_forget_download();
   plugin_host::card_letgo(camera_full.source ? camera_full.source() : nullptr);
 }
-// A download ended (picture_fetch, any slot; packages/features/camera.yaml): the picture goes into the store under its
-// key, a 304 keeps the copy there as it is, and its owner shows it. Without room in the store the owner draws the
-// download itself until the slot loads another picture.
+// A download ended (picture_fetch, any slot; packages/features/camera.yaml): the store takes the picture over under its
+// key, a 304 keeps what the store has, and its owner shows it. Without room in the store the owner draws the download
+// itself until the slot loads another picture.
 inline void picture_done(picture_loader::Slot slot, bool ok, bool cached) {
   const uint32_t now = esphome::millis();
+  auto &hooks = slot_hooks(slot);
+  // A 304 for a picture the store let go meanwhile: the slot handed its pixels over, so nothing is left to show. The link
+  // forgets its ETag (release) and the load counts as failed, so the loader fetches the picture whole.
+  if (ok && cached && pictures_kept()) {
+    const std::string asked = loader.loading_key(slot);
+    const lv_image_dsc_t *held = hooks.source ? hooks.source() : nullptr;
+    if (!asked.empty() && !pictures.entry(asked) && !(held && held->data)) {
+      ESP_LOGD("picture", "%s came back unchanged, but the store let it go: loaded again", asked.c_str());
+      if (hooks.release) hooks.release();
+      ok = cached = false;
+    }
+  }
   const std::string key = loader.loaded(slot, ok, now);
   if (!key.empty()) {
-    auto &hooks = slot_hooks(slot);
     lv_image_dsc_t *src = hooks.source ? hooks.source() : nullptr;
     const int s = static_cast<int>(slot);
     bool kept = false;
-    if (pictures_kept() && src && src->data) {
-      if (cached && pictures.entry(key)) { pictures.touch(key, now); kept = true; }
-      else kept = pictures.put(key, *src, now) != nullptr;
+    if (src) picture_memory("after", key.substr(0, key.find('|')).c_str(), src->header.w * src->header.h);
+    if (pictures_kept() && cached && pictures.entry(key)) {
+      pictures.touch(key, now);
+      kept = true;
+    } else if (pictures_kept() && src && src->data) {
+      // One picture in memory once (docs/PICTURES.md, "Memory"): the store takes the download's own buffer and the slot
+      // lets go of it; no copy, and the picture on the glass until now goes once its cards show this one. A slot that
+      // cannot give its buffer away is copied once into one the store owns.
+      lv_image_dsc_t taken = *src;
+      void *copy = nullptr;
+      if (!hooks.hand_over && (copy = kept_allocate(src->data_size))) {
+        std::memcpy(copy, src->data, src->data_size);
+        taken.data = static_cast<const uint8_t *>(copy);
+      }
+      kept = (hooks.hand_over || copy) && pictures.adopt(key, taken, now) != nullptr;
+      if (!kept && copy) kept_free(copy);
+      if (kept && hooks.hand_over) hooks.hand_over();
+      else if (kept && hooks.release) hooks.release();  // the copy is the store's: the slot's own goes
       if (!kept) ESP_LOGW("picture", "no room to keep %s", key.c_str());
     }
     if (!kept) { slot_key[s] = key; slot_at[s] = now; }
-    if (src) picture_memory("after", key.substr(0, key.find('|')).c_str(), src->header.w * src->header.h);
-    // A picture the store keeps needs its download no more: the slot's buffer goes now, so no picture is held twice
-    // (docs/PICTURES.md). The full view's next refresh decodes into a buffer of its own again; a slot whose picture the
-    // store could not keep holds on to it, since the card draws the download itself then.
-    if (kept && hooks.release) {
-      hooks.release();
-      ESP_LOGD("picture", "the download let go of %s: the store has it", key.c_str());
-    }
     loader.arrived(key, cached);
   }
   pictures_round();

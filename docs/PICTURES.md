@@ -116,11 +116,21 @@ alert, the screensaver) is that stream's newest frame, not another snapshot from
   (`runtime_tiles::picture_ask`), as a question to an app whose hello says `pictures`, or as the fields an older app
   reads; one count numbers every question, and an answer finds its owner by its number.
 - **The loader** (`picture_loader.h`): decides between owners, one download at a time, the most urgent first.
-- **The download** (`picture_fetch`): beside the main loop, into one of three buffers (the full view and the cards, an
-  alert, the tiles). Once the store keeps its copy, the download's buffer goes, so no picture is held twice.
+- **The download** (`picture_fetch`): beside the main loop, into a buffer of its own in one of three slots (the full
+  view and the cards, an alert, the tiles).
 - **The store** (`picture_store.h`): every still on the glass and on kept pages, within one budget from the board's
   PSRAM. The streams that run take their share of the same budget (`live_view::held_bytes`, at most half of it), and no
   picture is ever larger than the store can keep (`picture_store::cap_for`).
+
+### Memory
+
+One picture is in memory once. The store takes a finished download's buffer over as it is (`picture_store::adopt`) and
+the slot lets go of it (`picture_fetch::hand_over`), keeping its link's ETag so an unchanged picture still answers 304;
+nothing is copied. The picture it replaces, a camera's last frame or the photo before, stays on the glass until its cards
+show the new one and goes at the next `collect`. So a picture that changes over to the next one holds two buffers for
+that moment, the one on the glass and the one that comes, and never three; every other moment it holds one. A slot that
+cannot give its buffer away (the editor's WASM preview) is copied once into one the store owns. A 304 for a picture the
+store let go meanwhile is loaded whole again (`runtime_tiles::picture_done`).
 - **Two presenters**: LVGL draws a still from the store; `live_view` writes a stream past LVGL into the panel's frame
   buffer, with the rules of docs/CAMERA.md ("Nothing of LVGL's under a live picture", "One writer on the glass").
 

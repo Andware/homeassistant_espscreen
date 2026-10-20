@@ -278,6 +278,14 @@ void release(Slot &slot) {
   forget_picture(slot);
 }
 
+void hand_over(Slot &slot) {
+  slot.pixels = nullptr;
+  slot.bytes = 0;
+  slot.dsc.data = nullptr;
+  slot.dsc.data_size = 0;
+  slot.dsc.header.w = slot.dsc.header.h = 0;
+}
+
 lv_image_dsc_t *source(Slot &slot) { return &slot.dsc; }
 
 static void take_over(Slot &slot) {
