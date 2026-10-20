@@ -5035,9 +5035,10 @@ async def main():
     if not token:
         raise SystemExit('No Home Assistant access. Start the app via Supervisor.')
     async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-        # The branch the screens build from (docs/RELEASING.md, "Testing dev"): dev for an app added from the `#dev` URL.
+        # The branch the screens build from (docs/RELEASING.md, "Testing dev"): dev for an app added from the `#dev` URL,
+        # or for the image GitHub builds from dev (docs/DOCKER.md, "Testing dev").
         slug, version = await addon_self(session)
-        core.set_channel(core.channel_of(slug))
+        core.set_channel(core.start_channel(slug))
         core.set_version(version)
         LOG.info('App %s %s, channel %s, screens build from %s', slug or 'without a Supervisor', version or '',
                  core.channel() or 'none', core.ref() if core.channel() else 'the ref they have')

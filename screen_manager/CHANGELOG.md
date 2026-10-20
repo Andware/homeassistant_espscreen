@@ -191,6 +191,11 @@
   [@icodeforyou](https://github.com/icodeforyou) ([#281](https://github.com/MaxGramser/homeassistant_espscreen/pull/281)).
   This board file itself has not been run on one yet. Its speaker and microphones are in use too (the first entry here).
   Choose it under New screen.
+- **Dev in Docker.** A Docker install can try what comes with the next release: the image
+  `ghcr.io/maxgramser/homeassistant_espscreen:dev` is the dev app, as the repository URL with `#dev` is in Home
+  Assistant. Its screens build from dev, its Plugins page lists the plugins that wait for the next release, and each
+  screen can be reinstalled from dev. Set `SCREEN_CHANNEL` to `main` to point the screens back at main
+  (docs/DOCKER.md, "Testing dev").
 
 ## 0.4.89 (firmware 0.57.0)
 
