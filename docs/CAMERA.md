@@ -247,7 +247,8 @@ bar in pixels (`1280x715`). An app that knows streams answers with a link on its
 older app answers with a still, and the screen shows stills. The link serves `multipart/x-mixed-replace`: one baseline
 JPEG a part, each with its Content-Length, over plain HTTP/1.0. The app makes the next picture once the last one has
 left its host, always of the newest frame the camera gave, so a slow Wi-Fi gets fewer pictures and never older ones.
-At most four screens stream at once.
+The app serves at most eight streams at once, of every screen together (a page of live tiles and a camera full
+screen); a stream it refuses leaves that screen with its stills. A screen runs at most seven of its own.
 
 **Where the pictures come from** (`screen_manager/app/live_feed.py`). Most of the work lands on Home Assistant's host,
 often a Raspberry Pi, so each kind of camera takes the cheapest road:
