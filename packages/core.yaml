@@ -267,6 +267,9 @@ esphome:
           // An alarm panel that someone comes in on, or that goes off, wakes the screen as a touch does and opens its
           // card (firmware 0.3.3+): Back to page 1 counts from now.
           runtime_tiles::alarm_wake = []() { id(last_use_ms) = millis(); id(wake_display).execute(); };
+          // A plugin wakes the screen as Home Assistant's Wake button does (tessera::wake, plugin API 0.16): the one way
+          // in for every wake that is not a finger, the script wake_from, with the plugin's name for the log.
+          plugin_host::wake = [](const std::string &source) { id(wake_from).execute(source); };
           // Saving power while the glass is dark (screen_power.h): LVGL pauses, and Wi-Fi dozes.
           screen_power::freeze = [](bool on) { id(screen_lvgl).set_paused(on, false); ESP_LOGI("power", on ? "dark: saving" : "awake"); };
           screen_power::later = [](uint32_t ms) { id(screen_power_wait).execute(ms); };
@@ -2448,6 +2451,27 @@ script:
           then:
             - script.execute: go_home
 
+  # Wake that is light, not a tap (0.2.56+): the one way in for every wake that is not a finger on the glass. Home
+  # Assistant's Wake button, a board's own sensor (which presses that button) and a plugin (tessera::wake, plugin API
+  # 0.16, through plugin_host::wake) all come here; `source` only goes into the log. A dimmed screen lights up the way
+  # the tap on its wake overlay does, then goes to page 1 at once when that time ran out during standby; one that is on
+  # only restarts the standby time. Back to page 1 keeps counting from the last touch (last_use_ms), so a wake on every
+  # motion holds no card or page 2 up.
+  - id: wake_from
+    parameters:
+      source: string
+    then:
+      - lambda: 'ESP_LOGI("standby", "Wake from %s, screen %s", source.c_str(), id(display_dimmed) ? "in standby" : "on");'
+      - if:
+          condition:
+            lambda: 'return id(display_dimmed);'
+          then:
+            - script.execute: wake_display
+            # A page whose time ran out during standby: light up on page 1, not on the old page first.
+            - script.execute: back_to_page_1_when_due
+          else:
+            - lambda: 'id(last_touch_ms) = millis();'
+
   # ---------- ALERT (HA action show_alert) ----------
   # The screen wakes, keeps its normal brightness and shows the card until OK or the
   # timeout (0: until OK); the standby interval waits on alert_active. A new alert
@@ -2644,27 +2668,20 @@ text:
     internal: ${DASHBOARD_INBOX_INTERNAL}
 
 button:
-  # Wake and Sleep for Home Assistant automations (0.2.45+). Wake is light, not a tap (0.2.56+): it
-  # lights a dimmed screen and counts the standby time from now, while Back to page 1 keeps counting
-  # from the last touch, so Wake on every motion no longer holds a card or page 2 up. Sleep is the
-  # standby time running out, right away and also with Auto standby off; it holds until a tap, Wake
-  # or an alert, and closes an alert that is up. Neither saves anything, so an automation may press
-  # them on every motion. No entity_category: they are controls, not settings.
+  # Wake and Sleep for Home Assistant automations (0.2.45+). Wake is light, not a tap (0.2.56+, the
+  # script wake_from): it lights a dimmed screen and counts the standby time from now, while Back to
+  # page 1 keeps counting from the last touch, so Wake on every motion no longer holds a card or page 2
+  # up. Sleep is the standby time running out, right away and also with Auto standby off; it holds until
+  # a tap, Wake or an alert, and closes an alert that is up. Neither saves anything, so an automation may
+  # press them on every motion. No entity_category: they are controls, not settings.
   - platform: template
     id: wake_button
     name: "Wake"
     icon: "mdi:gesture-tap"
     on_press:
-      - lambda: 'ESP_LOGI("standby", "Wake from Home Assistant, screen %s", id(display_dimmed) ? "in standby" : "on");'
-      - if:
-          condition:
-            lambda: 'return id(display_dimmed);'
-          then:
-            - script.execute: wake_display
-            # A page whose time ran out during standby: light up on page 1, not on the old page first.
-            - script.execute: back_to_page_1_when_due
-          else:
-            - lambda: 'id(last_touch_ms) = millis();'
+      - script.execute:
+          id: wake_from
+          source: "Home Assistant"
   - platform: template
     id: sleep_button
     name: "Sleep"

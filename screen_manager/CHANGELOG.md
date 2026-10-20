@@ -67,6 +67,11 @@
   tile's options for entities to choose, each with its own searchable list, such as the grid, the solar panels and
   the battery of an energy dashboard. Tessera sends each chosen entity's state to the tile and follows it, and a new
   choice takes effect without building the screen again. Thanks to @vajpeters, who built it for the Victron plugin.
+- **Plugins can wake the screen (plugin API 0.16).** A plugin can now wake a screen the way Home Assistant's Wake
+  button does, for example when a camera sees someone come: a screen in standby lights up, and one that is on stays on
+  for its standby time from then, while Back to page 1 keeps counting from the last touch. A plugin that does this has
+  a setting of its own for it, off until you turn it on. Thanks to @Heronimonimo, who asked for it for the Screen
+  camera plugin.
 - **Opening a page from Home Assistant wakes a screen that is still preparing.** A layout that reaches a screen in
   standby is prepared once the screen is lit, and the Show page action did nothing in between. It now wakes the screen
   first, and the page it asked for opens as soon as the pages are ready.

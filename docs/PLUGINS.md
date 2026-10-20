@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.15 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.16 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -228,6 +228,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | Settings rows | `settings(SettingsPage&)`; `settings_screen::plugin_pages` | `Plugins.settings_for`, `set_setting`: the manifest's `settings` (switch, number, select, text, button with its `status`), entities of the screen's own device found in the entity registry (`_setting_entities`) | in the plugin's details on the screen's Plugins tab (`PluginSettings.vue`), with its inputs and parts; Screen settings links there |
 | A question to Home Assistant | `tessera::send`, `on_message` (op `plugin`) | `Plugins.answer`: only `permissions.ha_commands`, logged; an answer the manifest's `answers` maps goes as its fields, the rest as it came; both bounded (`bounded`, 3.2 KB, by bytes) | the commands under "What it may do" |
 | The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`), `on_press` and `on_step(Step)` (0.11, "Touch feedback" below) | | |
+| Waking the screen (0.16) | `tessera::wake(plugin)`: `plugin_host::wake`, which `packages/core.yaml` points at the script `wake_from`, the one way Home Assistant's Wake button and a board's sensor take; "Waking the screen" below | nothing | nothing |
 | Entities chosen per tile (0.15) | nothing new: the tile reads `x.entities.<option id>` (state, name, attributes, updated) from its data | an option of kind `entity` (`plugin_manifest.check_option`, `option_value`); `Plugins.tile_message` puts each chosen entity's `state_part` under `entities`, `related_entities` follows them | the tile's inspector: a searchable entity picker per option (`PluginOptions.vue`) |
 | A screensaver (0.14) | `Saver`, `add_saver(id, step, make)`, `SaverContext`; `ui::takes_taps` (only for `taps: true`, `Plugin::set_taps`); `wish()`; `drift()`; "A screensaver" below | the manifest's `savers`; `Plugins.saver_kinds`, `saver_plugins`, `saver_step`, `refresh_savers`; `screen_saver.message`'s `pf`; `answer_plugin_pictures` with `question.saver` and `saver:picture` | the Screensaver card: a face per step, a step of its own in the order, its options |
 | A board's own hardware | the plugin's `plugin.yaml` (audio codecs, a relay), its `boards` in the manifest | offered only to the screens of those boards | the Plugins page says which boards |
@@ -256,6 +257,36 @@ So a new control needs at most one line, by what it is:
 `touch_feedback.h` is free of LVGL (`tests/test_touch_feedback.cpp`); `touch_feedback_lvgl.h` is included by
 `plugin_host.cpp` alone and starts listening when the first plugin starts, so a screen without plugins has none of it.
 `on_touch` (0.3) stays what it was: the tap the touch filter took, as the finger lets go.
+
+## Waking the screen (0.16)
+
+`tessera::wake(this)` wakes the screen the way Home Assistant's Wake button does. It is for a plugin that senses
+someone come: motion in front of a camera, a light coming on, a sound.
+
+Every wake that is not a finger on the glass takes one way, the script `wake_from` in `packages/core.yaml`. Home
+Assistant's Wake button runs it, a board's own sensor presses that button (the reTerminal D1001's Wake when moved),
+and `tessera::wake` reaches it through `plugin_host::wake`, which the core sets at boot. The log says who woke the
+screen (`Wake from plugin <id>`). So a plugin's wake does what Wake does:
+
+- A screen in standby lights up at its brightness, also in the night hours. Its screensaver goes, a Sleep is over, and
+  when Back to page 1 came due during standby it lights up on page 1.
+- A screen that is on only counts its standby time from now, so it stays on while the plugin keeps sensing someone.
+- It is no tap. Back to page 1 keeps counting from the last touch, so waking on every motion holds no card or page 2
+  up. A finger on the glass counts as use; a wake does not.
+- A board that cannot go dark (`CAN_STANDBY` false) has no standby, so there is nothing to wake.
+
+A plugin that wakes the screen by what it senses:
+
+- has a setting for it, off until someone turns it on: a switch in its `plugin.yaml`, listed under `settings` in its
+  manifest. A screen that lights up by itself surprises the people who did not ask for it.
+- calls `wake` while it senses someone, also while the screen is on, and at most once every second or two. That keeps a
+  lit screen on as long as someone is there, the way an automation that presses Wake on every motion does, without
+  filling the log. A plugin that should only light a dark screen, and never keep a lit one on, keeps what `on_standby`
+  last said and calls `wake` only while the screen is dark.
+- calls it from its own calls on the screen's loop (`on_interval`, `on_message`, a callback of an ESPHome component),
+  never from a task of its own: such a task sets a flag that `on_interval` reads.
+- leaves the rest to the core. It never runs `wake_display`, `wake_from` or any other script of the core, nor presses
+  the Wake button: they are not the plugin API, and their names may change in any release.
 
 ## Where a plugin comes from
 
