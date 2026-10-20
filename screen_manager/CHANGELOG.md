@@ -32,6 +32,10 @@
 - **One picture after the next without a third copy in memory.** When a picture changed (the next screensaver photo,
   another track's cover, a map that moved) the screen held the old one, the download and a copy of it for a moment; it
   now takes the download as it is. A map or cover that did not change comes as "not changed" again instead of whole.
+- **Smoother screens, above all the large ones.** A screen drew its whole glass again whenever it brought another
+  page up to date in the background, and twice a minute it drew every card again for the clock. On a 10-inch screen
+  each of those took about a fifth of a second, in which nothing moved and a sound that played stuttered. Now only the
+  page keys and the cards that show the time are drawn again, and a plugin's sounds keep half a second ready.
 - **Plugin API 0.18: popups.** A plugin can show a popup over the screen, the card an alert shows, as high as what it
   says and as wide as the screen allows, for a moment that wants your eye: the Voice assistant shows what it heard and
   its answer as it speaks, with rings that ripple while it listens and an arc that turns while it thinks
