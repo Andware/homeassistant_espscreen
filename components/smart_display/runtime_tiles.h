@@ -9158,17 +9158,19 @@ inline void render_slot(size_t slot) {
 // such as the minute tick and time sync) draws every card.
 inline TileSet dirty_tiles;
 inline bool dirty_all=false, dirty_header=false;
-// The minute turned or a display setting changed (packages/core.yaml says so before its refresh): every card on the
-// glass is drawn, as for a refresh that names nothing, and on a kept page the cards that show the time (firmware 0.3.2+).
+// A display setting changed (packages/core.yaml says so before its refresh): every card on the glass is drawn, as for a
+// refresh that names nothing, and on a kept page the cards that show the time (firmware 0.3.2+). The minute turning is
+// mark_minute: only the cards that show the time.
 inline bool dirty_time=false;
 // A card whose text or drawing moves on with the clock: a clock, a timer, the sun's arc, a graph's window, a playing
-// track's bar, "5 min ago" under a script or a scene, and a second line that names a moment. A forecast changes with
-// its entity, which Home Assistant updates on its own.
+// track's bar, "5 min ago" under a script or a scene, a second line that names a moment, and a calendar's now and
+// minutes left. A forecast changes with its entity, which Home Assistant updates on its own; its today and its hours'
+// window follow the clock once an hour (mark_minute).
 inline bool shows_time(const Tile &t) {
   const std::string d=t.domain();
   return t.is_clock() || t.is_bedside() || t.display=="graph" || t.extra().subtitle_at || d=="timer" || d=="sun" ||
          (d=="media_player" && media_card::playing(t.state)) ||
-         d=="script" || d=="scene" || d=="button" || d=="input_button" || d=="automation";
+         d=="script" || d=="scene" || d=="button" || d=="input_button" || d=="automation" || d=="calendar";
 }
 inline void mark_time() {
   dirty_time=true;
@@ -9182,6 +9184,15 @@ inline void mark_all() { dirty_all=true; changes.mark_all(); }
 inline void mark_tile(size_t index) { changes.mark_tile(index); if(index<dirty_tiles.size())dirty_tiles.set(index); else dirty_all=true; }
 inline void refresh_tile(size_t index) { mark_tile(index); if(refresh)refresh(); }
 inline void refresh_header_only() { dirty_header=true; if(refresh)refresh(); }
+// The minute turned, or Home Assistant set the clock: the top bar's clock and the cards that show the time, on the glass
+// now and on a kept page when it comes back. Not every card: on a 10-inch that redrew the whole glass twice a minute
+// (200 ms each), and a sound that played meanwhile stuttered.
+inline void mark_minute() {
+  dirty_header=true;
+  const bool hour=minute_of_day()%60==0;
+  for(size_t i=0;i<model.count;++i)
+    if(shows_time(model.tiles[i]) || (hour && model.tiles[i].domain()=="weather"))mark_tile(i);
+}
 inline void refresh_all() { mark_all(); if(refresh)refresh(); }
 // The starting screen (firmware 0.2.73+): what the screen waits for in the middle of the page with a spinner under it,
 // until the first layout arrives. The first render() makes it and the first layout deletes it, spinner and all.
@@ -9687,8 +9698,8 @@ inline void render(lv_obj_t *room) {
   name_label(room, !model.configured ? std::string() : !model.ready() ? tr(txt::status_loading_tiles) : !ha_connected() ? tr(txt::status_ha_not_connected) : !feed_alive() ? tr(txt::status_manager_not_active) : model.title_of(applied_page));
   render_header();
   lap(swipe_profile::HEADER);
-  // A refresh that names nothing draws every card (and counts as a change of everything); the minute tick says it is
-  // only the time (dirty_time).
+  // A refresh that names nothing draws every card (and counts as a change of everything); a changed display setting
+  // says it is only the look and the time (dirty_time), the minute marks its own cards (mark_minute).
   if(!dirty_all && dirty_tiles.none() && !dirty_header && !dirty_time)mark_all();
   const bool all=dirty_all || dirty_time;
   const uint32_t upto=changes.last;  // every change asked for so far is drawn below, for the cards on the glass
