@@ -943,6 +943,10 @@
         "not_paired": "Előbb párosíts egy fordítószervert.",
         "unknown": "A fordítószerver már nem ismeri a Tesserát. Párosítsd újra.",
         "pending": "A fordítószerver még nem fogadta el a Tesserát."
+      },
+      "video": {
+        "not_written": "A Tessera video nem írható ide: {folder}: {reason}.",
+        "not_installed": "Először telepítsd a Tessera videót."
       }
     },
     "status": {
@@ -3058,6 +3062,23 @@
         "reinstall_all_hint": "Minden kijelzőhöz lefordítja a legújabb dev változatot, egymás után, és Wi-Fin telepíti. Dev-en a verziószám nem változik, ezért egy új dev sosem jelenik meg frissítésként.",
         "reinstall_all_confirm": "Újratelepíted 1 kijelzőt a legújabb dev-ből? Újraindul, amint rajta van a firmware. | Újratelepítesz {n} kijelzőt a legújabb dev-ből? Egymás után fordulnak, és mindegyik újraindul, amint rajta van a firmware.",
         "reinstall_all_go": "Újratelepítés"
+      },
+      "video": {
+        "title": "Videó a Home Assistantban",
+        "text": "A Képernyőkamera Videó részével rendelkező képernyő élőben mutatja kameráját a Home Assistantban, hanggal: egy Videó kamera a képernyő eszközén, a böngészőben és az alkalmazásban. Ehhez a Home Assistantnak a Tessera video integrációra van szüksége.",
+        "install": "Telepítés a Home Assistantba",
+        "install_again": "Újratelepítés",
+        "update": "Integráció frissítése",
+        "newer": "Telepítve · újabb verzió érhető el",
+        "waits_restart": "Telepítve · indítsd újra a Home Assistantot a betöltéshez",
+        "running": "● Fut a Home Assistantban",
+        "restart": "Home Assistant újraindítása",
+        "restart_confirm": "Újraindítod most a Home Assistantot? Egy-két percig nem elérhető, ahogy az irányítópultjai és automatizálásai sem.",
+        "restarting": "A Home Assistant újraindul. A képernyők videója egy percen belül követi.",
+        "installed": "Tessera video telepítve. Indítsd újra egyszer a Home Assistantot a betöltéshez.",
+        "screens": "Képernyők videóval: {names}",
+        "no_screens": "Még egyik képernyőn sincs videó: add hozzá a Képernyőkamerát a Videó résszel egy kamerás P4 képernyőhöz.",
+        "writes": "A(z) {path} mappát írja; az újratelepítés lecseréli. A Tessera magától felveszi a videós képernyőket."
       },
       "claude": {
         "installed": "Skill telepítve. A Claude Code azonnal átveszi.",

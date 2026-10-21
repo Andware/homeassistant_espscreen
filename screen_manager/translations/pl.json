@@ -943,6 +943,10 @@
         "not_paired": "Najpierw sparuj serwer kompilacji.",
         "unknown": "Serwer kompilacji nie zna już Tessera. Sparuj go ponownie.",
         "pending": "Serwer kompilacji jeszcze nie zaakceptował Tessera."
+      },
+      "video": {
+        "not_written": "Nie udało się zapisać Tessera video w {folder}: {reason}.",
+        "not_installed": "Najpierw zainstaluj Tessera video."
       }
     },
     "status": {
@@ -3058,6 +3062,23 @@
         "reinstall_all_hint": "Kompiluje najnowszą wersję dev dla każdego ekranu, jeden po drugim, i instaluje ją przez Wi-Fi. Na dev numer wersji się nie zmienia, więc nowa wersja dev nigdy nie pojawia się jako aktualizacja.",
         "reinstall_all_confirm": "Zainstalować ponownie 1 ekran z najnowszej wersji dev? Uruchomi się ponownie, gdy dostanie firmware. | Zainstalować ponownie {n} ekrany z najnowszej wersji dev? Kompilują się po kolei i każdy uruchamia się ponownie, gdy dostanie firmware. | Zainstalować ponownie {n} ekranów z najnowszej wersji dev? Kompilują się po kolei i każdy uruchamia się ponownie, gdy dostanie firmware.",
         "reinstall_all_go": "Zainstaluj ponownie"
+      },
+      "video": {
+        "title": "Wideo w Home Assistant",
+        "text": "Ekran z częścią Wideo wtyczki Kamera ekranu pokazuje swoją kamerę na żywo w Home Assistant, z dźwiękiem: kamera Wideo przy urządzeniu ekranu, w przeglądarce i w aplikacji. Home Assistant potrzebuje do tego integracji Tessera video.",
+        "install": "Zainstaluj w Home Assistant",
+        "install_again": "Zainstaluj ponownie",
+        "update": "Zaktualizuj integrację",
+        "newer": "Zainstalowana · nowsza wersja jest gotowa",
+        "waits_restart": "Zainstalowana · uruchom ponownie Home Assistant, aby ją wczytać",
+        "running": "● Działa w Home Assistant",
+        "restart": "Uruchom ponownie Home Assistant",
+        "restart_confirm": "Uruchomić ponownie Home Assistant teraz? Zniknie na minutę lub dwie, a z nim pulpity i automatyzacje.",
+        "restarting": "Home Assistant uruchamia się ponownie. Wideo ekranów wróci w ciągu minuty po jego powrocie.",
+        "installed": "Tessera video zainstalowana. Uruchom ponownie Home Assistant raz, aby ją wczytać.",
+        "screens": "Ekrany z wideo: {names}",
+        "no_screens": "Żaden ekran nie ma jeszcze wideo: dodaj Kamerę ekranu z częścią Wideo do ekranu P4 z kamerą.",
+        "writes": "Zapisuje folder {path}; ponowna instalacja go zastępuje. Tessera sama dodaje każdy ekran z wideo."
       },
       "claude": {
         "installed": "Umiejętność zainstalowana. Claude Code od razu ją wykrywa.",

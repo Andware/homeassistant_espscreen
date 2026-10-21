@@ -342,6 +342,11 @@ export type LineBuild = {
   place?: number; after?: string | null; stage?: string | null; memory?: import("./model/install-progress").BuildMemory | null;
   reason?: string | null;
 } & ServerSide;
+export type VideoIntegration = {
+  path: string; installed: boolean; current: boolean; version: string; loaded: string | null;
+  screens: string[]; entries: number; restart?: boolean;
+};
+
 export type Inventory = {
   editor_features?: { tall_tiles?: boolean; plugins?: boolean };
   csrf?: string;
@@ -368,6 +373,9 @@ export type Inventory = {
   // The CHANGELOG by release, newest first: only in the full inventory, not in the live payload (app 0.2.78).
   changelog?: ChangelogSection[];
   claude_skill?: { path: string; installed: boolean; current: boolean; restart?: boolean };
+  // Video in Home Assistant (Settings, screen_video.py): the tessera_video integration in Home Assistant's folder, the
+  // version Home Assistant runs (null until it restarted with it), and the screens with Screen camera's part Video.
+  video?: VideoIntegration;
   icons?: {
     groups: { label: string; icons: IconInfo[] }[];
     builtin?: Record<string, string>; weather: Record<string, string>; sun: Record<string, string>; calendar?: Record<string, string>;

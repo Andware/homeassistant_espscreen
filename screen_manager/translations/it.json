@@ -943,6 +943,10 @@
         "not_paired": "Abbina prima un server di compilazione.",
         "unknown": "Il server di compilazione non riconosce più Tessera. Abbinalo di nuovo.",
         "pending": "Il server di compilazione non ha ancora accettato Tessera."
+      },
+      "video": {
+        "not_written": "Impossibile scrivere Tessera video in {folder}: {reason}.",
+        "not_installed": "Installa prima Tessera video."
       }
     },
     "status": {
@@ -3058,6 +3062,23 @@
         "reinstall_all_hint": "Compila la dev più recente per ogni schermo, uno dopo l'altro, e la installa via Wi-Fi. Su dev il numero di versione resta uguale, quindi una nuova dev non viene mai offerta come aggiornamento.",
         "reinstall_all_confirm": "Reinstallare 1 schermo dalla dev più recente? Si riavvia appena ha il firmware. | Reinstallare {n} schermi dalla dev più recente? Vengono compilati uno dopo l'altro e ognuno si riavvia appena ha il suo firmware.",
         "reinstall_all_go": "Reinstalla"
+      },
+      "video": {
+        "title": "Video in Home Assistant",
+        "text": "Uno schermo con la parte Video di Fotocamera dello schermo mostra la sua fotocamera dal vivo in Home Assistant, con l'audio: una telecamera Video sul dispositivo dello schermo, nel browser e nell'app. Home Assistant ha bisogno dell'integrazione Tessera video.",
+        "install": "Installa in Home Assistant",
+        "install_again": "Installa di nuovo",
+        "update": "Aggiorna l'integrazione",
+        "newer": "Installata · è pronta una versione più recente",
+        "waits_restart": "Installata · riavvia Home Assistant per caricarla",
+        "running": "● Attiva in Home Assistant",
+        "restart": "Riavvia Home Assistant",
+        "restart_confirm": "Riavviare Home Assistant ora? Resta assente un minuto o due, come le sue plance e automazioni.",
+        "restarting": "Home Assistant si riavvia. Il video degli schermi segue entro un minuto dal suo ritorno.",
+        "installed": "Tessera video installata. Riavvia Home Assistant una volta per caricarla.",
+        "screens": "Schermi con video: {names}",
+        "no_screens": "Nessuno schermo ha ancora il video: aggiungi Fotocamera dello schermo, con la parte Video, a uno schermo P4 con fotocamera.",
+        "writes": "Scrive la cartella {path}; installare di nuovo la sostituisce. Tessera aggiunge da sé ogni schermo con video."
       },
       "claude": {
         "installed": "Skill installata. Claude Code la rileva subito.",

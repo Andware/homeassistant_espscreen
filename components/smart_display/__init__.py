@@ -90,10 +90,20 @@ def _tier(config):
 # A window of 64 KB, as Espressif's own esp_hosted throughput settings have it, gave 2.6 MB/s on the reTerminal D1001
 # (2026-10-10). The window applies to every connection, which is why it is the P4's alone: a CYD has 45 KB in one
 # piece. A screen's own `sdkconfig_options` keep the last word.
+#
+# The send buffer likewise: ESP-IDF's 5,760 bytes let one connection carry about 1.5 Mbit/s over the C6, and Screen
+# camera's video (one TCP connection a viewer, docs/CAMERA.md "The screen's own camera as video in Home Assistant") held
+# its sound up behind the picture for seconds. And all of it in PSRAM first (ESPHome's `wifi: use_psram` sets the same
+# option): what a connection holds unsent or unread lived in internal RAM, which a P4 runs short of. With live camera
+# tiles on the glass and the video playing, the reTerminal D1001 went from 160 KB to 13 KB free in two seconds and the
+# C6's driver aborted the chip (2026-10-21). A P4's panel is MIPI-DSI with PSRAM to spare, so the reason the ESP32-S3's
+# RGB panels keep these buffers inside (packages/hardware/esp32s3-rgb.yaml) does not hold here.
 P4_NETWORK = {
     "CONFIG_LWIP_TCP_WND_DEFAULT": 65534,
+    "CONFIG_LWIP_TCP_SND_BUF_DEFAULT": 65534,
     "CONFIG_LWIP_TCP_RECVMBOX_SIZE": 64,
     "CONFIG_LWIP_TCPIP_RECVMBOX_SIZE": 64,
+    "CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP": True,
 }
 
 

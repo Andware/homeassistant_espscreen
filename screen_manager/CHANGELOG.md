@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A screen's own camera as live video with sound in Home Assistant** (the P4 screens with a camera: the reTerminal D1001 and the M5Stack Tab5). Screen camera 0.4.0 brings a part Video: H.264 from the screen's video encoder and the microphone as Opus, in sync, playing in Home Assistant's browser page and app about a third of a second behind. Under Settings, **Video in Home Assistant** installs the Home Assistant integration it needs (Tessera video) when you press Install, and restarts Home Assistant when you say so; then Tessera adds a camera **Video** to each screen with the part by itself, without a password to type (docs/CAMERA.md, "The screen's own camera as video in Home Assistant"). Every ESP32-P4 screen gets a larger network send buffer for it.
+
 - **A plugin added with a link can be taken off the list again.** A release added with a link that no screen runs (an old try-out) had no way off the Plugins page except restarting the app. Its details now have "Remove from the list". A plugin a screen still runs is taken off the screen first.
 
 - **Pictures in one system (docs/PICTURES.md).** Every picture a screen shows now goes one way: the camera full

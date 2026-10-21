@@ -943,6 +943,10 @@
         "not_paired": "Koppel eerst een buildserver.",
         "unknown": "De buildserver kent Tessera niet meer. Koppel hem opnieuw.",
         "pending": "De buildserver heeft Tessera nog niet geaccepteerd."
+      },
+      "video": {
+        "not_written": "Tessera video kon niet naar {folder} worden geschreven: {reason}.",
+        "not_installed": "Installeer eerst Tessera video."
       }
     },
     "status": {
@@ -2629,6 +2633,23 @@
         "reinstall_all_hint": "Bouwt voor elk scherm de nieuwste dev, de een na de ander, en zet die via Wi-Fi op het scherm. Op dev blijft het versienummer gelijk, dus een nieuwe dev wordt nooit als update aangeboden.",
         "reinstall_all_confirm": "1 scherm opnieuw installeren van de nieuwste dev? Het herstart zodra de firmware erop staat. | {n} schermen opnieuw installeren van de nieuwste dev? Ze worden een voor een gebouwd, en elk herstart zodra de firmware erop staat.",
         "reinstall_all_go": "Opnieuw installeren"
+      },
+      "video": {
+        "title": "Video in Home Assistant",
+        "text": "Een scherm met het onderdeel Video van Schermcamera laat zijn camera live zien in Home Assistant, met geluid: een camera Video bij het apparaat van het scherm, in de browser en de app. Home Assistant heeft daarvoor de integratie Tessera video nodig.",
+        "install": "Installeren in Home Assistant",
+        "install_again": "Opnieuw installeren",
+        "update": "Integratie bijwerken",
+        "newer": "Geïnstalleerd · een nieuwere versie staat klaar",
+        "waits_restart": "Geïnstalleerd · herstart Home Assistant om hem te laden",
+        "running": "● Draait in Home Assistant",
+        "restart": "Home Assistant herstarten",
+        "restart_confirm": "Home Assistant nu herstarten? Het is een minuut of twee weg, en zijn dashboards en automatiseringen ook.",
+        "restarting": "Home Assistant herstart. De video van de schermen volgt binnen een minuut nadat het terug is.",
+        "installed": "Tessera video geïnstalleerd. Herstart Home Assistant één keer om hem te laden.",
+        "screens": "Schermen met video: {names}",
+        "no_screens": "Nog geen scherm heeft video: voeg Schermcamera toe aan een P4-scherm met camera, met het onderdeel Video.",
+        "writes": "Schrijft de map {path}; opnieuw installeren vervangt hem. Tessera voegt elk scherm met video zelf toe."
       },
       "claude": {
         "installed": "Skill geïnstalleerd. Claude Code vindt hem meteen.",

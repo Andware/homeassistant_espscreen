@@ -25,6 +25,7 @@ import picture_service
 import picture_sources
 import live_feed
 import claude_skill
+import screen_video
 import screen_hang
 import screen_labels
 import screen_saver
@@ -993,6 +994,8 @@ class Manager:
         self._clock_resync = None
         self.set_screens()
         self.skill_dir = claude_skill.skill_dir()
+        # Video in Home Assistant (Settings): the tessera_video integration, installed only on request (screen_video.py).
+        self.videos = screen_video.Videos(screen_video.target())
         self._registry_source, self._registry_index = None, {}
         self._items_source, self._items = None, []
         self._screens_key, self._screens = None, []
@@ -1499,6 +1502,26 @@ class Manager:
                 for meta in self.firmware.profile_names().values()
                 if meta.get('screen') and meta.get('node') and ha_pairing.usable_key(meta.get('api_key'))}
         await self.pairing.run(self.ha, ours, self.screens())
+
+    def video_status(self):
+        """Settings, Video in Home Assistant: the integration's copy in Home Assistant's folder, whether Home Assistant
+        runs it, and the screens with the video."""
+        wanted, _ = screen_video.video_screens(self.plugins, self.screens()) if core.plugins_enabled() else ({}, set())
+        return {**screen_video.status(self.videos.directory), 'loaded': self.videos.loaded,
+                'screens': sorted(wanted.values()), 'entries': self.videos.entries}
+
+    async def video_loop(self):
+        """An entry of tessera_video for each screen with the video, once Home Assistant runs the integration."""
+        while True:
+            await asyncio.sleep(screen_video.INTERVAL)
+            if not self.ha.online or not self.ha.registry or not core.plugins_enabled():
+                continue
+            try:
+                await self.videos.sync(self.ha, *screen_video.video_screens(self.plugins, self.screens()))
+            except (ClientError, ConnectionError, TimeoutError, OSError, ValueError, Refused) as error:
+                LOG.debug('Video in Home Assistant waits (%s)', type(error).__name__)
+            except Exception:   # a slip in one round never ends the app
+                LOG.exception('Video in Home Assistant failed this round')
 
     async def pairing_loop(self):
         """Adds the screens this app made to Home Assistant as soon as it finds them on the network, and lets them
@@ -4070,6 +4093,7 @@ def create_app(manager, development=False):
         # What's new for the Update badge: here only, not in every live update (app 0.2.78).
         payload['changelog'] = manager.updates.changelog
         payload['claude_skill'] = claude_skill.status(manager.skill_dir)
+        payload['video'] = manager.video_status()
         # The name in the editor's language for the library, and as the screens show it for the mockup (app 0.2.90).
         payload['builtin'] = [{'id': key, 'name': builtin_name(key, t), 'screen_name': builtin_name(key),
                                'device': t('addon.labels.built_into_screen'), 'area': '', 'state': 'ok'} for key in BUILTIN]
@@ -4597,6 +4621,22 @@ def create_app(manager, development=False):
     async def install_claude_skill(request):
         """Settings → Claude → Install: writes the skill into Home Assistant's configuration folder, only on request."""
         return web.json_response(claude_skill.install(manager.skill_dir))
+    async def install_video(request):
+        """Settings, Video in Home Assistant, Install: writes tessera_video into Home Assistant's configuration folder,
+        only on request. Home Assistant loads it at its next start (restart_for_video)."""
+        return web.json_response({**screen_video.install(manager.videos.directory), **{
+            k: v for k, v in manager.video_status().items() if k in ('loaded', 'screens', 'entries')}})
+    async def restart_for_video(request):
+        """Settings, Video in Home Assistant, Restart Home Assistant: as its own Restart does (homeassistant.restart,
+        which checks the configuration first and refuses to restart a broken one)."""
+        if not screen_video.status(manager.videos.directory)['installed']:
+            raise web.HTTPConflict(text=t('addon.errors.video.not_installed'))
+        try:
+            await manager.ha.call_service('homeassistant', 'restart', {})
+        except (ConnectionError, TimeoutError, ClientError):
+            pass    # Home Assistant may close the connection before it answers: it is restarting
+        LOG.info('Home Assistant restarts to load Tessera video')
+        return web.json_response({'restarting': True})
     async def download_claude_skill(request):
         """Settings → Claude → Download: the same skill as a zip for claude.ai; writes nothing."""
         return web.Response(body=claude_skill.archive(), content_type='application/zip',
@@ -4999,6 +5039,8 @@ def create_app(manager, development=False):
     app.router.add_post('/api/header-preview', header_preview)
     app.router.add_post('/api/claude-skill', install_claude_skill)
     app.router.add_get('/api/claude-skill.zip', download_claude_skill)
+    app.router.add_post('/api/video', install_video)
+    app.router.add_post('/api/video/restart', restart_for_video)
     app.router.add_get('/api/events', events)
     app.router.add_put('/api/screens/{inbox}', save)
     app.router.add_post('/api/screens/{inbox}/import', import_document)
@@ -5070,7 +5112,7 @@ async def main():
         try:
             await asyncio.gather(ha.run(), manager.run(), manager.history_loop(), manager.updates.run(),
                                  manager.alert_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(),
-                                 manager.media_loop(), manager.pairing_loop(), manager.photo_loop(),
+                                 manager.media_loop(), manager.pairing_loop(), manager.photo_loop(), manager.video_loop(),
                                  *([manager.plugins.loop(), manager.plugin_loop()] if core.plugins_enabled() else []))
         finally:
             await cameras.cleanup()

@@ -943,6 +943,10 @@
         "not_paired": "Pair a build server first.",
         "unknown": "The build server no longer knows Tessera. Pair it again.",
         "pending": "The build server has not accepted Tessera yet."
+      },
+      "video": {
+        "not_written": "Tessera video could not be written to {folder}: {reason}.",
+        "not_installed": "Install Tessera video first."
       }
     },
     "status": {
@@ -2629,6 +2633,23 @@
         "reinstall_all_hint": "Builds the newest dev for every screen, one after the other, and installs it over Wi-Fi. On dev the version number stays the same, so a new dev is never offered as an update.",
         "reinstall_all_confirm": "Reinstall 1 screen from the newest dev? It restarts once its firmware is on. | Reinstall {n} screens from the newest dev? They are built one after the other, and each restarts once its firmware is on.",
         "reinstall_all_go": "Reinstall"
+      },
+      "video": {
+        "title": "Video in Home Assistant",
+        "text": "A screen with Screen camera's part Video shows its camera live in Home Assistant, with sound: a camera Video on the screen's device, in the browser and the app. Home Assistant needs the Tessera video integration for it.",
+        "install": "Install in Home Assistant",
+        "install_again": "Install again",
+        "update": "Update the integration",
+        "newer": "Installed · a newer version is ready",
+        "waits_restart": "Installed · restart Home Assistant to load it",
+        "running": "● Running in Home Assistant",
+        "restart": "Restart Home Assistant",
+        "restart_confirm": "Restart Home Assistant now? It is away for a minute or two, and so are its dashboards and automations.",
+        "restarting": "Home Assistant restarts. The screens' video follows within a minute after it is back.",
+        "installed": "Tessera video installed. Restart Home Assistant once to load it.",
+        "screens": "Screens with video: {names}",
+        "no_screens": "No screen has video yet: add Screen camera to a P4 screen with a camera, with its part Video.",
+        "writes": "Writes the folder {path}; installing again replaces it. Tessera adds each screen with video by itself."
       },
       "claude": {
         "installed": "Skill installed. Claude Code picks it up right away.",

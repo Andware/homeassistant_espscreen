@@ -943,6 +943,10 @@
         "not_paired": "Emparelhe primeiro um servidor de compilação.",
         "unknown": "O servidor de compilação já não conhece o Tessera. Emparelhe-o de novo.",
         "pending": "O servidor de compilação ainda não aceitou o Tessera."
+      },
+      "video": {
+        "not_written": "Não foi possível escrever Tessera video em {folder}: {reason}.",
+        "not_installed": "Instale primeiro Tessera video."
       }
     },
     "status": {
@@ -3058,6 +3062,23 @@
         "reinstall_all_hint": "Compila a dev mais recente para cada ecrã, um após o outro, e instala-a por Wi-Fi. Em dev o número da versão não muda, por isso uma dev nova nunca é oferecida como atualização.",
         "reinstall_all_confirm": "Reinstalar 1 ecrã a partir da dev mais recente? Reinicia assim que tiver o firmware. | Reinstalar {n} ecrãs a partir da dev mais recente? São compilados um após o outro, e cada um reinicia assim que tiver o firmware.",
         "reinstall_all_go": "Reinstalar"
+      },
+      "video": {
+        "title": "Vídeo no Home Assistant",
+        "text": "Um ecrã com a parte Vídeo de Câmara do ecrã mostra a sua câmara em direto no Home Assistant, com som: uma câmara Vídeo no dispositivo do ecrã, no navegador e na app. O Home Assistant precisa da integração Tessera video para isso.",
+        "install": "Instalar no Home Assistant",
+        "install_again": "Instalar de novo",
+        "update": "Atualizar a integração",
+        "newer": "Instalada · há uma versão mais recente",
+        "waits_restart": "Instalada · reinicie o Home Assistant para a carregar",
+        "running": "● A funcionar no Home Assistant",
+        "restart": "Reiniciar o Home Assistant",
+        "restart_confirm": "Reiniciar o Home Assistant agora? Fica fora um ou dois minutos, tal como os seus painéis e automatizações.",
+        "restarting": "O Home Assistant reinicia. O vídeo dos ecrãs segue um minuto depois de voltar.",
+        "installed": "Tessera video instalada. Reinicie o Home Assistant uma vez para a carregar.",
+        "screens": "Ecrãs com vídeo: {names}",
+        "no_screens": "Nenhum ecrã tem vídeo ainda: adicione Câmara do ecrã, com a parte Vídeo, a um ecrã P4 com câmara.",
+        "writes": "Escreve a pasta {path}; instalar de novo substitui-a. O Tessera adiciona cada ecrã com vídeo por si."
       },
       "claude": {
         "installed": "Habilidade instalada. O Claude Code deteta-a de imediato.",

@@ -943,6 +943,10 @@
         "not_paired": "Empareja antes un servidor de compilación.",
         "unknown": "El servidor de compilación ya no conoce a Tessera. Vuelve a emparejarlo.",
         "pending": "El servidor de compilación aún no ha aceptado a Tessera."
+      },
+      "video": {
+        "not_written": "No se pudo escribir Tessera video en {folder}: {reason}.",
+        "not_installed": "Instala primero Tessera video."
       }
     },
     "status": {
@@ -3058,6 +3062,23 @@
         "reinstall_all_hint": "Compila la dev más reciente para cada pantalla, una tras otra, y la instala por Wi-Fi. En dev el número de versión no cambia, así que una dev nueva nunca se ofrece como actualización.",
         "reinstall_all_confirm": "¿Reinstalar 1 pantalla desde la dev más reciente? Se reinicia cuando tenga el firmware. | ¿Reinstalar {n} pantallas desde la dev más reciente? Se compilan una tras otra y cada una se reinicia cuando tiene su firmware.",
         "reinstall_all_go": "Reinstalar"
+      },
+      "video": {
+        "title": "Vídeo en Home Assistant",
+        "text": "Una pantalla con la parte Vídeo de Cámara de la pantalla muestra su cámara en directo en Home Assistant, con sonido: una cámara Vídeo en el dispositivo de la pantalla, en el navegador y en la app. Home Assistant necesita para ello la integración Tessera video.",
+        "install": "Instalar en Home Assistant",
+        "install_again": "Instalar de nuevo",
+        "update": "Actualizar la integración",
+        "newer": "Instalada · hay una versión más nueva",
+        "waits_restart": "Instalada · reinicia Home Assistant para cargarla",
+        "running": "● Funcionando en Home Assistant",
+        "restart": "Reiniciar Home Assistant",
+        "restart_confirm": "¿Reiniciar Home Assistant ahora? Estará fuera uno o dos minutos, igual que sus paneles y automatizaciones.",
+        "restarting": "Home Assistant se reinicia. El vídeo de las pantallas llega en un minuto tras su vuelta.",
+        "installed": "Tessera video instalada. Reinicia Home Assistant una vez para cargarla.",
+        "screens": "Pantallas con vídeo: {names}",
+        "no_screens": "Ninguna pantalla tiene vídeo aún: añade Cámara de la pantalla, con su parte Vídeo, a una pantalla P4 con cámara.",
+        "writes": "Escribe la carpeta {path}; instalar de nuevo la reemplaza. Tessera añade cada pantalla con vídeo por sí mismo."
       },
       "claude": {
         "installed": "Habilidad instalada. Claude Code la detecta al momento.",

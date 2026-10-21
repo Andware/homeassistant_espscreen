@@ -943,6 +943,10 @@
         "not_paired": "Kopple zuerst einen Build-Server.",
         "unknown": "Der Build-Server kennt Tessera nicht mehr. Kopple ihn erneut.",
         "pending": "Der Build-Server hat Tessera noch nicht angenommen."
+      },
+      "video": {
+        "not_written": "Tessera video konnte nicht nach {folder} geschrieben werden: {reason}.",
+        "not_installed": "Installiere zuerst Tessera video."
       }
     },
     "status": {
@@ -3058,6 +3062,23 @@
         "reinstall_all_hint": "Baut für jeden Bildschirm den neuesten Dev-Stand, einen nach dem anderen, und installiert ihn über WLAN. Auf Dev bleibt die Versionsnummer gleich, darum wird ein neuer Dev-Stand nie als Update angeboten.",
         "reinstall_all_confirm": "1 Bildschirm vom neuesten Dev-Stand neu installieren? Er startet neu, sobald die Firmware drauf ist. | {n} Bildschirme vom neuesten Dev-Stand neu installieren? Sie werden nacheinander gebaut, und jeder startet neu, sobald seine Firmware drauf ist.",
         "reinstall_all_go": "Neu installieren"
+      },
+      "video": {
+        "title": "Video in Home Assistant",
+        "text": "Ein Bildschirm mit dem Teil Video von Bildschirmkamera zeigt seine Kamera live in Home Assistant, mit Ton: eine Kamera Video am Gerät des Bildschirms, im Browser und in der App. Home Assistant braucht dafür die Integration Tessera video.",
+        "install": "In Home Assistant installieren",
+        "install_again": "Erneut installieren",
+        "update": "Integration aktualisieren",
+        "newer": "Installiert · eine neuere Version ist bereit",
+        "waits_restart": "Installiert · Home Assistant neu starten, um sie zu laden",
+        "running": "● Läuft in Home Assistant",
+        "restart": "Home Assistant neu starten",
+        "restart_confirm": "Home Assistant jetzt neu starten? Es ist ein bis zwei Minuten weg, ebenso seine Dashboards und Automationen.",
+        "restarting": "Home Assistant startet neu. Das Video der Bildschirme folgt innerhalb einer Minute danach.",
+        "installed": "Tessera video installiert. Starte Home Assistant einmal neu, um sie zu laden.",
+        "screens": "Bildschirme mit Video: {names}",
+        "no_screens": "Noch kein Bildschirm hat Video: Füge Bildschirmkamera mit dem Teil Video zu einem P4-Bildschirm mit Kamera hinzu.",
+        "writes": "Schreibt den Ordner {path}; erneutes Installieren ersetzt ihn. Tessera fügt jeden Bildschirm mit Video selbst hinzu."
       },
       "claude": {
         "installed": "Skill installiert. Claude Code nutzt ihn sofort.",

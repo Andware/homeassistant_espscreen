@@ -437,6 +437,64 @@ through, how much it matters, and how the app is asked for it. One loader decide
   places, the picture used longest ago that nothing draws makes way (`picture_store.h`). The screen's log says what
   the store holds whenever that changes (`store: 5 pictures, 578 of 1638 KB (cover tile tile cover tile), 0 to go`).
 
+## The screen's own camera as video in Home Assistant
+
+The rest of this page is about pictures coming to a screen. This section goes the other way: a screen with a camera of
+its own (the reTerminal D1001 and the M5Stack Tab5, the feature `camera_sensor`) as a live camera in Home Assistant,
+with sound, playing in the browser and the app with about a third of a second of delay.
+
+**Setting it up.** Add the plugin Screen camera to the screen; its part **Video** is on when it is added (the plugin's
+details, on the screen's Plugins tab, turn it off). Then, once for the whole home, open **Settings, Video in Home
+Assistant** in Tessera, press **Install in Home Assistant** and then **Restart Home Assistant**. From then on Tessera
+adds a camera **Video** to the device of each screen with the video by itself, and takes it away again when the part is
+turned off. Nobody types a password or an address.
+
+**What travels.** The camera hands its frames to the ESP32-P4's hardware H.264 encoder: 1280 x 720 at 15 frames a
+second, 1 Mbit/s, a key frame every second. The microphone goes as Opus, 16 kHz in one channel at 32 kbit/s. A small
+RTSP server on the screen (port 8554, RTP over the RTSP connection) serves up to three viewers from the one encoder.
+Home Assistant's integration `tessera_video` (shipped by the app, `screen_manager/app/ha_integration/tessera_video`)
+gives Home Assistant that address as the camera's stream, and Home Assistant's go2rtc passes H.264 and Opus on to the
+browser as WebRTC without transcoding. Stills come from the same stream. Both ends work the password out of the API key
+Home Assistant already keeps for the screen (`sha256("tessera-video:" + key)`, its first 24 hexadecimal digits), user
+`tessera`.
+
+**What changes on the screen.** The camera runs from boot, in its raw mode. Its JPEG pictures are gone, and so is the
+camera "Camera" of the screen's device: "Video" gives the stills now. Light level and motion of Screen camera keep
+working: they read the same frames the video gets. The dot in the top right corner shows while anyone watches. The
+microphone listens only while someone watches, and the voice assistant can listen at the same time.
+
+**What it takes, measured on a reTerminal D1001.** Each of these cost a build to find, and each is kept in the code:
+
+- lwIP's TCP send buffer of 5760 bytes lets four segments travel at once, which over the ESP32-C6's Wi-Fi caps one
+  connection near 1.5 Mbit/s and holds the sound up behind the picture for seconds. Every P4 gets 65534
+  (`P4_NETWORK` in `components/smart_display/__init__.py`).
+- Internal RAM is what a P4 runs short of. The encoder keeps about 104 KB of it and Opus about 25 KB, for as long as
+  the screen runs. What every connection holds unsent or unread lived there too: with live camera tiles on the glass
+  and the video playing, free internal RAM fell from 160 KB to 13 KB in two seconds and the C6's driver aborted the
+  chip. So on every P4 the network's buffers go to PSRAM first (`CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP`, the option
+  ESPHome's `wifi: use_psram` sets), and the video skips frames while less than 80 KB is free, starting again with a
+  key frame above 110 KB.
+- The encoder keeps its reference frame in internal RAM. It is made once, at the camera's first frame, on the camera's
+  own task, with the camera started at boot. Made when someone starts watching, after the pages were built, there was
+  no memory left for it. Made in `setup()`, before the camera driver ran, the first frame hung the whole chip.
+- An encoder whose output did not fit stays stuck, so its output buffer holds 1 MB (a key frame of a dark room is over
+  200 KB), it is never closed and opened again, and a viewer never chooses another size.
+- The server's own buffers (a 64 KB send batch, a second of sound) live in PSRAM, and so does its task's 32 KB stack
+  (Opus needs about 27 KB of it). With less than about 90 KB of internal RAM free the Wi-Fi starved and the chip
+  stalled now and then.
+- The microphone's chunks go to the server whole or not at all. A partial write of an odd number of bytes split every
+  later 16-bit sample in two, which sounds like white noise. A chunk that does not fit is dropped whole, and its
+  samples move the sound's clock on, so picture and sound stay in step.
+- Opus counts at 48 kHz in RTP whatever it carries, and the SDP says `opus/48000/2`. Sender reports every second on both
+  tracks, against the same clock the camera stamps its frames with, line picture and sound up in the browser.
+- One viewer at a time was not enough: Home Assistant's own stream (for HLS and stills) opens a connection beside
+  go2rtc's, and while it waited the frontend fell back to HLS, three seconds late and without sound.
+- esp_audio_codec 2.5.0: from 2.6 on it builds only for P4 chips of revision 3.
+- A JPEG-only build of Screen camera puts an empty esp_h264 in the build folder (its component
+  `esp_h264_placeholder`). The video's build goes without that component, and ESPHome wipes a build folder when a
+  component it had is gone, so the empty one cannot hide the real encoder. When a build fails to compile, ESPHome's
+  upload sends the previous firmware: after a flash, check that the screen runs the new build's compile time.
+
 ## For developers
 
 - The app's side is one picture system, docs/PICTURES.md: `picture_question.py` (the question and its answer),
