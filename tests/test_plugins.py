@@ -1214,6 +1214,9 @@ class Queue(unittest.IsolatedAsyncioTestCase):
             def save_plugins(self, profile, text):
                 (config / profile.replace('.yaml', '.plugins.yaml')).write_text(text)
 
+            async def clean_build(self, name):
+                started.append(('clean', name))
+
             def start(self, data):
                 started.append(data['file'])
 
@@ -1249,6 +1252,13 @@ class Queue(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"CITY": "Utrecht"', text)
         self.assertIn('extra.yaml', text)
         self.assertIn('clock_words/plugin.yaml', text)
+        # Only a change of a plugin's parts starts the build from an empty build folder (BuildQueue, Build.fresh): above,
+        # adding and updating kept the folder.
+        started.clear()
+        await service.apply('hall', {'add': [{'id': 'city_words', 'source': 'folder', 'parts': []}]})
+        await service.manager.build_queue.idle()
+        self.assertEqual(started, [('clean', 'hall.yaml'), 'hall.yaml'])
+        self.assertNotIn('extra.yaml', (config / 'hall.plugins.yaml').read_text())
 
 
 class BuildOutcome(unittest.IsolatedAsyncioTestCase):

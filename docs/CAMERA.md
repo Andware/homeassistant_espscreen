@@ -491,9 +491,12 @@ microphone listens only while someone watches, and the voice assistant can liste
   go2rtc's, and while it waited the frontend fell back to HLS, three seconds late and without sound.
 - esp_audio_codec 2.5.0: from 2.6 on it builds only for P4 chips of revision 3.
 - A JPEG-only build of Screen camera puts an empty esp_h264 in the build folder (its component
-  `esp_h264_placeholder`). The video's build goes without that component, and ESPHome wipes a build folder when a
-  component it had is gone, so the empty one cannot hide the real encoder. When a build fails to compile, ESPHome's
-  upload sends the previous firmware: after a flash, check that the screen runs the new build's compile time.
+  `esp_h264_placeholder`), and ESPHome never takes a file it wrote away again: it wipes a build folder only when a
+  component it had is gone. The video's build goes without that component, which covers a screen built with Screen
+  camera 0.4.0 before. For one that ran an older Screen camera, the app starts a build whose plugin parts changed from
+  an empty build folder (`Build.fresh` in `build_queue.py`); in Device Builder, use Clean Build Files once. When a build
+  fails to compile, ESPHome's upload sends the previous firmware: after a flash, check that the screen runs the new
+  build's compile time.
 
 ## For developers
 
