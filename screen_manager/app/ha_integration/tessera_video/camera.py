@@ -39,6 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, add: AddEnt
     if device is None or mac is None or esphome is None:
         # The screen's ESPHome integration is not there (yet): Home Assistant tries again.
         raise ConfigEntryNotReady("The screen's ESPHome device is not in Home Assistant")
+    # The camera belongs on the device the ESPHome integration keeps for the screen. A device this entry held before
+    # without it (the screen was added to ESPHome again, and Home Assistant made it a new device) lets go of this entry,
+    # and Home Assistant removes it once nothing holds it, so the camera finds the screen's device by its MAC.
+    registry = dr.async_get(hass)
+    for other in dr.async_entries_for_config_entry(registry, entry.entry_id):
+        if esphome.entry_id not in other.config_entries:
+            registry.async_update_device(other.id, remove_config_entry_id=entry.entry_id)
     add([ScreenVideo(mac, esphome)])
 
 

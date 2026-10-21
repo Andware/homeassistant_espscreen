@@ -39,8 +39,17 @@ class FakeHA:
 
     def __init__(self, loaded='1.0.0', entries=()):
         self.loaded = loaded
-        self.entries = [dict(e) for e in entries]
+        # Home Assistant's list of entries has no unique id: the device registry says which device holds an entry.
+        self.entries = [{k: v for k, v in e.items() if k != 'unique_id'} for e in entries]
+        self.held = {e['entry_id']: e.get('unique_id') for e in entries}
         self.deleted, self.flows = [], {}
+
+    @property
+    def devices(self):
+        if getattr(self, 'no_devices', False):
+            return []
+        return [{'id': device, 'config_entries': ['esphome-' + device, entry]} for entry, device in self.held.items()
+                if device and any(e['entry_id'] == entry for e in self.entries)]
 
     async def request(self, kind, **data):
         if kind == 'manifest/get':
@@ -59,9 +68,10 @@ class FakeHA:
             return {'type': 'form', 'flow_id': flow_id, 'step_id': 'user'}
         if method == 'post' and path.startswith('flow/'):
             device = data['device']
-            if any(e['unique_id'] == device for e in self.entries):
+            if device in self.held.values():
                 return {'type': 'abort', 'reason': 'already_configured'}
-            self.entries.append({'entry_id': 'e' + device, 'unique_id': device, 'title': device})
+            self.entries.append({'entry_id': 'e' + device, 'title': device})
+            self.held['e' + device] = device
             return {'type': 'create_entry', 'result': {'entry_id': 'e' + device}}
         if method == 'delete':
             return {}
@@ -174,10 +184,19 @@ class Sync(unittest.TestCase):
             videos, done = self.run_sync(ha, folder)
             self.assertEqual(done, {'added': ['dev-tablet'], 'removed': ['dev-kitchen']})
             self.assertEqual(videos.loaded, '1.0.0')
-            self.assertEqual(sorted(e['unique_id'] for e in ha.entries), ['dev-elsewhere', 'dev-hall', 'dev-tablet'])
+            self.assertEqual(sorted(ha.held[e['entry_id']] for e in ha.entries), ['dev-elsewhere', 'dev-hall', 'dev-tablet'])
             # Again: nothing more to do.
             again = asyncio.run(videos.sync(ha, *screen_video.video_screens(FakePlugins(RECORDS), screens())))
             self.assertEqual(again, {'added': [], 'removed': []})
+
+    def test_an_entry_on_no_device_yet_is_not_added_twice(self):
+        with tempfile.TemporaryDirectory() as folder:
+            # The tablet's entry is there, but its camera is on no device yet (the ESPHome device is not loaded).
+            ha = FakeHA(entries=[{'entry_id': 'waiting', 'unique_id': 'dev-tablet', 'title': 'Tablet'}])
+            ha.no_devices = True
+            _, done = self.run_sync(ha, folder)
+            self.assertEqual(done, {'added': [], 'removed': []})
+            self.assertEqual(len(ha.entries), 1)
 
 
 class Wiring(unittest.TestCase):

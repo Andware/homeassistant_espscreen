@@ -115,14 +115,22 @@ class Videos:
         if self.loaded is None:
             return {'added': [], 'removed': []}
         entries = [e for e in await ha.request('config_entries/get', domain=DOMAIN) or [] if isinstance(e, dict)]
-        have = {e.get('unique_id'): e for e in entries}
         self.entries = len(entries)
+        # Which screen an entry is for: Home Assistant's list of entries leaves their unique id out, so the device
+        # registry says it, through the camera the entry put on the screen's device. An entry on no device yet (its
+        # screen's ESPHome device is not there) is left alone, and the flow below says it is there already.
+        ours = {e.get('entry_id'): e for e in entries}
+        have = {}
+        for device in getattr(ha, 'devices', None) or []:
+            for entry_id in (device or {}).get('config_entries') or []:
+                if entry_id in ours:
+                    have[device.get('id')] = ours[entry_id]
         added, removed, now = [], [], time.monotonic()
         for device, name in wanted.items():
             if device in have or now < self.tried.get(device, 0):
                 continue
             self.tried[device] = now + INTERVAL * 10
-            if await self.add(ha, device):
+            if await self.add(ha, device) == 'added':
                 added.append(device)
                 LOG.info('%s: its video is in Home Assistant', name)
         for device, entry in have.items():
@@ -133,13 +141,14 @@ class Videos:
         return {'added': added, 'removed': removed}
 
     async def add(self, ha, device):
-        """The integration's own dialog, answered with the screen's device; a flow that does not end is closed again."""
+        """The integration's own dialog, answered with the screen's device: 'added', 'there' when the screen has an entry
+        already, or None. A flow that does not end is closed again."""
         form = await ha.flow('post', 'flow', {'handler': DOMAIN})
         if form.get('type') != 'form' or not form.get('flow_id'):
-            return False
+            return None
         done = await ha.flow('post', f"flow/{form['flow_id']}", {'device': device})
         if done.get('type') == 'create_entry':
-            return True
+            return 'added'
         if done.get('type') == 'form' and done.get('flow_id'):
             await ha.flow('delete', f"flow/{done['flow_id']}")
-        return done.get('type') == 'abort' and done.get('reason') == 'already_configured'
+        return 'there' if done.get('type') == 'abort' and done.get('reason') == 'already_configured' else None
