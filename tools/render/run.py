@@ -2710,6 +2710,49 @@ class Run:
                 raise RuntimeError(f'media: {what}: {card}')
             await asyncio.sleep(0.15)
 
+    async def doorbell_round(self):
+        """A doorbell's ring (module doorbell, docs/DOORBELL.md): the op doorbell opens the camera full view as a ring, with
+        its picture as ESP Screens paints it in the room beside its keys; a touch answers it (esphome.screen_doorbell), a
+        second ring keeps it open, and the close of a ring answered on another screen closes it."""
+        calls = []
+        self.client.subscribe_service_calls(calls.append)
+        # Page 1 stands first: a layout that lands closes a camera's view (cancel_layout_input), a ring's too.
+        await self.page_done(0)
+        await asyncio.sleep(2)
+        key, start, since = 'ring0001', len(self.lines), 0
+        ring = {'v': 1, 'op': 'doorbell', 'e': 'camera.front_door', 'n': 'Front door', 'k': key, 'r': int(MOMENT.timestamp()) - 20}
+        await self.send(ring)
+        await self.until(lambda l: 'for a ring' in l, 10, 'doorbell: the view never opened', start)
+        end, answered = time.monotonic() + 10, False
+        while time.monotonic() < end and not answered:
+            for call, read in self.unanswered(calls, since):
+                body, _ = painted(read.question, [porch(*self.camera)], [{}])
+                await self.reply(read, self.pictures.url(f'{self.item.key}-doorbell.bmp', body))
+                call.data['_answered'] = '1'
+                answered = True
+                self.warnings.append(f'doorbell: its picture asked at {read.question.box[0]} x {read.question.box[1]}')
+                break
+            await asyncio.sleep(0.05)
+        if not answered:
+            self.failures.append('doorbell: the view asked for no picture')
+        await self.render('doorbell')
+        # A touch in the middle of the picture answers the ring, once.
+        since = len(calls)
+        await self.tap(self.canvas[0] // 3, self.canvas[1] // 2)
+        await self.tap(self.canvas[0] // 3, self.canvas[1] // 2)
+        reports = [dict(c.data) for c in calls[since:] if c.service == 'esphome.screen_doorbell']
+        if [r.get('action') for r in reports] != ['answered'] or any(r.get('key') != key for r in reports):
+            self.failures.append(f'doorbell: a touch should report answered once, reported {reports}')
+        # Answered elsewhere: the close of that ring closes it here, without a report of its own.
+        since, start = len(calls), len(self.lines)
+        await self.send({'v': 1, 'op': 'doorbell', 'k': key, 'c': 1})
+        await self.until(lambda l: 'answered on another screen' in l, 10, 'doorbell: the close never came', start)
+        await self.page_done(0)
+        await self.render('doorbell-closed')
+        if any(c.service == 'esphome.screen_doorbell' for c in calls[since:]):
+            self.failures.append('doorbell: a ring closed from elsewhere reported again')
+        return 1
+
     async def saver_panel(self):
         """The screensaver (firmware 0.29.0+) over the demo layout in standby: a cover that plays, a camera and the clock,
         each as ESP Screens says it (screen_saver.py) and with its picture as ESP Screens paints it (picture_paint)."""
@@ -3777,6 +3820,8 @@ class Run:
             return 1, await self.media_tiles(grid)
         if self.only == 'saver':
             return 1, await self.saver_panel()
+        if self.only == 'doorbell':
+            return 1, await self.doorbell_round()
         if self.only == 'humidifier':
             return 1, await self.humidifier_panel(grid)
         if self.only == 'vacuum':
@@ -3881,7 +3926,7 @@ def main():
     parser.add_argument('--out', type=Path, default=REPO / '.esphome' / 'render' / 'out')
     parser.add_argument('--work', type=Path, help='where the host builds go (default: .esphome/render/build)')
     parser.add_argument('--camera', default='960x540', help='the camera picture of the camera alert, WxH')
-    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'mediatiles', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock', 'vacuum', 'vacuumtile'], help='after the demo layout arrives, run only this stage')
+    parser.add_argument('--only', choices=['alarm', 'lock', 'automation', 'remote', 'bedside', 'media', 'mediatiles', 'saver', 'humidifier', 'weather', 'calendar', 'bars', 'dock', 'vacuum', 'vacuumtile', 'doorbell'], help='after the demo layout arrives, run only this stage')
     parser.add_argument('--plugin', type=Path, help='a plugin folder (docs/PLUGINS.md) to build into the variants, then run the plugin '
                         'round alone: tests/fixtures/plugins/host_probe proves the plugin host on the real firmware')
     parser.add_argument('--port-base', type=int, help='the first API port (default host.PORT_BASE); another worktree may use it')

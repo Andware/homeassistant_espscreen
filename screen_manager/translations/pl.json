@@ -159,6 +159,7 @@
       "microphone": "Mikrofon",
       "media_player": "Głośność",
       "wake_when_moved": "Wybudź przy ruchu",
+      "doorbell": "Dzwonek",
       "dark_mode": "Tryb ciemny",
       "auto_standby": "Auto czuwanie",
       "standby_after": "Czuwanie po",
@@ -195,6 +196,10 @@
       "microphone_gain": "Wzmocnienie mikrofonu",
       "automatic_gain": "Automatyczne wzmocnienie",
       "echo_cancellation": "Usuwanie echa"
+    },
+    "doorbell": {
+      "sound_on": "Dźwięk wł.",
+      "sound_off": "Dźwięk wył."
     },
     "tile": {
       "tap_to_open": "Otwórz",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Wybudź przy ruchu",
           "hint": "Ekran wybudza się ze stanu czuwania, gdy ktoś go podniesie, przesunie lub w niego stuknie. Czuje sam ekran, nie kogoś, kto przechodzi obok."
+        },
+        "doorbell": {
+          "label": "Dzwonek do drzwi",
+          "hint": "Gdy dzwonek do drzwi w Home Assistant zadzwoni, ten ekran się budzi, odtwarza gong i otwiera kamerę na żywo z dźwiękiem. Wyłączone zostawia ten ekran w spokoju, na przykład w sypialni w nocy."
         },
         "microphone_gain": {
           "label": "Wzmocnienie mikrofonu",

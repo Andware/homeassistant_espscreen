@@ -159,6 +159,7 @@
       "microphone": "Microfone",
       "media_player": "Volume",
       "wake_when_moved": "Acordar ao mover",
+      "doorbell": "Campainha",
       "dark_mode": "Modo escuro",
       "auto_standby": "Espera automática",
       "standby_after": "Espera após",
@@ -195,6 +196,10 @@
       "microphone_gain": "Ganho do microfone",
       "automatic_gain": "Ganho automático",
       "echo_cancellation": "Cancelamento eco"
+    },
+    "doorbell": {
+      "sound_on": "Som ligado",
+      "sound_off": "Som desligado"
     },
     "tile": {
       "tap_to_open": "Toque para abrir",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Acordar ao mover",
           "hint": "O ecrã sai do modo de espera quando alguém o pega, move ou bate nele. Sente o próprio ecrã, não alguém que passa."
+        },
+        "doorbell": {
+          "label": "Campainha",
+          "hint": "Quando uma campainha do Home Assistant toca, este ecrã acorda, toca um aviso e abre a câmara em direto com som. Desligado deixa este ecrã em paz, por exemplo um quarto à noite."
         },
         "microphone_gain": {
           "label": "Ganho do microfone",

@@ -159,6 +159,7 @@
       "microphone": "Microphone",
       "media_player": "Volume",
       "wake_when_moved": "Réveil au mouvement",
+      "doorbell": "Sonnette",
       "dark_mode": "Mode sombre",
       "auto_standby": "Veille auto",
       "standby_after": "Veille après",
@@ -195,6 +196,10 @@
       "microphone_gain": "Gain du microphone",
       "automatic_gain": "Gain automatique",
       "echo_cancellation": "Annulation d'écho"
+    },
+    "doorbell": {
+      "sound_on": "Son activé",
+      "sound_off": "Son coupé"
     },
     "tile": {
       "tap_to_open": "Ouvrir",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Réveil au mouvement",
           "hint": "L’écran sort de veille quand quelqu’un le prend, le déplace ou le heurte. Il sent l’écran lui-même, pas quelqu’un qui passe."
+        },
+        "doorbell": {
+          "label": "Sonnette",
+          "hint": "Quand une sonnette de Home Assistant sonne, cet écran se réveille, joue un carillon et ouvre sa caméra en direct avec le son. Désactivé, cet écran reste tranquille, par exemple une chambre la nuit."
         },
         "microphone_gain": {
           "label": "Gain du microphone",

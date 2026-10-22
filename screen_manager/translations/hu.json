@@ -159,6 +159,7 @@
       "microphone": "Mikrofon",
       "media_player": "Hangerő",
       "wake_when_moved": "Ébresztés mozgatásra",
+      "doorbell": "Csengő",
       "dark_mode": "Sötét mód",
       "auto_standby": "Auto készenlét",
       "standby_after": "Készenlét ennyi után",
@@ -195,6 +196,10 @@
       "microphone_gain": "Mikrofonerősítés",
       "automatic_gain": "Automatikus erősítés",
       "echo_cancellation": "Visszhangszűrés"
+    },
+    "doorbell": {
+      "sound_on": "Hang be",
+      "sound_off": "Hang ki"
     },
     "tile": {
       "tap_to_open": "Megnyitás",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Ébresztés mozgatásra",
           "hint": "A kijelző felébred készenlétből, ha valaki felveszi, elmozdítja vagy megkocogtatja. Magát a kijelzőt érzékeli, nem az arra járókat."
+        },
+        "doorbell": {
+          "label": "Ajtócsengő",
+          "hint": "Ha egy Home Assistant ajtócsengő megszólal, ez a képernyő felébred, csengőhangot játszik, és élőben, hanggal megnyitja a kameráját. Kikapcsolva ez a képernyő nyugton marad, például éjjel a hálószobában."
         },
         "microphone_gain": {
           "label": "Mikrofonerősítés",

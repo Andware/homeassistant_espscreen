@@ -159,6 +159,7 @@
       "microphone": "Microfoon",
       "media_player": "Volume",
       "wake_when_moved": "Wakker bij bewegen",
+      "doorbell": "Deurbel",
       "dark_mode": "Donkere modus",
       "auto_standby": "Automatisch stand-by",
       "standby_after": "Stand-by na",
@@ -195,6 +196,10 @@
       "microphone_gain": "Microfoongain",
       "automatic_gain": "Automatische gain",
       "echo_cancellation": "Echo-onderdrukking"
+    },
+    "doorbell": {
+      "sound_on": "Geluid aan",
+      "sound_off": "Geluid uit"
     },
     "tile": {
       "tap_to_open": "Tik om te openen",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Wakker bij bewegen",
           "hint": "Het scherm wordt wakker uit stand-by als iemand het oppakt, verplaatst of erop tikt. Het voelt het scherm zelf, niet iemand die langsloopt."
+        },
+        "doorbell": {
+          "label": "Deurbel",
+          "hint": "Als een deurbel in Home Assistant gaat, wordt dit scherm wakker, speelt een belgeluid en opent de camera live met geluid. Uit laat dit scherm met rust, bijvoorbeeld een slaapkamer in de nacht."
         },
         "microphone_gain": {
           "label": "Microfoongain",

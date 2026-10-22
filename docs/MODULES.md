@@ -58,6 +58,10 @@ the add-on and the editor offer a module's options only on boards that have it.
   (docs/SCREENSAVER.md, "Clock faces", `module_clock_faces.h`, included by `runtime_tiles.h` before `saver_clock_draw`).
   Its screens say `clock_faces` in their hello and ESP Screens sends them the face (`cf`); the editor offers faces only
   where `boards.json` lists the module, and lite keeps the digital clock.
+- **doorbell** (full): a doorbell's ring opens its camera full screen, live with its sound and a chime
+  (docs/DOORBELL.md, `module_doorbell.cpp` with its header). Its screens say `doorbell` in their hello when they stream
+  (a P4), and ESP Screens sends them the op `doorbell`; lite gets no ring by itself (an alert with the doorbell's picture
+  stays the way there).
 - **dock** (full): up from the bottom edge opens the Dock, a small drawer at the bottom of the glass (at most 12 cm
   wide, the full width on a 4-inch glass) with every page as a small picture and its name, in one row or two.
   The drawer rides on the finger that opens it: its top stays under the finger until it lets go, and then a flick, or

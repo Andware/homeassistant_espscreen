@@ -159,6 +159,7 @@
       "microphone": "Microfono",
       "media_player": "Volume",
       "wake_when_moved": "Riattiva se mosso",
+      "doorbell": "Campanello",
       "dark_mode": "Modalità scura",
       "auto_standby": "Standby automatico",
       "standby_after": "Standby dopo",
@@ -195,6 +196,10 @@
       "microphone_gain": "Guadagno microfono",
       "automatic_gain": "Guadagno automatico",
       "echo_cancellation": "Cancellazione eco"
+    },
+    "doorbell": {
+      "sound_on": "Audio attivo",
+      "sound_off": "Audio disattivato"
     },
     "tile": {
       "tap_to_open": "Tocca per aprire",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Riattiva se mosso",
           "hint": "Lo schermo esce dallo standby quando qualcuno lo prende, lo sposta o lo urta. Sente lo schermo stesso, non chi passa."
+        },
+        "doorbell": {
+          "label": "Campanello",
+          "hint": "Quando suona un campanello di Home Assistant, questo schermo si riattiva, suona un avviso e apre la sua telecamera dal vivo con l'audio. Disattivato lascia stare questo schermo, ad esempio una camera da letto di notte."
         },
         "microphone_gain": {
           "label": "Guadagno microfono",

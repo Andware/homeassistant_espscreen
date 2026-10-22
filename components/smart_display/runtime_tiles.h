@@ -62,6 +62,9 @@
 #include "calendar_view.h"
 #include "meter_view.h"
 #include "module_vacuum_tile.h"
+#ifdef SD_MOD_DOORBELL
+#include "module_doorbell.h"
+#endif
 #include "plugin_api.h"
 #include "plugin_host.h"
 #include "screen_hooks.h"
@@ -9822,6 +9825,13 @@ inline void render_header() {
   // an unavailable entity opens nothing, as its tile does.
   header_renderer.on_item([](size_t item) {
     const auto *bar = shown_bar();
+#ifdef SD_MOD_DOORBELL
+    // A missed ring (module doorbell) opens that ring's view again.
+    if (bar && item < bar->count && bar->items[item].card == header_bar::DOORBELL_CARD) {
+      if (allowed(esphome::millis(), 14, "header doorbell")) doorbell::reopen();
+      return;
+    }
+#endif
     if (!bar || item >= bar->count || bar->items[item].card >= model.count || !fresh()) return;
     const auto &tile = model.tiles[bar->items[item].card];
     if (!tile.received || !tile.available() || !allowed(esphome::millis(), 14, "header item")) return;
@@ -11000,6 +11010,32 @@ constexpr uint8_t ALERT_IMAGE_RETRIES = 3;
 
 inline bool camera_supported() { return static_cast<bool>(camera_full.load); }
 inline bool camera_visible() { return camera_root != nullptr; }
+// A ring's view keeps the screen from standby (module doorbell, packages/core.yaml's standby interval); lite has none.
+inline bool doorbell_holds() {
+#ifdef SD_MOD_DOORBELL
+  return doorbell::holds();
+#else
+  return false;
+#endif
+}
+// Its bindings, for the YAML of every board: a lambda that holds a ${...} cannot hold an #ifdef (ESPHome reads it as a
+// template), so these take the module's place there. How a ring ended goes to ESP Screens (packages/core.yaml); the chime
+// plays on `speaker` and `enabled` reads the switch Doorbell under Extras (features/audio-player.yaml).
+inline void doorbell_reports(std::function<void(const std::string &, const std::string &)> report) {
+#ifdef SD_MOD_DOORBELL
+  doorbell::report = std::move(report);
+#else
+  (void) report;
+#endif
+}
+template<class Speaker> inline void doorbell_audio(Speaker *speaker, std::function<bool()> enabled) {
+#ifdef SD_MOD_DOORBELL
+  doorbell::bind_speaker(speaker);
+  doorbell::enabled = std::move(enabled);
+#else
+  (void) speaker; (void) enabled;
+#endif
+}
 
 // ---- Pictures kept until they change (firmware 0.3.2+, picture_store.h) ----
 // On a board with PSRAM every picture a card draws (a page's strip, an album cover) is the store's own copy, never the
@@ -11563,6 +11599,10 @@ inline bool drawn_over(lv_obj_t *owner, int x, int y, int w, int h) {
 }
 // The room below the top bar: the back key and the name stay LVGL's, on the view's black, never over the picture.
 inline live_view::Rect live_area() {
+#ifdef SD_MOD_DOORBELL
+  // A ring's view (module doorbell): the room beside or above its keys.
+  if (doorbell::shown()) return doorbell::area();
+#endif
   const int top = detail_bar::bottom();
   return {0, top, overlay_card::screen_width(), overlay_card::screen_height() - top};
 }
@@ -11581,12 +11621,18 @@ inline bool camera_muted = false;
 inline lv_obj_t *camera_sound_key = nullptr;
 inline lv_obj_t *view_key(lv_obj_t *parent, int size, const char *glyph, bool over_map);
 inline void camera_sound_glyph() {
+#ifdef SD_MOD_DOORBELL
+  if (doorbell::shown()) { doorbell::sound_changed(); return; }
+#endif
   if (!camera_sound_key) return;
   lv_label_set_text(lv_obj_get_child(camera_sound_key, 0), camera_muted ? "\U000F0581" : "\U000F057E");  // volume-off, -high
 }
 // The key at the right of the view's top bar, once the camera's sound comes (Event::SOUND): a tap mutes it or lets it in.
 inline void camera_sound_show() {
   if (!camera_root || camera_sound_key) return;
+#ifdef SD_MOD_DOORBELL
+  if (doorbell::shown()) return;  // a ring's view has its sound key from the start
+#endif
   const auto slot = detail_bar::right_slot(camera_root);
   camera_sound_key = view_key(camera_root, slot.h, camera_muted ? "\U000F0581" : "\U000F057E", false);
   lv_obj_set_pos(camera_sound_key, slot.x, slot.y);
@@ -11616,6 +11662,10 @@ inline void camera_warm(bool on) {
     if (!camera_warm_spinner) return;
     lv_obj_set_style_arc_color(camera_warm_spinner, theme::color(theme::CAMERA_TRACK), LV_PART_MAIN);
   }
+#ifdef SD_MOD_DOORBELL
+  // A ring's view has its close key at the edge: the spinner turns beside it.
+  if (doorbell::shown()) { doorbell::spinner_place(camera_warm_spinner, size); lv_obj_remove_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN); return; }
+#endif
   const auto slot = detail_bar::right_slot(camera_root);
   lv_obj_set_pos(camera_warm_spinner, slot.x + (slot.w - size) / 2, slot.y + (slot.h - size) / 2);
   lv_obj_remove_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN);
@@ -12065,9 +12115,14 @@ inline void camera_request(const std::string &entity, int size, uint32_t backgro
     return;
   }
   // The whole glass, within the board's cap (picture_cap, GitHub #183): a board with the memory gets its own pixels.
-  const int scale = picture_store::fit_scale(overlay_card::screen_width(), overlay_card::screen_height(), cap);
-  q.w = place.w = std::max(1, picture_store::scaled(overlay_card::screen_width(), scale));
-  q.h = place.h = std::max(1, picture_store::scaled(overlay_card::screen_height(), scale));
+  int glass_w = overlay_card::screen_width(), glass_h = overlay_card::screen_height();
+#ifdef SD_MOD_DOORBELL
+  // A ring's picture fills the room beside its keys.
+  if (doorbell::shown() && camera_map_index < 0 && !saver_camera) { glass_w = doorbell::area().w; glass_h = doorbell::area().h; }
+#endif
+  const int scale = picture_store::fit_scale(glass_w, glass_h, cap);
+  q.w = place.w = std::max(1, picture_store::scaled(glass_w, scale));
+  q.h = place.h = std::max(1, picture_store::scaled(glass_h, scale));
   const char *kind = "full";
   if (saver_camera) {
     // The screensaver's picture: the player's cover over the glass, a camera, or the photo of the photos step, darkened
@@ -12131,6 +12186,9 @@ inline void camera_release() {
 
 inline void camera_close() {
   if (!camera_root) return;
+#ifdef SD_MOD_DOORBELL
+  doorbell::closing();  // a ring's view says how it ended
+#endif
   // A live picture stops first: nothing of it writes the glass once LVGL draws the page there again.
   live_view::close(camera.live_handle);
   lv_obj_delete(camera_root);
@@ -12366,6 +12424,16 @@ inline void camera_open(const std::string &entity, const std::string &name, int 
     lv_obj_set_style_arc_color(camera_spinner, theme::color(on_page ? theme::TRACK : theme::CAMERA_TRACK), LV_PART_MAIN);
     lv_obj_center(camera_spinner);
   }
+#ifdef SD_MOD_DOORBELL
+  // A ring (module doorbell): the doorbell's own header and keys instead of the back key and the name.
+  if (doorbell::shown()) {
+    doorbell::build(camera_root, name);
+    camera_name = name;
+    ESP_LOGI("camera", "open %s for a ring", entity.c_str());
+    pictures_round();
+    return;
+  }
+#endif
   // The top bar of every page a tap opens (detail_bar), its back key dark over a map.
   const auto home = detail_bar::back_slot(camera_root);
   const int bar = home.h, bar_y = home.y;
@@ -12429,6 +12497,9 @@ inline void camera_open(const std::string &entity, const std::string &name, int 
 // The board's interval (250 ms): the store lets go of what no card draws, every picture says what it wants and the
 // loader asks, loads and breaks off (pictures_round), and the screensaver follows.
 inline void camera_tick() {
+#ifdef SD_MOD_DOORBELL
+  doorbell::tick(esphome::millis());  // its chime, how long ago it rang, the close of a ring nobody answered
+#endif
   pictures_collect();  // copies no card shows any more, and the oldest over the budget
   live_tiles_round();
   pictures_round();
@@ -12615,6 +12686,9 @@ inline void view_done(picture_loader::Outcome outcome) {
     saver_words();
   } else if (first && camera_picture) {
     camera_note_text("");
+#ifdef SD_MOD_DOORBELL
+    if (doorbell::shown()) doorbell::picture_shown(camera_picture);
+#endif
     if (camera_back) lv_obj_move_foreground(camera_back);
     lv_obj_move_foreground(camera_title);
     // A map's card (firmware 0.21.0+) may have come before its first picture: it lies over the map as the bar does.

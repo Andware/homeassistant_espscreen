@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 import math
 from urllib.parse import urlsplit
 import calendar_feed
+import doorbell
 import durations
 import picture_legacy
 import picture_links
@@ -233,6 +234,9 @@ class HomeAssistant:
         self.broadcasts = asyncio.Queue()
         # (event type, data) of tile events (app 0.2.51+), for Manager.tile_loop.
         self.tile_events = asyncio.Queue()
+        # ('ring', state_changed body) of a doorbell that rang and ('report', data) of a screen's report of a ring
+        # (docs/DOORBELL.md), for Manager.doorbell_loop.
+        self.doorbell_events = asyncio.Queue()
         # ESPHome actions that can answer (`esphome.<node>_screen_message` of firmware 0.2.49+), from Home
         # Assistant's own list; refreshed when a device registers its actions again.
         self.responses = set()
@@ -316,6 +320,9 @@ class HomeAssistant:
                         self.states.pop(eid, None)
                     # Unsaved/virtual previews also follow entities not used by a physical screen.
                     self.state_events.notify(eid)
+                    # A doorbell rang (an event entity of the doorbell class, its event type ring): its camera opens on the screens.
+                    if doorbell.rang(body):
+                        self.doorbell_events.put_nowait(('ring', body))
                     if self.relevant is None or eid in self.relevant:
                         self.dirty.add(eid)
                         self.changed.set()
@@ -338,6 +345,8 @@ class HomeAssistant:
                     self.broadcasts.put_nowait((event['event_type'], body))
                 elif event.get('event_type') in TILE_EVENTS:
                     self.tile_events.put_nowait((event['event_type'], body))
+                elif event.get('event_type') == doorbell.EVENT:
+                    self.doorbell_events.put_nowait(('report', body))
         raise ConnectionError('Home Assistant connection lost.')
 
     def describe_close(self, connected):
@@ -585,7 +594,7 @@ class HomeAssistant:
                     await self.request('subscribe_events', event_type=media_library.PLAY_EVENT)
                     await self.request('subscribe_events', event_type=speakers.SPEAKER_EVENT)
                     await self.request('subscribe_events', event_type='repairs_issue_registry_updated')
-                    for event_type in (*REGISTRY_EVENTS, *BROADCAST_EVENTS, ALERT_EVENT, *TILE_EVENTS, *SERVICE_EVENTS):
+                    for event_type in (*REGISTRY_EVENTS, *BROADCAST_EVENTS, ALERT_EVENT, *TILE_EVENTS, *SERVICE_EVENTS, doorbell.EVENT):
                         await self.request('subscribe_events', event_type=event_type)
                     self.states = {s['entity_id']: s for s in await self.request('get_states')}
                     await self.registries()
@@ -1057,6 +1066,8 @@ class Manager:
         self.map_hits = {}
         # The action behind an alert's button (app 0.2.91): node -> (key, action, data) of the alert on that screen.
         self.alert_actions = {}
+        # The rings of doorbells and the last one nobody answered (doorbell.py, docs/DOORBELL.md).
+        self.doorbells = doorbell.Doorbells()
         self.store = LayoutStore(self.path, self.record_grid)
         # An app from before Language & region (app 0.2.90): its screens keep the 24 hours they show, until Home Assistant
         # says every screen's own clock setting was 12 hours (resolve_clock_pin). A new install starts on Automatic, and
@@ -3853,6 +3864,74 @@ class Manager:
             except Exception as error:
                 LOG.warning('%s failed (%s)', event_type, type(error).__name__)
 
+    def doorbell_screens(self):
+        """The screens a ring goes to: online, reachable, and their hello said `doorbell` (module doorbell, a P4)."""
+        out = []
+        for screen in self.screens():
+            sender = self.page_senders.get(screen['id'])
+            if screen.get('online') and sender and doorbell.FEATURE in (getattr(sender, 'features', ()) or ()) and self.transport(screen['id'], screen):
+                out.append(screen)
+        return out
+
+    async def doorbell_send(self, screens, message):
+        results = await asyncio.gather(*(self.send_auxiliary(screen['id'], message, self.transport(screen['id'], screen), self.page_scope(screen['id']))
+                                         for screen in screens), return_exceptions=True)
+        return sum(1 for result in results if result is True)
+
+    async def doorbell_ring(self, body):
+        """A doorbell rang (doorbell.rang): its camera, live with its sound, on every screen that streams."""
+        entity = body.get('entity_id')
+        camera = doorbell.camera_of(self.device_entries(entity), self.ha.states)
+        if not camera:
+            LOG.info('Doorbell %s rang; its device has no camera to show', entity)
+            return
+        screens = self.doorbell_screens()
+        if not screens:
+            LOG.info('Doorbell %s rang; no screen shows a doorbell (a P4 with firmware that has it)', entity)
+            return
+        name = doorbell.name_of(entity, self.device_name_of(entity), self.ha.states)
+        # The screens may open this camera now (camera_allowed), as after an alert with its picture.
+        self.alert_cameras[camera] = time.monotonic()
+        key = self.doorbells.start(camera, name, doorbell.moment(body), [screen['id'] for screen in screens])
+        sent = await self.doorbell_send(screens, self.doorbells.message(key))
+        LOG.info('Doorbell %s rang: %s on %d of %d screens', entity, camera, sent, len(screens))
+        asyncio.ensure_future(self.doorbell_unanswered(key))
+
+    async def doorbell_unanswered(self, key):
+        """Nobody answered the ring: it is the missed ring, which the top bars of those screens show."""
+        await asyncio.sleep(doorbell.MISSED_AFTER)
+        if self.doorbells.unanswered(key):
+            LOG.info('Doorbell ring missed: it shows in the top bars')
+            self.ha.changed.set()
+
+    async def doorbell_report(self, data):
+        """A screen says how a ring ended there (esphome.screen_doorbell): answered or closed closes it on the others,
+        seen takes a missed ring out of the top bars."""
+        if not isinstance(data, dict):
+            return
+        action, key, node = data.get('action'), data.get('key'), data.get('screen')
+        if action in doorbell.ANSWERS and isinstance(key, str):
+            had_missed = self.doorbells.missed is not None
+            targets = set(self.doorbells.answered(key))
+            others = [screen for screen in self.screens() if screen['id'] in targets and screen.get('node') != node and self.transport(screen['id'], screen)]
+            if others:
+                closed = await self.doorbell_send(others, self.doorbells.message(key, close=True))
+                LOG.info('Doorbell ring %s on %s: closed on %d other screens', action, node, closed)
+            if had_missed and self.doorbells.missed is None:
+                self.ha.changed.set()
+        elif action == 'seen' and self.doorbells.seen():
+            self.ha.changed.set()
+
+    async def doorbell_loop(self):
+        """Rings and the screens' reports of them, in arrival order."""
+        queue = getattr(self.ha, 'doorbell_events', None)
+        while queue is not None:
+            kind, data = await queue.get()
+            try:
+                await (self.doorbell_ring(data) if kind == 'ring' else self.doorbell_report(data))
+            except Exception as error:
+                LOG.warning('Doorbell %s failed (%s)', kind, type(error).__name__)
+
     async def alert_ended(self, data):
         """A screen reports how its alert ended (esphome.screen_alert). The button performs the action the alert
         came with, once for the alert however many screens showed it; any other ending forgets it on that screen."""
@@ -5180,7 +5259,7 @@ async def main():
             LOG.error('Camera images are off: port %d is not available (%s)', picture_links.port(), error)
         try:
             await asyncio.gather(ha.run(), manager.run(), manager.history_loop(), manager.updates.run(),
-                                 manager.alert_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(),
+                                 manager.alert_loop(), manager.doorbell_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(),
                                  manager.media_loop(), manager.pairing_loop(), manager.photo_loop(), manager.video_loop(),
                                  *([manager.plugins.loop(), manager.plugin_loop()] if core.plugins_enabled() else []))
         finally:

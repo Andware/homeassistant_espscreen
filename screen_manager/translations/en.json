@@ -159,6 +159,7 @@
       "microphone": "Microphone",
       "media_player": "Volume",
       "wake_when_moved": "Wake when moved",
+      "doorbell": "Doorbell",
       "dark_mode": "Dark mode",
       "auto_standby": "Auto standby",
       "standby_after": "Standby after",
@@ -195,6 +196,10 @@
       "microphone_gain": "Microphone gain",
       "automatic_gain": "Automatic gain",
       "echo_cancellation": "Echo cancellation"
+    },
+    "doorbell": {
+      "sound_on": "Sound on",
+      "sound_off": "Sound off"
     },
     "tile": {
       "tap_to_open": "Tap to open",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Wake when moved",
           "hint": "The screen wakes from standby when someone picks it up, moves it or knocks on it. It feels the screen itself, not someone walking past."
+        },
+        "doorbell": {
+          "label": "Doorbell",
+          "hint": "When a doorbell in Home Assistant rings, this screen wakes, chimes and opens its camera live with sound. Off leaves this screen alone, for example a bedroom at night."
         },
         "microphone_gain": {
           "label": "Microphone gain",

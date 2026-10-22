@@ -159,6 +159,7 @@
       "microphone": "Micrófono",
       "media_player": "Volumen",
       "wake_when_moved": "Despertar al moverlo",
+      "doorbell": "Timbre",
       "dark_mode": "Modo oscuro",
       "auto_standby": "Reposo automático",
       "standby_after": "Reposo tras",
@@ -195,6 +196,10 @@
       "microphone_gain": "Ganancia de micrófono",
       "automatic_gain": "Ganancia automática",
       "echo_cancellation": "Cancelación de eco"
+    },
+    "doorbell": {
+      "sound_on": "Sonido activado",
+      "sound_off": "Sonido desactivado"
     },
     "tile": {
       "tap_to_open": "Toca para abrir",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Despertar al moverlo",
           "hint": "La pantalla sale del modo de espera cuando alguien la coge, la mueve o la golpea. Siente la propia pantalla, no a alguien que pasa."
+        },
+        "doorbell": {
+          "label": "Timbre",
+          "hint": "Cuando suena un timbre de Home Assistant, esta pantalla se despierta, toca un aviso y abre su cámara en directo con sonido. Desactivado deja esta pantalla en paz, por ejemplo un dormitorio por la noche."
         },
         "microphone_gain": {
           "label": "Ganancia de micrófono",

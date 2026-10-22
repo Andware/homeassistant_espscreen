@@ -159,6 +159,7 @@
       "microphone": "Mikrofon",
       "media_player": "Lautstärke",
       "wake_when_moved": "Bei Bewegung aufwecken",
+      "doorbell": "Türklingel",
       "dark_mode": "Dunkler Modus",
       "auto_standby": "Auto-Standby",
       "standby_after": "Standby nach",
@@ -195,6 +196,10 @@
       "microphone_gain": "Mikrofonverstärkung",
       "automatic_gain": "Automatische Verstärkung",
       "echo_cancellation": "Echounterdrückung"
+    },
+    "doorbell": {
+      "sound_on": "Ton an",
+      "sound_off": "Ton aus"
     },
     "tile": {
       "tap_to_open": "Zum Öffnen",
@@ -1144,6 +1149,10 @@
         "wake_when_moved": {
           "label": "Bei Bewegung aufwecken",
           "hint": "Der Bildschirm wacht aus dem Standby auf, wenn jemand ihn hochnimmt, bewegt oder anstößt. Er spürt sich selbst, nicht jemanden, der vorbeigeht."
+        },
+        "doorbell": {
+          "label": "Türklingel",
+          "hint": "Klingelt eine Türklingel in Home Assistant, wacht dieser Bildschirm auf, spielt einen Gong und öffnet ihre Kamera live mit Ton. Aus lässt diesen Bildschirm in Ruhe, etwa ein Schlafzimmer in der Nacht."
         },
         "microphone_gain": {
           "label": "Mikrofonverstärkung",
