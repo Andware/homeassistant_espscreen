@@ -2,7 +2,10 @@
 // A robot vacuum's larger tile (docs/VACUUM.md, "A larger tile") of the module vacuum_card (tier full): what
 // runtime_tiles.h reaches of it. vacuum_tile.h places its parts; module_vacuum_tile.cpp, a compilation unit of its own,
 // paints them and takes their taps. A lite screen has neither and draws the keys.
+// The WebAssembly preview and the host tests have no defines.h, and no module either.
+#if __has_include("esphome/core/defines.h")
 #include "esphome/core/defines.h"
+#endif
 #ifdef SD_MOD_VACUUM_CARD
 #include "lvgl.h"
 #include <string>
