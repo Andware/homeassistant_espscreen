@@ -141,6 +141,10 @@ struct Pen {
     d.font = font;
     d.color = lv_color_hex(colour);
     d.text = s.c_str();
+    // LVGL draws later, when it dispatches the layer; the string here is often a temporary (fit(), std::to_string),
+    // gone by then. So LVGL takes a copy of its own: without it the loop task drew freed memory for ever (task
+    // watchdog, a boot loop with a vacuum tile on page 1).
+    d.text_local = 1;
     d.align = align;
     if (align == LV_TEXT_ALIGN_LEFT) d.flag = LV_TEXT_FLAG_EXPAND;
     const int h = lv_font_get_line_height(font);
