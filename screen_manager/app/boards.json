@@ -44,6 +44,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 19,
+   "icon": 29,
    "icon_home": 24,
    "icon_mini": 18,
    "label": 12,
@@ -124,6 +125,7 @@
    "gap_y": 8,
    "margin": 11,
    "page_bar": 32,
+   "radius": 15,
    "tile_pad": 8,
    "top": 39
   },
@@ -163,6 +165,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 28,
    "icon_home": 25,
    "icon_mini": 18,
    "label": 11,
@@ -218,6 +221,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 36,
+   "radius": 18,
    "tile_pad": 8,
    "top": 37
   },
@@ -252,6 +256,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 28,
    "icon_home": 25,
    "icon_mini": 18,
    "label": 11,
@@ -307,6 +312,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 36,
+   "radius": 18,
    "tile_pad": 8,
    "top": 37
   },
@@ -341,6 +347,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 23,
+   "icon": 36,
    "icon_home": 29,
    "icon_mini": 22,
    "label": 15,
@@ -401,6 +408,7 @@
    "gap_y": 10,
    "margin": 14,
    "page_bar": 40,
+   "radius": 19,
    "tile_pad": 10,
    "top": 48
   },
@@ -445,6 +453,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -525,6 +534,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -559,6 +569,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 29,
    "icon_home": 26,
    "icon_mini": 18,
    "label": 11,
@@ -614,6 +625,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 37,
+   "radius": 18,
    "tile_pad": 8,
    "top": 38
   },
@@ -671,6 +683,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -751,6 +764,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -804,6 +818,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -884,6 +899,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -928,6 +944,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -1008,6 +1025,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -1061,6 +1079,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 34,
+   "icon": 54,
    "icon_home": 43,
    "icon_mini": 33,
    "label": 23,
@@ -1141,6 +1160,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 60,
+   "radius": 28,
    "tile_pad": 15,
    "top": 64
   },
@@ -1194,6 +1214,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -1274,6 +1295,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -1327,6 +1349,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -1407,6 +1430,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -1460,6 +1484,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -1540,6 +1565,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -1584,6 +1610,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 46,
    "icon_home": 37,
    "icon_mini": 29,
    "label": 20,
@@ -1664,6 +1691,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 51,
+   "radius": 24,
    "tile_pad": 13,
    "top": 58
   },
@@ -1718,6 +1746,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 47,
    "icon_home": 38,
    "icon_mini": 29,
    "label": 20,
@@ -1798,6 +1827,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 52,
+   "radius": 24,
    "tile_pad": 13,
    "top": 59
   },
@@ -1832,6 +1862,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -1892,6 +1923,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -1936,6 +1968,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 21,
+   "icon": 33,
    "icon_home": 26,
    "icon_mini": 20,
    "label": 14,
@@ -2016,6 +2049,7 @@
    "gap_y": 9,
    "margin": 13,
    "page_bar": 37,
+   "radius": 17,
    "tile_pad": 9,
    "top": 43
   },
@@ -2075,6 +2109,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 47,
+   "icon": 73,
    "icon_home": 59,
    "icon_mini": 45,
    "label": 31,
@@ -2155,6 +2190,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 81,
+   "radius": 38,
    "tile_pad": 21,
    "top": 81
   },
@@ -2210,6 +2246,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -2290,6 +2327,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -2324,6 +2362,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -2384,6 +2423,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -2433,6 +2473,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 34,
+   "icon": 54,
    "icon_home": 43,
    "icon_mini": 33,
    "label": 23,
@@ -2513,6 +2554,7 @@
    "gap_y": 13,
    "margin": 16,
    "page_bar": 60,
+   "radius": 28,
    "tile_pad": 15,
    "top": 64
   },
@@ -2557,6 +2599,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -2637,6 +2680,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -2681,6 +2725,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -2761,6 +2806,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -2805,6 +2851,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 46,
    "icon_home": 37,
    "icon_mini": 29,
    "label": 20,
@@ -2885,6 +2932,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 51,
+   "radius": 24,
    "tile_pad": 13,
    "top": 58
   },
@@ -2929,6 +2977,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 21,
+   "icon": 33,
    "icon_home": 26,
    "icon_mini": 20,
    "label": 14,
@@ -3009,6 +3058,7 @@
    "gap_y": 9,
    "margin": 13,
    "page_bar": 37,
+   "radius": 17,
    "tile_pad": 9,
    "top": 43
   },
@@ -3053,6 +3103,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 26,
    "icon_mini": 26,
    "label": 18,
@@ -3133,6 +3184,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 53
   },
@@ -3188,6 +3240,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 40,
+   "icon": 63,
    "icon_home": 51,
    "icon_mini": 39,
    "label": 27,
@@ -3268,6 +3321,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 70,
+   "radius": 33,
    "tile_pad": 18,
    "top": 72
   },
@@ -3323,6 +3377,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 33,
+   "icon": 52,
    "icon_home": 42,
    "icon_mini": 32,
    "label": 22,
@@ -3403,6 +3458,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 58,
+   "radius": 27,
    "tile_pad": 15,
    "top": 62
   },
@@ -3458,6 +3514,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -3538,6 +3595,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -3582,6 +3640,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -3662,6 +3721,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -3714,6 +3774,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 19,
+   "icon": 29,
    "icon_home": 24,
    "icon_mini": 18,
    "label": 12,
@@ -3794,6 +3855,7 @@
    "gap_y": 8,
    "margin": 11,
    "page_bar": 32,
+   "radius": 15,
    "tile_pad": 8,
    "top": 39
   },
@@ -3833,6 +3895,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 28,
    "icon_home": 25,
    "icon_mini": 18,
    "label": 11,
@@ -3888,6 +3951,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 36,
+   "radius": 18,
    "tile_pad": 8,
    "top": 37
   },
@@ -3922,6 +3986,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 28,
    "icon_home": 25,
    "icon_mini": 18,
    "label": 11,
@@ -3977,6 +4042,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 36,
+   "radius": 18,
    "tile_pad": 8,
    "top": 37
   },
@@ -4011,6 +4077,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 23,
+   "icon": 36,
    "icon_home": 29,
    "icon_mini": 22,
    "label": 15,
@@ -4071,6 +4138,7 @@
    "gap_y": 10,
    "margin": 14,
    "page_bar": 40,
+   "radius": 19,
    "tile_pad": 10,
    "top": 48
   },
@@ -4115,6 +4183,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -4195,6 +4264,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -4229,6 +4299,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 29,
    "icon_home": 26,
    "icon_mini": 18,
    "label": 11,
@@ -4284,6 +4355,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 37,
+   "radius": 18,
    "tile_pad": 8,
    "top": 38
   },
@@ -4341,6 +4413,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -4421,6 +4494,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -4474,6 +4548,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -4554,6 +4629,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -4598,6 +4674,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -4678,6 +4755,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -4731,6 +4809,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 34,
+   "icon": 54,
    "icon_home": 43,
    "icon_mini": 33,
    "label": 23,
@@ -4811,6 +4890,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 60,
+   "radius": 28,
    "tile_pad": 15,
    "top": 64
   },
@@ -4864,6 +4944,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -4944,6 +5025,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -4997,6 +5079,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -5077,6 +5160,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -5130,6 +5214,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -5210,6 +5295,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -5254,6 +5340,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 46,
    "icon_home": 37,
    "icon_mini": 29,
    "label": 20,
@@ -5334,6 +5421,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 51,
+   "radius": 24,
    "tile_pad": 13,
    "top": 58
   },
@@ -5386,6 +5474,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 19,
+   "icon": 29,
    "icon_home": 24,
    "icon_mini": 18,
    "label": 12,
@@ -5466,6 +5555,7 @@
    "gap_y": 8,
    "margin": 11,
    "page_bar": 32,
+   "radius": 15,
    "tile_pad": 8,
    "top": 39
   },
@@ -5505,6 +5595,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 28,
    "icon_home": 25,
    "icon_mini": 18,
    "label": 11,
@@ -5560,6 +5651,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 36,
+   "radius": 18,
    "tile_pad": 8,
    "top": 37
   },
@@ -5594,6 +5686,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 28,
    "icon_home": 25,
    "icon_mini": 18,
    "label": 11,
@@ -5649,6 +5742,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 36,
+   "radius": 18,
    "tile_pad": 8,
    "top": 37
   },
@@ -5683,6 +5777,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 23,
+   "icon": 36,
    "icon_home": 29,
    "icon_mini": 22,
    "label": 15,
@@ -5743,6 +5838,7 @@
    "gap_y": 10,
    "margin": 14,
    "page_bar": 40,
+   "radius": 19,
    "tile_pad": 10,
    "top": 48
   },
@@ -5787,6 +5883,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -5867,6 +5964,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -5901,6 +5999,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 18,
+   "icon": 29,
    "icon_home": 26,
    "icon_mini": 18,
    "label": 11,
@@ -5956,6 +6055,7 @@
    "gap_y": 4,
    "margin": 9,
    "page_bar": 37,
+   "radius": 18,
    "tile_pad": 8,
    "top": 38
   },
@@ -6013,6 +6113,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -6093,6 +6194,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -6146,6 +6248,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -6226,6 +6329,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -6270,6 +6374,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -6350,6 +6455,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -6403,6 +6509,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 34,
+   "icon": 54,
    "icon_home": 43,
    "icon_mini": 33,
    "label": 23,
@@ -6483,6 +6590,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 60,
+   "radius": 28,
    "tile_pad": 15,
    "top": 64
   },
@@ -6536,6 +6644,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -6616,6 +6725,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -6669,6 +6779,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -6749,6 +6860,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -6802,6 +6914,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -6882,6 +6995,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -6926,6 +7040,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 46,
    "icon_home": 37,
    "icon_mini": 29,
    "label": 20,
@@ -7006,6 +7121,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 51,
+   "radius": 24,
    "tile_pad": 13,
    "top": 58
   },
@@ -7060,6 +7176,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 47,
    "icon_home": 38,
    "icon_mini": 29,
    "label": 20,
@@ -7140,6 +7257,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 52,
+   "radius": 24,
    "tile_pad": 13,
    "top": 59
   },
@@ -7174,6 +7292,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -7234,6 +7353,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -7278,6 +7398,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 21,
+   "icon": 33,
    "icon_home": 26,
    "icon_mini": 20,
    "label": 14,
@@ -7358,6 +7479,7 @@
    "gap_y": 9,
    "margin": 13,
    "page_bar": 37,
+   "radius": 17,
    "tile_pad": 9,
    "top": 43
   },
@@ -7417,6 +7539,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 47,
+   "icon": 73,
    "icon_home": 59,
    "icon_mini": 45,
    "label": 31,
@@ -7497,6 +7620,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 81,
+   "radius": 38,
    "tile_pad": 21,
    "top": 81
   },
@@ -7552,6 +7676,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -7632,6 +7757,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -7666,6 +7792,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -7726,6 +7853,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -7775,6 +7903,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 34,
+   "icon": 54,
    "icon_home": 43,
    "icon_mini": 33,
    "label": 23,
@@ -7855,6 +7984,7 @@
    "gap_y": 13,
    "margin": 16,
    "page_bar": 60,
+   "radius": 28,
    "tile_pad": 15,
    "top": 64
   },
@@ -7899,6 +8029,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -7979,6 +8110,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -8023,6 +8155,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -8103,6 +8236,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -8147,6 +8281,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 46,
    "icon_home": 37,
    "icon_mini": 29,
    "label": 20,
@@ -8227,6 +8362,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 51,
+   "radius": 24,
    "tile_pad": 13,
    "top": 58
   },
@@ -8271,6 +8407,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 21,
+   "icon": 33,
    "icon_home": 26,
    "icon_mini": 20,
    "label": 14,
@@ -8351,6 +8488,7 @@
    "gap_y": 9,
    "margin": 13,
    "page_bar": 37,
+   "radius": 17,
    "tile_pad": 9,
    "top": 43
   },
@@ -8395,6 +8533,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 26,
    "icon_mini": 26,
    "label": 18,
@@ -8475,6 +8614,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 53
   },
@@ -8530,6 +8670,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 40,
+   "icon": 63,
    "icon_home": 51,
    "icon_mini": 39,
    "label": 27,
@@ -8610,6 +8751,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 70,
+   "radius": 33,
    "tile_pad": 18,
    "top": 72
   },
@@ -8665,6 +8807,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 33,
+   "icon": 52,
    "icon_home": 42,
    "icon_mini": 32,
    "label": 22,
@@ -8745,6 +8888,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 58,
+   "radius": 27,
    "tile_pad": 15,
    "top": 62
   },
@@ -8800,6 +8944,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -8880,6 +9025,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -8924,6 +9070,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -9004,6 +9151,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -9058,6 +9206,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 47,
    "icon_home": 38,
    "icon_mini": 29,
    "label": 20,
@@ -9138,6 +9287,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 52,
+   "radius": 24,
    "tile_pad": 13,
    "top": 59
   },
@@ -9172,6 +9322,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -9232,6 +9383,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -9276,6 +9428,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 21,
+   "icon": 33,
    "icon_home": 26,
    "icon_mini": 20,
    "label": 14,
@@ -9356,6 +9509,7 @@
    "gap_y": 9,
    "margin": 13,
    "page_bar": 37,
+   "radius": 17,
    "tile_pad": 9,
    "top": 43
   },
@@ -9415,6 +9569,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 47,
+   "icon": 73,
    "icon_home": 59,
    "icon_mini": 45,
    "label": 31,
@@ -9495,6 +9650,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 81,
+   "radius": 38,
    "tile_pad": 21,
    "top": 81
   },
@@ -9550,6 +9706,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 24,
+   "icon": 37,
    "icon_home": 30,
    "icon_mini": 23,
    "label": 16,
@@ -9630,6 +9787,7 @@
    "gap_y": 11,
    "margin": 14,
    "page_bar": 41,
+   "radius": 19,
    "tile_pad": 11,
    "top": 50
   },
@@ -9664,6 +9822,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -9724,6 +9883,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },
@@ -9773,6 +9933,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 34,
+   "icon": 54,
    "icon_home": 43,
    "icon_mini": 33,
    "label": 23,
@@ -9853,6 +10014,7 @@
    "gap_y": 13,
    "margin": 16,
    "page_bar": 60,
+   "radius": 28,
    "tile_pad": 15,
    "top": 64
   },
@@ -9897,6 +10059,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -9977,6 +10140,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -10021,6 +10185,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -10101,6 +10266,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -10145,6 +10311,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 30,
+   "icon": 46,
    "icon_home": 37,
    "icon_mini": 29,
    "label": 20,
@@ -10225,6 +10392,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 51,
+   "radius": 24,
    "tile_pad": 13,
    "top": 58
   },
@@ -10269,6 +10437,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 21,
+   "icon": 33,
    "icon_home": 26,
    "icon_mini": 20,
    "label": 14,
@@ -10349,6 +10518,7 @@
    "gap_y": 9,
    "margin": 13,
    "page_bar": 37,
+   "radius": 17,
    "tile_pad": 9,
    "top": 43
   },
@@ -10393,6 +10563,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 26,
    "icon_mini": 26,
    "label": 18,
@@ -10473,6 +10644,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 53
   },
@@ -10528,6 +10700,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 40,
+   "icon": 63,
    "icon_home": 51,
    "icon_mini": 39,
    "label": 27,
@@ -10608,6 +10781,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 70,
+   "radius": 33,
    "tile_pad": 18,
    "top": 72
   },
@@ -10663,6 +10837,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 33,
+   "icon": 52,
    "icon_home": 42,
    "icon_mini": 32,
    "label": 22,
@@ -10743,6 +10918,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 58,
+   "radius": 27,
    "tile_pad": 15,
    "top": 62
   },
@@ -10798,6 +10974,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 27,
+   "icon": 42,
    "icon_home": 34,
    "icon_mini": 26,
    "label": 18,
@@ -10878,6 +11055,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 47,
+   "radius": 22,
    "tile_pad": 12,
    "top": 56
   },
@@ -10922,6 +11100,7 @@
   "firmware": "0.57.0",
   "fonts": {
    "headline": 26,
+   "icon": 41,
    "icon_home": 33,
    "icon_mini": 25,
    "label": 17,
@@ -11002,6 +11181,7 @@
    "gap_y": 12,
    "margin": 16,
    "page_bar": 45,
+   "radius": 21,
    "tile_pad": 12,
    "top": 55
   },

@@ -50,6 +50,16 @@
   camera (docs/PLUGINS.md). Tessera's own Cinema, New music and Picture frame use it: no more grey bars in a cover flow
   after the screen fetched its pictures again, Picture frame shows what a player plays, and a camera in Picture frame
   is live on a P4 screen.
+
+- **The editor's cards look like the cards on your screen.** While you lay out a page, every card is now drawn at the
+  sizes of your own screen: its letters in the screen's Roboto (a bold name, a plain line), its icon circle, corner and
+  padding, and each part where the screen puts it. Before, the inside of a card had sizes of the editor's own, close on
+  a 4-inch Guition but far too small on a CYD, a 4.3-inch or a 10-inch screen. A long name is cut where the screen cuts
+  it, a light that is on says its brightness, a blind and a player on a small card say what the screen says, a lock and
+  a player show their own icon, and a thermostat's number has the screen's decimal. Larger cards follow the screen as
+  well: a thermostat's big number between its keys with the temperature now under it, a robot vacuum's keys, a player's
+  track, artist and volume, and a player over a whole page with its cover, progress bar and keys. A card you drag keeps
+  its look while it moves.
 - **Stars for plugins, and a heart for any plugin.** A few days after a screen first runs a plugin from the Plugins
   page, a card above the screen asks how it works for you: one to five stars, then Send. Later asks again in two
   weeks; Don't ask again, what is shared and the privacy page are behind the card's ⋯ menu. A plugin's details take

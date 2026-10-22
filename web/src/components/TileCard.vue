@@ -58,13 +58,13 @@ const classes = computed(() => {
   const face = card.face;
   return { wide: face.wide, full: face.full, tall: face.tall, "watch-card": kind.value === "watch", "tall-action": face.tallAction || face.tallStack, "big-key": face.bigKey,
     photo: card.loaded.artwork && !!card.artwork, camera: (kind.value === "camera" && card.loaded.camera) || (kind.value === "favorite" && card.loaded.favorite),
-    bare: props.tile.options?.background === "none", placeholder: props.placeholder || (!card.live && !card.foreign), chosen: card.chosen,
+    glass: !!card.head, bare: props.tile.options?.background === "none", placeholder: props.placeholder || (!card.live && !card.foreign), chosen: card.chosen,
     "just-added": !props.preview && !!props.tile.id && doc.justAdded === props.tile.id };
 });
 const style = computed(() => {
   const background = card.background;
   return { gridColumn: `${props.at % card.grid.columns + 1} / span ${card.shape.columns}`, gridRow: `${Math.floor(props.at % card.grid.slots / card.grid.columns) + 1} / span ${card.shape.rows}`,
-    ...(background && props.tile.options?.background !== "none" ? { backgroundColor: background } : {}),
+    ...card.glassStyle.frame, ...(background && props.tile.options?.background !== "none" ? { backgroundColor: background } : {}),
     "--tile-cols": card.shape.columns, "--tile-icon": card.palette.icon, "--tile-circle": card.palette.circle, "--tile-accent": card.palette.accent, ...(card.watchStyle?.pad ?? {}) };
 });
 
