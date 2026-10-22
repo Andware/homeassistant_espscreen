@@ -449,8 +449,12 @@ Assistant** in Tessera, press **Install in Home Assistant** and then **Restart H
 adds a camera **Video** to the device of each screen with the video by itself, and takes it away again when the part is
 turned off. Nobody types a password or an address.
 
-**What travels.** The camera hands its frames to the ESP32-P4's hardware H.264 encoder: 1280 x 720 at 15 frames a
-second, 1 Mbit/s, a key frame every second. The microphone goes as Opus, 16 kHz in one channel at 32 kbit/s. A small
+**What travels.** The camera hands its frames to the ESP32-P4's hardware H.264 encoder at the camera's own size, at
+15 frames a second, 1 Mbit/s, a key frame every second. The encoder wants whole macroblocks of 16 pixels, so a camera
+whose size is not (the Guition screens' OV02C10 gives 1288 x 728) has the edge of its frames cut off on the way, by
+the P4's pixel engine: the middle, 1280 x 720. The encoder keeps its reference frame in internal RAM and that grows
+with the size, so the video takes no camera above 1280 x 800; a sensor whose modes are all larger gets a smaller one
+in the part's YAML (`esp_video_camera: resolution`), never in a board file. The microphone goes as Opus, 16 kHz in one channel at 32 kbit/s. A small
 RTSP server on the screen (port 8554, RTP over the RTSP connection) serves up to three viewers from the one encoder.
 Home Assistant's integration `tessera_video` (shipped by the app, `screen_manager/app/ha_integration/tessera_video`)
 gives Home Assistant that address as the camera's stream, and Home Assistant's go2rtc passes H.264 and Opus on to the
