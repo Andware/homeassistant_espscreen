@@ -98,7 +98,8 @@ inline int room_need_w(const Measure &me, const Metrics &m, const std::vector<st
   for (const auto &r : rooms) w = std::max(w, me.width(SMALL, r));
   return w + 2 * m.pad;
 }
-inline int room_need_h(const Measure &me, const Metrics &m, Face icon) { return 2 * m.pad + me.line[icon] + me.line[SMALL]; }
+// Its icon over its name with a thin margin: a frame two rows of rooms almost fit kept them on one (the 8-inch D1001).
+inline int room_need_h(const Measure &me, const Metrics &, Face icon) { return 2 * ui::px(5) + me.line[icon] + me.line[SMALL]; }
 struct Grid { int cols = 0, rows = 0, w = 0, h = 0, shown = 0; bool big = false; };
 // Even rows, every tile at least a name wide and an icon and a line high, no taller than 22 mm; a last "+N" for the rest.
 inline Grid room_grid(const Measure &me, const Metrics &m, const std::vector<std::string> &rooms, Box r, int max_rows = 99) {

@@ -53,7 +53,8 @@ const chipW = (m: Metrics, words: string) => m.px(10) + width("M", m.fonts.watch
 
 // ---- Rooms as icon tiles ----
 const roomNeedW = (m: Metrics, rooms: string[]) => Math.max(0, ...rooms.map((r) => width(r, m.fonts.small))) + 2 * m.pad;
-const roomNeedH = (m: Metrics, icon: number) => 2 * m.pad + lineOf(icon) + lineOf(m.fonts.small);
+// Its icon over its name with a thin margin: a frame two rows of rooms almost fit kept them on one (the 8-inch D1001).
+const roomNeedH = (m: Metrics, icon: number) => 2 * m.px(5) + lineOf(icon) + lineOf(m.fonts.small);
 type Grid = { cols: number; rows: number; w: number; h: number; shown: number; big: boolean };
 /** Even rows, every tile at least a name wide and an icon and a line high, no taller than 22 mm; a last "+N" for the rest. */
 function roomGrid(m: Metrics, rooms: string[], r: Box, maxRows = 99): Grid | null {

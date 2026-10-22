@@ -52,13 +52,22 @@ int main() {
     const Hit r = hit(l, 0, l.rooms[4].x + 2, l.rooms[4].y + 2);
     assert(r.kind == HIT_ROOM && r.arg == 4);
   }
-  // The whole page of the Guition: the dock at the bottom with Start a size up, and the map over a strip of rooms.
+  // The whole page of the Guition: the dock at the bottom with Start a size up, the map and every room beside it.
   {
     const Layout l = plan(me, input("map_rooms", 424, 353));
-    assert(l.first.w > ui::touch_min());
-    assert(!l.map.empty() && l.map.y < l.rooms.front().y);
-    for (const auto &r : l.rooms) assert(within(r, 424, 353));
+    assert(l.docked && l.first.w > ui::touch_min());
+    assert(!l.map.empty() && l.rooms.size() == ROOMS.size() && l.more.empty());
+    for (const auto &r : l.rooms) assert(within(r, 424, 353) && (r.x >= l.map.x + l.map.w || r.y >= l.map.y + l.map.h));
   }
+  // The 8-inch D1001's 2x2 (189 dpi): four rooms in two rows beside the map, none behind a "+N".
+  ui::configure(189, "standard");
+  {
+    Input in = input("map_rooms", 464, 240);
+    in.rooms = {"Gang", "Keuken", "Slaapkamer", "Woonkamer"};
+    const Layout l = plan(measure(20, 18), in);
+    assert(!l.map.empty() && l.rooms.size() == 4 && l.more.empty());
+  }
+  ui::configure(170, "standard");
   // A 10-inch's 3x3 (149 dpi): the dock with the mode and both keys, chips in the header, the map beside the rooms.
   ui::configure(149, "standard");
   {
