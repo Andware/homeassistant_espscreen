@@ -1024,7 +1024,11 @@
           "speed": "Sebesség-csúszka"
         },
         "vacuum": {
-          "buttons": "Indítás, leállítás, dokkolás"
+          "buttons": "Indítás, leállítás, dokkolás",
+          "map": "Térkép",
+          "rooms": "Szobák kiválasztása",
+          "routines": "Rutinok",
+          "map_rooms": "Térkép és szobák"
         },
         "cover": {
           "buttons": "Nyitás, állj, zárás",

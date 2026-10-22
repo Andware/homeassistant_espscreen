@@ -1024,7 +1024,11 @@
           "speed": "Cursore della velocità"
         },
         "vacuum": {
-          "buttons": "Avvia, ferma, base"
+          "buttons": "Avvia, ferma, base",
+          "map": "Mappa",
+          "rooms": "Scegli le stanze",
+          "routines": "Routine",
+          "map_rooms": "Mappa e stanze"
         },
         "cover": {
           "buttons": "Apri, ferma, chiudi",

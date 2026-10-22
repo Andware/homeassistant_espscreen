@@ -1024,7 +1024,11 @@
           "speed": "Snelheidsslider"
         },
         "vacuum": {
-          "buttons": "Start, stop, naar dock"
+          "buttons": "Start, stop, naar dock",
+          "map": "Kaart",
+          "rooms": "Kamers kiezen",
+          "routines": "Routines",
+          "map_rooms": "Kaart en kamers"
         },
         "cover": {
           "buttons": "Open, stop, dicht",

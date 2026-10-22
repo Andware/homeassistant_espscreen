@@ -725,6 +725,9 @@ api:
                     // Screens sends them (the `vc` block, screen_manager/app/vacuum_card.py).
                     #ifdef SD_MOD_VACUUM_CARD
                     features.add("vacuum_card");
+                    // vacuum_tile: a larger vacuum tile draws its map, its rooms or its routines beside its keys
+                    // (module_vacuum_tile.cpp), so ESP Screens sends those controls; any other screen gets the keys.
+                    features.add("vacuum_tile");
                     #endif
                     // cover_rows (firmware 0.57.0): a cover card lays out what its room holds (cover_tile.h), so ESP
                     // Screens sends a card one row high its slats and a 1x1 card its control, which it draws when they fit.

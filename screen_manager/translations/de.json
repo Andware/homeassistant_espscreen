@@ -1024,7 +1024,11 @@
           "speed": "Drehzahlregler"
         },
         "vacuum": {
-          "buttons": "Start, Stopp, Station"
+          "buttons": "Start, Stopp, Station",
+          "map": "Karte",
+          "rooms": "Räume wählen",
+          "routines": "Routinen",
+          "map_rooms": "Karte und Räume"
         },
         "cover": {
           "buttons": "Öffnen, Stopp, Schließen",

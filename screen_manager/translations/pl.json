@@ -1024,7 +1024,11 @@
           "speed": "Suwak prędkości"
         },
         "vacuum": {
-          "buttons": "Start, stop, stacja"
+          "buttons": "Start, stop, stacja",
+          "map": "Mapa",
+          "rooms": "Wybór pokoi",
+          "routines": "Procedury",
+          "map_rooms": "Mapa i pokoje"
         },
         "cover": {
           "buttons": "Otwórz, stop, zamknij",

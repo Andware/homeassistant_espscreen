@@ -1024,7 +1024,11 @@
           "speed": "Speed slider"
         },
         "vacuum": {
-          "buttons": "Start, stop, dock"
+          "buttons": "Start, stop, dock",
+          "map": "Map",
+          "rooms": "Rooms to pick",
+          "routines": "Routines",
+          "map_rooms": "Map and rooms"
         },
         "cover": {
           "buttons": "Open, stop, close",

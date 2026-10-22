@@ -1024,7 +1024,11 @@
           "speed": "Curseur de vitesse"
         },
         "vacuum": {
-          "buttons": "Démarrer, arrêter, base"
+          "buttons": "Démarrer, arrêter, base",
+          "map": "Carte",
+          "rooms": "Choisir les pièces",
+          "routines": "Routines",
+          "map_rooms": "Carte et pièces"
         },
         "cover": {
           "buttons": "Ouvrir, arrêter, fermer",

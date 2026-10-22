@@ -17,6 +17,7 @@ import TilePicture from "./tile/TilePicture.vue";
 import TilePlugin from "./tile/TilePlugin.vue";
 import TileRoundKey from "./tile/TileRoundKey.vue";
 import TileTall from "./tile/TileTall.vue";
+import TileVacuum from "./tile/TileVacuum.vue";
 import TileWatch from "./tile/TileWatch.vue";
 import { useUiStore } from "../stores/ui";
 import { placeTile, removeTile } from "../editor/tiles";
@@ -108,6 +109,7 @@ async function onKey(e: KeyboardEvent) {
     <TileClockFace v-else-if="CLOCKS.includes(kind)" :card="card" />
     <TilePicture v-else-if="kind === 'favorite' || kind === 'camera'" :card="card" />
     <TileWatch v-else-if="kind === 'watch'" :card="card" />
+    <TileVacuum v-else-if="kind === 'vacuum'" :card="card" />
     <TileTall v-else-if="kind === 'tall' || kind === 'big-key'" :card="card" />
     <TileLine v-else :card="card" />
     <TileResize v-if="card.live && !preview && !placeholder" :tile="tile" />

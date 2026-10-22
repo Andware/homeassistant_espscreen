@@ -104,7 +104,7 @@ export function useTileCard(props: TileCardProps) {
   });
   const faceOf = () => tileFace({
     entity: props.tile.entity, options: props.tile.options, shape: shape.value, full: isFull(props.tile), wide: isWide(props.tile),
-    live: current.value, chosen: chosenControls.value, rangeReady: rangeReady.value, bigKeys: bigKeys.value,
+    live: current.value, chosen: chosenControls.value, rangeReady: rangeReady.value, bigKeys: bigKeys.value, vacuumTile: scr.currentScreen?.vacuum_tile !== false,
     favorite: Boolean(favoritePlay.value), plugin: Boolean(pluginTile.value), pluginRow: Boolean(pluginRow.value), watch: Boolean(watchFace.value),
   });
 

@@ -61,6 +61,7 @@
 #include "energy_view.h"
 #include "calendar_view.h"
 #include "meter_view.h"
+#include "module_vacuum_tile.h"
 #include "plugin_api.h"
 #include "plugin_host.h"
 #include "screen_hooks.h"
@@ -614,6 +615,10 @@ struct Widgets {
   calendar_view::View *calendar{};
   // A sensor's meter (firmware 0.56.0+, meter_view.cpp); it goes with the card's extra layer.
   meter_view::View *meter{};
+#ifdef SD_MOD_VACUUM_CARD
+  // A robot vacuum's larger tile (module_vacuum_tile.cpp); it goes with the card's extra layer.
+  vacuum_face::View *vacuum_face{};
+#endif
   // A plugin tile's card (docs/PLUGINS.md, plugin_host.cpp): the plugin's object; it goes with the card's extra layer.
   plugin_host::Card *plugin{};
 };
@@ -6059,6 +6064,10 @@ inline void event(lv_event_t *event) {
   if(tile.favorite()&&!held&&tile.tap=="auto"){favorite_tap(w.index);return;}
   // A room's calendar card books on its keys (calendar_view.cpp); the rest of the card opens its full screen.
   if(d=="calendar"&&!held&&calendar_view::card_tap(w,tile))return;
+#ifdef SD_MOD_VACUUM_CARD
+  // A robot's larger tile acts on its own parts (its keys, rooms, routines, mode); the rest of it opens its card.
+  if(d=="vacuum"&&!held&&w.vacuum_face&&vacuum_face::card_tap(w,tile))return;
+#endif
   // tile_controls::tap_route decides; tests/test_tile_controls.cpp keeps every older tap choice routed as before.
   auto tap = tile_controls::tap_route(tile, code == LV_EVENT_LONG_PRESSED);
   switch (tap.route) {
@@ -6426,6 +6435,9 @@ inline void end_extra(Widgets &w) {
     if(w.energy)energy_view::release(w);
     if(w.calendar)calendar_view::release(w);
     if(w.meter)meter_view::release(w);
+#ifdef SD_MOD_VACUUM_CARD
+    if(w.vacuum_face)vacuum_face::release(w);
+#endif
     if(w.plugin)plugin_host::release(w);
     lv_obj_clean(w.extra);w.parts.fill(nullptr);w.extra_mode.clear();free_points(w.points);}
 }
@@ -8816,7 +8828,13 @@ inline void render_slot(size_t slot) {
   bool meter=t.is_meter() && !w.key;
   // A plugin's tile (docs/PLUGINS.md) draws itself too, when this screen has its plugin; else it is a plain card.
   bool plugin=t.is_plugin() && plugin_host::known(t);
-  bool custom=clock||forecast||sunpath||bedside||energy||plugin||calendar||meter;
+#ifdef SD_MOD_VACUUM_CARD
+  // A robot's larger tile (docs/VACUUM.md, "A larger tile"): a map, rooms or routines with its keys, on a tall card.
+  bool vacuum=d=="vacuum" && !w.key && vacuum_face::shows(t);
+#else
+  constexpr bool vacuum=false;
+#endif
+  bool custom=clock||forecast||sunpath||bedside||energy||plugin||calendar||meter||vacuum;
   if(!large_tile)pad_vertical(w.tile,watch||custom||graph?2:4);
   // A big value that stepped up to the setpoint's digits (the watch block below) keeps them until that block
   // decides again, so a card is not restyled twice a render.
@@ -8868,6 +8886,14 @@ inline void render_slot(size_t slot) {
     lap(swipe_profile::GEOMETRY);
     meter_view::render(w,t,content_w,content_h);
     lap(swipe_profile::CUSTOM);
+#ifdef SD_MOD_VACUUM_CARD
+  }else if(vacuum){
+    lv_obj_add_flag(w.slider,LV_OBJ_FLAG_HIDDEN);hide_panel(w);lv_obj_add_flag(w.progress,LV_OBJ_FLAG_HIDDEN);
+    if(w.picture)lv_obj_add_flag(w.picture,LV_OBJ_FLAG_HIDDEN);
+    lap(swipe_profile::GEOMETRY);
+    vacuum_face::render(w,t,content_w,content_h);
+    lap(swipe_profile::CUSTOM);
+#endif
   }else if(plugin){
     lv_obj_add_flag(w.slider,LV_OBJ_FLAG_HIDDEN);hide_panel(w);lv_obj_add_flag(w.progress,LV_OBJ_FLAG_HIDDEN);
     if(w.picture)lv_obj_add_flag(w.picture,LV_OBJ_FLAG_HIDDEN);
@@ -10322,6 +10348,9 @@ inline void drop_card(Widgets &w) {
   if (w.energy) energy_view::release(w);
   if (w.calendar) calendar_view::release(w);
   if (w.meter) meter_view::release(w);
+#ifdef SD_MOD_VACUUM_CARD
+  if (w.vacuum_face) vacuum_face::release(w);
+#endif
   if (w.plugin) plugin_host::release(w);
   if (captured_slider && (captured_slider == w.slider || captured_slider == w.control_slider)) { captured_slider = nullptr; slider_changed = false; }
   if (w.tile) lv_obj_delete(w.tile);
@@ -10393,6 +10422,15 @@ inline unsigned kept_count() { return (unsigned) shelf.pages(); }
 // that next shows a tile without custom parts only hides them (hide_extra, made for paging a slot back and forth), so
 // over a few layouts every kept card held a hidden one, and on a 4-inch Guition two pages added and taken away took
 // the memory inside the chip from 49 to 20 KB until layouts were refused (2026-10-13). The card itself stays.
+// The picture a card's own face draws beside its picture object (a robot's map on its larger tile), for the store's count.
+inline lv_obj_t *face_picture(const Widgets &w) {
+#ifdef SD_MOD_VACUUM_CARD
+  return vacuum_face::picture(w);
+#else
+  (void) w;
+  return nullptr;
+#endif
+}
 inline void forget_kept() {
   shelf.forget();
   for (auto *set : kept_sets) if (set) for (auto &w : *set) {
@@ -10402,7 +10440,7 @@ inline void forget_kept() {
     // Their pictures go with what they showed: a picture object still pointing at a copy counts as drawing it, and the
     // store frees nothing a card draws, so the old layout's pictures stayed beside the new ones until the set showed
     // another page (GitHub #183). The cards are drawn anew with their own.
-    for (lv_obj_t *picture : {w.picture, w.extra_mode == "media" ? w.parts[MEDIA_PICTURE] : nullptr})
+    for (lv_obj_t *picture : {w.picture, w.extra_mode == "media" ? w.parts[MEDIA_PICTURE] : nullptr, face_picture(w)})
       if (picture) { lv_image_set_src(picture, nullptr); lv_obj_add_flag(picture, LV_OBJ_FLAG_HIDDEN); }
     plugin_host::picture_let_go(w, nullptr);
     w.cover_shown.clear();
@@ -11011,7 +11049,7 @@ inline bool picture_shown(const lv_image_dsc_t *image) {
 #if LV_USE_IMAGE
   bool shown = false;
   auto on = [&](lv_obj_t *obj) { if (draws(obj, image)) shown = true; };
-  each_card([&](Widgets &w) { on(w.picture); if (w.extra_mode == "media") on(w.parts[MEDIA_PICTURE]); if (plugin_host::picture_draws(w, image)) shown = true; });
+  each_card([&](Widgets &w) { on(w.picture); if (w.extra_mode == "media") on(w.parts[MEDIA_PICTURE]); if (plugin_host::picture_draws(w, image)) shown = true; on(face_picture(w)); });
   on(media_detail_picture);
   on(camera_picture);
   on(alert_picture);
@@ -11029,7 +11067,7 @@ inline bool picture_shown(const lv_image_dsc_t *image) {
 // it may make way (picture_store::collect), and its page asks for it again when it comes back.
 inline bool picture_away(const lv_image_dsc_t *image) {
 #if LV_USE_IMAGE
-  const auto drawn = [&](Widgets &w) { return draws(w.picture, image) || (w.extra_mode == "media" && draws(w.parts[MEDIA_PICTURE], image)) || plugin_host::picture_draws(w, image); };
+  const auto drawn = [&](Widgets &w) { return draws(w.picture, image) || (w.extra_mode == "media" && draws(w.parts[MEDIA_PICTURE], image)) || plugin_host::picture_draws(w, image) || draws(face_picture(w), image); };
   for (auto &w : widgets) if (drawn(w)) return false;
   if (draws(media_detail_picture, image) || draws(camera_picture, image) || draws(alert_picture, image) || media_library::draws(image) ||
       plugin_host::card_draws(image))
@@ -11050,7 +11088,7 @@ inline void picture_let_go(const lv_image_dsc_t *image) {
 #if LV_USE_IMAGE
   for (auto *set : kept_sets) if (set) for (auto &w : *set) {
     bool took = false;
-    for (lv_obj_t *picture : {w.picture, w.extra_mode == "media" ? w.parts[MEDIA_PICTURE] : nullptr})
+    for (lv_obj_t *picture : {w.picture, w.extra_mode == "media" ? w.parts[MEDIA_PICTURE] : nullptr, face_picture(w)})
       if (draws(picture, image)) { lv_image_set_src(picture, nullptr); lv_obj_add_flag(picture, LV_OBJ_FLAG_HIDDEN); took = true; }
     if (plugin_host::picture_let_go(w, image)) took = true;
     if (!took) continue;
@@ -11263,6 +11301,21 @@ inline bool card_open() { return detail_shown() || colour_shown() || effects_pag
 inline bool tile_ask(const Widgets &w, const Tile &t, tile_picture::Ask &a) {
   // A plugin tile's places (plugin API 0.10): its parts, measured by the host.
   if (w.plugin) return plugin_host::picture_ask(w, t, a);
+#ifdef SD_MOD_VACUUM_CARD
+  // A robot's map on its larger tile: the map's place, on the frame's colour, drawn by the app from the robot's map.
+  if (vacuum_face::picture(w)) {
+    int x, y, width, height;
+    if (!t.pictured() || !vacuum_face::map_place(w, x, y, width, height) || width <= 0 || height <= 0) return false;
+    a.frame = tile_picture::frame(width, height, 0, 0, theme::hex(theme::TRACK), theme::hex(theme::TRACK), picture_cap());
+    a.index = w.index;
+    a.entity = t.entity;
+    a.mark = t.extra().vacuum ? t.extra().vacuum->map_mark : std::string();
+    a.dark = theme::dark;
+    a.drawn = true;
+    a.source = picture_question::vacuum_source(t.entity);
+    return true;
+  }
+#endif
   if (!w.tile || !w.circle || !t.pictured()) return false;
   const bool art = card_art(t);
   lv_obj_t *place = art ? w.tile : w.circle;
@@ -11319,6 +11372,9 @@ inline bool tile_picture_waiting(const Widgets &w, const Tile &t) {
 // track's cover, a map before someone moved) until the next is here.
 inline void tile_picture_place(Widgets &w, const Tile &t, int size, int x, int y) {
   w.art_size = size; w.art_x = x; w.art_y = y;
+#ifdef SD_MOD_VACUUM_CARD
+  if (vacuum_face::picture(w)) { vacuum_face::picture_place(w, t); return; }
+#endif
   // A plugin tile's picture is an atlas of its places' pieces (plugin API 0.10): the host lays each on its place.
   if (w.plugin) {
     const bool its = tile_picture::belongs(w.art_key, w.index, t.entity);
@@ -11445,11 +11501,12 @@ inline void tile_pictures_letgo() {
   if (!download) return;
   each_card([&](Widgets &w) {
     bool took = plugin_host::picture_let_go(w, download);
-    if (draws(w.picture, download)) {
-      lv_image_set_src(w.picture, nullptr);
-      lv_obj_add_flag(w.picture, LV_OBJ_FLAG_HIDDEN);
-      took = true;
-    }
+    for (lv_obj_t *picture : {w.picture, face_picture(w)})
+      if (draws(picture, download)) {
+        lv_image_set_src(picture, nullptr);
+        lv_obj_add_flag(picture, LV_OBJ_FLAG_HIDDEN);
+        took = true;
+      }
     if (took && w.index < model.count) refresh_tile(w.index);
   });
 #endif

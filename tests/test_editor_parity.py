@@ -137,6 +137,7 @@ import {{ humidityText, readingText, stateText, temperatureText }} from "{model 
 import {{ cardHead, cardLook, cardPanel, cardRoom, iconFace, inkBox }} from "{model / 'card-layout'}";
 import {{ climateLayout, tallAction, tallLayout }} from "{model / 'tall-layout'}";
 import {{ mediaLayout }} from "{model / 'media-layout'}";
+import {{ vacuumLayout, vacuumMetrics }} from "{model / 'vacuum-tile'}";
 const DATA = JSON.parse(readFileSync("{Path(tmp) / 'data.json'}", "utf8"));
 {body}
 ''')
@@ -1169,6 +1170,116 @@ console.log(JSON.stringify(DATA.cases.map((c: any) => {
             p = fw['panel']
             self.assertEqual([panel['x'], panel['y'], panel['width'], panel['height']],
                              [p['x1'] - x0, p['y1'] - y0, p['x2'] - p['x1'] + 1, p['y2'] - p['y1'] + 1], f'{where}: the switch')
+
+
+class VacuumTile(unittest.TestCase):
+    """A robot vacuum's larger tile (vacuum_tile.h, docs/VACUUM.md "A larger tile") in model/vacuum-tile.ts: the header,
+    the chips, the keys in the dock or the header, the mode, the frame, the map, the rooms with their "+N", the routines
+    and the corners, on every board's shape over a sweep of rooms, for each face and for robots that offer less. Both
+    sides measure a text the same way (half a face's size per letter), so only the planning is compared."""
+
+    ROOMS = ['Kitchen', 'Living room', 'Hallway', 'Bedroom', 'Office', 'Bathroom', 'Guest room', 'Laundry', 'Nursery', 'Garage']
+    ROUTINES = ['After dinner', 'Daily clean', 'Deep clean', 'Empty the bin', 'Mop the kitchen']
+    # (rooms, routines, modes, second, state, battery, charging, progress, radius, pad)
+    ROBOTS = [(6, 5, 3, 1, 'docked', 100, 1, -1, 22, 12), (10, 2, 0, 0, 'cleaning', 64, 0, 42, 16, 8),
+              (0, 1, 2, 1, 'error', 15, 0, -1, 22, 12), (3, 0, 4, 1, 'cleaning', -1, 0, 7, 12, 6)]
+    FACES = ('map', 'rooms', 'routines', 'map_rooms')
+    STATES = ('docked', 'cleaning', 'error')
+
+    TS = '''
+const b = (x: any) => x && x.w > 0 && x.h > 0 ? `${x.x},${x.y},${x.w},${x.h}` : "-";
+const list = (v: any[]) => v.map((r: any) => `${b(r)}:${r.index}`).join("/") || "-";
+const out: string[] = [];
+const fonts: Record<string, any> = {};
+for (const key of Object.keys(DATA.shapes)) fonts[key] = vacuumMetrics(DATA.shapes[key]).fonts;
+for (const c of DATA.cases) {
+  const s = DATA.shapes[c[0]];
+  const l = vacuumLayout(s, { face: c[1], width: c[2], height: c[3], rooms: DATA.rooms.slice(0, c[4]), routines: DATA.routines.slice(0, c[5]),
+    map: true, modes: c[6], second: !!c[7], state: c[8], battery: c[9] < 0 ? null : c[9], charging: !!c[10], progress: c[11] < 0 ? null : c[11],
+    radius: c[12], pad: c[13], measure: (text: string, size: number) => Math.floor(text.length * size * 55 / 100) });
+  out.push([l.head, l.text.x, l.text.w, l.chips.map((x: any) => b(x.box)).join("/") || "-", b(l.dock), b(l.start), b(l.mode), b(l.frame),
+    l.frameRadius, l.tileRadius, b(l.map), list(l.rooms), +l.bigIcons, l.more ? `${b(l.more)}+${l.more.count}` : "-", list(l.routines),
+    l.routinesMore ? `${b(l.routinesMore)}+${l.routinesMore.count}` : "-"].join(" "));
+}
+console.log(JSON.stringify({ out, fonts }));'''
+
+    CPP = r'''#include "components/smart_display/vacuum_tile.h"
+#include <cstdio>
+using namespace vacuum_tile;
+struct C { int dpi; const char *look; int face, w, h, rooms, routines, modes, second, state, battery, charging, progress, radius, pad,
+           label, small, mini, icon, watch, circle; };
+static const C CASES[] = {
+@CASES@
+};
+static const char *FACE_NAMES[] = {"map", "rooms", "routines", "map_rooms"};
+static const char *STATES[] = {"docked", "cleaning", "error"};
+static const std::vector<std::string> ROOMS = {@ROOMS@}, ROUTINES = {@ROUTINES@};
+static std::string b(const Box &x) { return x.empty() ? "-" : std::to_string(x.x) + "," + std::to_string(x.y) + "," + std::to_string(x.w) + "," + std::to_string(x.h); }
+template <class T> static std::string list(const std::vector<T> &v) {
+  std::string o;
+  for (const auto &p : v) o += (o.empty() ? "" : "/") + b(p) + ":" + std::to_string(p.index);
+  return o.empty() ? "-" : o;
+}
+static std::string more(const More &m) { return m.empty() ? "-" : b(m) + "+" + std::to_string(m.count); }
+int main() {
+  for (const auto &c : CASES) {
+    ui::configure(c.dpi, c.look);
+    const int sizes[FACES] = {c.label, c.small, c.mini, c.icon, c.watch};
+    Measure me;
+    for (int i = 0; i < FACES; ++i) me.line[i] = (int) std::lround(sizes[i] * 1.172);
+    me.circle = c.circle ? c.circle : ui::px(54);
+    me.width = [&](Face f, const std::string &s) { return (int) (s.size() * sizes[f] * 55 / 100); };
+    Input in;
+    in.face = FACE_NAMES[c.face]; in.width = c.w; in.height = c.h;
+    in.rooms.assign(ROOMS.begin(), ROOMS.begin() + c.rooms);
+    in.routines.assign(ROUTINES.begin(), ROUTINES.begin() + c.routines);
+    in.map = true; in.modes = c.modes; in.second = c.second; in.state = STATES[c.state]; in.battery = c.battery;
+    in.charging = c.charging; in.progress = c.progress; in.radius = c.radius; in.pad = c.pad;
+    const Layout l = plan(me, in);
+    std::string chips;
+    for (const auto &x : l.chips) chips += (chips.empty() ? "" : "/") + b(x.box);
+    std::printf("plan %d %d %d %s %s %s %s %s %d %d %s %s %d %s %s %s\n", l.head, l.text.x, l.text.w, chips.empty() ? "-" : chips.c_str(),
+                b(l.second).c_str(), b(l.first).c_str(), b(l.mode).c_str(), b(l.frame).c_str(), l.frame_radius, l.tile_radius,
+                b(l.map).c_str(), list(l.rooms).c_str(), l.big_icons ? 1 : 0, more(l.more).c_str(), list(l.routines).c_str(),
+                more(l.routines_more).c_str());
+  }
+}
+'''
+
+    @classmethod
+    def setUpClass(cls):
+        compiler(), node()
+        cls.cases = [(key, shape, face, w, h, robot)
+                     for key, _, shape in SHAPES
+                     for w in range(140, min(shape['width'], 1100), 67)
+                     for h in range(130, min(shape['height'], 760), 59)
+                     for face in cls.FACES for robot in cls.ROBOTS]
+        with tempfile.TemporaryDirectory() as tmp:
+            data = {'shapes': {key: shape for key, _, shape in SHAPES}, 'rooms': cls.ROOMS, 'routines': cls.ROUTINES,
+                    'cases': [[c[0], c[2], c[3], c[4], *c[5]] for c in cls.cases]}
+            cls.ts = run_ts(cls.TS, data, tmp)
+            rows = []
+            for key, shape, face, w, h, robot in cls.cases:
+                f = cls.ts['fonts'][key]
+                rooms, routines, modes, second, state, battery, charging, progress, radius, pad = robot
+                rows.append('{%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d}' % (
+                    shape.get('dpi') or 0, json.dumps(shape.get('look') or 'standard'), cls.FACES.index(face), w, h, rooms, routines, modes,
+                    second, cls.STATES.index(state), battery, charging, progress, radius, pad,
+                    f['label'], f['small'], f['mini'], f['icon'], f['watchIcon'], (shape.get('spacing') or {}).get('circle') or 0))
+            source = (cls.CPP.replace('@CASES@', ',\n'.join(rows)).replace('@ROOMS@', cpp_strings(cls.ROOMS))
+                      .replace('@ROUTINES@', cpp_strings(cls.ROUTINES)))
+            cls.cpp = build_and_run(source, tmp)
+
+    def test_the_editors_tile_is_the_firmwares_plan(self):
+        fw = [line[5:] for line in self.cpp.splitlines() if line.startswith('plan ')]
+        ts = self.ts['out']
+        self.assertEqual((len(fw), len(ts)), (len(self.cases), len(self.cases)))
+        # Every arrangement is met: keys in the dock with a mode, rooms with a last "+N", routines with theirs.
+        self.assertTrue(any(line.split()[6] != '-' for line in fw))
+        self.assertTrue(any(line.split()[13] != '-' for line in fw))
+        self.assertTrue(any(line.split()[15] != '-' for line in fw))
+        wrong = [(c[0], c[2], c[3], c[4], c[5], t, f) for c, t, f in zip(self.cases, ts, fw) if t != f]
+        self.assertEqual(wrong[:3], [], f'vacuumLayout is not vacuum_tile::plan in {len(wrong)} of {len(fw)} rooms')
 
 
 if __name__ == '__main__':

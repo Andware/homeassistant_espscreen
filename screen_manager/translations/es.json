@@ -1024,7 +1024,11 @@
           "speed": "Control deslizante de velocidad"
         },
         "vacuum": {
-          "buttons": "Iniciar, detener, base"
+          "buttons": "Iniciar, detener, base",
+          "map": "Mapa",
+          "rooms": "Elegir habitaciones",
+          "routines": "Rutinas",
+          "map_rooms": "Mapa y habitaciones"
         },
         "cover": {
           "buttons": "Abrir, detener, cerrar",
