@@ -11020,7 +11020,7 @@ inline bool doorbell_holds() {
 }
 // Its bindings, for the YAML of every board: a lambda that holds a ${...} cannot hold an #ifdef (ESPHome reads it as a
 // template), so these take the module's place there. How a ring ended goes to ESP Screens (packages/core.yaml); the chime
-// plays on `speaker` and `enabled` reads the switch Doorbell under Extras (features/audio-player.yaml).
+// plays on `speaker` (features/audio-player.yaml).
 inline void doorbell_reports(std::function<void(const std::string &, const std::string &)> report) {
 #ifdef SD_MOD_DOORBELL
   doorbell::report = std::move(report);
@@ -11028,12 +11028,11 @@ inline void doorbell_reports(std::function<void(const std::string &, const std::
   (void) report;
 #endif
 }
-template<class Speaker> inline void doorbell_audio(Speaker *speaker, std::function<bool()> enabled) {
+template<class Speaker> inline void doorbell_audio(Speaker *speaker) {
 #ifdef SD_MOD_DOORBELL
   doorbell::bind_speaker(speaker);
-  doorbell::enabled = std::move(enabled);
 #else
-  (void) speaker; (void) enabled;
+  (void) speaker;
 #endif
 }
 

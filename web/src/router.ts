@@ -19,7 +19,10 @@ export const router = createRouter({
     { path: "/settings", name: "settings", component: Nothing },
     { path: "/new-screen", name: "new-screen", component: Nothing },
     { path: "/firmware", name: "firmware", component: Nothing },
-    { path: "/alerts", name: "alerts", component: Nothing },
+    // Events (app 0.4.91): what an automation in Home Assistant can fire at the screens, an alert or a doorbell's ring,
+    // each one a part of the page (`kind`). The address of the Alerts page before it still opens the alerts.
+    { path: "/events/:kind(alerts|doorbell)?", name: "events", component: Nothing },
+    { path: "/alerts", redirect: "/events/alerts" },
     { path: "/plugins", name: "plugins", component: Nothing },
     // The Override YAML of a screen's ESPHome profile (kitchen.yaml); without a profile the page says so.
     { path: "/override/:profile?", name: "override", component: Nothing },

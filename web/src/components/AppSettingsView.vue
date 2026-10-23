@@ -211,10 +211,10 @@ const useProfile = () => whileSaving(() => region.saveLanguage(different.value))
         <a class="btn quiet mini" href="https://tessera-maxgramser.on-forge.com/privacy" target="_blank" rel="noopener">{{ t("editor.feedback.privacy") }}</a>
       </section>
       <section class="card">
-        <h2>{{ t("editor.nav.alerts") }}</h2>
+        <h2>{{ t("editor.nav.events") }}</h2>
         <p>{{ t("editor.settings.alerts.text") }}</p>
         <div class="tools">
-          <button type="button" class="tool" @click="ui.go('#alerts')"><span class="tool-icon">!</span><span class="tx"><b>{{ t("editor.nav.alerts") }}</b><small>{{ t("editor.settings.alerts.detail") }}</small></span></button>
+          <button type="button" class="tool" @click="ui.go('#events')"><span class="tool-icon">!</span><span class="tx"><b>{{ t("editor.nav.events") }}</b><small>{{ t("editor.settings.alerts.detail") }}</small></span></button>
         </div>
       </section>
       <section v-if="inv.pluginsEnabled" class="card" id="video">

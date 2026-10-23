@@ -404,9 +404,11 @@ data:
   night mode wait as long as the card is showing.
 - **`flash`**: `true` makes the backlight blink four times when the alert arrives.
 
-In Tessera, **Alerts** in the sidebar opens a cheatsheet with the exact action name for each screen,
-a ready-to-paste example, and all fields, icons, and colors. It starts with **Try it** (app 0.2.73): fill in
-the same seven fields, choose one screen or all of them, and send a test alert.
+In Tessera, **Events** in the sidebar opens **Alerts**: a cheatsheet with the exact action name for each screen,
+a ready-to-paste example, and all fields, icons, and colors. It starts with a wizard: point to what starts the alert
+(any entity of yours), fill in the same fields, choose the screens, and **Add to Home Assistant** saves the automation
+for you, called "Tessera: <name>", or send a test alert now. The same page has **Doorbell**, a doorbell's ring with its
+camera live on the ESP32-P4 screens (docs/DOORBELL.md).
 Home Assistant asks for all seven fields; leave a field empty (`""`, `0`, `false`) if you
 don't use it. A new alert replaces the current one. Every end is reported as the event
 **`esphome.screen_alert`** with `action` (`ok`, `button2`, `timeout`, `replaced`, or `remote`), `title`,
@@ -456,7 +458,7 @@ actions:
 - **What to fill in:** the screen's device name (`hallway-screen`), the name Home Assistant shows
   for it (`Hallway Screen`), or a room (`Hallway`), which reaches every screen in it. Case, spaces,
   dashes and underscores don't matter, so the `hallway_screen` of its action works too.
-  **Alerts** in Tessera lists the value for every screen, ready to copy, and writes the example
+  **Events, Alerts** in Tessera lists the value for every screen, ready to copy, and writes the example
   for the screen you choose.
 - **Several screens:** give a list, such as `screen: [hallway-screen, kitchen-screen]`.
 - **A name that matches no screen sends nothing,** so an alert meant for one screen never lands on

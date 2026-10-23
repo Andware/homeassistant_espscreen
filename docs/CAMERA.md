@@ -180,8 +180,8 @@ or full-page tile and keeps the small picture in the icon's place there.
 
 ## A doorbell
 
-On the ESP32-P4 screens a doorbell needs no automation: a ring opens its camera live with its sound by itself
-(docs/DOORBELL.md). On the other screens an alert brings the doorbell's picture along:
+The doorbell's own event, `esp_screens_doorbell`, opens its camera live with its sound on the ESP32-P4 screens and shows
+its picture in an alert on the others (docs/DOORBELL.md). An alert alone brings the doorbell's picture along:
 
 ```yaml
 triggers:

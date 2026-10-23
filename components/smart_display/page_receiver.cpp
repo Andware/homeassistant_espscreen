@@ -365,9 +365,10 @@ std::string receive(const std::string &payload) {
     }
     if (op != "tile" && !transfer.active) { result = "Resend needed"; return false; }
     if (op == "doorbell") {
-      // A ring (module doorbell, docs/DOORBELL.md): ESP Screens saw a doorbell's event entity ring in Home Assistant and
-      // names its camera (`e`), its name (`n`), the ring's key (`k`) and when it rang (`r`, unix time); or, with `c`, that
-      // this ring was answered on another screen and closes here too. Only a screen whose hello says `doorbell` gets it.
+      // A ring (module doorbell, docs/DOORBELL.md): an automation fired esp_screens_doorbell, and ESP Screens names its
+      // camera (`e`), its name (`n`), the ring's key (`k`), when it rang (`r`, unix time) and how long it stays untouched
+      // (`t`, seconds); or, with `c`, that this ring was answered on another screen or dismissed and closes here too. Only
+      // a screen whose hello says `doorbell` gets it.
 #ifdef SD_MOD_DOORBELL
       const std::string key = string(root["k"], 16);
       if (key.empty()) return false;
@@ -376,7 +377,8 @@ std::string receive(const std::string &payload) {
       } else {
         const std::string entity = string(root["e"], 120), name = string(root["n"], 60);
         if (!valid_entity(entity)) return false;
-        doorbell::ring(entity, name.empty() ? entity : name, key, root["r"].is<unsigned>() ? root["r"].as<uint32_t>() : 0);
+        doorbell::ring(entity, name.empty() ? entity : name, key, root["r"].is<unsigned>() ? root["r"].as<uint32_t>() : 0,
+                       root["t"].is<unsigned>() ? root["t"].as<uint32_t>() : 0);
       }
 #endif
       result = model.ready() ? "Synced" : "Loading tiles";

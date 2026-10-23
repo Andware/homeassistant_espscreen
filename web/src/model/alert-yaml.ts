@@ -3,6 +3,7 @@
 // and for one of them, the event with a second button, and waiting for the answer. The examples are the doorbell, its
 // words in the editor's language; the YAML itself stays as code. Pure, with the words from the translations.
 import { andList, t } from "../i18n";
+import { title, trigger, type Automation, type TriggerKind } from "./automation";
 
 export type AlertField = { name: string; type: string; example: unknown; label?: string; help?: string };
 /** What the add-on says of alerts: their fields, the bytes a field holds per look and the boards that have it, the
@@ -94,4 +95,22 @@ export function choiceYaml(reference: AlertReference | undefined) {
   lines.push(`  button2_text: ${yamlString(text)}`, `  button2_color: red`, `  action: script.open_gate`,
     `  ${choice?.action2?.name || "button2_action"}: ${choice?.action2?.example || "script.snooze_reminder"}`);
   return `event: ${showEvent(reference)}\nevent_data:\n${lines.join("\n")}`;
+}
+
+/** The alert's automation of the wizard (Events, Alerts): what starts it, then the event for every screen with the alert's
+ * fields, its camera and its screens, called "Tessera: <its title>" (model/automation.ts). */
+export function alertAutomation(reference: AlertReference | undefined, choice: {
+  trigger: string; kind: TriggerKind | null; fields: Record<string, unknown>; camera?: string; screens?: string[];
+}): Automation {
+  const screens = choice.screens || [];
+  return {
+    alias: title(String(choice.fields.title || "") || t("editor.events.alerts")),
+    description: t("editor.alerts.wizard.description"),
+    triggers: [trigger(choice.trigger || "binary_sensor.front_door", choice.kind || "on")],
+    actions: [{ event: showEvent(reference), event_data: {
+      ...Object.fromEntries(Object.entries(choice.fields).filter(([, value]) => value !== "" && value !== undefined)),
+      ...(choice.camera ? { camera: choice.camera } : {}),
+      ...(screens.length ? { screen: screens.length === 1 ? screens[0] : screens } : {}),
+    } }],
+  };
 }

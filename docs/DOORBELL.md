@@ -1,56 +1,15 @@
 # The doorbell
 
-Someone rings, and every screen that can stream (the ESP32-P4 screens) wakes up, plays a chime and opens the doorbell's
-camera full screen, live, with its sound on. Nothing to set up: a doorbell that Home Assistant knows as a doorbell is
-enough.
+Someone rings, and your screens show the door. An automation in Home Assistant fires the event
+`esp_screens_doorbell` with the doorbell's camera: an ESP32-P4 screen wakes up, plays a chime and opens the camera full
+screen, live, with its sound on; any other screen shows the camera's picture in an alert. Any doorbell works, because
+you choose what starts the automation: a doorbell Home Assistant knows as one, a sensor that turns on while someone
+rings, a button, anything.
 
-## What you need
+The editor's **Events** page (in the sidebar) has a wizard for it: point to what rings, the camera and the screens, and
+the app adds the automation to Home Assistant for you, or you copy its YAML.
 
-- A video doorbell in Home Assistant with an **event entity of the doorbell class** (`event.front_door_doorbell`, for
-  example) and a **camera** on the same device. Home Assistant made `ring` the standard event type of a doorbell in April 2026:
-  every doorbell integration fires it when the button is pressed, and Home Assistant's own "Doorbell rang" trigger reads it.
-- A screen whose firmware has the doorbell: the ESP32-P4 screens (8 MB of flash or more and a live picture,
-  docs/MODULES.md). Their hello says `doorbell`.
-- The screen allowed to perform Home Assistant actions (docs/EASY_SETUP.md, chapter 3), so it can say when someone
-  answered.
-
-## What happens
-
-1. ESP Screens sees the doorbell's event entity change to a new moment with the event type `ring`. A doorbell that
-   comes back from unavailable did not ring, and another event type (a long press) is not a ring.
-2. It finds the camera on the doorbell's device (a camera that is not disabled, one that works first) and sends every
-   screen that draws a doorbell the op `doorbell` with that camera, the doorbell device's name and the moment it rang.
-3. The screen wakes from standby or Sleep, closes the settings page, a card or another camera, plays the chime on its
-   speaker and opens the camera full screen as a doorbell: the doorbell's disc where the back key stands, its name and
-   how long ago it rang beside it, the close key at the right, and the picture beside the keys (glass lying down) or
-   above them (square or standing glass). The picture is live as soon as the stream starts; until then its still and a
-   spinner in the top bar.
-4. The first touch on the view **answers** the ring: ESP Screens closes it on the other screens. The close key answers
-   it too.
-5. Nobody touches it: it closes a minute after the last ring. The ring is then **missed**, and every doorbell screen
-   shows it at the left of its top bar (the doorbell's icon and "2 min ago") until someone taps that item, which opens
-   the doorbell's camera again, or answers a later ring.
-
-The view stays lit while it is open: standby and Back to Home wait for it, five minutes after the last touch or ring at
-most (Back to Home counts from the last touch, so without this a ring after two quiet minutes closed at once). A second ring
-while it is open plays the chime again and starts the minute over.
-
-## Turning it off on one screen
-
-Every P4 screen has a switch **Doorbell** under Extras: on the screen's settings page, in the editor's Screen settings
-and as `switch.<screen>_doorbell` in Home Assistant. Off, the screen lets a ring pass. An automation can switch it off
-at night for a bedroom's screen.
-
-## The sound
-
-The doorbell's sound plays as the camera full screen's sound does (docs/CAMERA.md), on at every ring; the key **Sound**
-mutes it for this ring. The chime is two notes made by the screen itself and plays on the speaker for announcements, at
-the screen's volume (Extras, Volume).
-
-## Other screens
-
-A screen without the doorbell (a CYD, an ESP32-S3) gets nothing from a ring by itself. An automation can show it the
-doorbell's picture in an alert (docs/CAMERA.md, "A doorbell"):
+## The event
 
 ```yaml
 triggers:
@@ -58,31 +17,97 @@ triggers:
     target:
       entity_id: event.front_door_doorbell
 actions:
-  - event: esp_screens_show_alert
+  - event: esp_screens_doorbell
     event_data:
-      title: Someone is at the door
-      icon: doorbell
       camera: camera.front_door
+      title: Front door
+      screen: [hallway-screen, kitchen-screen]
       timeout: 60
-      screen: hallway
 ```
+
+| Field | What it does |
+|---|---|
+| `camera` | The doorbell's camera entity. Required. A P4 screen streams it live with its sound; any other screen shows its picture in an alert. |
+| `title` | What the screen calls the doorbell, at the top of its view and as the alert's title. Empty takes the name of the camera's device, or the camera's own. |
+| `screen` | Which screens get the ring: a device name, the name Home Assistant shows, or a room; a list reaches several. Leave it out for every screen. A name that matches no screen sends nothing. The same rules as an alert's `screen`. |
+| `timeout` | Seconds a ring stays when nobody touches it, 10 to 600. Empty is 60. |
+
+`esp_screens_dismiss_doorbell` closes every ring nobody answered yet, on every screen (for example when the door opens).
+
+What starts the automation is yours to pick:
+
+- A doorbell Home Assistant knows as one, an `event` entity of the doorbell class (UniFi Protect, Ring, Nest, DoorBird
+  and others): `trigger: doorbell.rang`. Home Assistant made `ring` the standard event type of a doorbell in April 2026.
+- A doorbell that reports a press as a sensor (Reolink's Visitor): `trigger: state`, `from: "off"`, `to: "on"`.
+- Anything else: a button, a switch, a script. Each can fire the same event.
+
+## What happens on the screens
+
+1. The app sends every P4 screen the event names the op `doorbell` (its hello says `doorbell`), and every other screen
+   the camera's alert (`esp_screens_show_alert` with the title, the doorbell icon and the camera).
+2. A P4 screen wakes from standby or Sleep, closes the settings page, a card or another camera, plays a chime it makes
+   itself on its speaker, and opens the camera full screen as a doorbell: the doorbell's disc where the back key
+   stands, its name and how long ago it rang beside it, the close key at the right, and the picture beside the keys
+   (glass lying down) or above them (square or standing glass). The picture is live as soon as the stream starts; until
+   then its still and a spinner in the top bar.
+3. The first touch on a screen **answers** the ring: the app closes the view on the other screens and the alert on the
+   others. The close key answers it too.
+4. Nobody touches it: it closes after its timeout. The ring is then **missed**, and every doorbell screen shows it at the
+   left of its top bar (the doorbell's icon and "2 min ago") until someone taps that item, which opens the camera again,
+   or answers a later ring of that camera.
+
+While the view is open, standby and Back to Home wait; it closes five minutes after the last touch or ring at most. A
+second ring while it is open plays the chime again and starts the timeout over.
+
+Not every doorbell can do everything. The sound comes only when the camera's stream in Home Assistant has it.
+
+## After a ring
+
+Once per ring the app fires one event of its own, for an automation that follows it:
+
+- `esp_screens_doorbell_answered` when someone answered it on a screen, with `camera`, `title` and `screen`;
+- `esp_screens_doorbell_missed` when nobody did before its timeout, with `camera` and `title`.
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: esp_screens_doorbell_missed
+actions:
+  - action: notify.notify
+    data:
+      message: Someone rang the doorbell
+```
+
+Each screen also reports how a ring ended there as `esphome.screen_doorbell` (`action`: answered, closed, missed or
+seen; `key`; `screen`), which the app reads.
+
+## Into Home Assistant
+
+The wizards of Events (the doorbell's and the alerts') save their automation the way Home Assistant's own automation
+editor does (`POST /api/config/automation/config/<id>`): Home Assistant writes it into `automations.yaml` and reloads
+it, so it works at once, without a restart. Every automation from Tessera is called **Tessera: <name>**, so Home
+Assistant's list shows which ones came from here, and the wizard lists them, each with a link to it in Home Assistant.
+The app only saves automations whose every action fires one of its events, under ids of its own (`tessera_doorbell_...`,
+`tessera_alert_...`), and only changes or removes those. An automation you made yourself and named "Tessera: ..." is
+listed too, but left alone.
 
 ## How it fits together
 
 | Part | Where |
 |---|---|
-| What a ring is, which camera, the screens, answered and missed | `screen_manager/app/doorbell.py`, `Manager.doorbell_*` in `server.py` |
+| The event, its fields, the screens, answered and missed, the wizard's suggestions | `screen_manager/app/doorbell.py`, `Manager.doorbell_*` in `server.py` |
+| Automations into Home Assistant | `screen_manager/app/automations.py`, `api/automations` in `server.py` |
+| The Events page and its wizards | `web/src/components/EventsView.vue`, `DoorbellView.vue`, `alerts/AlertTry.vue`, `events/` |
 | The missed ring in the top bar | `page_service.sync_pages` (`with_missed`), the item's `b` |
 | The op `doorbell` | `page_receiver.cpp` |
 | The view, the chime, the times | `module_doorbell.cpp` (module doorbell), hooked into the camera full view of `runtime_tiles.h` |
-| The switch Doorbell | `packages/features/audio-player.yaml`, `boards.yaml` `settings` |
-| The report of how a ring ended | `doorbell_report` in `packages/core.yaml`, the event `esphome.screen_doorbell` (`action`: answered, closed, missed or seen; `key`; `screen`) |
+| The report of how a ring ended | `doorbell_report` in `packages/core.yaml`, the event `esphome.screen_doorbell` |
 
 The view never lays anything of LVGL over its picture: a live picture is written to the glass past LVGL
 (docs/PICTURES.md), so the keys stand beside it.
 
 ## Not yet
 
-- **Open the door.** A key that opens a lock or presses a button of the doorbell's device, or one picked for it.
+- **Open the door.** A key that opens a lock or presses a button you point to in the wizard.
 - **Talk.** The screen's microphone to the doorbell's speaker, through Home Assistant's own go2rtc and the doorbell's
-  backchannel, while the key is held.
+  backchannel, while the key is held. Not every doorbell has a backchannel.

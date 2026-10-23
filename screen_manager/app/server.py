@@ -15,6 +15,7 @@ import time
 from datetime import datetime, timedelta, timezone
 import math
 from urllib.parse import urlsplit
+import automations
 import calendar_feed
 import doorbell
 import durations
@@ -58,7 +59,7 @@ import entity_settings
 import plugins
 
 from aiohttp import ClientError, ClientSession, ClientTimeout, WSMsgType, web
-from core import alarm_extras, lock_extras, ALERT_EVENT, board_of, BROADCAST_EVENTS, BROADCAST_SHOW, BUILTIN, CAMERA_DOMAINS, entity_id, SETTINGS_BESIDE_BLOCK, TILE_EVENTS, TILE_RESULT_EVENT, layout_snapshot, match_screen, HEADER_MIN_FIRMWARE, NAME_TILE_SETTINGS, TRANSPORT_MIN_FIRMWARE, alert_action, alert_camera, alert_choice, alert_data, choice_service, ALERT_CHOICE_ACTION, ALERT_CHOICE_MIN_FIRMWARE, parse_firmware, alert_reference, alert_screen_choice, alert_screen_names, alert_service, alert_targets, backgrounds, builtin_name, controls_catalogue, device_prefixes, discover, discover_screens, encode, entity_slug, extras, media_cover, media_extras, forecast_kinds, header_items, inbox_prefix, message_action, min_firmware, name_clash, packets, revision, screen_items, state_message, validate_header, validate_layout, validate_settings
+from core import alarm_extras, lock_extras, ALERT_EVENT, board_of, BROADCAST_DISMISS, BROADCAST_EVENTS, BROADCAST_SHOW, BUILTIN, CAMERA_DOMAINS, entity_id, SETTINGS_BESIDE_BLOCK, TILE_EVENTS, TILE_RESULT_EVENT, layout_snapshot, match_screen, HEADER_MIN_FIRMWARE, NAME_TILE_SETTINGS, TRANSPORT_MIN_FIRMWARE, alert_action, alert_camera, alert_choice, alert_data, choice_service, ALERT_CHOICE_ACTION, ALERT_CHOICE_MIN_FIRMWARE, parse_firmware, alert_reference, alert_screen_choice, alert_screen_names, alert_service, alert_targets, backgrounds, builtin_name, controls_catalogue, device_prefixes, discover, discover_screens, encode, entity_slug, extras, media_cover, media_extras, forecast_kinds, header_items, inbox_prefix, message_action, min_firmware, name_clash, packets, revision, screen_items, state_message, validate_header, validate_layout, validate_settings
 from core import ENERGY_TILE, MAP_TILE_MIN_FIRMWARE, WEATHER_WEEK, calibrate_entity, can_standby, dimmable, SETTING_ENTITIES, SETTING_RULES, STANDBY_KEYS, setting_action, setting_entities, setting_from_state, state_word
 from core import BAR_CARDS_FEATURE, BOARD_KEYS, has_battery, has_module, is_key, drawn_controls, FAVORITE_KINDS, SCREENSAVER_MIN_FIRMWARE, short, plugin_tile
 from core import (FIRMWARE_MAX_BAR_ITEMS, FIRMWARE_MAX_PAGES, FIRMWARE_MAX_TILES, Grid, page_target, PAGE_TILE_REPEAT_MIN_FIRMWARE, ENTITY_REPEAT_MIN_FIRMWARE, ROTATION_MIN_FIRMWARE, SHAPES, firmware_features, grid_of, orientation_at,
@@ -235,8 +236,8 @@ class HomeAssistant:
         self.broadcasts = asyncio.Queue()
         # (event type, data) of tile events (app 0.2.51+), for Manager.tile_loop.
         self.tile_events = asyncio.Queue()
-        # ('ring', state_changed body) of a doorbell that rang and ('report', data) of a screen's report of a ring
-        # (docs/DOORBELL.md), for Manager.doorbell_loop.
+        # (event type, data) of the doorbell's events (esp_screens_doorbell, esp_screens_dismiss_doorbell) and of a screen's
+        # report of a ring (esphome.screen_doorbell, docs/DOORBELL.md), for Manager.doorbell_loop.
         self.doorbell_events = asyncio.Queue()
         # ESPHome actions that can answer (`esphome.<node>_screen_message` of firmware 0.2.49+), from Home
         # Assistant's own list; refreshed when a device registers its actions again.
@@ -321,9 +322,6 @@ class HomeAssistant:
                         self.states.pop(eid, None)
                     # Unsaved/virtual previews also follow entities not used by a physical screen.
                     self.state_events.notify(eid)
-                    # A doorbell rang (an event entity of the doorbell class, its event type ring): its camera opens on the screens.
-                    if doorbell.rang(body):
-                        self.doorbell_events.put_nowait(('ring', body))
                     if self.relevant is None or eid in self.relevant:
                         self.dirty.add(eid)
                         self.changed.set()
@@ -346,8 +344,8 @@ class HomeAssistant:
                     self.broadcasts.put_nowait((event['event_type'], body))
                 elif event.get('event_type') in TILE_EVENTS:
                     self.tile_events.put_nowait((event['event_type'], body))
-                elif event.get('event_type') == doorbell.EVENT:
-                    self.doorbell_events.put_nowait(('report', body))
+                elif event.get('event_type') in (*doorbell.EVENTS, doorbell.EVENT):
+                    self.doorbell_events.put_nowait((event['event_type'], body))
         raise ConnectionError('Home Assistant connection lost.')
 
     def describe_close(self, connected):
@@ -595,7 +593,7 @@ class HomeAssistant:
                     await self.request('subscribe_events', event_type=media_library.PLAY_EVENT)
                     await self.request('subscribe_events', event_type=speakers.SPEAKER_EVENT)
                     await self.request('subscribe_events', event_type='repairs_issue_registry_updated')
-                    for event_type in (*REGISTRY_EVENTS, *BROADCAST_EVENTS, ALERT_EVENT, *TILE_EVENTS, *SERVICE_EVENTS, doorbell.EVENT):
+                    for event_type in (*REGISTRY_EVENTS, *BROADCAST_EVENTS, ALERT_EVENT, *TILE_EVENTS, *SERVICE_EVENTS, *doorbell.EVENTS, doorbell.EVENT):
                         await self.request('subscribe_events', event_type=event_type)
                     self.states = {s['entity_id']: s for s in await self.request('get_states')}
                     await self.registries()
@@ -869,6 +867,30 @@ class HomeAssistant:
             response.raise_for_status()
             answer = await response.json(content_type=None)
         return bool(isinstance(answer, dict) and answer.get('require_restart'))
+
+    async def save_automation(self, automation_id, config):
+        """Save one automation as Home Assistant's own editor does (automations.py): it writes automations.yaml and reloads
+        the automations. Over REST with the same token; only an administrator may."""
+        async with self.session.post(f'{self.base}/config/automation/config/{automation_id}',
+                                     headers={'Authorization': 'Bearer ' + self.token}, json=config,
+                                     timeout=ClientTimeout(total=60)) as response:
+            if response.status in (401, 403):
+                raise Refused(t('addon.errors.automations.not_allowed'))
+            if response.status == 400:
+                answer = await response.json(content_type=None)
+                raise ValueError(t('addon.errors.automations.refused', reason=str((answer or {}).get('message', ''))[:200]))
+            response.raise_for_status()
+
+    async def delete_automation(self, automation_id):
+        """Remove one automation, as Home Assistant's own editor does."""
+        async with self.session.delete(f'{self.base}/config/automation/config/{automation_id}',
+                                       headers={'Authorization': 'Bearer ' + self.token},
+                                       timeout=ClientTimeout(total=60)) as response:
+            if response.status in (401, 403):
+                raise Refused(t('addon.errors.automations.not_allowed'))
+            # One that is gone already answers 400, "Resource not found" (homeassistant/components/config/view.py).
+            if response.status not in (400, 404):
+                response.raise_for_status()
 
     async def remove_state(self, entity_id):
         """A state this app published itself (a screen's layout sensor), gone with the screen it described."""
@@ -1206,6 +1228,17 @@ class Manager:
         said = lambda name: getattr(sender, name, None) or getattr(sender, 'last_' + name, None)
         return (said('max_pages') or FIRMWARE_MAX_PAGES, said('max_tiles') or FIRMWARE_MAX_TILES,
                 said('max_bar_items') or FIRMWARE_MAX_BAR_ITEMS)
+
+    def doorbell_kind(self, screen):
+        """What a ring does on this screen (docs/DOORBELL.md): `view`, the doorbell's camera live (its hello says `doorbell`,
+        else a P4 that streams with the board's module), `picture`, the camera's alert with its picture, or `plain`, the alert
+        alone (a board that draws no pictures)."""
+        sender = self.page_senders.get(self.aliases.get(screen.get('id'), screen.get('id')))
+        if sender is not None and getattr(sender, 'protocol', None) is not None:
+            view = doorbell.FEATURE in (getattr(sender, 'features', None) or ())
+        else:
+            view = has_module(screen, 'doorbell') and self.live_camera(screen)
+        return 'view' if view else 'picture' if board_of(screen) in picture_question.BOXES else 'plain'
 
     def live_camera(self, screen):
         """Whether this screen streams a camera live (live_feed.py): its hello while it is connected (`live`), else its
@@ -3882,31 +3915,72 @@ class Manager:
                                          for screen in screens), return_exceptions=True)
         return sum(1 for result in results if result is True)
 
-    async def doorbell_ring(self, body):
-        """A doorbell rang (doorbell.rang): its camera, live with its sound, on every screen that streams."""
-        entity = body.get('entity_id')
-        camera = doorbell.camera_of(self.device_entries(entity), self.ha.states)
-        if not camera:
-            LOG.info('Doorbell %s rang; its device has no camera to show', entity)
-            return
-        screens = self.doorbell_screens()
-        if not screens:
-            LOG.info('Doorbell %s rang; no screen shows a doorbell (a P4 with firmware that has it)', entity)
-            return
-        name = doorbell.name_of(entity, self.device_name_of(entity), self.ha.states)
+    async def doorbell_show(self, data):
+        """esp_screens_doorbell (docs/DOORBELL.md): the doorbell's camera on the screens the event names, every screen
+        without a name. A screen that draws a doorbell opens the camera live with its sound and a chime; any other gets
+        the camera's alert. What the reply of Events, Try it shows: sent (views), alerts, skipped, failed, unknown."""
+        camera, title, timeout, unusable = doorbell.request(data)
+        if camera is None:
+            LOG.warning('%s: no camera (camera.<name>), nothing sent', doorbell.SHOW)
+            return {'sent': 0, 'alerts': 0, 'skipped': 0, 'failed': 0, 'unusable': unusable}
+        paired = self.screens()
+        wanted, usable = alert_screen_names(data)
+        if not usable:
+            LOG.warning('%s: unusable screen, sent to no screen', doorbell.SHOW)
+            return {'sent': 0, 'alerts': 0, 'skipped': 0, 'failed': 0, 'unusable': unusable + ['screen']}
+        screens, unknown = alert_screen_choice(paired, wanted) if wanted else (paired, [])
+        if unknown:
+            LOG.warning('%s: no screen called %s', doorbell.SHOW, ', '.join(unknown))
+        views = [screen for screen in self.doorbell_screens() if screen['id'] in {s['id'] for s in screens}]
+        others = [screen for screen in screens if screen not in views and screen.get('node')]
+        name = title or doorbell.name_of(camera, self.device_name_of(camera), self.ha.states)
         # The screens may open this camera now (camera_allowed), as after an alert with its picture.
         self.alert_cameras[camera] = time.monotonic()
-        key = self.doorbells.start(camera, name, doorbell.moment(body), [screen['id'] for screen in screens])
-        sent = await self.doorbell_send(screens, self.doorbells.message(key))
-        LOG.info('Doorbell %s rang: %s on %d of %d screens', entity, camera, sent, len(screens))
-        asyncio.ensure_future(self.doorbell_unanswered(key))
+        key = self.doorbells.start(camera, name, timeout, [screen['id'] for screen in views], [screen['node'] for screen in others])
+        sent = await self.doorbell_send(views, self.doorbells.message(key)) if views else 0
+        alerts = {'sent': 0, 'skipped': 0, 'failed': 0}
+        if others:
+            alerts = await self.broadcast(BROADCAST_SHOW, {'title': name, 'icon': doorbell.ALERT_ICON, 'camera': camera,
+                                                           'timeout': timeout, 'screen': [screen['node'] for screen in others]})
+        LOG.info('%s: %s on %d screens with its view, %d with its alert', doorbell.SHOW, camera, sent, alerts.get('sent', 0))
+        asyncio.ensure_future(self.doorbell_unanswered(key, timeout))
+        result = {'sent': sent, 'alerts': alerts.get('sent', 0), 'skipped': alerts.get('skipped', 0) + len(views) - sent,
+                  'failed': alerts.get('failed', 0), 'unusable': unusable}
+        if wanted:
+            result['unknown'] = unknown
+        return result
 
-    async def doorbell_unanswered(self, key):
-        """Nobody answered the ring: it is the missed ring, which the top bars of those screens show."""
-        await asyncio.sleep(doorbell.MISSED_AFTER)
+    async def doorbell_close(self, key, views, alerts):
+        """A ring ends: its view closes on `views` (inboxes), its alert on `alerts` (nodes)."""
+        screens = [screen for screen in self.screens() if screen['id'] in set(views) and self.transport(screen['id'], screen)]
+        closed = await self.doorbell_send(screens, self.doorbells.message(key, close=True)) if screens else 0
+        if alerts:
+            await self.broadcast(BROADCAST_DISMISS, {'screen': list(alerts)})
+        return closed
+
+    async def doorbell_dismiss(self, data):
+        """esp_screens_dismiss_doorbell: every ring nobody answered yet closes on every screen."""
+        for key in self.doorbells.open():
+            views, alerts = self.doorbells.answered(key)
+            closed = await self.doorbell_close(key, views, alerts)
+            LOG.info('%s: closed on %d screens', doorbell.DISMISS, closed)
+        self.ha.changed.set()
+
+    async def doorbell_unanswered(self, key, timeout):
+        """Nobody answered the ring before its timeout: it is the missed ring, which the top bars of those screens show."""
+        await asyncio.sleep(timeout + doorbell.MISSED_GRACE)
         if self.doorbells.unanswered(key):
             LOG.info('Doorbell ring missed: it shows in the top bars')
             self.ha.changed.set()
+            ring = self.doorbells.ring(key) or {}
+            await self.doorbell_fire(doorbell.MISSED, {'camera': ring.get('camera'), 'title': ring.get('name')})
+
+    async def doorbell_fire(self, event_type, data):
+        """The app's own event of a ring (doorbell.ANSWERED, MISSED), once, for an automation that follows it."""
+        try:
+            await self.ha.fire(event_type, data)
+        except Exception as error:
+            LOG.warning('%s was not fired (%s)', event_type, type(error).__name__)
 
     async def doorbell_report(self, data):
         """A screen says how a ring ended there (esphome.screen_doorbell): answered or closed closes it on the others,
@@ -3916,10 +3990,14 @@ class Manager:
         action, key, node = data.get('action'), data.get('key'), data.get('screen')
         if action in doorbell.ANSWERS and isinstance(key, str):
             had_missed = self.doorbells.missed is not None
-            targets = set(self.doorbells.answered(key))
-            others = [screen for screen in self.screens() if screen['id'] in targets and screen.get('node') != node and self.transport(screen['id'], screen)]
-            if others:
-                closed = await self.doorbell_send(others, self.doorbells.message(key, close=True))
+            first = not (self.doorbells.ring(key) or {'answered': True})['answered']
+            views, alerts = self.doorbells.answered(key)
+            if first:
+                ring = self.doorbells.ring(key)
+                await self.doorbell_fire(doorbell.ANSWERED, {'camera': ring['camera'], 'title': ring['name'], 'screen': node})
+            others = [screen['id'] for screen in self.screens() if screen['id'] in set(views) and screen.get('node') != node]
+            if others or alerts:
+                closed = await self.doorbell_close(key, others, alerts)
                 LOG.info('Doorbell ring %s on %s: closed on %d other screens', action, node, closed)
             if had_missed and self.doorbells.missed is None:
                 self.ha.changed.set()
@@ -3932,7 +4010,8 @@ class Manager:
         while queue is not None:
             kind, data = await queue.get()
             try:
-                await (self.doorbell_ring(data) if kind == 'ring' else self.doorbell_report(data))
+                handler = {doorbell.SHOW: self.doorbell_show, doorbell.DISMISS: self.doorbell_dismiss}.get(kind, self.doorbell_report)
+                await handler(data)
             except Exception as error:
                 LOG.warning('Doorbell %s failed (%s)', kind, type(error).__name__)
 
@@ -4124,6 +4203,7 @@ def create_app(manager, development=False):
             screen['pictures'] = board_of(screen) in picture_question.BOXES
             screen['alert_action'] = alert_service(screen.get('node'))
             screen['dismiss_action'] = alert_service(screen.get('node'), 'dismiss_alert')
+            screen['doorbell'] = manager.doorbell_kind(screen)
             # What the editor may offer this screen, by the firmware the app's own checks go by (app 0.2.78) and the
             # grid of its pages: an offline screen keeps its tiles, and the editor needn't know the version rules.
             version = manager.firmware_version(screen['id'], screen)
@@ -4193,6 +4273,8 @@ def create_app(manager, development=False):
         payload['controls'] = controls_catalogue()
         payload['icons'] = tile_icons.editor()
         payload['alerts'] = alert_reference()
+        # The doorbell's event, and the doorbells this Home Assistant has, for the wizard to offer first (docs/DOORBELL.md).
+        payload['doorbell'] = {**doorbell.reference(), 'suggestions': doorbell.suggestions(manager.ha.states, manager.registry_index(), manager.device_entries)}
         # What's new for the Update badge: here only, not in every live update (app 0.2.78).
         payload['changelog'] = manager.updates.changelog
         payload['claude_skill'] = claude_skill.status(manager.skill_dir)
@@ -4726,6 +4808,46 @@ def create_app(manager, development=False):
         service, unusable = alert_data(data)
         await manager.ha.call(alert_service(screen['node']), service)
         return web.json_response({'sent': 1, 'failed': 0, 'skipped': 0, 'unusable': unusable})
+    async def test_doorbell(request):
+        """Events, Doorbell, Try it: one ring to one screen or to every screen, as esp_screens_doorbell sends it."""
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError(t('addon.errors.alerts.invalid'))
+        # The wizard's own fields as the automation it builds would send them, its screens by name too.
+        data = dict(body.get('data')) if isinstance(body.get('data'), dict) else {}
+        if body.get('screen') not in (None, '', 'all'):
+            screen = manager.screen(str(body.get('screen')))
+            if screen is None or not screen.get('node'):
+                raise ValueError(t('addon.errors.unknown_screen'))
+            data['screen'] = screen['node']
+        return web.json_response(await manager.doorbell_show(data))
+    async def list_automations(request):
+        """Events: the automations this app put into Home Assistant (automations.py), for the wizard's list."""
+        return web.json_response({'automations': automations.listed(manager.ha.states, request.query.get('kind') or None)})
+    async def save_automation(request):
+        """Events, Add to Home Assistant: the wizard's automation into Home Assistant, a new one or one of ours again."""
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError(t('addon.errors.alerts.invalid'))
+        kind = str(body.get('kind', ''))
+        automation_id = body.get('id') or automations.new_id(kind)
+        if automations.kind_of(automation_id) != kind:
+            raise ValueError(t('addon.errors.automations.not_ours'))
+        try:
+            config = automations.checked(kind, body.get('config'))
+        except ValueError as error:
+            raise ValueError(t('addon.errors.automations.invalid', part=str(error))) from None
+        await manager.ha.save_automation(automation_id, config)
+        LOG.info('Events: automation %s saved in Home Assistant (%s)', automation_id, config['alias'])
+        return web.json_response({'id': automation_id, 'path': f'/config/automation/edit/{automation_id}'})
+    async def delete_automation(request):
+        """Events: remove one of the automations this app put into Home Assistant, never another."""
+        automation_id = request.match_info['id']
+        if not automations.kind_of(automation_id):
+            raise ValueError(t('addon.errors.automations.not_ours'))
+        await manager.ha.delete_automation(automation_id)
+        LOG.info('Events: automation %s removed from Home Assistant', automation_id)
+        return web.json_response({'removed': automation_id})
     async def install_claude_skill(request):
         """Settings → Claude → Install: writes the skill into Home Assistant's configuration folder, only on request."""
         return web.json_response(claude_skill.install(manager.skill_dir))
@@ -5235,6 +5357,10 @@ def create_app(manager, development=False):
     app.router.add_post('/api/screens/{inbox}/identify', identify)
     app.router.add_post('/api/screens/{inbox}/calibrate', calibrate)
     app.router.add_post('/api/alerts/test', test_alert)
+    app.router.add_post('/api/doorbell/test', test_doorbell)
+    app.router.add_get('/api/automations', list_automations)
+    app.router.add_post('/api/automations', save_automation)
+    app.router.add_delete('/api/automations/{id}', delete_automation)
     app.router.add_get('/api/entity-actions', entity_actions)
     app.router.add_get('/api/entity-subtitle', entity_subtitle)
     app.router.add_get('/api/display-precision', display_precision)

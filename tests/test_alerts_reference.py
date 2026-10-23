@@ -76,9 +76,10 @@ class ReferenceTests(unittest.TestCase):
     def test_page_carries_the_cheatsheet(self):
         import editor_sources
         html = editor_sources.PAGE
-        for marker in ('id="open-alerts"', 'id="alerts-dialog"', 'id="close-alerts"', 'id="alerts-screens"', 'id="alerts-icons"', 'id="alerts-colors"', 'id="alerts-fields"', 'id="alerts-example"'):
+        # Alerts is a part of Events (app 0.4.91): the sidebar's Events opens it, its Back is the page's.
+        for marker in ('id="open-events"', 'id="alerts-dialog"', 'id="close-events"', 'id="alerts-screens"', 'id="alerts-icons"', 'id="alerts-colors"', 'id="alerts-fields"', 'id="alerts-example"'):
             self.assertIn(marker, html, marker)
-        for marker in ('inventory.alerts', 'alert_action', 'dismiss_action', 'AlertsView', 'go(\'#alerts\')'):
+        for marker in ('inventory.alerts', 'alert_action', 'dismiss_action', 'AlertsView', 'go(\'#events\')'):
             self.assertIn(marker, editor_sources.SCRIPT, marker)
         self.assertIn('.alert-icon-grid', editor_sources.CSS)
 

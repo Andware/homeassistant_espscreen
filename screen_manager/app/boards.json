@@ -26,8 +26,7 @@
    "order": 22,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -669,8 +668,7 @@
    "order": 9,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -805,8 +803,7 @@
    "order": 10,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -1069,8 +1066,7 @@
    "order": 21,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -1206,8 +1202,7 @@
    "order": 4,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "new",
    "touch": "GSL3670"
@@ -1343,8 +1338,7 @@
    "order": 15,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GSL3680"
@@ -1480,8 +1474,7 @@
    "order": 5,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GSL3680"
@@ -1745,8 +1738,7 @@
    "settings": [
     "media_player",
     "microphone",
-    "wake_when_moved",
-    "doorbell"
+    "wake_when_moved"
    ],
    "status": "experimental",
    "touch": "GSL3670"
@@ -2112,8 +2104,7 @@
    "settings": [
     "media_player",
     "microphone",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "new",
    "touch": "ST7121/ST7123"
@@ -2252,8 +2243,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -3382,8 +3372,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -3521,8 +3510,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -3660,8 +3648,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -3923,8 +3910,7 @@
    "order": 22,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -4566,8 +4552,7 @@
    "order": 9,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -4702,8 +4687,7 @@
    "order": 10,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -4966,8 +4950,7 @@
    "order": 21,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -5103,8 +5086,7 @@
    "order": 4,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "new",
    "touch": "GSL3670"
@@ -5240,8 +5222,7 @@
    "order": 15,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GSL3680"
@@ -5377,8 +5358,7 @@
    "order": 5,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GSL3680"
@@ -5641,8 +5621,7 @@
    "order": 22,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -6284,8 +6263,7 @@
    "order": 9,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -6420,8 +6398,7 @@
    "order": 10,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -6684,8 +6661,7 @@
    "order": 21,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -6821,8 +6797,7 @@
    "order": 4,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "new",
    "touch": "GSL3670"
@@ -6958,8 +6933,7 @@
    "order": 15,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GSL3680"
@@ -7095,8 +7069,7 @@
    "order": 5,
    "settings": [
     "media_player",
-    "microphone",
-    "doorbell"
+    "microphone"
    ],
    "status": "experimental",
    "touch": "GSL3680"
@@ -7360,8 +7333,7 @@
    "settings": [
     "media_player",
     "microphone",
-    "wake_when_moved",
-    "doorbell"
+    "wake_when_moved"
    ],
    "status": "experimental",
    "touch": "GSL3670"
@@ -7727,8 +7699,7 @@
    "settings": [
     "media_player",
     "microphone",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "new",
    "touch": "ST7121/ST7123"
@@ -7867,8 +7838,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -8997,8 +8967,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -9136,8 +9105,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -9275,8 +9243,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -9539,8 +9506,7 @@
    "settings": [
     "media_player",
     "microphone",
-    "wake_when_moved",
-    "doorbell"
+    "wake_when_moved"
    ],
    "status": "experimental",
    "touch": "GSL3670"
@@ -9906,8 +9872,7 @@
    "settings": [
     "media_player",
     "microphone",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "new",
    "touch": "ST7121/ST7123"
@@ -10046,8 +10011,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -11176,8 +11140,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -11315,8 +11278,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"
@@ -11454,8 +11416,7 @@
     "microphone",
     "microphone_gain",
     "automatic_gain",
-    "echo_cancellation",
-    "doorbell"
+    "echo_cancellation"
    ],
    "status": "experimental",
    "touch": "GT911"

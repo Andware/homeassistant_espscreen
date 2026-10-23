@@ -275,6 +275,8 @@ export type Screen = {
   // How a plugin it runs works for you (docs/PLUGINS.md, "Likes, ratings and counting"): the stars card, or none.
   plugin_ask?: PluginAsk | null;
   alert_action?: string; dismiss_action?: string;
+  // What a doorbell's ring does here (app 0.4.91, docs/DOORBELL.md): its camera live, its alert with the picture, or the alert alone.
+  doorbell?: "view" | "picture" | "plain";
   // The screen's device name (its ESPHome name): what its actions are named after and what an alert's `screen` takes.
   node?: string;
   // The API key in the screen's own YAML (app 0.2.132), for pairing it again; null when the add-on has no profile for it.
@@ -430,6 +432,8 @@ export type Inventory = {
     suggestions?: Record<string, { item: HeaderItem; label: string; name?: string; area?: string; icon?: string }[]>;
   };
   alerts?: any;
+  // The doorbell's event, its fields and what comes back (model/doorbell-yaml.ts DoorbellReference).
+  doorbell?: any;
   // Missing from an add-on before 0.2.90: English everywhere, and no Language card.
   language?: Languages;
   [key: string]: unknown;

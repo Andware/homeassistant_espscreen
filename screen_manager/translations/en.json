@@ -159,7 +159,6 @@
       "microphone": "Microphone",
       "media_player": "Volume",
       "wake_when_moved": "Wake when moved",
-      "doorbell": "Doorbell",
       "dark_mode": "Dark mode",
       "auto_standby": "Auto standby",
       "standby_after": "Standby after",
@@ -967,6 +966,12 @@
         "retry": "Tessera didn't take the report just now. Try again in a minute, or download it.",
         "offline": "Tessera can't be reached from here. Download the report instead.",
         "invalid": "Tessera refused the report. Download it and attach it to a GitHub issue instead."
+      },
+      "automations": {
+        "not_allowed": "Home Assistant did not let the app save automations. The app needs an administrator's access.",
+        "refused": "Home Assistant refused the automation: {reason}",
+        "not_ours": "That automation was not made by Tessera, so the app leaves it alone.",
+        "invalid": "This automation cannot be saved ({part})."
       }
     },
     "status": {
@@ -1164,10 +1169,6 @@
         "wake_when_moved": {
           "label": "Wake when moved",
           "hint": "The screen wakes from standby when someone picks it up, moves it or knocks on it. It feels the screen itself, not someone walking past."
-        },
-        "doorbell": {
-          "label": "Doorbell",
-          "hint": "When a doorbell in Home Assistant rings, this screen wakes, chimes and opens its camera live with sound. Off leaves this screen alone, for example a bedroom at night."
         },
         "microphone_gain": {
           "label": "Microphone gain",
@@ -1503,6 +1504,32 @@
         "directory": "Folder",
         "music": "Music"
       }
+    },
+    "doorbell": {
+      "fields": {
+        "camera": {
+          "label": "Camera",
+          "help": "The camera entity of the doorbell. A screen that streams (an ESP32-P4) shows it live with its sound; any other screen shows its picture in an alert. Required."
+        },
+        "title": {
+          "label": "Title",
+          "help": "What the screen calls the doorbell, at the top of its view and as the alert's title. Empty takes the camera's name."
+        },
+        "screen": {
+          "label": "Screen",
+          "help": "Which screens get the ring: a device name (such as kitchen-screen), the name Home Assistant shows, or a room. A list reaches several. Leave it out for every screen. A name that matches no screen sends nothing."
+        },
+        "timeout": {
+          "label": "Timeout",
+          "help": "Seconds the ring stays when nobody touches it, {min} to {max}. Empty is {default}. A touch keeps it open."
+        }
+      },
+      "endings": {
+        "answered": "Someone touched it: answered, and closed on the other screens",
+        "closed": "Its close key, or something else that closed it",
+        "missed": "Nobody touched it before its timeout",
+        "seen": "A missed ring was opened again from the top bar"
+      }
     }
   },
   "editor": {
@@ -1529,7 +1556,7 @@
     "nav": {
       "new_screen": "New screen",
       "firmware": "Firmware & USB",
-      "alerts": "Alerts",
+      "events": "Events",
       "settings": "Settings",
       "new_screen_detail": "Connect and install",
       "plugins": "Plugins",
@@ -2997,8 +3024,6 @@
       "waits_turn": "Another screen is being built now. This one waits its turn and starts by itself right after."
     },
     "alerts": {
-      "eyebrow": "Alerts · cheatsheet",
-      "title": "A full-screen notification, from an automation.",
       "intro": "Every screen has the {action} action. It places a card over everything, wakes the screen, and keeps the backlight at normal brightness until someone taps the button or the timeout runs out. Home Assistant itself shows no explanation or dropdowns for ESPHome actions; everything you can fill in is listed here.",
       "loading": "The cheatsheet is still loading; one moment.",
       "example": {
@@ -3008,7 +3033,7 @@
       },
       "sections": "Sections",
       "nav": {
-        "try": "Try it",
+        "try": "Set it up",
         "screens": "Your screens",
         "howto": "In an automation",
         "all": "All screens",
@@ -3022,10 +3047,6 @@
         "choice": "Two buttons"
       },
       "try": {
-        "text": "Send one alert now, with the same fields an automation sends. The screen shows the card and, with blinking on, flashes its backlight.",
-        "screen": "Screen",
-        "all": "All screens ({ready} ready)",
-        "not_ready": "{name} · not ready",
         "title": "Title",
         "subtitle": "Subtitle",
         "icon": "Icon",
@@ -3037,8 +3058,6 @@
         "sending": "Sending…",
         "send": "Send alert",
         "sent_all": "Sent to {n} screen. | Sent to {n} screens.",
-        "sent_to": "Sent to {name}.",
-        "sent_one": "Sent to the screen.",
         "skipped": "1 skipped (offline or old firmware). | {n} skipped (offline or old firmware).",
         "left_empty": "Left empty: {fields}.",
         "nothing": "No screen could show it: check that a screen is online with firmware {version} or newer."
@@ -3154,6 +3173,17 @@
         "text": "Add {second} for a second button on the left of the first, so the person at the screen can choose, such as Not now and Open. {first_color} and {second_color} give a button a color of its own, green for yes and red for no. Which answer goes on which side is yours to choose: the first button is always on the right.",
         "event": "Through the event every one of these fields is optional, and {second_action} with {second_data} runs an action from the second button, as {action} does from the first. A screen with firmware older than {version} shows the alert with its one button.",
         "direct": "Calling a screen directly? Its action {choice} takes the fields of show_alert plus these three; the second button ends the alert with {ending}."
+      },
+      "wizard": {
+        "text": "Point to what starts the alert, fill in what it says, and choose the screens. The app adds the automation to Home Assistant for you, or you send one now to see it.",
+        "step_trigger": "What starts it?",
+        "step_alert": "What does it say?",
+        "camera": "Camera (optional)",
+        "no_camera": "No camera",
+        "step_screens": "Which screens?",
+        "screens_hint": "None chosen: every screen that can show an alert ({ready} now).",
+        "not_ready": "Pick what starts it first.",
+        "description": "Made in Tessera's Events: an alert on the screens."
       }
     },
     "override": {
@@ -4144,6 +4174,92 @@
       },
       "failed_title": "The report could not be made",
       "try_again": "Try again"
+    },
+    "events": {
+      "eyebrow": "Events · from Home Assistant",
+      "intro": "What an automation in Home Assistant can fire at your screens. You choose the trigger, the screens and what they show.",
+      "alerts": "Alerts",
+      "doorbell": "Doorbell",
+      "wizard": {
+        "suggested": "Your doorbells:",
+        "none": "No entity found",
+        "pick_trigger": "Pick what starts it",
+        "yaml": "Show the automation as YAML",
+        "kind": {
+          "doorbell": "Starts when this doorbell rings (Home Assistant's Doorbell rang).",
+          "event": "Starts every time this event fires.",
+          "on": "Starts when this turns on.",
+          "press": "Starts every time this is pressed."
+        }
+      },
+      "install": {
+        "add": "Add to Home Assistant",
+        "saving": "Adding…",
+        "save_again": "Save changes to Home Assistant",
+        "saved": "Added. It works right away, no restart needed.",
+        "open": "Open in Home Assistant",
+        "hint": "It is called \"{title}\" in Home Assistant's automations, where you can change it further.",
+        "listed": "From Tessera in Home Assistant",
+        "remove": "Remove",
+        "remove_confirm": "Remove \"{name}\" from Home Assistant?",
+        "on": "On",
+        "off": "Off"
+      }
+    },
+    "doorbell": {
+      "intro": "Someone rings, and your screens show the door. An automation fires the event with the doorbell's camera: a P4 screen wakes, chimes and opens the camera live with its sound; any other screen shows its picture in an alert. Any doorbell works, whatever starts the automation.",
+      "example": {
+        "title": "Front door",
+        "when": "Just now",
+        "sound": "Sound on"
+      },
+      "steps": {
+        "ring": "The automation fires the event with the camera and, if you like, the screens.",
+        "answer": "The first screen someone touches answers the ring; it closes on the others.",
+        "missed": "Nobody touched it: it closes after its timeout and stays in the top bar as a missed ring."
+      },
+      "try": {
+        "send": "Ring",
+        "views": "Opened live on {n} screen. | Opened live on {n} screens.",
+        "alerts": "Shown as an alert on {n} screen. | Shown as an alert on {n} screens.",
+        "nothing": "No screen showed it. Is the screen online, and its camera a camera entity?"
+      },
+      "no_camera": "No camera",
+      "fields": {
+        "title": "Title",
+        "timeout": "Timeout (seconds)"
+      },
+      "screens": {
+        "title": "Your screens",
+        "text": "What each screen does with a ring.",
+        "view": "Live with sound",
+        "picture": "Alert with picture",
+        "plain": "Alert without picture"
+      },
+      "fields_title": "The event's fields",
+      "after": {
+        "title": "Afterwards",
+        "text": "Once per ring the app fires {answered} when someone answered it on a screen, or {missed} when nobody did. Both carry the camera and the title; answered also names the screen.",
+        "dismiss": "To close a ring on every screen, for example when the door opens:"
+      },
+      "yaml": {
+        "missed_alias": "Missed doorbell to my phone",
+        "missed_message": "Someone rang the doorbell",
+        "description": "Made in Tessera's Events: a doorbell's ring on the screens."
+      },
+      "wizard": {
+        "title": "Set up your doorbell",
+        "text": "Point to what rings at your house, its camera and the screens. The app adds the automation to Home Assistant for you, or you copy it.",
+        "step_trigger": "What rings?",
+        "step_camera": "Which camera?",
+        "pick_camera": "Pick the doorbell's camera",
+        "camera_hint": "A P4 screen streams it live with sound when the camera has sound; other screens show its picture.",
+        "step_screens": "Which screens?",
+        "screens_hint": "None chosen: every screen.",
+        "step_details": "Name and timeout",
+        "not_ready": "Pick what rings and a camera first.",
+        "limits": "Not every doorbell can do everything: sound comes only when the camera's stream has it. Talking back and opening the door come later."
+      }
     }
   }
 }

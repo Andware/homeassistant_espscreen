@@ -8,8 +8,8 @@
 // (live_view.h), so a key over it would be painted over 15 times a second.
 //
 // A ring stays open while someone looks: the first touch says "answered" (ESP Screens then closes it on the other screens),
-// and it closes ANSWERED_MS after the last touch or ring. Nobody touched it: it closes UNTOUCHED_MS after the last ring and
-// says "missed", and the top bar shows the ring until someone opens it again.
+// and it closes ANSWERED_MS after the last touch or ring. Nobody touched it: it closes the ring's timeout after the last
+// ring and says "missed", and the top bar shows the ring until someone opens it again.
 //
 // Compiled on its own, as module_vacuum_tile.cpp is: on Xtensa the literal pool of one object file must stay within
 // reach of all of its code, and the full tier holds S3 boards too.
@@ -30,15 +30,15 @@
 namespace runtime_tiles {
 namespace doorbell {
 
-std::function<bool()> enabled;
 std::function<void(const std::string &, const std::string &)> report;
 
 namespace {
 const char *const TAG = "doorbell";
 const char *const DOORBELL = "\U000F12E6", *const CLOSE = "\U000F0156", *const SOUND = "\U000F057E", *const SILENT = "\U000F0581";
-// Nobody touched it: it closes a minute after the last ring. Someone did: five minutes after the last touch or ring, as a
-// battery doorbell stops streaming after a few minutes anyway.
-constexpr uint32_t UNTOUCHED_MS = 60000, ANSWERED_MS = 300000;
+// Nobody touched it: it closes the ring's timeout after the last ring (the event's, a minute unless it says). Someone did:
+// five minutes after the last touch or ring, as a battery doorbell stops streaming after a few minutes anyway.
+constexpr uint32_t ANSWERED_MS = 300000;
+uint32_t untouched_ms = 60000;
 // The ring around the disc while it rings.
 constexpr uint32_t RINGING_MS = 15000;
 
@@ -310,7 +310,7 @@ void tick(uint32_t now) {
       else lv_obj_add_flag(halo, LV_OBJ_FLAG_HIDDEN);
     }
   }
-  if (!touched && now - ring_ms > UNTOUCHED_MS) {
+  if (!touched && now - ring_ms > untouched_ms) {
     ended = true;
     say("missed");
     camera_close();
@@ -320,14 +320,11 @@ void tick(uint32_t now) {
   }
 }
 
-void ring(const std::string &camera_entity, const std::string &name, const std::string &key, uint32_t rang) {
-  if (enabled && !enabled()) {
-    ESP_LOGI(TAG, "%s rang: the switch Doorbell is off", camera_entity.c_str());
-    return;
-  }
+void ring(const std::string &camera_entity, const std::string &name, const std::string &key, uint32_t rang, uint32_t untouched_s) {
   if (!camera_supported() || camera_entity.rfind("camera.", 0) != 0 || !valid_entity(camera_entity)) return;
   const uint32_t now = esphome::millis();
   ring_ms = now;
+  untouched_ms = std::max<uint32_t>(10, std::min<uint32_t>(600, untouched_s ? untouched_s : 60)) * 1000;
   if (active && camera_root && camera.entity == camera_entity) {
     // It rings again while it shows: the chime again, the moment it rang, its ring around the disc.
     now_ring.key = key;

@@ -159,7 +159,6 @@
       "microphone": "Microfone",
       "media_player": "Volume",
       "wake_when_moved": "Acordar ao mover",
-      "doorbell": "Campainha",
       "dark_mode": "Modo escuro",
       "auto_standby": "Espera automática",
       "standby_after": "Espera após",
@@ -967,6 +966,12 @@
         "retry": "A Tessera não aceitou o relatório neste momento. Tente novamente dentro de um minuto, ou transfira-o.",
         "offline": "A Tessera não está acessível a partir daqui. Transfira o relatório em vez disso.",
         "invalid": "A Tessera recusou o relatório. Transfira-o e anexe-o a um issue no GitHub."
+      },
+      "automations": {
+        "not_allowed": "O Home Assistant não deixou a app guardar automações. A app precisa de acesso de administrador.",
+        "refused": "O Home Assistant recusou a automação: {reason}",
+        "not_ours": "Essa automação não foi criada pelo Tessera, por isso a app não lhe toca.",
+        "invalid": "Esta automação não pode ser guardada ({part})."
       }
     },
     "status": {
@@ -1164,10 +1169,6 @@
         "wake_when_moved": {
           "label": "Acordar ao mover",
           "hint": "O ecrã sai do modo de espera quando alguém o pega, move ou bate nele. Sente o próprio ecrã, não alguém que passa."
-        },
-        "doorbell": {
-          "label": "Campainha",
-          "hint": "Quando uma campainha do Home Assistant toca, este ecrã acorda, toca um aviso e abre a câmara em direto com som. Desligado deixa este ecrã em paz, por exemplo um quarto à noite."
         },
         "microphone_gain": {
           "label": "Ganho do microfone",
@@ -1503,6 +1504,32 @@
         "directory": "Pasta",
         "music": "Música"
       }
+    },
+    "doorbell": {
+      "fields": {
+        "camera": {
+          "label": "Câmara",
+          "help": "A entidade de câmara da campainha. Um ecrã que transmite (um ESP32-P4) mostra-a em direto com som; qualquer outro mostra a imagem num alerta. Obrigatória."
+        },
+        "title": {
+          "label": "Título",
+          "help": "Como o ecrã chama a campainha, no topo da vista e como título do alerta. Vazio usa o nome da câmara."
+        },
+        "screen": {
+          "label": "Ecrã",
+          "help": "Que ecrãs recebem o toque: um nome de dispositivo (como kitchen-screen), o nome que o Home Assistant mostra ou uma divisão. Uma lista chega a vários. Omita para todos. Um nome que não corresponde a nenhum ecrã não envia nada."
+        },
+        "timeout": {
+          "label": "Tempo limite",
+          "help": "Segundos que o toque fica se ninguém tocar, de {min} a {max}. Vazio é {default}. Um toque mantém-no aberto."
+        }
+      },
+      "endings": {
+        "answered": "Alguém tocou: atendido e fechado nos outros ecrãs",
+        "closed": "O botão de fechar, ou outra coisa que o fechou",
+        "missed": "Ninguém tocou antes do tempo limite",
+        "seen": "Um toque perdido foi reaberto a partir da barra superior"
+      }
     }
   },
   "editor": {
@@ -1530,7 +1557,7 @@
       "plugins": "Plugins",
       "new_screen": "Novo ecrã",
       "firmware": "Firmware e USB",
-      "alerts": "Alertas",
+      "events": "Eventos",
       "settings": "Definições",
       "new_screen_detail": "Ligar e instalar",
       "manual": "Manual"
@@ -3426,8 +3453,6 @@
       "waits_turn": "Outro ecrã está a ser compilado agora. Este espera a sua vez e começa sozinho logo a seguir."
     },
     "alerts": {
-      "eyebrow": "Alertas · guia rápido",
-      "title": "Uma notificação em ecrã inteiro, a partir de uma automatização.",
       "intro": "Cada ecrã tem a ação {action}. Coloca um cartão por cima de tudo, acorda o ecrã e mantém a retroiluminação no brilho normal até alguém tocar no botão ou o tempo limite acabar. O próprio Home Assistant não mostra explicações nem listas pendentes para as ações do ESPHome; tudo o que pode preencher está aqui.",
       "loading": "O guia rápido ainda está a carregar; um momento.",
       "example": {
@@ -3437,7 +3462,7 @@
       },
       "sections": "Secções",
       "nav": {
-        "try": "Experimente",
+        "try": "Configurar",
         "screens": "Os seus ecrãs",
         "howto": "Numa automatização",
         "all": "Todos os ecrãs",
@@ -3451,10 +3476,6 @@
         "choice": "Dois botões"
       },
       "try": {
-        "text": "Envie agora um alerta, com os mesmos campos que uma automatização envia. O ecrã mostra o cartão e, com a intermitência ativada, faz piscar a retroiluminação.",
-        "screen": "Ecrã",
-        "all": "Todos os ecrãs (prontos: {ready})",
-        "not_ready": "{name} · não está pronto",
         "title": "Título",
         "subtitle": "Subtítulo",
         "icon": "Ícone",
@@ -3466,8 +3487,6 @@
         "sending": "A enviar…",
         "send": "Enviar alerta",
         "sent_all": "Enviado para {n} ecrã. | Enviado para {n} ecrãs.",
-        "sent_to": "Enviado para {name}.",
-        "sent_one": "Enviado para o ecrã.",
         "skipped": "{n} ecrã ignorado (offline ou firmware antigo). | {n} ecrãs ignorados (offline ou firmware antigo).",
         "left_empty": "Deixados vazios: {fields}.",
         "nothing": "Nenhum ecrã o conseguiu mostrar: verifique se há um ecrã online com o firmware {version} ou mais recente."
@@ -3583,6 +3602,17 @@
         "text": "Adicione {second} para um segundo botão à esquerda do primeiro, para que quem está no ecrã possa escolher, por exemplo Agora não e Abrir. {first_color} e {second_color} dão a um botão uma cor própria, verde para sim e vermelho para não. Que resposta fica em que lado é consigo: o primeiro botão fica sempre à direita.",
         "event": "Através do evento cada um destes campos é opcional, e {second_action} com {second_data} executa uma ação a partir do segundo botão, como {action} a partir do primeiro. Um ecrã com firmware anterior a {version} mostra o alerta com um só botão.",
         "direct": "Chama um ecrã diretamente? A sua ação {choice} recebe os campos de show_alert mais estes três; o segundo botão termina o alerta com {ending}."
+      },
+      "wizard": {
+        "text": "Indique o que inicia o alerta, o que ele diz e escolha os ecrãs. A app adiciona a automação ao Home Assistant por si, ou envie um agora para o ver.",
+        "step_trigger": "O que o inicia?",
+        "step_alert": "O que diz?",
+        "camera": "Câmara (opcional)",
+        "no_camera": "Sem câmara",
+        "step_screens": "Que ecrãs?",
+        "screens_hint": "Nenhum escolhido: todos os ecrãs que mostram alertas ({ready} agora).",
+        "not_ready": "Escolha primeiro o que o inicia.",
+        "description": "Criada nos Eventos do Tessera: um alerta nos ecrãs."
       }
     },
     "override": {
@@ -4144,6 +4174,92 @@
       },
       "failed_title": "Não foi possível fazer o relatório",
       "try_again": "Tentar novamente"
+    },
+    "events": {
+      "eyebrow": "Eventos · do Home Assistant",
+      "intro": "O que uma automação do Home Assistant pode enviar aos seus ecrãs. Escolhe o gatilho, os ecrãs e o que mostram.",
+      "alerts": "Alertas",
+      "doorbell": "Campainha",
+      "wizard": {
+        "suggested": "As suas campainhas:",
+        "none": "Nenhuma entidade encontrada",
+        "pick_trigger": "Escolha o que a inicia",
+        "yaml": "Mostrar a automação em YAML",
+        "kind": {
+          "doorbell": "Começa quando esta campainha toca (Doorbell rang do Home Assistant).",
+          "event": "Começa sempre que este evento dispara.",
+          "on": "Começa quando isto liga.",
+          "press": "Começa sempre que é premido."
+        }
+      },
+      "install": {
+        "add": "Adicionar ao Home Assistant",
+        "saving": "A adicionar…",
+        "save_again": "Guardar alterações no Home Assistant",
+        "saved": "Adicionada. Funciona de imediato, sem reiniciar.",
+        "open": "Abrir no Home Assistant",
+        "hint": "Chama-se \"{title}\" nas automações do Home Assistant, onde a pode alterar.",
+        "listed": "Do Tessera no Home Assistant",
+        "remove": "Remover",
+        "remove_confirm": "Remover \"{name}\" do Home Assistant?",
+        "on": "Ligada",
+        "off": "Desligada"
+      }
+    },
+    "doorbell": {
+      "intro": "Alguém toca e os seus ecrãs mostram a porta. Uma automação envia o evento com a câmara da campainha: um ecrã P4 acorda, toca um aviso e abre a câmara em direto com som; qualquer outro ecrã mostra a imagem num alerta. Qualquer campainha funciona, seja qual for o gatilho.",
+      "example": {
+        "title": "Porta da frente",
+        "when": "Agora mesmo",
+        "sound": "Som ligado"
+      },
+      "steps": {
+        "ring": "A automação envia o evento com a câmara e, se quiser, os ecrãs.",
+        "answer": "O primeiro ecrã tocado atende; nos outros fecha.",
+        "missed": "Ninguém tocou: fecha após o tempo limite e fica na barra superior como toque perdido."
+      },
+      "try": {
+        "send": "Tocar",
+        "views": "Aberto em direto em {n} ecrã. | Aberto em direto em {n} ecrãs.",
+        "alerts": "Mostrado como alerta em {n} ecrã. | Mostrado como alerta em {n} ecrãs.",
+        "nothing": "Nenhum ecrã o mostrou. O ecrã está online e a câmara é uma entidade de câmara?"
+      },
+      "no_camera": "Sem câmara",
+      "fields": {
+        "title": "Título",
+        "timeout": "Tempo limite (segundos)"
+      },
+      "screens": {
+        "title": "Os seus ecrãs",
+        "text": "O que cada ecrã faz com um toque.",
+        "view": "Em direto com som",
+        "picture": "Alerta com imagem",
+        "plain": "Alerta sem imagem"
+      },
+      "fields_title": "Os campos do evento",
+      "after": {
+        "title": "Depois",
+        "text": "Uma vez por toque a app envia {answered} quando alguém atendeu num ecrã, ou {missed} quando ninguém o fez. Ambos levam a câmara e o título; answered também indica o ecrã.",
+        "dismiss": "Para fechar um toque em todos os ecrãs, por exemplo quando a porta abre:"
+      },
+      "yaml": {
+        "missed_alias": "Campainha perdida para o meu telemóvel",
+        "missed_message": "Alguém tocou à campainha",
+        "description": "Criada nos Eventos do Tessera: uma campainha nos ecrãs."
+      },
+      "wizard": {
+        "title": "Configure a sua campainha",
+        "text": "Indique o que toca em sua casa, a câmara e os ecrãs. A app adiciona a automação ao Home Assistant por si, ou copia-a.",
+        "step_trigger": "O que toca?",
+        "step_camera": "Que câmara?",
+        "pick_camera": "Escolha a câmara da campainha",
+        "camera_hint": "Um ecrã P4 transmite-a em direto com som se a câmara tiver som; os outros ecrãs mostram a imagem.",
+        "step_screens": "Que ecrãs?",
+        "screens_hint": "Nenhum escolhido: todos os ecrãs.",
+        "step_details": "Nome e tempo limite",
+        "not_ready": "Escolha primeiro o que toca e uma câmara.",
+        "limits": "Nem todas as campainhas fazem tudo: o som só vem se o fluxo da câmara o tiver. Falar e abrir a porta virão mais tarde."
+      }
     }
   }
 }

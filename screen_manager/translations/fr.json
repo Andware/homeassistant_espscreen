@@ -159,7 +159,6 @@
       "microphone": "Microphone",
       "media_player": "Volume",
       "wake_when_moved": "Réveil au mouvement",
-      "doorbell": "Sonnette",
       "dark_mode": "Mode sombre",
       "auto_standby": "Veille auto",
       "standby_after": "Veille après",
@@ -967,6 +966,12 @@
         "retry": "Tessera n'a pas pris le rapport pour le moment. Réessayez dans une minute, ou téléchargez-le.",
         "offline": "Tessera est injoignable d'ici. Téléchargez le rapport à la place.",
         "invalid": "Tessera a refusé le rapport. Téléchargez-le et joignez-le à un ticket GitHub."
+      },
+      "automations": {
+        "not_allowed": "Home Assistant n'a pas laissé l'application enregistrer des automatisations. Elle a besoin d'un accès administrateur.",
+        "refused": "Home Assistant a refusé l'automatisation : {reason}",
+        "not_ours": "Cette automatisation n'a pas été créée par Tessera, l'application n'y touche pas.",
+        "invalid": "Cette automatisation ne peut pas être enregistrée ({part})."
       }
     },
     "status": {
@@ -1164,10 +1169,6 @@
         "wake_when_moved": {
           "label": "Réveil au mouvement",
           "hint": "L’écran sort de veille quand quelqu’un le prend, le déplace ou le heurte. Il sent l’écran lui-même, pas quelqu’un qui passe."
-        },
-        "doorbell": {
-          "label": "Sonnette",
-          "hint": "Quand une sonnette de Home Assistant sonne, cet écran se réveille, joue un carillon et ouvre sa caméra en direct avec le son. Désactivé, cet écran reste tranquille, par exemple une chambre la nuit."
         },
         "microphone_gain": {
           "label": "Gain du microphone",
@@ -1503,6 +1504,32 @@
         "directory": "Dossier",
         "music": "Musique"
       }
+    },
+    "doorbell": {
+      "fields": {
+        "camera": {
+          "label": "Caméra",
+          "help": "L'entité caméra de la sonnette. Un écran qui diffuse (un ESP32-P4) l'affiche en direct avec le son ; tout autre écran affiche son image dans une alerte. Obligatoire."
+        },
+        "title": {
+          "label": "Titre",
+          "help": "Le nom de la sonnette à l'écran, en haut de la vue et comme titre de l'alerte. Vide prend le nom de la caméra."
+        },
+        "screen": {
+          "label": "Écran",
+          "help": "Quels écrans reçoivent la sonnerie : un nom d'appareil (comme kitchen-screen), le nom affiché par Home Assistant, ou une pièce. Une liste en atteint plusieurs. Omettez-le pour tous les écrans. Un nom qui ne correspond à aucun écran n'envoie rien."
+        },
+        "timeout": {
+          "label": "Délai",
+          "help": "Secondes pendant lesquelles la sonnerie reste si personne ne la touche, de {min} à {max}. Vide vaut {default}. Un toucher la garde ouverte."
+        }
+      },
+      "endings": {
+        "answered": "Quelqu'un l'a touchée : répondue, et fermée sur les autres écrans",
+        "closed": "Son bouton de fermeture, ou autre chose qui l'a fermée",
+        "missed": "Personne ne l'a touchée avant son délai",
+        "seen": "Une sonnerie manquée a été rouverte depuis la barre du haut"
+      }
     }
   },
   "editor": {
@@ -1530,7 +1557,7 @@
       "plugins": "Plugins",
       "new_screen": "Nouvel écran",
       "firmware": "Firmware et USB",
-      "alerts": "Alertes",
+      "events": "Événements",
       "settings": "Paramètres",
       "new_screen_detail": "Connecter et installer",
       "manual": "Manuel"
@@ -3426,8 +3453,6 @@
       "waits_turn": "Un autre écran est en cours de compilation. Celui-ci attend son tour et démarre tout seul juste après."
     },
     "alerts": {
-      "eyebrow": "Alertes · aide-mémoire",
-      "title": "Une notification plein écran, depuis une automatisation.",
       "intro": "Chaque écran a l'action {action}. Elle place une carte par-dessus tout, réveille l'écran et garde le rétroéclairage à luminosité normale jusqu'à ce que quelqu'un touche le bouton ou que le délai expire. Home Assistant n'affiche lui-même ni explication ni listes déroulantes pour les actions ESPHome ; tout ce que vous pouvez remplir est listé ici.",
       "loading": "L'aide-mémoire est encore en cours de chargement ; un instant.",
       "example": {
@@ -3437,7 +3462,7 @@
       },
       "sections": "Sections",
       "nav": {
-        "try": "Essayer",
+        "try": "Configurer",
         "screens": "Vos écrans",
         "howto": "Dans une automatisation",
         "all": "Tous les écrans",
@@ -3451,10 +3476,6 @@
         "choice": "Deux boutons"
       },
       "try": {
-        "text": "Envoyez une alerte maintenant, avec les mêmes champs qu'une automatisation. L'écran affiche la carte et, si le clignotement est activé, fait clignoter son rétroéclairage.",
-        "screen": "Écran",
-        "all": "Tous les écrans (prêts : {ready})",
-        "not_ready": "{name} · pas prêt",
         "title": "Titre",
         "subtitle": "Sous-titre",
         "icon": "Icône",
@@ -3466,8 +3487,6 @@
         "sending": "Envoi…",
         "send": "Envoyer l'alerte",
         "sent_all": "Envoyée à {n} écran. | Envoyée à {n} écrans.",
-        "sent_to": "Envoyée à {name}.",
-        "sent_one": "Envoyée à l'écran.",
         "skipped": "{n} écran ignoré (hors ligne ou firmware trop ancien). | {n} écrans ignorés (hors ligne ou firmware trop ancien).",
         "left_empty": "Champs laissés vides : {fields}.",
         "nothing": "Aucun écran n'a pu l'afficher : vérifiez qu'un écran est en ligne avec le firmware {version} ou plus récent."
@@ -3583,6 +3602,17 @@
         "text": "Ajoutez {second} pour un deuxième bouton à gauche du premier, afin que la personne devant l'écran puisse choisir, par exemple Pas maintenant et Ouvrir. {first_color} et {second_color} donnent à un bouton sa propre couleur, vert pour oui et rouge pour non. Quelle réponse va de quel côté, c'est vous qui choisissez : le premier bouton est toujours à droite.",
         "event": "Via l'événement, chacun de ces champs est facultatif, et {second_action} avec {second_data} lance une action depuis le deuxième bouton, comme {action} depuis le premier. Un écran dont le firmware est antérieur à {version} affiche l'alerte avec un seul bouton.",
         "direct": "Vous appelez un écran directement ? Son action {choice} prend les champs de show_alert plus ces trois ; le deuxième bouton termine l'alerte avec {ending}."
+      },
+      "wizard": {
+        "text": "Indiquez ce qui déclenche l'alerte, ce qu'elle dit, et choisissez les écrans. L'application ajoute l'automatisation à Home Assistant pour vous, ou vous en envoyez une maintenant pour la voir.",
+        "step_trigger": "Qu'est-ce qui la déclenche ?",
+        "step_alert": "Que dit-elle ?",
+        "camera": "Caméra (facultatif)",
+        "no_camera": "Aucune caméra",
+        "step_screens": "Quels écrans ?",
+        "screens_hint": "Aucun choisi : tous les écrans qui peuvent afficher une alerte ({ready} maintenant).",
+        "not_ready": "Choisissez d'abord ce qui la déclenche.",
+        "description": "Créée dans les Événements de Tessera : une alerte sur les écrans."
       }
     },
     "override": {
@@ -4144,6 +4174,92 @@
       },
       "failed_title": "Le rapport n'a pas pu être fait",
       "try_again": "Réessayer"
+    },
+    "events": {
+      "eyebrow": "Événements · depuis Home Assistant",
+      "intro": "Ce qu'une automatisation de Home Assistant peut envoyer à vos écrans. Vous choisissez le déclencheur, les écrans et ce qu'ils affichent.",
+      "alerts": "Alertes",
+      "doorbell": "Sonnette",
+      "wizard": {
+        "suggested": "Vos sonnettes :",
+        "none": "Aucune entité trouvée",
+        "pick_trigger": "Choisissez ce qui la déclenche",
+        "yaml": "Afficher l'automatisation en YAML",
+        "kind": {
+          "doorbell": "Démarre quand cette sonnette sonne (Doorbell rang de Home Assistant).",
+          "event": "Démarre à chaque déclenchement de cet événement.",
+          "on": "Démarre quand ceci s'allume.",
+          "press": "Démarre à chaque appui."
+        }
+      },
+      "install": {
+        "add": "Ajouter à Home Assistant",
+        "saving": "Ajout…",
+        "save_again": "Enregistrer les changements dans Home Assistant",
+        "saved": "Ajoutée. Elle fonctionne tout de suite, sans redémarrage.",
+        "open": "Ouvrir dans Home Assistant",
+        "hint": "Elle s'appelle « {title} » dans les automatisations de Home Assistant, où vous pouvez la modifier.",
+        "listed": "De Tessera dans Home Assistant",
+        "remove": "Supprimer",
+        "remove_confirm": "Supprimer « {name} » de Home Assistant ?",
+        "on": "Activée",
+        "off": "Désactivée"
+      }
+    },
+    "doorbell": {
+      "intro": "Quelqu'un sonne et vos écrans montrent la porte. Une automatisation envoie l'événement avec la caméra de la sonnette : un écran P4 se réveille, joue un carillon et ouvre la caméra en direct avec le son ; tout autre écran affiche son image dans une alerte. Toute sonnette fonctionne, quel que soit le déclencheur.",
+      "example": {
+        "title": "Porte d'entrée",
+        "when": "À l'instant",
+        "sound": "Son activé"
+      },
+      "steps": {
+        "ring": "L'automatisation envoie l'événement avec la caméra et, si vous voulez, les écrans.",
+        "answer": "Le premier écran touché répond ; elle se ferme sur les autres.",
+        "missed": "Personne ne l'a touchée : elle se ferme après son délai et reste dans la barre du haut comme sonnerie manquée."
+      },
+      "try": {
+        "send": "Sonner",
+        "views": "Ouverte en direct sur {n} écran. | Ouverte en direct sur {n} écrans.",
+        "alerts": "Affichée en alerte sur {n} écran. | Affichée en alerte sur {n} écrans.",
+        "nothing": "Aucun écran ne l'a affichée. L'écran est-il en ligne et la caméra une entité caméra ?"
+      },
+      "no_camera": "Aucune caméra",
+      "fields": {
+        "title": "Titre",
+        "timeout": "Délai (secondes)"
+      },
+      "screens": {
+        "title": "Vos écrans",
+        "text": "Ce que chaque écran fait d'une sonnerie.",
+        "view": "En direct avec le son",
+        "picture": "Alerte avec image",
+        "plain": "Alerte sans image"
+      },
+      "fields_title": "Les champs de l'événement",
+      "after": {
+        "title": "Ensuite",
+        "text": "Une fois par sonnerie, l'application envoie {answered} quand quelqu'un a répondu sur un écran, ou {missed} quand personne ne l'a fait. Les deux portent la caméra et le titre ; answered nomme aussi l'écran.",
+        "dismiss": "Pour fermer une sonnerie sur tous les écrans, par exemple quand la porte s'ouvre :"
+      },
+      "yaml": {
+        "missed_alias": "Sonnette manquée vers mon téléphone",
+        "missed_message": "Quelqu'un a sonné",
+        "description": "Créée dans les Événements de Tessera : une sonnette sur les écrans."
+      },
+      "wizard": {
+        "title": "Configurez votre sonnette",
+        "text": "Indiquez ce qui sonne chez vous, sa caméra et les écrans. L'application ajoute l'automatisation à Home Assistant pour vous, ou vous la copiez.",
+        "step_trigger": "Qu'est-ce qui sonne ?",
+        "step_camera": "Quelle caméra ?",
+        "pick_camera": "Choisissez la caméra de la sonnette",
+        "camera_hint": "Un écran P4 la diffuse en direct avec le son si la caméra en a ; les autres écrans affichent son image.",
+        "step_screens": "Quels écrans ?",
+        "screens_hint": "Aucun choisi : tous les écrans.",
+        "step_details": "Nom et délai",
+        "not_ready": "Choisissez d'abord ce qui sonne et une caméra.",
+        "limits": "Toutes les sonnettes ne peuvent pas tout : le son vient seulement si le flux de la caméra en a. Parler et ouvrir la porte viendront plus tard."
+      }
     }
   }
 }

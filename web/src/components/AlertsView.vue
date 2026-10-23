@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Alerts: the cheatsheet for esphome.<node>_show_alert, built from the inventory. Trying one is AlertTry; the YAML to copy
-// is model/alert-yaml.ts.
+// Alerts, a part of Events (EventsView): the cheatsheet for esphome.<node>_show_alert, built from the inventory. Trying
+// one is AlertTry; the YAML to copy is model/alert-yaml.ts.
 import { computed, ref } from "vue";
 import { t } from "../i18n";
 import { actionYaml, allScreensYaml, choiceYaml, limitText, oneScreenYaml, screenValue, waitYaml, type AlertReference } from "../model/alert-yaml";
@@ -51,17 +51,10 @@ const sections = ["alerts-try", "alerts-screens", "alerts-howto", "alerts-all", 
 </script>
 
 <template>
-  <div class="panel wide alerts" id="alerts-dialog">
-    <div class="panel-head">
-      <div class="tx">
-        <span class="eyebrow">{{ t("editor.alerts.eyebrow") }}</span>
-        <h1>{{ t("editor.alerts.title") }}</h1>
-        <i18n-t keypath="editor.alerts.intro" tag="p" scope="global">
-          <template #action><code>show_alert</code></template>
-        </i18n-t>
-      </div>
-      <button type="button" class="btn quiet" id="close-alerts" @click="ui.go('')">{{ t("editor.common.back") }}</button>
-    </div>
+  <div class="alerts" id="alerts-dialog">
+    <i18n-t keypath="editor.alerts.intro" tag="p" class="events-intro" scope="global">
+      <template #action><code>show_alert</code></template>
+    </i18n-t>
     <p v-if="!alerts" class="hint">{{ t("editor.alerts.loading") }}</p>
     <template v-else>
       <div class="alert-hero">

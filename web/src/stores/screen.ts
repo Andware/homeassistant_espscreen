@@ -87,6 +87,10 @@ export const useScreenStore = defineStore("screen", () => {
   async function sendTestAlert(target: string, data: Record<string, unknown>) {
     return (await send("alerts/test", "POST", { screen: target, data })) as { sent: number; failed: number; skipped: number; unusable?: string[] };
   }
+  // Events, Doorbell, Try it: one ring as esp_screens_doorbell sends it, to one screen or to every screen.
+  async function sendTestDoorbell(target: string, data: Record<string, unknown>) {
+    return (await send("doorbell/test", "POST", { screen: target, data })) as { sent: number; alerts: number; failed: number; skipped: number; unusable?: string[] };
+  }
   // ---- Calibrate touch (app 0.2.117): the screen's own Calibrate touch button, pressed from here ----
   // Only a screen whose panel is one you calibrate has it, and the add-on says so by the button being on its device
   // in Home Assistant. It asks first: the screen goes to the crosses and stays there until someone standing in front
@@ -210,6 +214,6 @@ export const useScreenStore = defineStore("screen", () => {
     entityTilesRepeat, noTitle, pageReady, topbarMax, newLanguageText, removing, allowing,
     // What the editor's parts read as they draw (stores/lookup.ts).
     ...lookups({ supports, supportsVersion, repeatable, canAlert, updateState, screenLight, screenSubline, needsAttention }),
-    identify, sendTestAlert, calibrateTouch, feedbackAction, setScreensaver, renameScreen, forgetPending, allowActions,
+    identify, sendTestAlert, sendTestDoorbell, calibrateTouch, feedbackAction, setScreensaver, renameScreen, forgetPending, allowActions,
   };
 });
