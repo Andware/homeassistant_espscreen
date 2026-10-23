@@ -396,9 +396,44 @@ class Reports:
         self.transport = transport or self._post
         self.settings_path = self.dir / 'settings.json'
         self.settings = self._read_settings()
+        self.index_path = self.dir / 'index.json'
         self.watch_task = None
         self._session = None
         logging.getLogger().addHandler(self.buffer)
+        self._load_index()
+
+    # ---- the reports on disk, so a reference survives a restart of the app
+    def _load_index(self):
+        try:
+            rows = json.loads(self.index_path.read_text())
+        except (OSError, ValueError):
+            return
+        for row in rows if isinstance(rows, list) else []:
+            if not isinstance(row, dict) or row.get('state') not in ('ready', 'sent'):
+                continue
+            path = self.dir / f"{row.get('id')}.zip"
+            if not path.is_file():
+                continue
+            report = Report(row['id'], row.get('screen'), row.get('depth', 'basic'), self.clock)
+            report.created = row.get('created') or report.created
+            report.state, report.step, report.progress = row['state'], 'zip', 1.0
+            report.files, report.summary, report.warnings = row.get('files') or [], row.get('summary') or {}, row.get('warnings') or []
+            report.size, report.reference = row.get('size') or path.stat().st_size, row.get('reference')
+            report.sent_at, report.expires_at, report.path = row.get('sent_at'), row.get('expires_at'), path
+            try:
+                with zipfile.ZipFile(path) as bundle:
+                    report.texts = {name: bundle.read(name).decode('utf-8', 'replace') for name in bundle.namelist()}
+            except (OSError, zipfile.BadZipFile):
+                continue
+            self.reports[report.id] = report
+
+    def _save_index(self):
+        rows = [{'id': r.id, 'screen': r.inbox, 'depth': r.depth, 'state': r.state, 'created': r.created, 'files': r.files,
+                 'summary': r.summary, 'warnings': r.warnings, 'size': r.size, 'reference': r.reference, 'sent_at': r.sent_at,
+                 'expires_at': r.expires_at} for r in self.reports.values() if r.state in ('ready', 'sent')]
+        with contextlib.suppress(OSError):
+            self.dir.mkdir(parents=True, exist_ok=True)
+            atomic.write_json(self.index_path, rows)
 
     # ---- settings (the remembered e-mail)
     def _read_settings(self):
@@ -477,6 +512,7 @@ class Reports:
         if report.path:
             with contextlib.suppress(OSError):
                 report.path.unlink()
+        self._save_index()
 
     def _prune(self):
         kept = sorted(self.reports.values(), key=lambda r: r.created, reverse=True)
@@ -675,6 +711,7 @@ class Reports:
             os.chmod(report.path, 0o600)
         report.size = len(data)
         self._prune()
+        self._save_index()
 
     def _report_md(self, s, warnings, texts):
         crash = s.get('crash') or {}
@@ -972,6 +1009,7 @@ class Reports:
             report.sent_at, report.expires_at = now_iso(self.clock), result.get('expires_at')
             if result.get('retention_days'):
                 self.remember(retention_days=result['retention_days'])
+            self._save_index()
             self.manager.notify()
             return {'state': 'sent', 'reference': report.reference, 'expires_at': report.expires_at}
         words = {'retry': 'addon.errors.report.retry', 'offline': 'addon.errors.report.offline',

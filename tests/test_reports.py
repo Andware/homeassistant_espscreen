@@ -2,6 +2,7 @@
 import asyncio
 import importlib.util
 import io
+import logging
 import json
 import sys
 import tempfile
@@ -238,6 +239,11 @@ class TheRoute(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(after['crash']['count'], 1)
                     # The feedback key of the board is the bearer, and it stays the same for a later answer.
                     self.assertEqual(json.loads((data / 'feedback.json').read_text())['boards']['d1']['token'], token)
+                    # A restart of the app keeps the sent report and its reference (index.json beside the zips).
+                    again = reports.Reports(manager, data)
+                    self.assertEqual(again.status('text.screen', manager.screen('text.screen'))['last']['reference'], 'TR-7K3M9Q')
+                    self.assertEqual(again.file(id, 'report.md'), manager.reports.file(id, 'report.md'))
+                    logging.getLogger().removeHandler(again.buffer)
                     gone = await client.delete(f'/api/reports/{id}', headers={'X-Screen-CSRF': csrf})
                     self.assertEqual(gone.status, 204)
                     self.assertEqual((await client.get(f'/api/reports/{id}')).status, 400)
