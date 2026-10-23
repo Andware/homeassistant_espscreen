@@ -1532,7 +1532,8 @@
       "alerts": "Alerts",
       "settings": "Settings",
       "new_screen_detail": "Connect and install",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "manual": "Manual"
     },
     "api": {
       "failed": "That didn't work. Refresh the page and try again."

@@ -1532,7 +1532,8 @@
       "firmware": "Firmware e USB",
       "alerts": "Avvisi",
       "settings": "Impostazioni",
-      "new_screen_detail": "Collega e installa"
+      "new_screen_detail": "Collega e installa",
+      "manual": "Manuale"
     },
     "api": {
       "failed": "Non ha funzionato. Ricarica la pagina e riprova."

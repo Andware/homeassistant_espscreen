@@ -1532,7 +1532,8 @@
       "firmware": "Firmware i USB",
       "alerts": "Alerty",
       "settings": "Ustawienia",
-      "new_screen_detail": "Podłącz i zainstaluj"
+      "new_screen_detail": "Podłącz i zainstaluj",
+      "manual": "Instrukcja"
     },
     "api": {
       "failed": "Nie udało się. Odśwież stronę i spróbuj ponownie."

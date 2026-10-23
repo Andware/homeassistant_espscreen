@@ -1532,7 +1532,8 @@
       "firmware": "Firmware és USB",
       "alerts": "Figyelmeztetések",
       "settings": "Beállítások",
-      "new_screen_detail": "Csatlakoztatás és telepítés"
+      "new_screen_detail": "Csatlakoztatás és telepítés",
+      "manual": "Kézikönyv"
     },
     "api": {
       "failed": "Ez nem sikerült. Frissítsd az oldalt, és próbáld újra."

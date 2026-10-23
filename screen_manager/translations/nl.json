@@ -1532,7 +1532,8 @@
       "alerts": "Alerts",
       "settings": "Instellingen",
       "new_screen_detail": "Aansluiten en installeren",
-      "plugins": "Plugins"
+      "plugins": "Plugins",
+      "manual": "Handleiding"
     },
     "api": {
       "failed": "Dat lukte niet. Vernieuw de pagina en probeer het opnieuw."

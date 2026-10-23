@@ -1532,7 +1532,8 @@
       "firmware": "Firmware & USB",
       "alerts": "Meldungen",
       "settings": "Einstellungen",
-      "new_screen_detail": "Verbinden und installieren"
+      "new_screen_detail": "Verbinden und installieren",
+      "manual": "Handbuch"
     },
     "api": {
       "failed": "Das hat nicht geklappt. Lade die Seite neu und versuche es noch einmal."
