@@ -3326,8 +3326,7 @@
       "comment_label": "Toelichting (optioneel)",
       "comment_hint": "Laat persoonsgegevens, logs, wachtwoorden en API-keys weg.",
       "report_title": "Wil je dat het opgelost wordt?",
-      "report_text": "Open een issue op GitHub. Je bord, de versies en wat je ons vertelde staan er al in. Voeg een log toe, dan kunnen we het uitzoeken en je ernaar vragen.",
-      "report_open": "Open een GitHub-issue",
+      "report_text": "Stuur een rapport: Tessera verzamelt het bord, de versies, de logs en de laatste crash, laat ze je eerst zien en verstuurt ze pas als jij akkoord gaat. Of lees wat je kunt doen als iets niet werkt.",
       "add_details": "Details toevoegen",
       "done": "Klaar",
       "settings_title": "Feedback",
@@ -3360,7 +3359,9 @@
         "addon": "De versie van Tessera: {version}",
         "nothing_else": "Verder niets: geen naam, account, entiteiten, logs of Home Assistant-instellingen. Elk scherm deelt onder een eigen willekeurige sleutel."
       },
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "report_send": "Rapport sturen",
+      "report_manual": "Lees de probleemgids"
     },
     "webflash": {
       "target": "Installeren vanuit deze browser (Chrome of Edge)",

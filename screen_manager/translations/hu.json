@@ -3755,8 +3755,7 @@
       "comment_label": "Van még valami? (nem kötelező)",
       "comment_hint": "Kérjük, ne írj bele személyes adatokat, naplókat, jelszavakat vagy API-kulcsokat.",
       "report_title": "Szeretnéd, hogy javítsuk?",
-      "report_text": "Nyiss egy issue-t a GitHubon. A kijelződ típusa, a verziók és amit megírtál, már ki vannak töltve. Csatolj egy naplót, és utána tudunk járni, és kérdezni tudunk tőled.",
-      "report_open": "GitHub issue megnyitása",
+      "report_text": "Küldj jelentést: a Tessera összegyűjti a panelt, a verziókat, a naplókat és az utolsó összeomlást, előbb megmutatja neked, és csak a beleegyezéseddel küldi el. Vagy olvasd el, mit tehetsz, ha valami nem működik.",
       "add_details": "Részletek hozzáadása",
       "done": "Kész",
       "settings_title": "Visszajelzés",
@@ -3789,7 +3788,9 @@
         "addon": "A Tessera verziója: {version}",
         "nothing_else": "Semmi más: sem név, sem fiók, sem entitások, naplók vagy Home Assistant-beállítások. Minden kijelző a saját véletlenszerű kulcsával oszt meg."
       },
-      "privacy": "Adatvédelem"
+      "privacy": "Adatvédelem",
+      "report_send": "Jelentés küldése",
+      "report_manual": "Hibaelhárítási útmutató"
     },
     "webflash": {
       "target": "Telepítés ebből a böngészőből (Chrome vagy Edge)",

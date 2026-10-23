@@ -3326,8 +3326,7 @@
       "comment_label": "Anything else? (optional)",
       "comment_hint": "Please leave out personal details, logs, passwords and API keys.",
       "report_title": "Want it fixed?",
-      "report_text": "Open an issue on GitHub. Your board, the versions and what you told us are already filled in. Add a log and we can look into it, and ask you about it.",
-      "report_open": "Open a GitHub issue",
+      "report_text": "Send a report: Tessera collects the board, the versions, the logs and the last crash, shows them to you first, and sends them only when you agree. Or read what to do when something doesn't work.",
       "add_details": "Add details",
       "done": "Done",
       "settings_title": "Feedback",
@@ -3360,7 +3359,9 @@
         "addon": "The Tessera version: {version}",
         "nothing_else": "Nothing else: no name, account, entities, logs or Home Assistant settings. Each screen shares under its own random key."
       },
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "report_send": "Send a report",
+      "report_manual": "Read the troubleshooting guide"
     },
     "webflash": {
       "target": "Install from this browser (Chrome or Edge)",

@@ -3754,9 +3754,8 @@
       },
       "comment_label": "Nota (facoltativa)",
       "comment_hint": "Non inserire dati personali, log, password o chiavi API.",
-      "report_title": "Vuoi che venga corretto?",
-      "report_text": "Apri una segnalazione su GitHub. La tua scheda, le versioni e quello che ci hai detto sono già compilati. Aggiungi un log e potremo analizzarlo e farti delle domande.",
-      "report_open": "Apri una segnalazione su GitHub",
+      "report_title": "Vuoi che venga risolto?",
+      "report_text": "Invia una segnalazione: Tessera raccoglie la scheda, le versioni, i log e l'ultimo crash, te li mostra prima e li invia solo con il tuo consenso. Oppure leggi cosa fare quando qualcosa non funziona.",
       "add_details": "Aggiungi dettagli",
       "done": "Fatto",
       "settings_title": "Feedback",
@@ -3789,7 +3788,9 @@
         "addon": "La versione di Tessera: {version}",
         "nothing_else": "Nient'altro: nessun nome, account, entità, log o impostazioni di Home Assistant. Ogni schermo condivide con una propria chiave casuale."
       },
-      "privacy": "Privacy"
+      "privacy": "Privacy",
+      "report_send": "Invia una segnalazione",
+      "report_manual": "Leggi la guida ai problemi"
     },
     "webflash": {
       "target": "Installa da questo browser (Chrome o Edge)",

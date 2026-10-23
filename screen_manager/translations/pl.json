@@ -3755,8 +3755,7 @@
       "comment_label": "Notatka (opcjonalnie)",
       "comment_hint": "Nie podawaj danych osobowych, logów, haseł ani kluczy API.",
       "report_title": "Chcesz, żeby to naprawić?",
-      "report_text": "Otwórz zgłoszenie na GitHubie. Twoja płytka, wersje i to, co nam napisałeś, są już wpisane. Dodaj log, a będziemy mogli to zbadać i o to dopytać.",
-      "report_open": "Otwórz zgłoszenie na GitHubie",
+      "report_text": "Wyślij raport: Tessera zbiera płytkę, wersje, logi i ostatnią awarię, najpierw ci je pokazuje i wysyła dopiero za twoją zgodą. Albo przeczytaj, co zrobić, gdy coś nie działa.",
       "add_details": "Dodaj szczegóły",
       "done": "Gotowe",
       "settings_title": "Opinia",
@@ -3789,7 +3788,9 @@
         "addon": "Wersja Tessera: {version}",
         "nothing_else": "Nic więcej: bez nazwy, konta, encji, logów ani ustawień Home Assistant. Każdy ekran udostępnia pod własnym losowym kluczem."
       },
-      "privacy": "Prywatność"
+      "privacy": "Prywatność",
+      "report_send": "Wyślij raport",
+      "report_manual": "Przeczytaj poradnik"
     },
     "webflash": {
       "target": "Zainstaluj z tej przeglądarki (Chrome lub Edge)",

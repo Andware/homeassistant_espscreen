@@ -3755,8 +3755,7 @@
       "comment_label": "Nota (opcional)",
       "comment_hint": "No incluyas datos personales, registros, contraseñas ni claves de API.",
       "report_title": "¿Quieres que se arregle?",
-      "report_text": "Abre un issue en GitHub. Tu placa, las versiones y lo que nos contaste ya están rellenados. Añade un registro y podremos investigarlo y preguntarte.",
-      "report_open": "Abrir un issue en GitHub",
+      "report_text": "Envía un informe: Tessera reúne la placa, las versiones, los registros y el último fallo, te los muestra primero y solo los envía cuando tú lo apruebas. O lee qué hacer cuando algo no funciona.",
       "add_details": "Añadir detalles",
       "done": "Listo",
       "settings_title": "Comentarios",
@@ -3789,7 +3788,9 @@
         "addon": "La versión de Tessera: {version}",
         "nothing_else": "Nada más: ni nombre, ni cuenta, ni entidades, registros o configuración de Home Assistant. Cada pantalla comparte con su propia clave aleatoria."
       },
-      "privacy": "Privacidad"
+      "privacy": "Privacidad",
+      "report_send": "Enviar un informe",
+      "report_manual": "Leer la guía de problemas"
     },
     "webflash": {
       "target": "Instalar desde este navegador (Chrome o Edge)",

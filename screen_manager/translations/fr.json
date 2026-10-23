@@ -3755,8 +3755,7 @@
       "comment_label": "Note (facultatif)",
       "comment_hint": "N'indiquez ni données personnelles, ni journaux, ni mots de passe, ni clés d'API.",
       "report_title": "Vous voulez que ce soit corrigé ?",
-      "report_text": "Ouvrez un ticket sur GitHub. Votre carte, les versions et ce que vous nous avez dit sont déjà remplis. Ajoutez un journal et nous pourrons l'analyser et vous poser des questions.",
-      "report_open": "Ouvrir un ticket GitHub",
+      "report_text": "Envoyez un rapport : Tessera rassemble la carte, les versions, les journaux et le dernier plantage, vous les montre d'abord et ne les envoie qu'avec votre accord. Ou lisez quoi faire quand quelque chose ne fonctionne pas.",
       "add_details": "Ajouter des détails",
       "done": "Terminé",
       "settings_title": "Retour",
@@ -3789,7 +3788,9 @@
         "addon": "La version d'Tessera : {version}",
         "nothing_else": "Rien d'autre : ni nom, ni compte, ni entités, journaux ou réglages Home Assistant. Chaque écran partage sous sa propre clé aléatoire."
       },
-      "privacy": "Confidentialité"
+      "privacy": "Confidentialité",
+      "report_send": "Envoyer un rapport",
+      "report_manual": "Lire le guide de dépannage"
     },
     "webflash": {
       "target": "Installer depuis ce navigateur (Chrome ou Edge)",

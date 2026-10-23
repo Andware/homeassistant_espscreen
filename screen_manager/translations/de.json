@@ -3755,8 +3755,7 @@
       "comment_label": "Anmerkung (optional)",
       "comment_hint": "Bitte keine persönlichen Daten, Logs, Passwörter oder API-Schlüssel.",
       "report_title": "Soll es behoben werden?",
-      "report_text": "Eröffne ein Issue auf GitHub. Dein Board, die Versionen und was du uns gesagt hast, sind schon eingetragen. Füge ein Log hinzu, dann können wir es untersuchen und dich dazu fragen.",
-      "report_open": "GitHub-Issue eröffnen",
+      "report_text": "Schick einen Bericht: Tessera sammelt Board, Versionen, Logs und den letzten Absturz, zeigt sie dir zuerst und schickt sie erst, wenn du zustimmst. Oder lies nach, was du tun kannst, wenn etwas nicht funktioniert.",
       "add_details": "Details hinzufügen",
       "done": "Fertig",
       "settings_title": "Feedback",
@@ -3789,7 +3788,9 @@
         "addon": "Die Version von Tessera: {version}",
         "nothing_else": "Sonst nichts: kein Name, kein Konto, keine Entitäten, Logs oder Home-Assistant-Einstellungen. Jeder Bildschirm teilt unter einem eigenen zufälligen Schlüssel."
       },
-      "privacy": "Datenschutz"
+      "privacy": "Datenschutz",
+      "report_send": "Bericht senden",
+      "report_manual": "Fehlerbehebung lesen"
     },
     "webflash": {
       "target": "Aus diesem Browser installieren (Chrome oder Edge)",
