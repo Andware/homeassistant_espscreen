@@ -943,6 +943,21 @@
         "not_paired": "Pair a build server first.",
         "unknown": "The build server no longer knows Tessera. Pair it again.",
         "pending": "The build server has not accepted Tessera yet."
+      },
+      "report": {
+        "depth": "Choose the basic or the full report.",
+        "busy": "A report of this screen is still being collected.",
+        "no_profile": "This screen's YAML isn't in this add-on's ESPHome folder, so there is nothing to report from here.",
+        "not_found": "That report is gone. Make a new one.",
+        "not_ready": "The report isn't finished yet.",
+        "failed": "Collecting the report stopped ({reason}). Try again.",
+        "consent": "Tick the box to send the report.",
+        "note": "Keep the note under 2000 characters.",
+        "email": "That doesn't look like an e-mail address.",
+        "too_large": "The report is too large to send. Download it and attach it to a GitHub issue instead.",
+        "retry": "Tessera didn't take the report just now. Try again in a minute, or download it.",
+        "offline": "Tessera can't be reached from here. Download the report instead.",
+        "invalid": "Tessera refused the report. Download it and attach it to a GitHub issue instead."
       }
     },
     "status": {

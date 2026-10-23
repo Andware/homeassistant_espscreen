@@ -30,6 +30,7 @@ import screen_labels
 import screen_saver
 import saver_photos
 import feedback
+import reports
 import build_server
 from build_queue import BuildQueue
 from firmware import Firmware
@@ -968,6 +969,9 @@ class Manager:
         self.updates = Updater(self, self.path.parent / 'updates.json')
         # Does this screen work as you expect? One shared answer per board, with its own key (app 0.3.10).
         self.feedback = feedback.Feedback(self.path.parent / 'feedback.json')
+        # My screen doesn't work right (app 0.4.91, reports.py): one troubleshooting report per screen, and the crashes
+        # the app saw each screen reboot from.
+        self.reports = reports.Reports(self, self.path.parent)
         # The names the editor shows instead of Home Assistant's (app 0.4.2).
         self.labels = screen_labels.ScreenLabels(self.path.parent / 'screen-labels.json')
         # Which way each screen is to hang, as the editor chose beside the mockup (app 0.4.85, firmware 0.53.0+).
@@ -4686,7 +4690,57 @@ def create_app(manager, development=False):
                        'revision': 'addon.errors.feedback.invalid', 'action': 'addon.errors.invalid_input'}
     async def feedback_start(app):
         manager.feedback.start()
+        manager.reports.watch()
     app.on_startup.append(feedback_start)
+    # ---- My screen doesn't work right (reports.py, app 0.4.91) ----
+    def report_screen(request):
+        screen = manager.screen(request.match_info['inbox'])
+        if screen is None:
+            raise ValueError(t('addon.errors.unknown_screen'))
+        return screen
+    async def report_status(request):
+        screen = report_screen(request)
+        return web.json_response(manager.reports.status(screen['id'], screen))
+    async def report_start(request):
+        screen = report_screen(request)
+        data = await request.json()
+        depth = data.get('depth', 'basic') if isinstance(data, dict) else 'basic'
+        return web.json_response({'id': manager.reports.start(screen['id'], screen, depth)}, status=202)
+    async def report_view(request):
+        return web.json_response(manager.reports.get(request.match_info['id']).view())
+    async def report_file(request):
+        text = manager.reports.file(request.match_info['id'], request.match_info['name'])
+        return web.Response(text=text, content_type='text/plain', charset='utf-8', headers={'Cache-Control': 'no-store'})
+    async def report_zip(request):
+        id = request.match_info['id']
+        return web.Response(body=manager.reports.zip_bytes(id), content_type='application/zip',
+                            headers={'Content-Disposition': f'attachment; filename="{manager.reports.filename(id)}"', 'Cache-Control': 'no-store'})
+    async def report_send(request):
+        report = manager.reports.get(request.match_info['id'])
+        screen = manager.screen(report.inbox)
+        if screen is None:
+            raise ValueError(t('addon.errors.unknown_screen'))
+        data = await request.json()
+        if not isinstance(data, dict):
+            raise ValueError(t('addon.errors.invalid_input'))
+        try:
+            result = await manager.reports.send(report.id, data.get('consent'), data.get('note'), data.get('email'),
+                                                data.get('remember_email') is True, screen)
+        except ValueError as error:
+            if str(error) in ('note', 'email'):
+                raise ValueError(t(f'addon.errors.report.{error}')) from None
+            raise
+        return web.json_response(result)
+    async def report_delete(request):
+        manager.reports.delete(request.match_info['id'])
+        return web.Response(status=204)
+    app.router.add_get('/api/screens/{inbox}/report', report_status)
+    app.router.add_post('/api/screens/{inbox}/report', report_start)
+    app.router.add_get('/api/reports/{id}.zip', report_zip)
+    app.router.add_get('/api/reports/{id}', report_view)
+    app.router.add_get('/api/reports/{id}/files/{name}', report_file)
+    app.router.add_post('/api/reports/{id}/send', report_send)
+    app.router.add_delete('/api/reports/{id}', report_delete)
     async def feedback_action(request):
         """The owner's choice on the feedback card: answer, later, never, cancel, retry or delete. The page names the
         screen; the key, the revision and the model are this app's own, for a screen paired with this Home Assistant."""
@@ -4771,6 +4825,7 @@ def create_app(manager, development=False):
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError): await task
         await manager.feedback.close()
+        await manager.reports.close()
     app.on_cleanup.append(shutdown)
     app.router.add_get('/api/screens/{inbox}/inspect', inspector)
     app.router.add_post('/api/screens/{inbox}/update', update_screen)
