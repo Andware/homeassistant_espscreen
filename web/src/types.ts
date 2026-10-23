@@ -201,6 +201,34 @@ export type BoardChoice = BoardCatalog & {
 };
 // Does this screen work as you expect (app 0.3.10): what the add-on says about the board's shared answer. The key and
 // the revision never reach the page; the add-on keeps them.
+// The troubleshooting report of a screen ("My screen doesn't work right", components/ReportPanel.vue): what the add-on
+// offers for a screen, the report as it is collected, and the answer of a send. Field names are the add-on's.
+export type ReportDepth = "basic" | "full";
+export type ReportBlocker = "no_profile" | "collecting";
+export type ReportCrash = { at: string; reason: string; decoded: string[]; count: number };
+export type ReportLast = { id: string; reference: string; sent_at: string; depth: ReportDepth };
+export type ReportOffer = {
+  ready: boolean; blockers: ReportBlocker[]; retention_days: number; last: ReportLast | null; crash: ReportCrash | null;
+  email: string | null; privacy_url: string;
+};
+export type ReportState = "collecting" | "ready" | "failed" | "sent";
+export type ReportStep = "identity" | "profile" | "screen_log" | "ha_log" | "addon_log" | "build_log" | "crash" | "zip";
+export type ReportFile = { name: string; size: number; lines: number; kind: "md" | "json" | "yaml" | "log" | "txt" };
+export type ReportWarning = "screen_offline" | "no_api_key" | "no_elf" | "ha_log_unavailable" | "addon_log_unavailable" | "no_crash_record";
+export type ReportSummary = {
+  board: string; board_name: string; chip: string; firmware: string | null; channel: string; esphome: string | null;
+  addon: string; ha: string | null; plugins: { id: string; version: string }[]; crash: { reason: string; at: string } | null;
+  online: boolean; built_on: "addon" | "build_server" | "unknown"; elf: boolean;
+};
+export type Report = {
+  id: string; screen: string; depth: ReportDepth; state: ReportState; step: ReportStep | null; progress: number;
+  files: ReportFile[]; summary: ReportSummary | null; warnings: ReportWarning[]; size: number;
+  reference: string | null; sent_at: string | null; error: string | null;
+};
+export type ReportSendResult =
+  | { state: "sent"; reference: string; expires_at: string }
+  | { state: "retry" | "invalid" | "too_large" | "offline"; error: string };
+
 export type FeedbackIssue = "display" | "touch" | "connection" | "installation" | "other";
 export type FeedbackAnswer = { outcome: "working" | "not_working"; issues?: FeedbackIssue[] | null; comment?: string | null };
 export type FeedbackView = {
