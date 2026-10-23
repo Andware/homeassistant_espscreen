@@ -62,6 +62,7 @@
   way every control does it.
 - [CARD_PARTS.md](CARD_PARTS.md): a card built once and painted in place when a value changes, instead of built again.
 - [PLUGINS.md](PLUGINS.md): plugins on the core's side: the plugin API, a plugin tile end to end, the plugins file, fetch.
+- [REPORTS.md](REPORTS.md): the troubleshooting report of a screen: what it holds, what never leaves, where it goes, how a crash is read.
 - [BUILDS.md](BUILDS.md): the one line every build waits in (updates, plugins, New screen, Firmware & USB), and how a
   build is followed.
 - [TILE_MEMORY.md](TILE_MEMORY.md): how many tiles and pages a board holds, and the memory budget that says how many a

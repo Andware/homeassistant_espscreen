@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **My screen doesn't work right (docs/REPORTS.md).** A button on a screen's page makes one troubleshooting report of that screen: the board and every version, the plugins, the screen's YAML, the crash it kept from its previous boot and a minute of its log, Home Assistant's log lines about it and its diagnostics, the app's log and the last build, with passwords, keys, addresses and names taken out. Every file can be read on the page and the zip downloaded; with a consent per report it goes to Tessera, which answers a reference to quote on GitHub or Discord, keeps it 30 days, and can ask a question back if you leave an e-mail address. A fuller report (your pages with their entity ids, every ESPHome log line) is an opt-in that says what it adds. The app also notices a screen that rebooted, reads the crash ESPHome kept and shows it on the page, decoded when the screen was built here.
+
 - **A plugin added with a link can be taken off the list again.** A release added with a link that no screen runs (an old try-out) had no way off the Plugins page except restarting the app. Its details now have "Remove from the list". A plugin a screen still runs is taken off the screen first.
 
 - **Pictures in one system (docs/PICTURES.md).** Every picture a screen shows now goes one way: the camera full
