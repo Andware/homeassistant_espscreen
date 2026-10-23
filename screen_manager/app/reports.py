@@ -144,6 +144,19 @@ def system_log_text(entries, everything=False):
     return '\n'.join(lines)
 
 
+def _entries_about(entries, names):
+    """system_log entries with only the messages that name the screen (an entry groups every screen's lines)."""
+    wanted = tuple(n.lower() for n in names if isinstance(n, str) and len(n) >= 3)
+    out = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        messages = [m for m in entry.get('message') or [] if any(w in str(m).lower() for w in wanted)]
+        if messages or (not entry.get('message') and str(entry.get('name', '')).startswith(SCREEN_LOGGERS)):
+            out.append({**entry, 'message': messages})
+    return out
+
+
 def crash_lines(lines):
     """The crash block and the reset reason out of a screen's log, as the first subscriber after a reboot sees them."""
     return [l for l in lines if CRASH_LINE.search(l)]
@@ -265,6 +278,7 @@ async def screen_log(host, key, seconds, *, port=API_PORT, dump_config=True, lev
         if len(lines) >= limit:
             done.set()
 
+    started = time.monotonic()
     await client.connect(login=True)
     try:
         with contextlib.suppress(Exception):
@@ -275,6 +289,7 @@ async def screen_log(host, key, seconds, *, port=API_PORT, dump_config=True, lev
     finally:
         with contextlib.suppress(Exception):
             await client.disconnect()
+    LOG.info('Read %d log lines of %s in %.0f s', len(lines), name, time.monotonic() - started)
     return lines, info
 
 
@@ -323,6 +338,19 @@ class CrashStore:
     def forget(self, inbox):
         if self.data.pop(inbox, None) is not None:
             self.save()
+
+
+def _card_kinds(tiles):
+    """What the tiles are, counted by kind: an entity's domain, a plugin's or a content tile's kind."""
+    kinds = collections.Counter()
+    for tile in tiles:
+        if not isinstance(tile, dict):
+            continue
+        entity = tile.get('entity')
+        content = tile.get('content') if isinstance(tile.get('content'), dict) else {}
+        kind = entity.split('.', 1)[0] if isinstance(entity, str) and '.' in entity else content.get('kind') or ('plugin' if tile.get('key') else '?')
+        kinds[str(kind)] += 1
+    return dict(sorted(kinds.items()))
 
 
 def _count(value):
@@ -488,7 +516,9 @@ class Reports:
     async def _collect_steps(self, report, screen):
         m = self.manager
         inbox = report.inbox
-        names = self._names(screen)
+        entry = await self._entry_of(screen)
+        mac = self._mac_of(screen)
+        names = self._names(screen, [n for n in ((entry or {}).get('title'), mac, mac.replace(':', '') if mac else None) if n])
         full = report.depth == 'full'
         warnings = report.warnings
 
@@ -520,7 +550,7 @@ class Reports:
             'board_status': catalog.get('status'), 'inch': catalog.get('inch'),
             'chip': chip, 'shape': screen.get('shape'), 'features': screen.get('features'), 'flash': screen.get('flash'),
             'firmware': versions.get('firmware_version'), 'firmware_raw': screen.get('firmware'),
-            'channel': self._channel(), 'ref': meta.get('ref') if isinstance(meta, dict) else None,
+            'channel': self._channel(), 'ref': self._ref_of(profile),
             'esphome': self._esphome_version(), 'addon': versions.get('addon_version') or self._addon_version(),
             'ha': info.get('homeassistant'), 'supervisor': info.get('supervisor'), 'os': info.get('hassos'),
             'machine': info.get('machine'), 'arch': info.get('arch'),
@@ -528,7 +558,7 @@ class Reports:
             'crash': None, 'online': bool(screen.get('online')), 'built_on': built_on, 'elf': elf is not None,
             'node': screen.get('node') or meta.get('node'), 'language': screen.get('language'), 'area_set': bool(screen.get('area')),
             'status': screen.get('status'), 'memory': memory, 'pages': _count(layout.get('pages')) if isinstance(layout, dict) else None,
-            'tiles': len(tiles), 'cards': sorted({str(t.get('card') or t.get('type') or t.get('kind') or '?') for t in tiles if isinstance(t, dict)}),
+            'tiles': len(tiles), 'cards': _card_kinds(tiles),
             'profile': profile, 'depth': report.depth, 'made_at': now_iso(self.clock),
             'plugins_installed': self._installed_plugins(inbox),
         }
@@ -604,7 +634,7 @@ class Reports:
             warnings.append('ha_log_unavailable')
         else:
             texts['home-assistant.log'] = self._redact(ha_text, names)
-        diagnostics = await self._diagnostics(screen, full)
+        diagnostics = await self._diagnostics(screen, full, entry)
         if diagnostics is not None:
             texts['diagnostics.json'] = json.dumps(redaction.redact_data(diagnostics, names=names, values=self._secret_values()),
                                                   indent=1, ensure_ascii=False, default=str)
@@ -724,6 +754,16 @@ class Reports:
                 out[name] = state.get('state')
         return out
 
+    def _ref_of(self, profile):
+        """The branch or tag the screen's YAML builds its package from (`ref:` of the package, or GITHUB_REF)."""
+        if not profile:
+            return None
+        with contextlib.suppress(OSError):
+            text = (self.manager.firmware.root / profile).read_text()
+            m = re.search(r'^\s*ref:\s*["\']?([\w./-]+)', text, re.M) or re.search(r'GITHUB_REF:\s*["\']?([\w./-]+)', text)
+            return m.group(1) if m else None
+        return None
+
     def _needs_key(self, profile):
         with contextlib.suppress(OSError):
             return 'encryption' in (self.manager.firmware.root / profile).read_text()
@@ -776,10 +816,12 @@ class Reports:
             async with session.get('http://supervisor/addons/self/logs', headers={'Authorization': f'Bearer {token}', 'Range': f'entries=:-{ADDON_LOG_LINES}:'},
                                    timeout=ClientTimeout(total=20)) as response:
                 if response.status != 200:
+                    LOG.info('The Supervisor gave no log of this app for the report (%s)', response.status)
                     return None
                 text = await response.text()
                 return '\n'.join(strip_ansi(text).splitlines()[-ADDON_LOG_LINES:])
-        except Exception:  # noqa: BLE001
+        except Exception as error:  # noqa: BLE001
+            LOG.info('Reading this app\'s log for the report failed (%s)', type(error).__name__)
             return None
 
     async def _ha_log(self, names, full):
@@ -788,7 +830,25 @@ class Reports:
         ha = self.manager.ha
         session, base, token = getattr(ha, 'session', None), getattr(ha, 'base', None), getattr(ha, 'token', None)
         parts, got = [], False
-        if session is not None and base and token:
+        # Under the Supervisor, Home Assistant logs to the journal, which the Supervisor serves (/core/logs; the role
+        # homeassistant of config.yaml); elsewhere the log file of this run (/api/error_log).
+        supervisor = os.environ.get('SUPERVISOR_TOKEN', '')
+        if session is not None and supervisor:
+            try:
+                async with session.get(f'http://supervisor/core/logs?lines={HA_LOG_LINES * 4}', timeout=ClientTimeout(total=30),
+                                       headers={'Authorization': f'Bearer {supervisor}', 'Accept': 'text/plain'}) as response:
+                    if response.status == 200:
+                        text = strip_ansi(await response.text())
+                        lines = ha_log_lines(text, names, everything=full)
+                        parts.append(f'# Home Assistant\'s log (journal), lines about this screen ({len(lines)})' if not full
+                                     else f'# Home Assistant\'s log (journal), every ESPHome line ({len(lines)})')
+                        parts.extend(lines)
+                        got = True
+                    else:
+                        LOG.info('The Supervisor gave no Home Assistant log for the report (%s)', response.status)
+            except Exception as error:  # noqa: BLE001
+                LOG.info('Reading Home Assistant\'s journal for the report failed (%s)', type(error).__name__)
+        if session is not None and base and token and not got:
             try:
                 async with session.get(f'{base}/error_log', headers={'Authorization': f'Bearer {token}'}, timeout=ClientTimeout(total=30)) as response:
                     if response.status == 200:
@@ -798,24 +858,24 @@ class Reports:
                                      else f'# home-assistant.log, every ESPHome line ({len(lines)})')
                         parts.extend(lines)
                         got = True
-            except Exception:  # noqa: BLE001
-                pass
+                    else:
+                        LOG.info('Home Assistant gave no log for the report (%s)', response.status)
+            except Exception as error:  # noqa: BLE001
+                LOG.info('Reading Home Assistant\'s log for the report failed (%s)', type(error).__name__)
         try:
             entries = await ha.request('system_log/list')
             if isinstance(entries, list):
+                if not full:
+                    entries = _entries_about(entries, names)
                 parts += ['', '# Warnings and errors Home Assistant kept (system_log, newest first)', system_log_text(entries, everything=full)]
                 got = True
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as error:  # noqa: BLE001
+            LOG.info('Reading Home Assistant\'s warnings for the report failed (%s)', type(error).__name__)
         return '\n'.join(parts) if got else None
 
-    async def _diagnostics(self, screen, full):
-        """Home Assistant's own diagnostics of the screen's ESPHome entry (what Download diagnostics gives), shortened to
-        what is about the device unless the report is a full one."""
+    async def _entry_of(self, screen):
+        """The screen's ESPHome config entry in Home Assistant (its title heads every log line about the screen), or None."""
         ha = self.manager.ha
-        session, base, token = getattr(ha, 'session', None), getattr(ha, 'base', None), getattr(ha, 'token', None)
-        if session is None or not base or not token:
-            return None
         try:
             entries = await ha.request('config_entries/get', domain='esphome')
         except Exception:  # noqa: BLE001
@@ -823,17 +883,35 @@ class Reports:
         device = next((d for d in getattr(ha, 'devices', []) or [] if isinstance(d, dict) and d.get('id') == screen.get('device_id')), {})
         entry_ids = set(device.get('config_entries') or [])
         names = {str(n).lower() for n in (screen.get('device'), screen.get('name'), screen.get('node')) if n}
-        entry = next((e for e in entries or [] if isinstance(e, dict) and e.get('entry_id') in entry_ids), None) \
+        return next((e for e in entries or [] if isinstance(e, dict) and e.get('entry_id') in entry_ids), None) \
             or next((e for e in entries or [] if isinstance(e, dict) and str(e.get('title', '')).lower() in names), None)
+
+    def _mac_of(self, screen):
+        device = next((d for d in getattr(self.manager.ha, 'devices', []) or [] if isinstance(d, dict) and d.get('id') == screen.get('device_id')), {})
+        for kind, value in device.get('connections') or []:
+            if kind == 'mac' and isinstance(value, str):
+                return value
+        return None
+
+    async def _diagnostics(self, screen, full, entry=None):
+        """Home Assistant's own diagnostics of the screen's ESPHome entry (what Download diagnostics gives), shortened to
+        what is about the device unless the report is a full one."""
+        ha = self.manager.ha
+        session, base, token = getattr(ha, 'session', None), getattr(ha, 'base', None), getattr(ha, 'token', None)
+        if session is None or not base or not token:
+            return None
+        entry = entry or await self._entry_of(screen)
         if entry is None:
             return None
         try:
             async with session.get(f"{base}/diagnostics/config_entry/{entry['entry_id']}", headers={'Authorization': f'Bearer {token}'},
                                    timeout=ClientTimeout(total=20)) as response:
                 if response.status != 200:
+                    LOG.info('Home Assistant gave no diagnostics for the report (%s)', response.status)
                     return None
                 data = await response.json()
-        except Exception:  # noqa: BLE001
+        except Exception as error:  # noqa: BLE001
+            LOG.info('Reading the diagnostics for the report failed (%s)', type(error).__name__)
             return None
         if not isinstance(data, dict):
             return None
