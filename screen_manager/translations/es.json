@@ -943,6 +943,21 @@
         "not_paired": "Empareja antes un servidor de compilación.",
         "unknown": "El servidor de compilación ya no conoce a Tessera. Vuelve a emparejarlo.",
         "pending": "El servidor de compilación aún no ha aceptado a Tessera."
+      },
+      "report": {
+        "depth": "Elige el informe básico o el completo.",
+        "busy": "Todavía se está recopilando un informe de esta pantalla.",
+        "no_profile": "El YAML de esta pantalla no está en la carpeta de ESPHome de este complemento, así que desde aquí no hay nada que informar.",
+        "not_found": "Ese informe ya no existe. Haz uno nuevo.",
+        "not_ready": "El informe aún no está terminado.",
+        "failed": "La recopilación del informe se detuvo ({reason}). Inténtalo de nuevo.",
+        "consent": "Marca la casilla para enviar el informe.",
+        "note": "La nota debe tener menos de 2000 caracteres.",
+        "email": "Eso no parece una dirección de correo.",
+        "too_large": "El informe es demasiado grande para enviarlo. Descárgalo y adjúntalo a un issue de GitHub.",
+        "retry": "Tessera no aceptó el informe en este momento. Inténtalo de nuevo en un minuto, o descárgalo.",
+        "offline": "No se puede contactar con Tessera desde aquí. Descarga el informe en su lugar.",
+        "invalid": "Tessera rechazó el informe. Descárgalo y adjúntalo a un issue de GitHub."
       }
     },
     "status": {
@@ -3740,6 +3755,96 @@
         "nothing_else": "Nada más: ni nombre, ni cuenta, ni entidades, registros o configuración de Home Assistant. Cada pantalla comparte con su propia clave aleatoria."
       },
       "privacy": "Privacidad"
+    },
+    "report": {
+      "button": "Mi pantalla no funciona bien",
+      "card_title": "¿Algo va mal?",
+      "card_hint": "Reúne un informe con lo que la app sabe de esta pantalla, léelo y envíalo a Tessera para que podamos encontrar la causa.",
+      "eyebrow": "Solución de problemas",
+      "title": "Mi pantalla no funciona bien",
+      "title_named": "{name} no funciona bien",
+      "intro": "La app recopila lo que sabe de esta pantalla en unos pocos archivos. Los lees aquí, y solo Enviar los lleva a Tessera.",
+      "loading": "Leyendo lo que sabe la app…",
+      "collects_title": "Qué incluye",
+      "collects": "La placa y las versiones de la pantalla, su propio registro (hasta 45 segundos, en directo), las líneas del registro de Home Assistant sobre ella, el registro de la app y el último registro de compilación. Las contraseñas, claves, direcciones de red y el nombre de la pantalla se ocultan.",
+      "nothing_leaves": "Nada sale de tu Home Assistant hasta que pulses Enviar. Puedes leer cada archivo antes.",
+      "crash_title": "Último fallo",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "visto una vez esta semana | visto {n} veces esta semana",
+      "crash_lines": "Líneas decodificadas",
+      "full": "Incluir también la disposición de mis páginas, los nombres de las entidades y las demás líneas del registro de Home Assistant. Ayuda mucho a encontrar la causa.",
+      "note_label": "¿Qué pasó? (opcional)",
+      "note_hint": "Lo que viste, lo que hiciste justo antes y con qué frecuencia ocurre.",
+      "email_label": "Tu correo (opcional)",
+      "email_hint": "Por si podemos hacerte alguna pregunta al respecto.",
+      "remember_email": "Recordar mi correo en esta app",
+      "collect": "Recopilar",
+      "check_again": "Comprobar de nuevo",
+      "blockers": {
+        "no_profile": "El YAML de esta pantalla no está en la carpeta de esta app, así que no se puede hacer un informe de ella.",
+        "collecting": "Ya se está recopilando un informe de esta pantalla. Espera un momento y comprueba de nuevo."
+      },
+      "collecting": "Recopilando…",
+      "collecting_hint": "Tarda hasta un minuto: la app escucha el registro de la pantalla durante un rato.",
+      "steps": {
+        "identity": "Leyendo la identidad de la pantalla",
+        "profile": "Copiando su perfil",
+        "screen_log": "Escuchando el registro de la pantalla",
+        "ha_log": "Leyendo el registro de Home Assistant",
+        "addon_log": "Leyendo el registro de la app",
+        "build_log": "Leyendo el último registro de compilación",
+        "crash": "Leyendo el último fallo",
+        "zip": "Empaquetando los archivos"
+      },
+      "ready_title": "Listo para leer",
+      "facts": {
+        "board": "Placa",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Plugins",
+        "crash": "Último fallo",
+        "none": "Ninguno",
+        "unknown": "Desconocido"
+      },
+      "warnings": {
+        "screen_offline": "La pantalla está desconectada: el informe no tiene registro en directo, solo lo que la app guardó.",
+        "no_api_key": "La app no tiene clave de API para esta pantalla, así que no se pudo leer su registro en directo.",
+        "no_elf": "Falta el archivo de depuración del firmware, así que un fallo no se puede señalar por sus líneas de código.",
+        "ha_log_unavailable": "No se pudo leer el registro de Home Assistant.",
+        "addon_log_unavailable": "No se pudo leer el registro de la propia app.",
+        "no_crash_record": "No se encontró ningún fallo registrado para esta pantalla."
+      },
+      "files_title": "Archivos del informe",
+      "file_lines": "1 línea | {n} líneas",
+      "size": {
+        "b": "{n} B",
+        "kb": "{n} KB",
+        "mb": "{n} MB"
+      },
+      "download": "Descargar zip",
+      "send_title": "Enviar a Tessera",
+      "send_text": "Esto va a Tessera y se guarda {days} días. Contiene los archivos de arriba, tu nota y tu correo si lo diste.",
+      "privacy": "Privacidad",
+      "with_note": "Con tu nota.",
+      "with_email": "Podemos escribir a {email}.",
+      "change_note": "Cambiar la nota o el correo",
+      "consent": "He leído lo que contiene el informe y acepto enviarlo a Tessera.",
+      "send": "Enviar",
+      "sending": "Enviando…",
+      "sent": {
+        "title": "Enviado, gracias",
+        "quote": "Cita esta referencia en GitHub o Discord para que podamos encontrar tu informe.",
+        "copy": "Copiar",
+        "copied": "Referencia copiada.",
+        "selected": "La referencia está seleccionada: cópiala con Ctrl+C o ⌘C.",
+        "github": "Abrir un issue en GitHub",
+        "discord": "Preguntar en Discord",
+        "new": "Hacer un informe nuevo"
+      },
+      "failed_title": "No se pudo hacer el informe",
+      "try_again": "Reintentar"
     },
     "webflash": {
       "target": "Instalar desde este navegador (Chrome o Edge)",

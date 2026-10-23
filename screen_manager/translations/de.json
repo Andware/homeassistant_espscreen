@@ -943,6 +943,21 @@
         "not_paired": "Kopple zuerst einen Build-Server.",
         "unknown": "Der Build-Server kennt Tessera nicht mehr. Kopple ihn erneut.",
         "pending": "Der Build-Server hat Tessera noch nicht angenommen."
+      },
+      "report": {
+        "depth": "Wähle den einfachen oder den vollständigen Bericht.",
+        "busy": "Ein Bericht dieses Bildschirms wird noch gesammelt.",
+        "no_profile": "Die YAML dieses Bildschirms liegt nicht im ESPHome-Ordner dieses Add-ons, daher gibt es von hier nichts zu berichten.",
+        "not_found": "Dieser Bericht ist weg. Erstelle einen neuen.",
+        "not_ready": "Der Bericht ist noch nicht fertig.",
+        "failed": "Das Sammeln des Berichts ist abgebrochen ({reason}). Versuche es erneut.",
+        "consent": "Setze das Häkchen, um den Bericht zu senden.",
+        "note": "Halte die Anmerkung unter 2000 Zeichen.",
+        "email": "Das sieht nicht wie eine E-Mail-Adresse aus.",
+        "too_large": "Der Bericht ist zu groß zum Senden. Lade ihn herunter und hänge ihn stattdessen an ein GitHub-Issue an.",
+        "retry": "Tessera hat den Bericht gerade nicht angenommen. Versuche es in einer Minute erneut, oder lade ihn herunter.",
+        "offline": "Tessera ist von hier aus nicht erreichbar. Lade den Bericht stattdessen herunter.",
+        "invalid": "Tessera hat den Bericht abgelehnt. Lade ihn herunter und hänge ihn stattdessen an ein GitHub-Issue an."
       }
     },
     "status": {
@@ -3740,6 +3755,96 @@
         "nothing_else": "Sonst nichts: kein Name, kein Konto, keine Entitäten, Logs oder Home-Assistant-Einstellungen. Jeder Bildschirm teilt unter einem eigenen zufälligen Schlüssel."
       },
       "privacy": "Datenschutz"
+    },
+    "report": {
+      "button": "Mein Bildschirm funktioniert nicht richtig",
+      "card_title": "Stimmt etwas nicht?",
+      "card_hint": "Stelle einen Bericht aus dem zusammen, was die App über diesen Bildschirm weiß, lies ihn und sende ihn an Tessera, damit wir die Ursache finden können.",
+      "eyebrow": "Fehlersuche",
+      "title": "Mein Bildschirm funktioniert nicht richtig",
+      "title_named": "{name} funktioniert nicht richtig",
+      "intro": "Die App sammelt, was sie über diesen Bildschirm weiß, in ein paar Dateien. Du liest sie hier, und erst Senden bringt sie zu Tessera.",
+      "loading": "Lese, was die App weiß…",
+      "collects_title": "Was hineinkommt",
+      "collects": "Board und Versionen des Bildschirms, sein eigenes Log (bis zu 45 Sekunden, live), die Zeilen des Home-Assistant-Logs über ihn, das Log der App und das letzte Build-Log. Passwörter, Schlüssel, Netzwerkadressen und der Name des Bildschirms werden geschwärzt.",
+      "nothing_leaves": "Nichts verlässt dein Home Assistant, bis du auf Senden drückst. Du kannst jede Datei vorher lesen.",
+      "crash_title": "Letzter Absturz",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "diese Woche einmal gesehen | diese Woche {n} Mal gesehen",
+      "crash_lines": "Dekodierte Zeilen",
+      "full": "Auch mein Seitenlayout, die Namen der Entitäten und die übrigen Zeilen des Home-Assistant-Logs mitschicken. Das hilft sehr beim Finden der Ursache.",
+      "note_label": "Was ist passiert? (optional)",
+      "note_hint": "Was du gesehen hast, was du kurz davor getan hast und wie oft es vorkommt.",
+      "email_label": "Deine E-Mail (optional)",
+      "email_hint": "Falls wir dich dazu etwas fragen dürfen.",
+      "remember_email": "Meine E-Mail in dieser App merken",
+      "collect": "Sammeln",
+      "check_again": "Erneut prüfen",
+      "blockers": {
+        "no_profile": "Die YAML dieses Bildschirms liegt nicht im Ordner dieser App, daher lässt sich kein Bericht dafür erstellen.",
+        "collecting": "Ein Bericht dieses Bildschirms wird bereits gesammelt. Warte einen Moment und prüfe erneut."
+      },
+      "collecting": "Wird gesammelt…",
+      "collecting_hint": "Das dauert bis zu einer Minute: Die App hört eine Weile dem Log des Bildschirms zu.",
+      "steps": {
+        "identity": "Lese die Identität des Bildschirms",
+        "profile": "Kopiere sein Profil",
+        "screen_log": "Höre dem Log des Bildschirms zu",
+        "ha_log": "Lese das Home-Assistant-Log",
+        "addon_log": "Lese das Log der App",
+        "build_log": "Lese das letzte Build-Log",
+        "crash": "Lese den letzten Absturz",
+        "zip": "Packe die Dateien"
+      },
+      "ready_title": "Bereit zum Lesen",
+      "facts": {
+        "board": "Board",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Plugins",
+        "crash": "Letzter Absturz",
+        "none": "Keiner",
+        "unknown": "Unbekannt"
+      },
+      "warnings": {
+        "screen_offline": "Der Bildschirm ist offline: Der Bericht hat kein Live-Log, nur was die App aufbewahrt hat.",
+        "no_api_key": "Die App hat keinen API-Schlüssel für diesen Bildschirm, daher konnte sein Live-Log nicht gelesen werden.",
+        "no_elf": "Die Debug-Datei der Firmware fehlt, daher lässt sich ein Absturz nicht nach seinen Codezeilen benennen.",
+        "ha_log_unavailable": "Das Home-Assistant-Log konnte nicht gelesen werden.",
+        "addon_log_unavailable": "Das eigene Log der App konnte nicht gelesen werden.",
+        "no_crash_record": "Für diesen Bildschirm wurde kein Absturz aufgezeichnet."
+      },
+      "files_title": "Dateien im Bericht",
+      "file_lines": "1 Zeile | {n} Zeilen",
+      "size": {
+        "b": "{n} B",
+        "kb": "{n} KB",
+        "mb": "{n} MB"
+      },
+      "download": "Zip herunterladen",
+      "send_title": "An Tessera senden",
+      "send_text": "Das geht an Tessera und wird {days} Tage aufbewahrt. Es enthält die Dateien oben, deine Anmerkung und deine E-Mail, falls du eine angegeben hast.",
+      "privacy": "Datenschutz",
+      "with_note": "Mit deiner Anmerkung.",
+      "with_email": "Wir dürfen an {email} schreiben.",
+      "change_note": "Anmerkung oder E-Mail ändern",
+      "consent": "Ich habe gelesen, was im Bericht steht, und bin einverstanden, ihn an Tessera zu senden.",
+      "send": "Senden",
+      "sending": "Wird gesendet…",
+      "sent": {
+        "title": "Gesendet, danke",
+        "quote": "Nenne diese Referenz auf GitHub oder Discord, damit wir deinen Bericht finden.",
+        "copy": "Kopieren",
+        "copied": "Referenz kopiert.",
+        "selected": "Die Referenz ist markiert: Kopiere sie mit Ctrl+C oder ⌘C.",
+        "github": "GitHub-Issue eröffnen",
+        "discord": "Auf Discord fragen",
+        "new": "Neuen Bericht erstellen"
+      },
+      "failed_title": "Der Bericht konnte nicht erstellt werden",
+      "try_again": "Erneut versuchen"
     },
     "webflash": {
       "target": "Aus diesem Browser installieren (Chrome oder Edge)",

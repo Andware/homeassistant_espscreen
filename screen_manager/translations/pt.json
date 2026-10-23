@@ -943,6 +943,21 @@
         "not_paired": "Emparelhe primeiro um servidor de compilação.",
         "unknown": "O servidor de compilação já não conhece o Tessera. Emparelhe-o de novo.",
         "pending": "O servidor de compilação ainda não aceitou o Tessera."
+      },
+      "report": {
+        "depth": "Escolha o relatório básico ou o completo.",
+        "busy": "Ainda está a ser recolhido um relatório deste ecrã.",
+        "no_profile": "O YAML deste ecrã não está na pasta ESPHome deste complemento, por isso não há nada a relatar a partir daqui.",
+        "not_found": "Esse relatório já não existe. Faça um novo.",
+        "not_ready": "O relatório ainda não está terminado.",
+        "failed": "A recolha do relatório parou ({reason}). Tente novamente.",
+        "consent": "Marque a caixa para enviar o relatório.",
+        "note": "Mantenha a nota abaixo de 2000 caracteres.",
+        "email": "Isso não parece um endereço de email.",
+        "too_large": "O relatório é demasiado grande para enviar. Transfira-o e anexe-o a um issue no GitHub.",
+        "retry": "A Tessera não aceitou o relatório neste momento. Tente novamente dentro de um minuto, ou transfira-o.",
+        "offline": "A Tessera não está acessível a partir daqui. Transfira o relatório em vez disso.",
+        "invalid": "A Tessera recusou o relatório. Transfira-o e anexe-o a um issue no GitHub."
       }
     },
     "status": {
@@ -3740,6 +3755,96 @@
         "nothing_else": "Mais nada: nem nome, conta, entidades, registos ou definições do Home Assistant. Cada ecrã partilha com a sua própria chave aleatória."
       },
       "privacy": "Privacidade"
+    },
+    "report": {
+      "button": "O meu ecrã não funciona bem",
+      "card_title": "Algo está mal?",
+      "card_hint": "Junte um relatório com o que a app sabe sobre este ecrã, leia-o e envie-o à Tessera para que possamos encontrar a causa.",
+      "eyebrow": "Resolução de problemas",
+      "title": "O meu ecrã não funciona bem",
+      "title_named": "{name} não funciona bem",
+      "intro": "A app recolhe o que sabe sobre este ecrã em alguns ficheiros. Lê-os aqui, e só Enviar os leva à Tessera.",
+      "loading": "A ler o que a app sabe…",
+      "collects_title": "O que inclui",
+      "collects": "A placa e as versões do ecrã, o seu próprio registo (até 45 segundos, em direto), as linhas do registo do Home Assistant sobre ele, o registo da app e o último registo de compilação. Palavras-passe, chaves, endereços de rede e o nome do ecrã são ocultados.",
+      "nothing_leaves": "Nada sai do seu Home Assistant até carregar em Enviar. Pode ler cada ficheiro primeiro.",
+      "crash_title": "Última falha",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "vista uma vez esta semana | vista {n} vezes esta semana",
+      "crash_lines": "Linhas descodificadas",
+      "full": "Incluir também a disposição das minhas páginas, os nomes das entidades e as outras linhas do registo do Home Assistant. Ajuda muito a encontrar a causa.",
+      "note_label": "O que aconteceu? (opcional)",
+      "note_hint": "O que viu, o que fez mesmo antes e com que frequência acontece.",
+      "email_label": "O seu email (opcional)",
+      "email_hint": "Caso possamos fazer-lhe uma pergunta sobre isto.",
+      "remember_email": "Lembrar o meu email nesta app",
+      "collect": "Recolher",
+      "check_again": "Verificar de novo",
+      "blockers": {
+        "no_profile": "O YAML deste ecrã não está na pasta desta app, por isso não é possível fazer um relatório dele.",
+        "collecting": "Já está a ser recolhido um relatório deste ecrã. Aguarde um momento e verifique de novo."
+      },
+      "collecting": "A recolher…",
+      "collecting_hint": "Demora até um minuto: a app escuta o registo do ecrã durante algum tempo.",
+      "steps": {
+        "identity": "A ler a identidade do ecrã",
+        "profile": "A copiar o seu perfil",
+        "screen_log": "A escutar o registo do ecrã",
+        "ha_log": "A ler o registo do Home Assistant",
+        "addon_log": "A ler o registo da app",
+        "build_log": "A ler o último registo de compilação",
+        "crash": "A ler a última falha",
+        "zip": "A empacotar os ficheiros"
+      },
+      "ready_title": "Pronto para ler",
+      "facts": {
+        "board": "Placa",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Plugins",
+        "crash": "Última falha",
+        "none": "Nenhuma",
+        "unknown": "Desconhecido"
+      },
+      "warnings": {
+        "screen_offline": "O ecrã está offline: o relatório não tem registo em direto, só o que a app guardou.",
+        "no_api_key": "A app não tem chave de API para este ecrã, por isso o seu registo em direto não pôde ser lido.",
+        "no_elf": "Falta o ficheiro de depuração do firmware, por isso uma falha não pode ser identificada pelas suas linhas de código.",
+        "ha_log_unavailable": "Não foi possível ler o registo do Home Assistant.",
+        "addon_log_unavailable": "Não foi possível ler o registo da própria app.",
+        "no_crash_record": "Não foi encontrada nenhuma falha registada para este ecrã."
+      },
+      "files_title": "Ficheiros no relatório",
+      "file_lines": "1 linha | {n} linhas",
+      "size": {
+        "b": "{n} B",
+        "kb": "{n} KB",
+        "mb": "{n} MB"
+      },
+      "download": "Transferir zip",
+      "send_title": "Enviar à Tessera",
+      "send_text": "Isto vai para a Tessera e fica guardado {days} dias. Contém os ficheiros acima, a sua nota e o seu email, se o deu.",
+      "privacy": "Privacidade",
+      "with_note": "Com a sua nota.",
+      "with_email": "Podemos escrever para {email}.",
+      "change_note": "Alterar nota ou email",
+      "consent": "Li o que está no relatório e aceito enviá-lo à Tessera.",
+      "send": "Enviar",
+      "sending": "A enviar…",
+      "sent": {
+        "title": "Enviado, obrigado",
+        "quote": "Cite esta referência no GitHub ou no Discord para que possamos encontrar o seu relatório.",
+        "copy": "Copiar",
+        "copied": "Referência copiada.",
+        "selected": "A referência está selecionada: copie-a com Ctrl+C ou ⌘C.",
+        "github": "Abrir um issue no GitHub",
+        "discord": "Perguntar no Discord",
+        "new": "Fazer um novo relatório"
+      },
+      "failed_title": "Não foi possível fazer o relatório",
+      "try_again": "Tentar novamente"
     },
     "webflash": {
       "target": "Instalar a partir deste navegador (Chrome ou Edge)",

@@ -943,6 +943,21 @@
         "not_paired": "Associez d'abord un serveur de compilation.",
         "unknown": "Le serveur de compilation ne connaît plus Tessera. Associez-le à nouveau.",
         "pending": "Le serveur de compilation n'a pas encore accepté Tessera."
+      },
+      "report": {
+        "depth": "Choisissez le rapport de base ou le rapport complet.",
+        "busy": "Un rapport de cet écran est encore en cours.",
+        "no_profile": "Le YAML de cet écran n'est pas dans le dossier ESPHome de ce module, donc il n'y a rien à rapporter d'ici.",
+        "not_found": "Ce rapport n'existe plus. Faites-en un nouveau.",
+        "not_ready": "Le rapport n'est pas encore terminé.",
+        "failed": "La collecte du rapport s'est arrêtée ({reason}). Réessayez.",
+        "consent": "Cochez la case pour envoyer le rapport.",
+        "note": "La note doit faire moins de 2000 caractères.",
+        "email": "Cela ne ressemble pas à une adresse e-mail.",
+        "too_large": "Le rapport est trop volumineux pour être envoyé. Téléchargez-le et joignez-le à un ticket GitHub.",
+        "retry": "Tessera n'a pas pris le rapport pour le moment. Réessayez dans une minute, ou téléchargez-le.",
+        "offline": "Tessera est injoignable d'ici. Téléchargez le rapport à la place.",
+        "invalid": "Tessera a refusé le rapport. Téléchargez-le et joignez-le à un ticket GitHub."
       }
     },
     "status": {
@@ -3740,6 +3755,96 @@
         "nothing_else": "Rien d'autre : ni nom, ni compte, ni entités, journaux ou réglages Home Assistant. Chaque écran partage sous sa propre clé aléatoire."
       },
       "privacy": "Confidentialité"
+    },
+    "report": {
+      "button": "Mon écran ne fonctionne pas bien",
+      "card_title": "Quelque chose ne va pas ?",
+      "card_hint": "Rassemblez un rapport de ce que l'app sait de cet écran, lisez-le et envoyez-le à Tessera pour que nous puissions trouver la cause.",
+      "eyebrow": "Dépannage",
+      "title": "Mon écran ne fonctionne pas bien",
+      "title_named": "{name} ne fonctionne pas bien",
+      "intro": "L'app rassemble ce qu'elle sait de cet écran dans quelques fichiers. Vous les lisez ici, et seul Envoyer les transmet à Tessera.",
+      "loading": "Lecture de ce que l'app sait…",
+      "collects_title": "Ce qui est inclus",
+      "collects": "La carte et les versions de l'écran, son propre journal (jusqu'à 45 secondes, en direct), les lignes du journal de Home Assistant qui le concernent, le journal de l'app et le dernier journal de compilation. Les mots de passe, clés, adresses réseau et le nom de l'écran sont masqués.",
+      "nothing_leaves": "Rien ne quitte votre Home Assistant avant que vous n'appuyiez sur Envoyer. Vous pouvez lire chaque fichier avant.",
+      "crash_title": "Dernier plantage",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "vu une fois cette semaine | vu {n} fois cette semaine",
+      "crash_lines": "Lignes décodées",
+      "full": "Inclure aussi la disposition de mes pages, les noms des entités et les autres lignes du journal de Home Assistant. Cela aide beaucoup à trouver la cause.",
+      "note_label": "Que s'est-il passé ? (facultatif)",
+      "note_hint": "Ce que vous avez vu, ce que vous faisiez juste avant et à quelle fréquence cela se produit.",
+      "email_label": "Votre e-mail (facultatif)",
+      "email_hint": "Si nous pouvons vous poser une question à ce sujet.",
+      "remember_email": "Mémoriser mon e-mail dans cette app",
+      "collect": "Rassembler",
+      "check_again": "Vérifier à nouveau",
+      "blockers": {
+        "no_profile": "Le YAML de cet écran n'est pas dans le dossier de cette app, donc aucun rapport ne peut être fait pour lui.",
+        "collecting": "Un rapport de cet écran est déjà en cours. Patientez un instant et vérifiez à nouveau."
+      },
+      "collecting": "Rassemblement…",
+      "collecting_hint": "Cela prend jusqu'à une minute : l'app écoute le journal de l'écran pendant un moment.",
+      "steps": {
+        "identity": "Lecture de l'identité de l'écran",
+        "profile": "Copie de son profil",
+        "screen_log": "Écoute du journal de l'écran",
+        "ha_log": "Lecture du journal de Home Assistant",
+        "addon_log": "Lecture du journal de l'app",
+        "build_log": "Lecture du dernier journal de compilation",
+        "crash": "Lecture du dernier plantage",
+        "zip": "Empaquetage des fichiers"
+      },
+      "ready_title": "Prêt à lire",
+      "facts": {
+        "board": "Carte",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Plugins",
+        "crash": "Dernier plantage",
+        "none": "Aucun",
+        "unknown": "Inconnu"
+      },
+      "warnings": {
+        "screen_offline": "L'écran est hors ligne : le rapport n'a pas de journal en direct, seulement ce que l'app a conservé.",
+        "no_api_key": "L'app n'a pas de clé API pour cet écran, donc son journal en direct n'a pas pu être lu.",
+        "no_elf": "Le fichier de débogage du firmware manque, donc un plantage ne peut pas être situé dans ses lignes de code.",
+        "ha_log_unavailable": "Le journal de Home Assistant n'a pas pu être lu.",
+        "addon_log_unavailable": "Le journal de l'app elle-même n'a pas pu être lu.",
+        "no_crash_record": "Aucun plantage n'a été enregistré pour cet écran."
+      },
+      "files_title": "Fichiers du rapport",
+      "file_lines": "{n} ligne | {n} lignes",
+      "size": {
+        "b": "{n} o",
+        "kb": "{n} Ko",
+        "mb": "{n} Mo"
+      },
+      "download": "Télécharger le zip",
+      "send_title": "Envoyer à Tessera",
+      "send_text": "Ceci est envoyé à Tessera et conservé {days} jours. Il contient les fichiers ci-dessus, votre note et votre e-mail si vous l'avez donné.",
+      "privacy": "Confidentialité",
+      "with_note": "Avec votre note.",
+      "with_email": "Nous pouvons écrire à {email}.",
+      "change_note": "Modifier la note ou l'e-mail",
+      "consent": "J'ai lu ce que contient le rapport et j'accepte de l'envoyer à Tessera.",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "sent": {
+        "title": "Envoyé, merci",
+        "quote": "Citez cette référence sur GitHub ou Discord pour que nous puissions retrouver votre rapport.",
+        "copy": "Copier",
+        "copied": "Référence copiée.",
+        "selected": "La référence est sélectionnée : copiez-la avec Ctrl+C ou ⌘C.",
+        "github": "Ouvrir un ticket GitHub",
+        "discord": "Demander sur Discord",
+        "new": "Faire un nouveau rapport"
+      },
+      "failed_title": "Le rapport n'a pas pu être fait",
+      "try_again": "Réessayer"
     },
     "webflash": {
       "target": "Installer depuis ce navigateur (Chrome ou Edge)",

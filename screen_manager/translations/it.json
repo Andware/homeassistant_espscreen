@@ -943,6 +943,21 @@
         "not_paired": "Abbina prima un server di compilazione.",
         "unknown": "Il server di compilazione non riconosce più Tessera. Abbinalo di nuovo.",
         "pending": "Il server di compilazione non ha ancora accettato Tessera."
+      },
+      "report": {
+        "depth": "Scegli il rapporto di base o quello completo.",
+        "busy": "Un rapporto di questo schermo è ancora in raccolta.",
+        "no_profile": "Lo YAML di questo schermo non è nella cartella ESPHome di questo componente aggiuntivo, quindi da qui non c'è niente da riportare.",
+        "not_found": "Quel rapporto non c'è più. Fanne uno nuovo.",
+        "not_ready": "Il rapporto non è ancora finito.",
+        "failed": "La raccolta del rapporto si è fermata ({reason}). Riprova.",
+        "consent": "Spunta la casella per inviare il rapporto.",
+        "note": "Mantieni la nota sotto i 2000 caratteri.",
+        "email": "Non sembra un indirizzo email.",
+        "too_large": "Il rapporto è troppo grande per essere inviato. Scaricalo e allegalo a una segnalazione su GitHub.",
+        "retry": "Tessera non ha preso il rapporto in questo momento. Riprova tra un minuto, oppure scaricalo.",
+        "offline": "Tessera non è raggiungibile da qui. Scarica invece il rapporto.",
+        "invalid": "Tessera ha rifiutato il rapporto. Scaricalo e allegalo a una segnalazione su GitHub."
       }
     },
     "status": {
@@ -3740,6 +3755,96 @@
         "nothing_else": "Nient'altro: nessun nome, account, entità, log o impostazioni di Home Assistant. Ogni schermo condivide con una propria chiave casuale."
       },
       "privacy": "Privacy"
+    },
+    "report": {
+      "button": "Il mio schermo non funziona bene",
+      "card_title": "Qualcosa non va?",
+      "card_hint": "Metti insieme un rapporto di quello che l'app sa di questo schermo, leggilo e invialo a Tessera, così possiamo trovare la causa.",
+      "eyebrow": "Risoluzione dei problemi",
+      "title": "Il mio schermo non funziona bene",
+      "title_named": "{name} non funziona bene",
+      "intro": "L'app raccoglie quello che sa di questo schermo in pochi file. Li leggi qui, e solo Invia li porta a Tessera.",
+      "loading": "Lettura di quello che sa l'app…",
+      "collects_title": "Cosa contiene",
+      "collects": "La scheda e le versioni dello schermo, il suo log (fino a 45 secondi, in diretta), le righe del log di Home Assistant che lo riguardano, il log dell'app e l'ultimo log di compilazione. Password, chiavi, indirizzi di rete e il nome dello schermo vengono oscurati.",
+      "nothing_leaves": "Niente lascia il tuo Home Assistant finché non premi Invia. Puoi leggere ogni file prima.",
+      "crash_title": "Ultimo crash",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "visto una volta questa settimana | visto {n} volte questa settimana",
+      "crash_lines": "Righe decodificate",
+      "full": "Includi anche la disposizione delle mie pagine, i nomi delle entità e le altre righe del log di Home Assistant. Aiuta molto a trovare la causa.",
+      "note_label": "Cosa è successo? (facoltativo)",
+      "note_hint": "Cosa hai visto, cosa hai fatto subito prima e quanto spesso succede.",
+      "email_label": "La tua email (facoltativa)",
+      "email_hint": "Se possiamo farti una domanda al riguardo.",
+      "remember_email": "Ricorda la mia email in questa app",
+      "collect": "Raccogli",
+      "check_again": "Controlla di nuovo",
+      "blockers": {
+        "no_profile": "Lo YAML di questo schermo non è nella cartella di questa app, quindi non si può fare un rapporto per lui.",
+        "collecting": "Un rapporto di questo schermo è già in raccolta. Aspetta un momento e controlla di nuovo."
+      },
+      "collecting": "Raccolta in corso…",
+      "collecting_hint": "Ci vuole fino a un minuto: l'app ascolta per un po' il log dello schermo.",
+      "steps": {
+        "identity": "Lettura dell'identità dello schermo",
+        "profile": "Copia del suo profilo",
+        "screen_log": "Ascolto del log dello schermo",
+        "ha_log": "Lettura del log di Home Assistant",
+        "addon_log": "Lettura del log dell'app",
+        "build_log": "Lettura dell'ultimo log di compilazione",
+        "crash": "Lettura dell'ultimo crash",
+        "zip": "Impacchettamento dei file"
+      },
+      "ready_title": "Pronto da leggere",
+      "facts": {
+        "board": "Scheda",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Plugin",
+        "crash": "Ultimo crash",
+        "none": "Nessuno",
+        "unknown": "Sconosciuto"
+      },
+      "warnings": {
+        "screen_offline": "Lo schermo è offline: il rapporto non ha un log in diretta, solo quello che l'app ha conservato.",
+        "no_api_key": "L'app non ha una chiave API per questo schermo, quindi non è stato possibile leggere il suo log in diretta.",
+        "no_elf": "Manca il file di debug del firmware, quindi un crash non può essere ricondotto alle sue righe di codice.",
+        "ha_log_unavailable": "Non è stato possibile leggere il log di Home Assistant.",
+        "addon_log_unavailable": "Non è stato possibile leggere il log dell'app stessa.",
+        "no_crash_record": "Nessun crash registrato per questo schermo."
+      },
+      "files_title": "File nel rapporto",
+      "file_lines": "1 riga | {n} righe",
+      "size": {
+        "b": "{n} B",
+        "kb": "{n} KB",
+        "mb": "{n} MB"
+      },
+      "download": "Scarica lo zip",
+      "send_title": "Invia a Tessera",
+      "send_text": "Questo va a Tessera e viene conservato per {days} giorni. Contiene i file qui sopra, la tua nota e la tua email se l'hai data.",
+      "privacy": "Privacy",
+      "with_note": "Con la tua nota.",
+      "with_email": "Possiamo scrivere a {email}.",
+      "change_note": "Cambia nota o email",
+      "consent": "Ho letto cosa contiene il rapporto e accetto di inviarlo a Tessera.",
+      "send": "Invia",
+      "sending": "Invio…",
+      "sent": {
+        "title": "Inviato, grazie",
+        "quote": "Cita questo riferimento su GitHub o Discord, così possiamo trovare il tuo rapporto.",
+        "copy": "Copia",
+        "copied": "Riferimento copiato.",
+        "selected": "Il riferimento è selezionato: copialo con Ctrl+C o ⌘C.",
+        "github": "Apri una segnalazione su GitHub",
+        "discord": "Chiedi su Discord",
+        "new": "Fai un nuovo rapporto"
+      },
+      "failed_title": "Il rapporto non è stato creato",
+      "try_again": "Riprova"
     },
     "webflash": {
       "target": "Installa da questo browser (Chrome o Edge)",
