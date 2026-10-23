@@ -590,7 +590,7 @@ class Reports:
             'esphome': self._esphome_version(), 'addon': versions.get('addon_version') or self._addon_version(),
             'ha': info.get('homeassistant'), 'supervisor': info.get('supervisor'), 'os': info.get('hassos'),
             'machine': info.get('machine'), 'arch': info.get('arch'),
-            'plugins': [{'id': p.get('id'), 'version': p.get('version')} for p in running if isinstance(p, dict)],
+            'plugins': self._plugin_summary(running), 'plugins_source': 'hello' if running else None,
             'crash': None, 'online': bool(screen.get('online')), 'built_on': built_on, 'elf': elf is not None,
             'node': screen.get('node') or meta.get('node'), 'language': screen.get('language'), 'area_set': bool(screen.get('area')),
             'status': screen.get('status'), 'memory': memory, 'pages': _count(layout.get('pages')) if isinstance(layout, dict) else None,
@@ -662,6 +662,16 @@ class Reports:
                      else '# Live log: none (the screen was offline or could not be reached)')
         parts.extend(lines)
         texts['screen.log'] = self._redact('\n'.join(parts), names)
+        # The screen's hello names what it runs, and the app forgets it when the screen goes (page_delivery). A screen
+        # that was restarting as the report began, the one a report is made for, had said none: it is asked once more
+        # now, after the log's 45 seconds, and failing that the plugins the app installed on it stand in, said so
+        # (TR-4EFBDE, 2026-10-23: a Tab5 with nine plugins, "Plugins running: none").
+        if not summary['plugins'] and hasattr(m, 'plugins'):
+            summary['plugins'] = self._plugin_summary(m.plugins.running().get(inbox, []))
+            summary['plugins_source'] = 'hello' if summary['plugins'] else None
+        if not summary['plugins'] and summary.get('plugins_installed'):
+            summary['plugins'] = self._plugin_summary(summary['plugins_installed'])
+            summary['plugins_source'] = 'installed'
 
         # 5. Home Assistant's log and diagnostics
         self._set(report, 'ha_log', 0.7)
@@ -713,6 +723,24 @@ class Reports:
         self._prune()
         self._save_index()
 
+    @staticmethod
+    def _plugin_summary(items):
+        """Plugins as the summary lists them, id and version only: from a hello's list or the store's records."""
+        return [{'id': p.get('id'), 'version': p.get('version')} for p in items or [] if isinstance(p, dict)]
+
+    @staticmethod
+    def _plugin_lines(s):
+        """The two lines of report.md about plugins: what the app installed on the screen (the store, with a record's
+        state when it is not active), and what the screen's own hello said it runs, or that none was heard and the
+        installed ones stand in for it in the summary."""
+        installed = ', '.join(f"{r.get('id')} {r.get('version')}" + (f" ({r['state']})" if r.get('state') not in (None, 'active') else '')
+                              for r in s.get('plugins_installed') or [] if isinstance(r, dict)) or 'none'
+        if s.get('plugins_source') == 'installed':
+            running = 'not heard (the screen said no hello while the report was made; the installed ones stand in)'
+        else:
+            running = ', '.join('%s %s' % (p.get('id'), p.get('version')) for p in s.get('plugins') or []) or 'none'
+        return [f'- Plugins installed: {installed}', f"- Plugins running (the screen's hello): {running}"]
+
     def _report_md(self, s, warnings, texts):
         crash = s.get('crash') or {}
         lines = [f"# Tessera troubleshooting report ({s.get('made_at')})", '',
@@ -720,7 +748,7 @@ class Reports:
                  f"- Firmware: {s.get('firmware') or s.get('firmware_raw')} on {s.get('channel') or '?'} ({s.get('ref') or 'ref unknown'}), ESPHome {s.get('esphome')}, built on {s.get('built_on')}, ELF here: {s.get('elf')}",
                  f"- App: {s.get('addon')}; Home Assistant {s.get('ha')}, Supervisor {s.get('supervisor')}, OS {s.get('os')}, {s.get('machine')} ({s.get('arch')})",
                  f"- Screen: online {s.get('online')}, status {s.get('status')}, language {s.get('language')}, pages {s.get('pages')}, tiles {s.get('tiles')}, cards {', '.join(s.get('cards') or [])}",
-                 '- Plugins running: ' + (', '.join('%s %s' % (p.get('id'), p.get('version')) for p in s.get('plugins') or []) or 'none'),
+                 *self._plugin_lines(s),
                  f"- Memory (hello): {s.get('memory')}", f"- Sensors: {s.get('sensors')}", f"- Device info: {s.get('device')}", '']
         if crash:
             lines += ['## Last crash', f"{crash.get('at')}: {crash.get('reason')}", *('  ' + d for d in crash.get('decoded') or []), '']

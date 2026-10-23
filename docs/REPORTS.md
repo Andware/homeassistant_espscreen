@@ -9,7 +9,7 @@ the logs.
 
 | File | What it is |
 |---|---|
-| `report.md` | The facts first: board, versions, plugins, the last crash, warnings, the list of files. Start here. |
+| `report.md` | The facts first: board, versions, the plugins the app installed on the screen and the ones the screen's own hello named (a screen that was restarting while the report was made named none, so the installed ones stand in and the report says so), the last crash, warnings, the list of files. Start here. |
 | `summary.json` | The same facts as data, plus the hello's memory, the firmware's heap and Wi-Fi sensors, Last boot, the pages and tiles count and the card types. |
 | `profile.yaml`, `override.yaml`, `plugins.yaml` | The screen's own YAML and the files beside it, redacted. |
 | `screen.log` | The crashes the app saw this screen reboot from, decoded when the ELF is here, then 45 seconds of live log over the native API with the config dump (reset reason, partitions, versions). |

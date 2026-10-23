@@ -6,6 +6,7 @@ import logging
 import json
 import sys
 import tempfile
+import types
 import unittest
 import zipfile
 from pathlib import Path
@@ -132,6 +133,30 @@ class Cleaning(unittest.TestCase):
 
 
 @unittest.skipUnless(HAS_AIOHTTP, 'Run using .venv-portal/bin/python for server tests')
+class PluginLines(unittest.TestCase):
+    """report.md names the plugins the app installed and the ones the screen's hello said it runs; a screen that said
+    no hello while the report was made (it was restarting: TR-4EFBDE, nine plugins, "none") has the installed ones
+    stand in, and the report says so."""
+    INSTALLED = [{'id': 'buienradar', 'version': '0.3.6', 'state': 'active'}, {'id': 'timers', 'version': '0.2.1', 'state': 'failed'}]
+
+    def test_a_hello_lists_what_runs_beside_what_is_installed(self):
+        lines = reports.Reports._plugin_lines({'plugins_installed': self.INSTALLED, 'plugins_source': 'hello',
+                                               'plugins': [{'id': 'buienradar', 'version': '0.3.6'}]})
+        self.assertEqual(lines, ['- Plugins installed: buienradar 0.3.6, timers 0.2.1 (failed)',
+                                 "- Plugins running (the screen's hello): buienradar 0.3.6"])
+
+    def test_without_a_hello_the_installed_ones_stand_in_and_the_report_says_so(self):
+        summary = {'plugins_installed': self.INSTALLED, 'plugins_source': 'installed',
+                   'plugins': reports.Reports._plugin_summary(self.INSTALLED)}
+        self.assertEqual(summary['plugins'], [{'id': 'buienradar', 'version': '0.3.6'}, {'id': 'timers', 'version': '0.2.1'}])
+        self.assertEqual(reports.Reports._plugin_lines(summary)[1],
+                         "- Plugins running (the screen's hello): not heard (the screen said no hello while the report was made; the installed ones stand in)")
+
+    def test_a_screen_without_plugins_says_none_twice(self):
+        self.assertEqual(reports.Reports._plugin_lines({'plugins': [], 'plugins_installed': [], 'plugins_source': None}),
+                         ['- Plugins installed: none', "- Plugins running (the screen's hello): none"])
+
+
 class TheRoute(unittest.IsolatedAsyncioTestCase):
     async def test_a_report_is_collected_read_downloaded_and_sent(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -160,8 +185,18 @@ class TheRoute(unittest.IsolatedAsyncioTestCase):
                 manager = Manager(ha, data / 'screens.json')
                 captured, gate = {}, asyncio.Event()
 
+                # Two plugins the app installed on the screen; the screen says hello only while its log is being read
+                # (it was restarting as the report began), so the report must ask once more after the log.
+                for record in ({'id': 'buienradar', 'version': '0.3.6', 'ref': 'd249c2e', 'state': 'active', 'source': 'index'},
+                               {'id': 'timers', 'version': '0.2.1', 'ref': '857fb48', 'state': 'active', 'source': 'index'}):
+                    manager.plugins.store.put('text.screen', record)
+
                 async def fake_screen_log(host, key, seconds, **kw):
                     captured['host'], captured['key'] = host, key
+                    if 'hello' not in captured:  # the first report's screen comes back while its log is read
+                        captured['hello'] = True
+                        manager.page_senders['text.screen'] = types.SimpleNamespace(
+                            plugin_api='0.18', plugins=[{'id': 'timers', 'version': '0.2.1', 'tiles': ['timer']}])
                     await gate.wait()
                     return Crashes.CRASH + ['[I][wifi:200] IP 10.0.0.5 MAC AA:BB:CC:DD:EE:FF ssid: MyHome'], None
                 reports.screen_log = fake_screen_log
@@ -196,6 +231,12 @@ class TheRoute(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(view['summary']['board'], 'guition')
                     self.assertEqual(view['summary']['crash']['reason'], 'Fault - LoadProhibited (cause 28)')
                     self.assertIn('no_elf', view['warnings'])
+                    self.assertEqual(view['summary']['plugins'], [{'id': 'timers', 'version': '0.2.1'}])
+                    facts = await (await client.get(f'/api/reports/{id}/files/report.md')).text()
+                    self.assertIn('- Plugins installed: buienradar 0.3.6, timers 0.2.1\n', facts)
+                    self.assertIn("- Plugins running (the screen's hello): timers 0.2.1\n", facts)
+                    data_json = json.loads(await (await client.get(f'/api/reports/{id}/files/summary.json')).text())
+                    self.assertEqual((data_json['plugins_source'], len(data_json['plugins_installed'])), ('hello', 2))
                     profile = await (await client.get(f'/api/reports/{id}/files/profile.yaml')).text()
                     self.assertNotIn('hunter2', profile)
                     self.assertNotIn('MyHome', profile)
@@ -244,6 +285,21 @@ class TheRoute(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(again.status('text.screen', manager.screen('text.screen'))['last']['reference'], 'TR-7K3M9Q')
                     self.assertEqual(again.file(id, 'report.md'), manager.reports.file(id, 'report.md'))
                     logging.getLogger().removeHandler(again.buffer)
+                    # A screen that says no hello at all while its report is made: the installed plugins stand in, and
+                    # the report says they do.
+                    manager.page_senders.pop('text.screen')
+                    second = (await (await client.post('/api/screens/text.screen/report', headers={'X-Screen-CSRF': csrf},
+                                                       json={'depth': 'basic'})).json())['id']
+                    for _ in range(100):
+                        view = await (await client.get(f'/api/reports/{second}')).json()
+                        if view['state'] != 'collecting':
+                            break
+                        await asyncio.sleep(0.05)
+                    self.assertEqual(view['state'], 'ready', view)
+                    self.assertEqual(view['summary']['plugins'], [{'id': 'buienradar', 'version': '0.3.6'}, {'id': 'timers', 'version': '0.2.1'}])
+                    facts = await (await client.get(f'/api/reports/{second}/files/report.md')).text()
+                    self.assertIn("- Plugins running (the screen's hello): not heard (the screen said no hello", facts)
+                    self.assertEqual(json.loads(await (await client.get(f'/api/reports/{second}/files/summary.json')).text())['plugins_source'], 'installed')
                     gone = await client.delete(f'/api/reports/{id}', headers={'X-Screen-CSRF': csrf})
                     self.assertEqual(gone.status, 204)
                     self.assertEqual((await client.get(f'/api/reports/{id}')).status, 400)
