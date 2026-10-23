@@ -1,5 +1,10 @@
 ## Unreleased
 
+- **The Waveshare ESP32-S3-Touch-LCD-4.3C, experimental.** The 4.3C (also in the 4.3C-BOX) has the 4.3's glass but
+  Waveshare's CH32V003 expander in place of the 4.3's CH422G, so a 4.3C built as a 4.3 started with its touch in reset
+  ("touchscreen is marked FAILED: Calibration error") and a dark screen. It is a board of its own now, under New
+  screen, with a dimmable backlight. Built from Waveshare's own pin table and timings, not yet tried on the glass.
+
 - **My screen doesn't work right (docs/REPORTS.md).** A button on a screen's page makes one troubleshooting report of that screen: the board and every version, the plugins, the screen's YAML, the crash it kept from its previous boot and a minute of its log, Home Assistant's log lines about it and its diagnostics, the app's log and the last build, with passwords, keys, addresses and names taken out. Every file can be read on the page and the zip downloaded; with a consent per report it goes to Tessera, which answers a reference to quote on GitHub or Discord, keeps it 30 days, and can ask a question back if you leave an e-mail address. A fuller report (your pages with their entity ids, every ESPHome log line) is an opt-in that says what it adds. The app also notices a screen that rebooted, reads the crash ESPHome kept and shows it on the page, decoded when the screen was built here.
 
 - **A turned ESP32-P4 screen no longer restarts behind a live camera tile.** The M5Stack Tab5 (a 720x1280 panel shown as 1280x720) turns everything it draws with the P4's picture engine, and under the ESP-IDF that ESPHome builds with, a turned copy of some sizes never finishes: the screen froze behind it and its watchdog restarted it, every few minutes with live camera tiles. Such a copy now goes to the engine in pieces it finishes (docs/CAMERA.md, "A turned copy the 2D-DMA never finishes").
