@@ -270,6 +270,8 @@ esphome:
           // A plugin wakes the screen as Home Assistant's Wake button does (tessera::wake, plugin API 0.16): the one way
           // in for every wake that is not a finger, the script wake_from, with the plugin's name for the log.
           plugin_host::wake = [](const std::string &source) { id(wake_from).execute(source); };
+          // How a doorbell's ring ended on this screen goes to ESP Screens (module doorbell, esphome.screen_doorbell).
+          runtime_tiles::doorbell_reports([](const std::string &action, const std::string &key) { id(doorbell_report).execute(action, key); });
           // Saving power while the glass is dark (screen_power.h): LVGL pauses, and Wi-Fi dozes.
           screen_power::freeze = [](bool on) { id(screen_lvgl).set_paused(on, false); ESP_LOGI("power", on ? "dark: saving" : "awake"); };
           screen_power::later = [](uint32_t ms) { id(screen_power_wait).execute(ms); };
@@ -723,8 +725,17 @@ api:
                     #endif
                     // vacuum_card (module vacuum, tier full): the vacuum card draws its map, rooms and routines, so ESP
                     // Screens sends them (the `vc` block, screen_manager/app/vacuum_card.py).
+                    // doorbell (module doorbell, docs/DOORBELL.md): a ring of a doorbell in Home Assistant opens its camera here,
+                    // live with its sound and a chime, so ESP Screens sends this screen the op "doorbell". Only a screen that
+                    // streams (a P4, live_view.h): elsewhere the camera's picture would be a still.
+                    #ifdef SD_MOD_DOORBELL
+                    if (live_view::available()) features.add("doorbell");
+                    #endif
                     #ifdef SD_MOD_VACUUM_CARD
                     features.add("vacuum_card");
+                    // vacuum_tile: a larger vacuum tile draws its map, its rooms or its routines beside its keys
+                    // (module_vacuum_tile.cpp), so ESP Screens sends those controls; any other screen gets the keys.
+                    features.add("vacuum_tile");
                     #endif
                     // cover_rows (firmware 0.57.0): a cover card lays out what its room holds (cover_tile.h), so ESP
                     // Screens sends a card one row high its slats and a 1x1 card its control, which it draws when they fit.
@@ -770,6 +781,8 @@ interval:
             lambda: |-
               if (!screen_settings::current.standby_enabled) return false;
               if (id(display_dimmed) || id(touch_down) || id(calibration_active) || id(alert_active)) return false;
+              // A doorbell's ring on the glass (module doorbell) stays lit until it closes.
+              if (runtime_tiles::doorbell_holds()) return false;
               return (millis() - id(last_touch_ms)) > (screen_settings::current.standby_seconds * 1000UL);
           then:
             - script.execute: dim_display
@@ -2455,6 +2468,8 @@ script:
           condition:
             lambda: |-
               if (!runtime_tiles::auto_home || id(touch_down) || id(calibration_active) || id(alert_active)) return false;
+              // A doorbell's ring (module doorbell) closes on its own times, not two minutes after the last touch.
+              if (runtime_tiles::doorbell_holds()) return false;
               if (id(display_dimmed)) return false;
               bool away = settings_screen::visible() || screen_hooks::is_away() || runtime_tiles::colour_shown() || id(tile_page) != runtime_tiles::home_page() ||
                           (runtime_tiles::detail_root && !lv_obj_has_flag(runtime_tiles::detail_root, LV_OBJ_FLAG_HIDDEN));
@@ -2569,6 +2584,21 @@ script:
                   action: !lambda 'return action;'
                   title: !lambda 'return id(alert_title_text);'
                   screen: !lambda 'return App.get_name();'
+
+  # How a doorbell's ring ended here (module doorbell, docs/DOORBELL.md): answered (the first touch), closed, missed
+  # (nobody touched it) or seen (opened again from the top bar), with the app's key of the ring. Home Assistant adds
+  # device_id; ESP Screens closes an answered ring on the other screens and shows a missed one in their top bar.
+  - id: doorbell_report
+    parameters:
+      action: string
+      key: string
+    then:
+      - homeassistant.event:
+          event: esphome.screen_doorbell
+          data:
+            action: !lambda 'return action;'
+            key: !lambda 'return key;'
+            screen: !lambda 'return App.get_name();'
 
   # Standby: the standby time ran out (the 1 s interval checks Auto standby) or Sleep was pressed.
   # The settings page and every card close; with "also on standby" the screen goes back to page 1 too.

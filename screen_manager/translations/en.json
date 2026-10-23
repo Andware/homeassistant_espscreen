@@ -159,6 +159,7 @@
       "microphone": "Microphone",
       "media_player": "Volume",
       "wake_when_moved": "Wake when moved",
+      "doorbell": "Doorbell",
       "dark_mode": "Dark mode",
       "auto_standby": "Auto standby",
       "standby_after": "Standby after",
@@ -195,6 +196,10 @@
       "microphone_gain": "Microphone gain",
       "automatic_gain": "Automatic gain",
       "echo_cancellation": "Echo cancellation"
+    },
+    "doorbell": {
+      "sound_on": "Sound on",
+      "sound_off": "Sound off"
     },
     "tile": {
       "tap_to_open": "Tap to open",
@@ -944,6 +949,10 @@
         "unknown": "The build server no longer knows Tessera. Pair it again.",
         "pending": "The build server has not accepted Tessera yet."
       },
+      "video": {
+        "not_written": "Tessera video could not be written to {folder}: {reason}.",
+        "not_installed": "Install Tessera video first."
+      },
       "report": {
         "depth": "Choose the basic or the full report.",
         "busy": "A report of this screen is still being collected.",
@@ -1035,7 +1044,11 @@
           "speed": "Speed slider"
         },
         "vacuum": {
-          "buttons": "Start, stop, dock"
+          "buttons": "Start, stop, dock",
+          "map": "Map",
+          "rooms": "Rooms to pick",
+          "routines": "Routines",
+          "map_rooms": "Map and rooms"
         },
         "cover": {
           "buttons": "Open, stop, close",
@@ -1151,6 +1164,10 @@
         "wake_when_moved": {
           "label": "Wake when moved",
           "hint": "The screen wakes from standby when someone picks it up, moves it or knocks on it. It feels the screen itself, not someone walking past."
+        },
+        "doorbell": {
+          "label": "Doorbell",
+          "hint": "When a doorbell in Home Assistant rings, this screen wakes, chimes and opens its camera live with sound. Off leaves this screen alone, for example a bedroom at night."
         },
         "microphone_gain": {
           "label": "Microphone gain",
@@ -2645,6 +2662,23 @@
         "reinstall_all_confirm": "Reinstall 1 screen from the newest dev? It restarts once its firmware is on. | Reinstall {n} screens from the newest dev? They are built one after the other, and each restarts once its firmware is on.",
         "reinstall_all_go": "Reinstall"
       },
+      "video": {
+        "title": "Video in Home Assistant",
+        "text": "A screen with Screen camera's part Video shows its camera live in Home Assistant, with sound: a camera Video on the screen's device, in the browser and the app. Home Assistant needs the Tessera video integration for it.",
+        "install": "Install in Home Assistant",
+        "install_again": "Install again",
+        "update": "Update the integration",
+        "newer": "Installed · a newer version is ready",
+        "waits_restart": "Installed · restart Home Assistant to load it",
+        "running": "● Running in Home Assistant",
+        "restart": "Restart Home Assistant",
+        "restart_confirm": "Restart Home Assistant now? It is away for a minute or two, and so are its dashboards and automations.",
+        "restarting": "Home Assistant restarts. The screens' video follows within a minute after it is back.",
+        "installed": "Tessera video installed. Restart Home Assistant once to load it.",
+        "screens": "Screens with video: {names}",
+        "no_screens": "No screen has video yet: add Screen camera to a P4 screen with a camera, with its part Video.",
+        "writes": "Writes the folder {path}; installing again replaces it. Tessera adds each screen with video by itself."
+      },
       "claude": {
         "installed": "Skill installed. Claude Code picks it up right away.",
         "installed_restart": "Skill installed. Restart Claude Code once so it finds the new skills folder.",
@@ -3326,96 +3360,6 @@
         "nothing_else": "Nothing else: no name, account, entities, logs or Home Assistant settings. Each screen shares under its own random key."
       },
       "privacy": "Privacy"
-    },
-    "report": {
-      "button": "My screen doesn't work right",
-      "card_title": "Something wrong?",
-      "card_hint": "Put together a report of what the app knows about this screen, read it, and send it to Tessera so we can find the cause.",
-      "eyebrow": "Troubleshooting",
-      "title": "My screen doesn't work right",
-      "title_named": "{name} doesn't work right",
-      "intro": "The app collects what it knows about this screen into a few files. You read them here, and only Send takes them to Tessera.",
-      "loading": "Reading what the app knows…",
-      "collects_title": "What goes in",
-      "collects": "The screen's board and versions, its own log (up to 45 seconds, live), the lines of Home Assistant's log about it, the app's log and the last build log. Passwords, keys, network addresses and the screen's name are blanked out.",
-      "nothing_leaves": "Nothing leaves your Home Assistant until you press Send. You can read every file first.",
-      "crash_title": "Last crash",
-      "crash_line": "{reason}, {when}, {seen}",
-      "crash_seen": "seen once this week | seen {n} times this week",
-      "crash_lines": "Decoded lines",
-      "full": "Also include my page layout, entity names and Home Assistant's other log lines. This helps a lot with finding the cause.",
-      "note_label": "What happened? (optional)",
-      "note_hint": "What you saw, what you did just before, and how often it happens.",
-      "email_label": "Your email (optional)",
-      "email_hint": "If we may ask you a question about it.",
-      "remember_email": "Remember my email in this app",
-      "collect": "Collect",
-      "check_again": "Check again",
-      "blockers": {
-        "no_profile": "This screen's YAML is not in this app's folder, so no report can be made for it.",
-        "collecting": "A report of this screen is being collected already. Wait a moment and check again."
-      },
-      "collecting": "Collecting…",
-      "collecting_hint": "This takes up to a minute: the app listens to the screen's log for a while.",
-      "steps": {
-        "identity": "Reading the screen's identity",
-        "profile": "Copying its profile",
-        "screen_log": "Listening to the screen's log",
-        "ha_log": "Reading Home Assistant's log",
-        "addon_log": "Reading the app's log",
-        "build_log": "Reading the last build log",
-        "crash": "Reading the last crash",
-        "zip": "Packing the files"
-      },
-      "ready_title": "Ready to read",
-      "facts": {
-        "board": "Board",
-        "firmware": "Firmware",
-        "addon": "Tessera",
-        "ha": "Home Assistant",
-        "esphome": "ESPHome",
-        "plugins": "Plugins",
-        "crash": "Last crash",
-        "none": "None",
-        "unknown": "Unknown"
-      },
-      "warnings": {
-        "screen_offline": "The screen is offline: the report has no live log, only what the app kept.",
-        "no_api_key": "The app has no API key for this screen, so its live log could not be read.",
-        "no_elf": "The firmware's debug file is missing, so a crash cannot be named by its code lines.",
-        "ha_log_unavailable": "Home Assistant's log could not be read.",
-        "addon_log_unavailable": "The app's own log could not be read.",
-        "no_crash_record": "No crash record was found for this screen."
-      },
-      "files_title": "Files in the report",
-      "file_lines": "1 line | {n} lines",
-      "size": {
-        "b": "{n} B",
-        "kb": "{n} KB",
-        "mb": "{n} MB"
-      },
-      "download": "Download zip",
-      "send_title": "Send to Tessera",
-      "send_text": "This goes to Tessera and is kept for {days} days. It holds the files above, your note and your email if you gave one.",
-      "privacy": "Privacy",
-      "with_note": "With your note.",
-      "with_email": "We may write to {email}.",
-      "change_note": "Change note or email",
-      "consent": "I have read what is in the report and agree to send it to Tessera.",
-      "send": "Send",
-      "sending": "Sending…",
-      "sent": {
-        "title": "Sent, thank you",
-        "quote": "Quote this reference on GitHub or Discord so we can find your report.",
-        "copy": "Copy",
-        "copied": "Reference copied.",
-        "selected": "The reference is selected: copy it with Ctrl+C or ⌘C.",
-        "github": "Open a GitHub issue",
-        "discord": "Ask on Discord",
-        "new": "Make a new report"
-      },
-      "failed_title": "The report could not be made",
-      "try_again": "Try again"
     },
     "webflash": {
       "target": "Install from this browser (Chrome or Edge)",
@@ -4108,6 +4052,96 @@
       "move_to": "Move to page",
       "add_here": "Add a tile here",
       "paste_here": "Paste here"
+    },
+    "report": {
+      "button": "My screen doesn't work right",
+      "card_title": "Something wrong?",
+      "card_hint": "Put together a report of what the app knows about this screen, read it, and send it to Tessera so we can find the cause.",
+      "eyebrow": "Troubleshooting",
+      "title": "My screen doesn't work right",
+      "title_named": "{name} doesn't work right",
+      "intro": "The app collects what it knows about this screen into a few files. You read them here, and only Send takes them to Tessera.",
+      "loading": "Reading what the app knows…",
+      "collects_title": "What goes in",
+      "collects": "The screen's board and versions, its own log (up to 45 seconds, live), the lines of Home Assistant's log about it, the app's log and the last build log. Passwords, keys, network addresses and the screen's name are blanked out.",
+      "nothing_leaves": "Nothing leaves your Home Assistant until you press Send. You can read every file first.",
+      "crash_title": "Last crash",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "seen once this week | seen {n} times this week",
+      "crash_lines": "Decoded lines",
+      "full": "Also include my page layout, entity names and Home Assistant's other log lines. This helps a lot with finding the cause.",
+      "note_label": "What happened? (optional)",
+      "note_hint": "What you saw, what you did just before, and how often it happens.",
+      "email_label": "Your email (optional)",
+      "email_hint": "If we may ask you a question about it.",
+      "remember_email": "Remember my email in this app",
+      "collect": "Collect",
+      "check_again": "Check again",
+      "blockers": {
+        "no_profile": "This screen's YAML is not in this app's folder, so no report can be made for it.",
+        "collecting": "A report of this screen is being collected already. Wait a moment and check again."
+      },
+      "collecting": "Collecting…",
+      "collecting_hint": "This takes up to a minute: the app listens to the screen's log for a while.",
+      "steps": {
+        "identity": "Reading the screen's identity",
+        "profile": "Copying its profile",
+        "screen_log": "Listening to the screen's log",
+        "ha_log": "Reading Home Assistant's log",
+        "addon_log": "Reading the app's log",
+        "build_log": "Reading the last build log",
+        "crash": "Reading the last crash",
+        "zip": "Packing the files"
+      },
+      "ready_title": "Ready to read",
+      "facts": {
+        "board": "Board",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Plugins",
+        "crash": "Last crash",
+        "none": "None",
+        "unknown": "Unknown"
+      },
+      "warnings": {
+        "screen_offline": "The screen is offline: the report has no live log, only what the app kept.",
+        "no_api_key": "The app has no API key for this screen, so its live log could not be read.",
+        "no_elf": "The firmware's debug file is missing, so a crash cannot be named by its code lines.",
+        "ha_log_unavailable": "Home Assistant's log could not be read.",
+        "addon_log_unavailable": "The app's own log could not be read.",
+        "no_crash_record": "No crash record was found for this screen."
+      },
+      "files_title": "Files in the report",
+      "file_lines": "1 line | {n} lines",
+      "size": {
+        "b": "{n} B",
+        "kb": "{n} KB",
+        "mb": "{n} MB"
+      },
+      "download": "Download zip",
+      "send_title": "Send to Tessera",
+      "send_text": "This goes to Tessera and is kept for {days} days. It holds the files above, your note and your email if you gave one.",
+      "privacy": "Privacy",
+      "with_note": "With your note.",
+      "with_email": "We may write to {email}.",
+      "change_note": "Change note or email",
+      "consent": "I have read what is in the report and agree to send it to Tessera.",
+      "send": "Send",
+      "sending": "Sending…",
+      "sent": {
+        "title": "Sent, thank you",
+        "quote": "Quote this reference on GitHub or Discord so we can find your report.",
+        "copy": "Copy",
+        "copied": "Reference copied.",
+        "selected": "The reference is selected: copy it with Ctrl+C or ⌘C.",
+        "github": "Open a GitHub issue",
+        "discord": "Ask on Discord",
+        "new": "Make a new report"
+      },
+      "failed_title": "The report could not be made",
+      "try_again": "Try again"
     }
   }
 }

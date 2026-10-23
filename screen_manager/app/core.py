@@ -3029,14 +3029,17 @@ def discover(registry, states, devices, areas):
                          'icon': tile_icons.ha_icon(state.get('attributes')) or tile_icons.default_glyph(eid, state.get('state'), state.get('attributes'), item),
                          # Top-bar-only domains (a phone's tracker, a lock) stay out of the tile picker.
                          **({} if tile else {'tile': False}), **unavailable_since(state)})
-    # YAML entities may not have an entity-registry entry.
+    # YAML entities may not have an entity-registry entry. Their icon is the one the screen gets (tile_icon): Home
+    # Assistant's own, else the one its frontend shows for the state, as for a registered entity (app 0.4.90; before, a
+    # player or a lock of YAML showed the power icon on the mockup and its cast or lock icon on the glass).
     registered = {e['id'] for e in entities}
     in_registry = {r['entity_id'] for r in registry}
     for eid, state in states.items():
         tile = entity_id(eid)
         if (tile or header_entity(eid)) and eid not in registered and eid not in in_registry:
             entities.append({'id': eid, 'name': state.get('attributes', {}).get('friendly_name', eid), 'device': '', 'area': '', 'state': state['state'],
-                             'icon': tile_icons.ha_icon(state.get('attributes')), **({} if tile else {'tile': False}), **unavailable_since(state)})
+                             'icon': tile_icons.ha_icon(state.get('attributes')) or tile_icons.default_glyph(eid, state.get('state'), state.get('attributes')),
+                             **({} if tile else {'tile': False}), **unavailable_since(state)})
     return screens, sorted(entities, key=lambda e: e['name'].casefold())
 
 def hotspot_name(friendly):

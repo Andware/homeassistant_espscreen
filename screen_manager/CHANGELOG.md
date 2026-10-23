@@ -2,6 +2,12 @@
 
 - **My screen doesn't work right (docs/REPORTS.md).** A button on a screen's page makes one troubleshooting report of that screen: the board and every version, the plugins, the screen's YAML, the crash it kept from its previous boot and a minute of its log, Home Assistant's log lines about it and its diagnostics, the app's log and the last build, with passwords, keys, addresses and names taken out. Every file can be read on the page and the zip downloaded; with a consent per report it goes to Tessera, which answers a reference to quote on GitHub or Discord, keeps it 30 days, and can ask a question back if you leave an e-mail address. A fuller report (your pages with their entity ids, every ESPHome log line) is an opt-in that says what it adds. The app also notices a screen that rebooted, reads the crash ESPHome kept and shows it on the page, decoded when the screen was built here.
 
+- **The doorbell on the ESP32-P4 screens.** When a video doorbell in Home Assistant rings, every P4 screen wakes up, plays a chime and opens the doorbell's camera full screen, live, with its sound on, without an automation. The first screen someone touches answers the ring and the others close it. A ring nobody answers closes after a minute and stays in the top bar ("2 min ago") until someone taps it, which opens the camera again. A switch **Doorbell** under Extras (on the screen, in the editor and in Home Assistant) turns it off for one screen. It works with every doorbell Home Assistant knows as a doorbell (an event entity with the doorbell class and its standard event type `ring`) that has a camera on the same device (docs/DOORBELL.md). Needs the screen's Update.
+
+- **A robot vacuum's larger tile.** On a screen with 8 MB of flash or more, a robot's tile two rows high can now show its map, its rooms to pick, its routines, or the map with the rooms, beside its keys: a small screen of its own with the robot's state and battery at the top and Start and Dock (and the cleaning mode as icons) at the bottom. Tap rooms in the order you want them cleaned and press Start. Choose it under the tile's controls in the editor, or from the tip that shows when you drag the tile larger. Only what your robot has is offered. The CYD and the other 4 MB screens keep the tile with its keys (docs/VACUUM.md, "A larger tile").
+
+- **A screen's own camera as live video with sound in Home Assistant** (the P4 screens with a camera: the reTerminal D1001 and the M5Stack Tab5). Screen camera 0.4.0 brings a part Video: H.264 from the screen's video encoder and the microphone as Opus, in sync, playing in Home Assistant's browser page and app about a third of a second behind. Under Settings, **Video in Home Assistant** installs the Home Assistant integration it needs (Tessera video) when you press Install, and restarts Home Assistant when you say so; then Tessera adds a camera **Video** to each screen with the part by itself, without a password to type (docs/CAMERA.md, "The screen's own camera as video in Home Assistant"). Every ESP32-P4 screen gets a larger network send buffer for it.
+
 - **A plugin added with a link can be taken off the list again.** A release added with a link that no screen runs (an old try-out) had no way off the Plugins page except restarting the app. Its details now have "Remove from the list". A plugin a screen still runs is taken off the screen first.
 
 - **Pictures in one system (docs/PICTURES.md).** Every picture a screen shows now goes one way: the camera full
@@ -50,6 +56,16 @@
   camera (docs/PLUGINS.md). Tessera's own Cinema, New music and Picture frame use it: no more grey bars in a cover flow
   after the screen fetched its pictures again, Picture frame shows what a player plays, and a camera in Picture frame
   is live on a P4 screen.
+
+- **The editor's cards look like the cards on your screen.** While you lay out a page, every card is now drawn at the
+  sizes of your own screen: its letters in the screen's Roboto (a bold name, a plain line), its icon circle, corner and
+  padding, and each part where the screen puts it. Before, the inside of a card had sizes of the editor's own, close on
+  a 4-inch Guition but far too small on a CYD, a 4.3-inch or a 10-inch screen. A long name is cut where the screen cuts
+  it, a light that is on says its brightness, a blind and a player on a small card say what the screen says, a lock and
+  a player show their own icon, and a thermostat's number has the screen's decimal. Larger cards follow the screen as
+  well: a thermostat's big number between its keys with the temperature now under it, a robot vacuum's keys, a player's
+  track, artist and volume, and a player over a whole page with its cover, progress bar and keys. A card you drag keeps
+  its look while it moves.
 - **Stars for plugins, and a heart for any plugin.** A few days after a screen first runs a plugin from the Plugins
   page, a card above the screen asks how it works for you: one to five stars, then Send. Later asks again in two
   weeks; Don't ask again, what is shared and the privacy page are behind the card's ⋯ menu. A plugin's details take

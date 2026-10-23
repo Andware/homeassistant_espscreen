@@ -159,6 +159,7 @@
       "microphone": "Mikrofon",
       "media_player": "Hangerő",
       "wake_when_moved": "Ébresztés mozgatásra",
+      "doorbell": "Csengő",
       "dark_mode": "Sötét mód",
       "auto_standby": "Auto készenlét",
       "standby_after": "Készenlét ennyi után",
@@ -195,6 +196,10 @@
       "microphone_gain": "Mikrofonerősítés",
       "automatic_gain": "Automatikus erősítés",
       "echo_cancellation": "Visszhangszűrés"
+    },
+    "doorbell": {
+      "sound_on": "Hang be",
+      "sound_off": "Hang ki"
     },
     "tile": {
       "tap_to_open": "Megnyitás",
@@ -944,6 +949,10 @@
         "unknown": "A fordítószerver már nem ismeri a Tesserát. Párosítsd újra.",
         "pending": "A fordítószerver még nem fogadta el a Tesserát."
       },
+      "video": {
+        "not_written": "A Tessera video nem írható ide: {folder}: {reason}.",
+        "not_installed": "Először telepítsd a Tessera videót."
+      },
       "report": {
         "depth": "Válaszd az alap vagy a teljes jelentést.",
         "busy": "Erről a kijelzőről még készül egy jelentés.",
@@ -1035,7 +1044,11 @@
           "speed": "Sebesség-csúszka"
         },
         "vacuum": {
-          "buttons": "Indítás, leállítás, dokkolás"
+          "buttons": "Indítás, leállítás, dokkolás",
+          "map": "Térkép",
+          "rooms": "Szobák kiválasztása",
+          "routines": "Rutinok",
+          "map_rooms": "Térkép és szobák"
         },
         "cover": {
           "buttons": "Nyitás, állj, zárás",
@@ -1151,6 +1164,10 @@
         "wake_when_moved": {
           "label": "Ébresztés mozgatásra",
           "hint": "A kijelző felébred készenlétből, ha valaki felveszi, elmozdítja vagy megkocogtatja. Magát a kijelzőt érzékeli, nem az arra járókat."
+        },
+        "doorbell": {
+          "label": "Ajtócsengő",
+          "hint": "Ha egy Home Assistant ajtócsengő megszólal, ez a képernyő felébred, csengőhangot játszik, és élőben, hanggal megnyitja a kameráját. Kikapcsolva ez a képernyő nyugton marad, például éjjel a hálószobában."
         },
         "microphone_gain": {
           "label": "Mikrofonerősítés",
@@ -3074,6 +3091,23 @@
         "reinstall_all_confirm": "Újratelepíted 1 kijelzőt a legújabb dev-ből? Újraindul, amint rajta van a firmware. | Újratelepítesz {n} kijelzőt a legújabb dev-ből? Egymás után fordulnak, és mindegyik újraindul, amint rajta van a firmware.",
         "reinstall_all_go": "Újratelepítés"
       },
+      "video": {
+        "title": "Videó a Home Assistantban",
+        "text": "A Képernyőkamera Videó részével rendelkező képernyő élőben mutatja kameráját a Home Assistantban, hanggal: egy Videó kamera a képernyő eszközén, a böngészőben és az alkalmazásban. Ehhez a Home Assistantnak a Tessera video integrációra van szüksége.",
+        "install": "Telepítés a Home Assistantba",
+        "install_again": "Újratelepítés",
+        "update": "Integráció frissítése",
+        "newer": "Telepítve · újabb verzió érhető el",
+        "waits_restart": "Telepítve · indítsd újra a Home Assistantot a betöltéshez",
+        "running": "● Fut a Home Assistantban",
+        "restart": "Home Assistant újraindítása",
+        "restart_confirm": "Újraindítod most a Home Assistantot? Egy-két percig nem elérhető, ahogy az irányítópultjai és automatizálásai sem.",
+        "restarting": "A Home Assistant újraindul. A képernyők videója egy percen belül követi.",
+        "installed": "Tessera video telepítve. Indítsd újra egyszer a Home Assistantot a betöltéshez.",
+        "screens": "Képernyők videóval: {names}",
+        "no_screens": "Még egyik képernyőn sincs videó: add hozzá a Képernyőkamerát a Videó résszel egy kamerás P4 képernyőhöz.",
+        "writes": "A(z) {path} mappát írja; az újratelepítés lecseréli. A Tessera magától felveszi a videós képernyőket."
+      },
       "claude": {
         "installed": "Skill telepítve. A Claude Code azonnal átveszi.",
         "installed_restart": "Skill telepítve. Indítsd újra egyszer a Claude Code-ot, hogy megtalálja az új skills mappát.",
@@ -3756,96 +3790,6 @@
       },
       "privacy": "Adatvédelem"
     },
-    "report": {
-      "button": "A kijelzőm nem működik jól",
-      "card_title": "Valami nem stimmel?",
-      "card_hint": "Állíts össze egy jelentést abból, amit az app tud erről a kijelzőről, olvasd el, és küldd el a Tesserának, hogy megtaláljuk az okát.",
-      "eyebrow": "Hibaelhárítás",
-      "title": "A kijelzőm nem működik jól",
-      "title_named": "{name} nem működik jól",
-      "intro": "Az app néhány fájlba gyűjti, amit erről a kijelzőről tud. Itt elolvashatod őket, és csak a Küldés viszi el a Tesserának.",
-      "loading": "Olvasom, amit az app tud…",
-      "collects_title": "Mi kerül bele",
-      "collects": "A kijelző panelje és verziói, a saját naplója (legfeljebb 45 másodperc, élőben), a Home Assistant naplójának rá vonatkozó sorai, az app naplója és az utolsó fordítási napló. A jelszavak, kulcsok, hálózati címek és a kijelző neve ki vannak takarva.",
-      "nothing_leaves": "Semmi nem hagyja el a Home Assistantodat, amíg meg nem nyomod a Küldést. Előbb minden fájlt elolvashatsz.",
-      "crash_title": "Utolsó összeomlás",
-      "crash_line": "{reason}, {when}, {seen}",
-      "crash_seen": "egyszer fordult elő ezen a héten | {n} alkalommal fordult elő ezen a héten",
-      "crash_lines": "Dekódolt sorok",
-      "full": "Az oldalaim elrendezését, az entitások nevét és a Home Assistant naplójának többi sorát is add hozzá. Ez sokat segít az ok megtalálásában.",
-      "note_label": "Mi történt? (nem kötelező)",
-      "note_hint": "Mit láttál, mit csináltál közvetlenül előtte, és milyen gyakran fordul elő.",
-      "email_label": "Az e-mail-címed (nem kötelező)",
-      "email_hint": "Ha kérdezhetünk tőled róla valamit.",
-      "remember_email": "Jegyezze meg az e-mail-címemet ebben az appban",
-      "collect": "Gyűjtés",
-      "check_again": "Ellenőrzés újra",
-      "blockers": {
-        "no_profile": "Ennek a kijelzőnek a YAML-je nincs ennek az appnak a mappájában, így nem készíthető róla jelentés.",
-        "collecting": "Erről a kijelzőről már készül egy jelentés. Várj egy kicsit, és ellenőrizd újra."
-      },
-      "collecting": "Gyűjtés…",
-      "collecting_hint": "Ez legfeljebb egy percig tart: az app egy ideig figyeli a kijelző naplóját.",
-      "steps": {
-        "identity": "A kijelző azonosságának olvasása",
-        "profile": "A profiljának másolása",
-        "screen_log": "A kijelző naplójának figyelése",
-        "ha_log": "A Home Assistant naplójának olvasása",
-        "addon_log": "Az app naplójának olvasása",
-        "build_log": "Az utolsó fordítási napló olvasása",
-        "crash": "Az utolsó összeomlás olvasása",
-        "zip": "A fájlok becsomagolása"
-      },
-      "ready_title": "Olvasásra kész",
-      "facts": {
-        "board": "Panel",
-        "firmware": "Firmware",
-        "addon": "Tessera",
-        "ha": "Home Assistant",
-        "esphome": "ESPHome",
-        "plugins": "Bővítmények",
-        "crash": "Utolsó összeomlás",
-        "none": "Nincs",
-        "unknown": "Ismeretlen"
-      },
-      "warnings": {
-        "screen_offline": "A kijelző offline: a jelentésben nincs élő napló, csak amit az app megőrzött.",
-        "no_api_key": "Az appnak nincs API-kulcsa ehhez a kijelzőhöz, így az élő naplóját nem lehetett beolvasni.",
-        "no_elf": "A firmware hibakeresési fájlja hiányzik, így egy összeomlás nem köthető a kódsoraihoz.",
-        "ha_log_unavailable": "A Home Assistant naplóját nem lehetett beolvasni.",
-        "addon_log_unavailable": "Az app saját naplóját nem lehetett beolvasni.",
-        "no_crash_record": "Ehhez a kijelzőhöz nem található összeomlás-bejegyzés."
-      },
-      "files_title": "A jelentés fájljai",
-      "file_lines": "1 sor | {n} sor",
-      "size": {
-        "b": "{n} B",
-        "kb": "{n} KB",
-        "mb": "{n} MB"
-      },
-      "download": "Zip letöltése",
-      "send_title": "Küldés a Tesserának",
-      "send_text": "Ez a Tesserához kerül, és {days} napig őrizzük. A fenti fájlokat, a megjegyzésedet és az e-mail-címedet tartalmazza, ha megadtad.",
-      "privacy": "Adatvédelem",
-      "with_note": "A megjegyzéseddel.",
-      "with_email": "Írhatunk a(z) {email} címre.",
-      "change_note": "Megjegyzés vagy e-mail módosítása",
-      "consent": "Elolvastam, mi van a jelentésben, és beleegyezem, hogy elküldjük a Tesserának.",
-      "send": "Küldés",
-      "sending": "Küldés…",
-      "sent": {
-        "title": "Elküldve, köszönjük",
-        "quote": "Hivatkozz erre az azonosítóra a GitHubon vagy a Discordon, hogy megtaláljuk a jelentésedet.",
-        "copy": "Másolás",
-        "copied": "Azonosító kimásolva.",
-        "selected": "Az azonosító ki van jelölve: másold ki Ctrl+C-vel vagy ⌘C-vel.",
-        "github": "GitHub issue megnyitása",
-        "discord": "Kérdezz a Discordon",
-        "new": "Új jelentés készítése"
-      },
-      "failed_title": "A jelentést nem sikerült elkészíteni",
-      "try_again": "Próbáld újra"
-    },
     "webflash": {
       "target": "Telepítés ebből a böngészőből (Chrome vagy Edge)",
       "hint": "Csatlakoztasd a kijelzőt USB-adatkábellel ehhez a számítógéphez. A Tessera lefordítja a firmware-t, majd ez az oldal Chrome-ban vagy Edge-ben feltölti a kijelzőre. Utána a frissítések Wi-Fi-n mennek.",
@@ -4108,6 +4052,96 @@
       "move_to": "Áthelyezés oldalra",
       "add_here": "Csempe hozzáadása ide",
       "paste_here": "Beillesztés ide"
+    },
+    "report": {
+      "button": "A kijelzőm nem működik jól",
+      "card_title": "Valami nem stimmel?",
+      "card_hint": "Állíts össze egy jelentést abból, amit az app tud erről a kijelzőről, olvasd el, és küldd el a Tesserának, hogy megtaláljuk az okát.",
+      "eyebrow": "Hibaelhárítás",
+      "title": "A kijelzőm nem működik jól",
+      "title_named": "{name} nem működik jól",
+      "intro": "Az app néhány fájlba gyűjti, amit erről a kijelzőről tud. Itt elolvashatod őket, és csak a Küldés viszi el a Tesserának.",
+      "loading": "Olvasom, amit az app tud…",
+      "collects_title": "Mi kerül bele",
+      "collects": "A kijelző panelje és verziói, a saját naplója (legfeljebb 45 másodperc, élőben), a Home Assistant naplójának rá vonatkozó sorai, az app naplója és az utolsó fordítási napló. A jelszavak, kulcsok, hálózati címek és a kijelző neve ki vannak takarva.",
+      "nothing_leaves": "Semmi nem hagyja el a Home Assistantodat, amíg meg nem nyomod a Küldést. Előbb minden fájlt elolvashatsz.",
+      "crash_title": "Utolsó összeomlás",
+      "crash_line": "{reason}, {when}, {seen}",
+      "crash_seen": "egyszer fordult elő ezen a héten | {n} alkalommal fordult elő ezen a héten",
+      "crash_lines": "Dekódolt sorok",
+      "full": "Az oldalaim elrendezését, az entitások nevét és a Home Assistant naplójának többi sorát is add hozzá. Ez sokat segít az ok megtalálásában.",
+      "note_label": "Mi történt? (nem kötelező)",
+      "note_hint": "Mit láttál, mit csináltál közvetlenül előtte, és milyen gyakran fordul elő.",
+      "email_label": "Az e-mail-címed (nem kötelező)",
+      "email_hint": "Ha kérdezhetünk tőled róla valamit.",
+      "remember_email": "Jegyezze meg az e-mail-címemet ebben az appban",
+      "collect": "Gyűjtés",
+      "check_again": "Ellenőrzés újra",
+      "blockers": {
+        "no_profile": "Ennek a kijelzőnek a YAML-je nincs ennek az appnak a mappájában, így nem készíthető róla jelentés.",
+        "collecting": "Erről a kijelzőről már készül egy jelentés. Várj egy kicsit, és ellenőrizd újra."
+      },
+      "collecting": "Gyűjtés…",
+      "collecting_hint": "Ez legfeljebb egy percig tart: az app egy ideig figyeli a kijelző naplóját.",
+      "steps": {
+        "identity": "A kijelző azonosságának olvasása",
+        "profile": "A profiljának másolása",
+        "screen_log": "A kijelző naplójának figyelése",
+        "ha_log": "A Home Assistant naplójának olvasása",
+        "addon_log": "Az app naplójának olvasása",
+        "build_log": "Az utolsó fordítási napló olvasása",
+        "crash": "Az utolsó összeomlás olvasása",
+        "zip": "A fájlok becsomagolása"
+      },
+      "ready_title": "Olvasásra kész",
+      "facts": {
+        "board": "Panel",
+        "firmware": "Firmware",
+        "addon": "Tessera",
+        "ha": "Home Assistant",
+        "esphome": "ESPHome",
+        "plugins": "Bővítmények",
+        "crash": "Utolsó összeomlás",
+        "none": "Nincs",
+        "unknown": "Ismeretlen"
+      },
+      "warnings": {
+        "screen_offline": "A kijelző offline: a jelentésben nincs élő napló, csak amit az app megőrzött.",
+        "no_api_key": "Az appnak nincs API-kulcsa ehhez a kijelzőhöz, így az élő naplóját nem lehetett beolvasni.",
+        "no_elf": "A firmware hibakeresési fájlja hiányzik, így egy összeomlás nem köthető a kódsoraihoz.",
+        "ha_log_unavailable": "A Home Assistant naplóját nem lehetett beolvasni.",
+        "addon_log_unavailable": "Az app saját naplóját nem lehetett beolvasni.",
+        "no_crash_record": "Ehhez a kijelzőhöz nem található összeomlás-bejegyzés."
+      },
+      "files_title": "A jelentés fájljai",
+      "file_lines": "1 sor | {n} sor",
+      "size": {
+        "b": "{n} B",
+        "kb": "{n} KB",
+        "mb": "{n} MB"
+      },
+      "download": "Zip letöltése",
+      "send_title": "Küldés a Tesserának",
+      "send_text": "Ez a Tesserához kerül, és {days} napig őrizzük. A fenti fájlokat, a megjegyzésedet és az e-mail-címedet tartalmazza, ha megadtad.",
+      "privacy": "Adatvédelem",
+      "with_note": "A megjegyzéseddel.",
+      "with_email": "Írhatunk a(z) {email} címre.",
+      "change_note": "Megjegyzés vagy e-mail módosítása",
+      "consent": "Elolvastam, mi van a jelentésben, és beleegyezem, hogy elküldjük a Tesserának.",
+      "send": "Küldés",
+      "sending": "Küldés…",
+      "sent": {
+        "title": "Elküldve, köszönjük",
+        "quote": "Hivatkozz erre az azonosítóra a GitHubon vagy a Discordon, hogy megtaláljuk a jelentésedet.",
+        "copy": "Másolás",
+        "copied": "Azonosító kimásolva.",
+        "selected": "Az azonosító ki van jelölve: másold ki Ctrl+C-vel vagy ⌘C-vel.",
+        "github": "GitHub issue megnyitása",
+        "discord": "Kérdezz a Discordon",
+        "new": "Új jelentés készítése"
+      },
+      "failed_title": "A jelentést nem sikerült elkészíteni",
+      "try_again": "Próbáld újra"
     }
   }
 }
