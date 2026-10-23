@@ -138,6 +138,9 @@ async def _p4(config):
     # Every PPA client on the screen moves in shorter bursts, so the panel's own DMA keeps up (live_view.cpp, "The
     # panel's share of the memory bus").
     cg.add_build_flag("-Wl,--wrap=ppa_register_client")
+    # A turned copy of some sizes never finishes under ESP-IDF 5.5 and the screen restarts behind it (ppa_guard.h):
+    # every scale-rotate-mirror call goes through the guard, which copies such a block in pieces the engine finishes.
+    cg.add_build_flag("-Wl,--wrap=ppa_do_scale_rotate_mirror")
     from esphome.const import CONF_ID
 
     component = await cg.get_variable(lvgl[CONF_ID])

@@ -367,6 +367,23 @@ glass with the PPA) alike, through a linker wrap of `ppa_register_client`: betwe
 bridge. LVGL took the same way for the same underrun under its own PPA draw unit (lvgl/lvgl #9590). A copy takes a
 little longer for it. The reTerminal D1001 (pixel clock 80 MHz) counts none, with or without the change.
 
+**A turned copy the 2D-DMA never finishes.** The P4's picture engine (the PPA) cuts a copy into units of 64 pixels
+by 16 rows, and when the last unit holds fewer bits than the DMA's FIFO the DMA never counts it as received: the DONE
+never comes and the task that asked waits for good on the driver's semaphore, without an error or a log line
+(Espressif's hardware bug DIG-734). ESP-IDF knows and sets "bypass macro block order" for such a block, but in the
+5.5 releases it works the leftover out from the input's width and height even when the block is turned, where the
+hardware cuts the turned output (espressif/esp-idf #19023; the fix, 469aa16, is on master only). On a screen whose
+glass is turned a quarter every copy is turned, LVGL's flush of each strip as much as a live tile's picture, so sooner
+or later one hangs, the main loop stops behind it (it holds the glass, above) and the task watchdog restarts the
+screen. A tester's M5Stack Tab5 (a 720x1280 panel shown as 1280x720, the one turned P4 glass) restarted every few
+minutes with two live camera tiles; its crash record showed the crashed core idle, the sign of a main loop waiting
+rather than working (2026-10-23). So the firmware guards every `ppa_do_scale_rotate_mirror` call through a linker wrap
+(`ppa_guard.h`, `ppa_guard.cpp`): it works out both rules, the hardware's and the driver's, and a turned block the
+hardware would stall on while the driver leaves the bypass off is copied in pieces, each of which the engine takes
+whole; two in almost every case, never more than six. A block the driver takes as it is costs nothing. The log names
+the first eight such copies (`ppa_guard: a turned copy of WxH would hang the 2D-DMA`); `tests/test_ppa_guard.cpp`
+proves the pieces cover the block once and land where the whole would.
+
 **One writer on the glass at a time.** LVGL holds the glass for the whole of each refresh (from `LV_EVENT_REFR_START`
 to `LV_EVENT_REFR_READY`: deciding what to draw, drawing it, flushing it to the panel) and a stream's task holds it for
 each copy of a picture, one recursive mutex in `live_view.cpp` (`glass`). Without it a stream's first picture could land
