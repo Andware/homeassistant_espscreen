@@ -1,4 +1,4 @@
-## Unreleased
+## 0.4.90 (firmware 0.57.1 for waveshare43, waveshare5)
 
 - **The Waveshare 4.3-inch and 5-inch update again with ESPHome 2026.10.** ESPHome 2026.10.0 checks more closely
   whether a pin is used twice, and on these boards the display and the backlight named the same line of the board's
