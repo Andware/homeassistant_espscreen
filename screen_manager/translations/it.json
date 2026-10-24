@@ -3609,16 +3609,17 @@
         "with_picture": "Mostra l'immagine della telecamera",
         "without_picture": "Mostra l'avviso senza immagine",
         "summary": {
-          "says": "Testo"
+          "says": "Testo",
+          "buttons": "Pulsanti"
         },
         "steps": {
           "trigger": {
             "title": "Cosa lo avvia?",
-            "help": "Scegli cosa fa comparire l'avviso: un sensore che si accende, un aiutante interruttore, un pulsante o un evento."
+            "help": "Scegli cosa fa comparire l'avviso: un sensore che si accende, un aiutante interruttore, un pulsante o un evento. La usi in un'automazione che hai già? Allora puoi saltare questo passo."
           },
           "words": {
             "title": "Cosa dice?",
-            "help": "Un titolo breve, una riga sotto e il testo del pulsante. Vedi la scheda come la disegna lo schermo."
+            "help": "Un titolo breve e una riga sotto. Vedi la scheda come la disegna lo schermo."
           },
           "look": {
             "title": "Che aspetto ha?",
@@ -3633,9 +3634,36 @@
             "help": "Invialo una volta adesso, esattamente come farà l'automazione. Guarda i tuoi schermi."
           },
           "add": {
-            "title": "Aggiungi a Home Assistant",
-            "help": "Controlla e aggiungi. Funziona subito, senza riavvio."
+            "title": "Concludi",
+            "help": "Rendila un'automazione a sé, oppure copia l'azione in un'automazione che hai già."
+          },
+          "buttons": {
+            "title": "Quali pulsanti?",
+            "help": "Un pulsante, o due per una scelta. Ognuno può fare qualcosa in Home Assistant quando viene premuto, o solo chiudere l'avviso."
           }
+        },
+        "buttons": {
+          "one": "Un pulsante",
+          "one_detail": "OK, Arrivo, Visto: chiude l'avviso e può fare una cosa.",
+          "two": "Due pulsanti",
+          "two_detail": "Una scelta, come Apri e Non ora, ognuno con la sua azione.",
+          "first": "Pulsante destro",
+          "second": "Pulsante sinistro",
+          "second_example": "Non ora",
+          "color": "Colore",
+          "own_color": "Colore proprio",
+          "does": "Alla pressione",
+          "only_close": "Chiude solo l'avviso",
+          "no_actions": "Questa entità non ha un'azione che non richieda altro. Scegline un'altra.",
+          "closes": "chiude l'avviso",
+          "only": "Il pulsante"
+        },
+        "try_action": "Attenzione: premere un pulsante con un'azione la esegue davvero, anche ora.",
+        "route": {
+          "event": "Inviato come l'evento {event}: l'unica via che porta una telecamera, l'azione di un pulsante e una scelta di schermi. L'app dà a ogni schermo l'avviso nella forma che il suo firmware conosce.",
+          "one_button": "{screens}: firmware precedente alla {version}, mostra solo il pulsante destro.",
+          "action": "L'app esegue l'azione di un pulsante una volta, su qualunque schermo venga premuto. Dopo il timeout o un nuovo avviso non succede nulla.",
+          "no_picture": "{screens}: mostra l'avviso senza l'immagine della telecamera."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Un sensore: da spento ad acceso, per esempio quando rileva qualcuno.",
           "switch": "Un interruttore: quando qualcuno lo accende.",
           "input_boolean": "Un aiutante interruttore: quando si accende, per esempio da un'altra automazione."
+        },
+        "finish": {
+          "label": "Come vuoi usarla?",
+          "automation": "Crea l'automazione",
+          "automation_detail": "Tessera la aggiunge a Home Assistant, con l'avvio scelto al passo 1.",
+          "needs_trigger": "Scegli prima al passo 1 cosa la avvia.",
+          "action": "Usala in un'automazione tua",
+          "action_detail": "Copia solo l'azione e incollala in un'automazione che hai già.",
+          "paste": "In Home Assistant apri la tua automazione, aggiungi un'azione, scegli Modifica in YAML nel suo menu e incolla questo.",
+          "copy": "Copia YAML"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "Cosa suona?",
-            "help": "Scegli cosa dice a Home Assistant che c'è qualcuno alla porta. Prima i tuoi campanelli; va bene anche qualsiasi sensore, pulsante o evento."
+            "help": "Scegli cosa dice a Home Assistant che c'è qualcuno alla porta. Prima i tuoi campanelli; va bene anche qualsiasi sensore, pulsante o evento. La usi in un'automazione che hai già? Allora puoi saltare questo passo."
           },
           "camera": {
             "title": "Quale telecamera?",
@@ -4317,8 +4355,8 @@
             "help": "Suona una volta adesso, esattamente come farà l'automazione. Guarda i tuoi schermi."
           },
           "add": {
-            "title": "Aggiungi a Home Assistant",
-            "help": "Controlla e aggiungi. Funziona subito, senza riavvio."
+            "title": "Concludi",
+            "help": "Rendila un'automazione a sé, oppure copia l'azione in un'automazione che hai già."
           }
         }
       },

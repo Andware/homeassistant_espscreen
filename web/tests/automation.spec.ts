@@ -3,6 +3,7 @@
 // trigger each one gets, as Home Assistant's own editor writes it.
 import { describe, expect, it } from "vitest";
 import { automationYaml, title, trigger, triggerKind } from "../src/model/automation";
+import { alertRoute, buttonFields } from "../src/model/alert-yaml";
 import { doorbellAutomation, triggerKind as doorbellKind, type DoorbellReference } from "../src/model/doorbell-yaml";
 
 describe("what starts an automation", () => {
@@ -46,5 +47,25 @@ describe("the doorbell's automation", () => {
     expect(automation.triggers).toEqual([{ trigger: "state", entity_id: "binary_sensor.porch_visitor", from: "off", to: "on" }]);
     expect(automation.actions).toEqual([{ event: "esp_screens_doorbell", event_data: { camera: "camera.porch", screen: ["hallway", "kitchen"], timeout: 90 } }]);
     expect(automationYaml(automation)).toContain("    from: \"off\"\n    to: \"on\"");
+  });
+});
+
+describe("the alert's buttons and how it is sent", () => {
+  const closes = { text: "OK", color: "", entity: "", action: "" };
+  it("gives a button's action only when it has both an entity and an action, and the second button only with two", () => {
+    expect(buttonFields(closes, null)).toEqual({ button_text: "OK", button_color: "" });
+    expect(buttonFields({ text: "Open", color: "green", entity: "lock.front_door", action: "lock.unlock" },
+      { text: "Not now", color: "red", entity: "light.hall", action: "" })).toEqual({
+      button_text: "Open", button_color: "green", action: "lock.unlock", data: { entity_id: "lock.front_door" },
+      button2_text: "Not now", button2_color: "red" });
+    expect(buttonFields(closes, { text: "Snooze", color: "", entity: "script.snooze", action: "script.turn_on" })).toMatchObject({
+      button2_action: "script.turn_on", button2_data: { entity_id: "script.snooze" } });
+  });
+
+  it("always goes as the event, and says which screens show one button or no picture", () => {
+    const screens = [{ name: "Hall", choice: true, pictures: true }, { name: "Kitchen", choice: false, pictures: false }];
+    expect(alertRoute({ two: false, actions: 0, camera: false }, screens)).toEqual([{ key: "event" }]);
+    expect(alertRoute({ two: true, actions: 2, camera: true }, screens)).toEqual([
+      { key: "event" }, { key: "one_button", screens: ["Kitchen"] }, { key: "action" }, { key: "no_picture", screens: ["Kitchen"] }]);
   });
 });

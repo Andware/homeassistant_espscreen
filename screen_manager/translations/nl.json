@@ -3180,16 +3180,17 @@
         "with_picture": "Laat het beeld van de camera zien",
         "without_picture": "Laat de alert zonder beeld zien",
         "summary": {
-          "says": "Tekst"
+          "says": "Tekst",
+          "buttons": "Knoppen"
         },
         "steps": {
           "trigger": {
             "title": "Wat start het?",
-            "help": "Kies waardoor de alert verschijnt: een sensor die aangaat, een schakelhelper, een knop of een event."
+            "help": "Kies waardoor de alert verschijnt: een sensor die aangaat, een schakelhelper, een knop of een event. Gebruik je hem in een automatisering die je al hebt? Dan kun je deze stap overslaan."
           },
           "words": {
             "title": "Wat staat erop?",
-            "help": "Een korte titel, een regel eronder en de tekst op de knop. Je ziet de kaart zoals het scherm hem tekent."
+            "help": "Een korte titel en een regel eronder. Je ziet de kaart zoals het scherm hem tekent."
           },
           "look": {
             "title": "Hoe ziet het eruit?",
@@ -3204,9 +3205,36 @@
             "help": "Stuur hem nu één keer, precies zoals de automatisering het doet. Kijk naar je schermen."
           },
           "add": {
-            "title": "Toevoegen aan Home Assistant",
-            "help": "Controleer het en voeg het toe. Het werkt meteen, zonder herstart."
+            "title": "Afronden",
+            "help": "Maak er een eigen automatisering van, of kopieer de actie naar een automatisering die je al hebt."
+          },
+          "buttons": {
+            "title": "Welke knoppen?",
+            "help": "Eén knop, of twee voor een keuze. Elke knop kan iets doen in Home Assistant als je hem indrukt, of alleen de alert sluiten."
           }
+        },
+        "buttons": {
+          "one": "Eén knop",
+          "one_detail": "OK, Ik kom, Gezien: hij sluit de alert en kan één ding doen.",
+          "two": "Twee knoppen",
+          "two_detail": "Een keuze, zoals Openen en Niet nu, elk met een eigen actie.",
+          "first": "Rechterknop",
+          "second": "Linkerknop",
+          "second_example": "Niet nu",
+          "color": "Kleur",
+          "own_color": "Eigen kleur",
+          "does": "Bij indrukken",
+          "only_close": "Sluit alleen de alert",
+          "no_actions": "Deze entiteit heeft geen actie die verder niets nodig heeft. Kies een andere.",
+          "closes": "sluit de alert",
+          "only": "De knop"
+        },
+        "try_action": "Let op: een knop met een actie indrukken voert die echt uit, ook nu.",
+        "route": {
+          "event": "Verstuurd als het event {event}: de enige manier die een camera, een actie op een knop en een keuze van schermen meeneemt. De app geeft elk scherm de alert in de vorm die zijn firmware kent.",
+          "one_button": "{screens}: firmware ouder dan {version}, toont alleen de rechterknop.",
+          "action": "De app voert de actie van een knop één keer uit, op welk scherm hij ook wordt ingedrukt. Na de timeout of een nieuwe alert gebeurt er niets.",
+          "no_picture": "{screens}: toont de alert zonder het beeld van de camera."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Een sensor: van uit naar aan, bijvoorbeeld als hij iemand ziet.",
           "switch": "Een schakelaar: als iemand hem aanzet.",
           "input_boolean": "Een schakelhelper: als hij aangaat, bijvoorbeeld door een andere automatisering."
+        },
+        "finish": {
+          "label": "Hoe wil je hem gebruiken?",
+          "automation": "Maak de automatisering",
+          "automation_detail": "Tessera zet hem in Home Assistant, met wat je bij stap 1 koos als start.",
+          "needs_trigger": "Kies eerst bij stap 1 wat hem start.",
+          "action": "Gebruik in een eigen automatisering",
+          "action_detail": "Kopieer alleen de actie en plak hem in een automatisering die je al hebt.",
+          "paste": "Open in Home Assistant je automatisering, voeg een actie toe, kies Bewerken in YAML in het menu en plak dit.",
+          "copy": "Kopieer YAML"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "Wat belt er?",
-            "help": "Kies wat Home Assistant vertelt dat er iemand voor de deur staat. Je deurbellen staan bovenaan; elke sensor, knop of event werkt ook."
+            "help": "Kies wat Home Assistant vertelt dat er iemand voor de deur staat. Je deurbellen staan bovenaan; elke sensor, knop of event werkt ook. Gebruik je hem in een automatisering die je al hebt? Dan kun je deze stap overslaan."
           },
           "camera": {
             "title": "Welke camera?",
@@ -4317,8 +4355,8 @@
             "help": "Bel nu één keer, precies zoals de automatisering het doet. Kijk naar je schermen."
           },
           "add": {
-            "title": "Toevoegen aan Home Assistant",
-            "help": "Controleer het en voeg het toe. Het werkt meteen, zonder herstart."
+            "title": "Afronden",
+            "help": "Maak er een eigen automatisering van, of kopieer de actie naar een automatisering die je al hebt."
           }
         }
       },

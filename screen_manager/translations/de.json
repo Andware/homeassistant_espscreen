@@ -3609,16 +3609,17 @@
         "with_picture": "Zeigt das Bild der Kamera",
         "without_picture": "Zeigt die Meldung ohne Bild",
         "summary": {
-          "says": "Text"
+          "says": "Text",
+          "buttons": "Tasten"
         },
         "steps": {
           "trigger": {
             "title": "Was startet sie?",
-            "help": "Wähle, wodurch die Meldung erscheint: ein Sensor, der angeht, ein Schalter-Helfer, ein Taster oder ein Ereignis."
+            "help": "Wähle, wodurch die Meldung erscheint: ein Sensor, der angeht, ein Schalter-Helfer, ein Taster oder ein Ereignis. Nutzt du es in einer Automation, die du schon hast? Dann kannst du diesen Schritt überspringen."
           },
           "words": {
             "title": "Was steht darauf?",
-            "help": "Ein kurzer Titel, eine Zeile darunter und der Text auf der Taste. Du siehst die Karte so, wie der Bildschirm sie zeichnet."
+            "help": "Ein kurzer Titel und eine Zeile darunter. Du siehst die Karte so, wie der Bildschirm sie zeichnet."
           },
           "look": {
             "title": "Wie sieht sie aus?",
@@ -3633,9 +3634,36 @@
             "help": "Sende sie jetzt einmal, genau wie die Automation es tun wird. Schau auf deine Bildschirme."
           },
           "add": {
-            "title": "Zu Home Assistant hinzufügen",
-            "help": "Prüfe es und füge es hinzu. Es wirkt sofort, ohne Neustart."
+            "title": "Abschließen",
+            "help": "Mach eine eigene Automation daraus, oder kopiere die Aktion in eine Automation, die du schon hast."
+          },
+          "buttons": {
+            "title": "Welche Tasten?",
+            "help": "Eine Taste, oder zwei für eine Wahl. Jede kann beim Drücken etwas in Home Assistant tun oder nur die Meldung schließen."
           }
+        },
+        "buttons": {
+          "one": "Eine Taste",
+          "one_detail": "OK, Komme, Gesehen: sie schließt die Meldung und kann eine Sache tun.",
+          "two": "Zwei Tasten",
+          "two_detail": "Eine Wahl, etwa Öffnen und Nicht jetzt, jede mit eigener Aktion.",
+          "first": "Rechte Taste",
+          "second": "Linke Taste",
+          "second_example": "Nicht jetzt",
+          "color": "Farbe",
+          "own_color": "Eigene Farbe",
+          "does": "Beim Drücken",
+          "only_close": "Schließt nur die Meldung",
+          "no_actions": "Diese Entität hat keine Aktion, die sonst nichts braucht. Wähle eine andere.",
+          "closes": "schließt die Meldung",
+          "only": "Die Taste"
+        },
+        "try_action": "Achtung: Eine Taste mit Aktion zu drücken führt sie wirklich aus, auch jetzt.",
+        "route": {
+          "event": "Gesendet als Ereignis {event}: der einzige Weg, der eine Kamera, die Aktion einer Taste und eine Wahl der Bildschirme mitnimmt. Die App gibt jedem Bildschirm die Meldung in der Form, die seine Firmware kennt.",
+          "one_button": "{screens}: Firmware älter als {version}, zeigt nur die rechte Taste.",
+          "action": "Die App führt die Aktion einer Taste einmal aus, auf welchem Bildschirm sie auch gedrückt wird. Nach dem Timeout oder einer neuen Meldung passiert nichts.",
+          "no_picture": "{screens}: zeigt die Meldung ohne das Bild der Kamera."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Ein Sensor: von aus nach an, zum Beispiel wenn er jemanden erkennt.",
           "switch": "Ein Schalter: wenn jemand ihn einschaltet.",
           "input_boolean": "Ein Schalter-Helfer: wenn er angeht, zum Beispiel durch eine andere Automation."
+        },
+        "finish": {
+          "label": "Wie willst du sie nutzen?",
+          "automation": "Automation erstellen",
+          "automation_detail": "Tessera legt sie in Home Assistant an, mit dem Start aus Schritt 1.",
+          "needs_trigger": "Wähle zuerst in Schritt 1, was sie startet.",
+          "action": "In einer eigenen Automation nutzen",
+          "action_detail": "Kopiere nur die Aktion und füge sie in eine Automation ein, die du schon hast.",
+          "paste": "Öffne in Home Assistant deine Automation, füge eine Aktion hinzu, wähle im Menü In YAML bearbeiten und füge dies ein.",
+          "copy": "YAML kopieren"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "Was klingelt?",
-            "help": "Wähle, was Home Assistant sagt, dass jemand vor der Tür steht. Deine Türklingeln stehen oben; jeder Sensor, Taster oder jedes Ereignis geht auch."
+            "help": "Wähle, was Home Assistant sagt, dass jemand vor der Tür steht. Deine Türklingeln stehen oben; jeder Sensor, Taster oder jedes Ereignis geht auch. Nutzt du es in einer Automation, die du schon hast? Dann kannst du diesen Schritt überspringen."
           },
           "camera": {
             "title": "Welche Kamera?",
@@ -4317,8 +4355,8 @@
             "help": "Klingle jetzt einmal, genau wie die Automation es tun wird. Schau auf deine Bildschirme."
           },
           "add": {
-            "title": "Zu Home Assistant hinzufügen",
-            "help": "Prüfe es und füge es hinzu. Es wirkt sofort, ohne Neustart."
+            "title": "Abschließen",
+            "help": "Mach eine eigene Automation daraus, oder kopiere die Aktion in eine Automation, die du schon hast."
           }
         }
       },

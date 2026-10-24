@@ -3609,16 +3609,17 @@
         "with_picture": "Mostra a imagem da câmara",
         "without_picture": "Mostra o alerta sem imagem",
         "summary": {
-          "says": "Texto"
+          "says": "Texto",
+          "buttons": "Botões"
         },
         "steps": {
           "trigger": {
             "title": "O que o inicia?",
-            "help": "Escolha o que faz aparecer o alerta: um sensor que liga, um auxiliar de interruptor, um botão ou um evento."
+            "help": "Escolha o que faz aparecer o alerta: um sensor que liga, um auxiliar de interruptor, um botão ou um evento. Usa-a numa automação que já tem? Então pode saltar este passo."
           },
           "words": {
             "title": "O que diz?",
-            "help": "Um título curto, uma linha por baixo e o texto do botão. Vê o cartão tal como o ecrã o desenha."
+            "help": "Um título curto e uma linha por baixo. Vê o cartão tal como o ecrã o desenha."
           },
           "look": {
             "title": "Como fica?",
@@ -3633,9 +3634,36 @@
             "help": "Envie-o uma vez agora, tal como a automação fará. Olhe para os seus ecrãs."
           },
           "add": {
-            "title": "Adicionar ao Home Assistant",
-            "help": "Verifique e adicione. Funciona logo, sem reiniciar."
+            "title": "Concluir",
+            "help": "Faça dela uma automação própria, ou copie a ação para uma automação que já tem."
+          },
+          "buttons": {
+            "title": "Que botões?",
+            "help": "Um botão, ou dois para uma escolha. Cada um pode fazer algo no Home Assistant quando é premido, ou só fechar o alerta."
           }
+        },
+        "buttons": {
+          "one": "Um botão",
+          "one_detail": "OK, Já vou, Visto: fecha o alerta e pode fazer uma coisa.",
+          "two": "Dois botões",
+          "two_detail": "Uma escolha, como Abrir e Agora não, cada um com a sua ação.",
+          "first": "Botão direito",
+          "second": "Botão esquerdo",
+          "second_example": "Agora não",
+          "color": "Cor",
+          "own_color": "Cor própria",
+          "does": "Ao premir",
+          "only_close": "Só fecha o alerta",
+          "no_actions": "Esta entidade não tem nenhuma ação que não precise de mais nada. Escolha outra.",
+          "closes": "fecha o alerta",
+          "only": "O botão"
+        },
+        "try_action": "Atenção: premir um botão com uma ação executa-a mesmo, também agora.",
+        "route": {
+          "event": "Enviado como o evento {event}: a única via que leva uma câmara, a ação de um botão e uma escolha de ecrãs. A app dá a cada ecrã o alerta na forma que o seu firmware conhece.",
+          "one_button": "{screens}: firmware anterior a {version}, mostra só o botão direito.",
+          "action": "A app executa a ação de um botão uma vez, em qualquer ecrã onde seja premido. Depois do tempo limite ou de um novo alerta nada acontece.",
+          "no_picture": "{screens}: mostra o alerta sem a imagem da câmara."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Um sensor: de desligado para ligado, por exemplo quando deteta alguém.",
           "switch": "Um interruptor: quando alguém o liga.",
           "input_boolean": "Um auxiliar de interruptor: quando liga, por exemplo a partir de outra automação."
+        },
+        "finish": {
+          "label": "Como quer usá-la?",
+          "automation": "Criar a automação",
+          "automation_detail": "O Tessera adiciona-a ao Home Assistant, com o início escolhido no passo 1.",
+          "needs_trigger": "Escolha primeiro no passo 1 o que a inicia.",
+          "action": "Usar numa automação sua",
+          "action_detail": "Copie só a ação e cole-a numa automação que já tem.",
+          "paste": "No Home Assistant, abra a sua automação, adicione uma ação, escolha Editar em YAML no menu e cole isto.",
+          "copy": "Copiar YAML"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "O que toca?",
-            "help": "Escolha o que diz ao Home Assistant que há alguém à porta. As suas campainhas primeiro; qualquer sensor, botão ou evento também serve."
+            "help": "Escolha o que diz ao Home Assistant que há alguém à porta. As suas campainhas primeiro; qualquer sensor, botão ou evento também serve. Usa-a numa automação que já tem? Então pode saltar este passo."
           },
           "camera": {
             "title": "Que câmara?",
@@ -4317,8 +4355,8 @@
             "help": "Toque uma vez agora, tal como a automação fará. Olhe para os seus ecrãs."
           },
           "add": {
-            "title": "Adicionar ao Home Assistant",
-            "help": "Verifique e adicione. Funciona logo, sem reiniciar."
+            "title": "Concluir",
+            "help": "Faça dela uma automação própria, ou copie a ação para uma automação que já tem."
           }
         }
       },

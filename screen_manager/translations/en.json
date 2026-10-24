@@ -3180,16 +3180,17 @@
         "with_picture": "Shows the camera's picture",
         "without_picture": "Shows the alert without a picture",
         "summary": {
-          "says": "Says"
+          "says": "Says",
+          "buttons": "Buttons"
         },
         "steps": {
           "trigger": {
             "title": "What starts it?",
-            "help": "Pick what makes the alert appear: a sensor that turns on, a toggle helper, a button or an event."
+            "help": "Pick what makes the alert appear: a sensor that turns on, a toggle helper, a button or an event. Using it in an automation you already have? Then you can skip this step."
           },
           "words": {
             "title": "What does it say?",
-            "help": "A short title, a line under it and the text on its button. You see the card as the screen draws it."
+            "help": "A short title and a line under it. You see the card as the screen draws it."
           },
           "look": {
             "title": "How does it look?",
@@ -3204,9 +3205,36 @@
             "help": "Send it once now, exactly as the automation will. Look at your screens."
           },
           "add": {
-            "title": "Add to Home Assistant",
-            "help": "Check it and add it. It works right away, no restart needed."
+            "title": "Finish",
+            "help": "Make it an automation of its own, or copy the action into an automation you already have."
+          },
+          "buttons": {
+            "title": "Which buttons?",
+            "help": "One button, or two for a choice. Each can do something in Home Assistant when it is pressed, or only close the alert."
           }
+        },
+        "buttons": {
+          "one": "One button",
+          "one_detail": "OK, Coming, Seen: it closes the alert and can do one thing.",
+          "two": "Two buttons",
+          "two_detail": "A choice, such as Open and Not now, each with its own action.",
+          "first": "Right button",
+          "second": "Left button",
+          "second_example": "Not now",
+          "color": "Color",
+          "own_color": "Its own color",
+          "does": "When pressed",
+          "only_close": "Only closes the alert",
+          "no_actions": "This entity has no action that needs nothing more. Pick another.",
+          "closes": "closes the alert",
+          "only": "The button"
+        },
+        "try_action": "Careful: pressing a button with an action really performs it, also now.",
+        "route": {
+          "event": "Sent as the event {event}: the one way that carries a camera, a button's action and a choice of screens. The app gives each screen the alert in the form its firmware knows.",
+          "one_button": "{screens}: firmware older than {version}, shows only the right button.",
+          "action": "The app performs a button's action once, on whichever screen it is pressed. After the timeout or a new alert nothing happens.",
+          "no_picture": "{screens}: shows the alert without the camera's picture."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "A sensor: from off to on, for example when it detects someone.",
           "switch": "A switch: when someone turns it on.",
           "input_boolean": "A toggle helper: when it turns on, for example from another automation."
+        },
+        "finish": {
+          "label": "How do you want to use it?",
+          "automation": "Create the automation",
+          "automation_detail": "Tessera adds it to Home Assistant, starting from what you picked in step 1.",
+          "needs_trigger": "Pick what starts it in step 1 first.",
+          "action": "Use it in an automation of your own",
+          "action_detail": "Copy only the action and paste it into an automation you already have.",
+          "paste": "In Home Assistant, open your automation, add an action, choose Edit in YAML in its menu and paste this.",
+          "copy": "Copy YAML"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "What rings?",
-            "help": "Pick what tells Home Assistant someone is at the door. Your doorbells come first; any sensor, button or event works too."
+            "help": "Pick what tells Home Assistant someone is at the door. Your doorbells come first; any sensor, button or event works too. Using it in an automation you already have? Then you can skip this step."
           },
           "camera": {
             "title": "Which camera?",
@@ -4317,8 +4355,8 @@
             "help": "Ring once now, exactly as the automation will. Look at your screens."
           },
           "add": {
-            "title": "Add to Home Assistant",
-            "help": "Check it and add it. It works right away, no restart needed."
+            "title": "Finish",
+            "help": "Make it an automation of its own, or copy the action into an automation you already have."
           }
         }
       },

@@ -3609,16 +3609,17 @@
         "with_picture": "Pokazuje obraz z kamery",
         "without_picture": "Pokazuje alert bez obrazu",
         "summary": {
-          "says": "Treść"
+          "says": "Treść",
+          "buttons": "Przyciski"
         },
         "steps": {
           "trigger": {
             "title": "Co go uruchamia?",
-            "help": "Wybierz, co sprawia, że alert się pojawia: czujnik, który się włącza, pomocnik przełącznika, przycisk lub zdarzenie."
+            "help": "Wybierz, co sprawia, że alert się pojawia: czujnik, który się włącza, pomocnik przełącznika, przycisk lub zdarzenie. Używasz tego w automatyzacji, którą już masz? Wtedy możesz pominąć ten krok."
           },
           "words": {
             "title": "Co mówi?",
-            "help": "Krótki tytuł, linia pod nim i tekst na przycisku. Widzisz kartę tak, jak rysuje ją ekran."
+            "help": "Krótki tytuł i linia pod nim. Widzisz kartę tak, jak rysuje ją ekran."
           },
           "look": {
             "title": "Jak wygląda?",
@@ -3633,9 +3634,36 @@
             "help": "Wyślij go teraz raz, dokładnie tak, jak zrobi to automatyzacja. Spójrz na swoje ekrany."
           },
           "add": {
-            "title": "Dodaj do Home Assistant",
-            "help": "Sprawdź i dodaj. Działa od razu, bez restartu."
+            "title": "Zakończ",
+            "help": "Zrób z tego osobną automatyzację albo skopiuj akcję do automatyzacji, którą już masz."
+          },
+          "buttons": {
+            "title": "Które przyciski?",
+            "help": "Jeden przycisk albo dwa do wyboru. Każdy po naciśnięciu może coś zrobić w Home Assistant albo tylko zamknąć alert."
           }
+        },
+        "buttons": {
+          "one": "Jeden przycisk",
+          "one_detail": "OK, Idę, Widziane: zamyka alert i może zrobić jedną rzecz.",
+          "two": "Dwa przyciski",
+          "two_detail": "Wybór, np. Otwórz i Nie teraz, każdy z własną akcją.",
+          "first": "Prawy przycisk",
+          "second": "Lewy przycisk",
+          "second_example": "Nie teraz",
+          "color": "Kolor",
+          "own_color": "Własny kolor",
+          "does": "Po naciśnięciu",
+          "only_close": "Tylko zamyka alert",
+          "no_actions": "Ta encja nie ma akcji, która nie potrzebuje niczego więcej. Wybierz inną.",
+          "closes": "zamyka alert",
+          "only": "Przycisk"
+        },
+        "try_action": "Uwaga: naciśnięcie przycisku z akcją naprawdę ją wykonuje, także teraz.",
+        "route": {
+          "event": "Wysyłany jako zdarzenie {event}: jedyna droga, która niesie kamerę, akcję przycisku i wybór ekranów. Aplikacja daje każdemu ekranowi alert w formie, którą zna jego firmware.",
+          "one_button": "{screens}: firmware starsze niż {version}, pokazuje tylko prawy przycisk.",
+          "action": "Aplikacja wykonuje akcję przycisku raz, na którymkolwiek ekranie zostanie naciśnięty. Po upływie czasu lub nowym alercie nic się nie dzieje.",
+          "no_picture": "{screens}: pokazuje alert bez obrazu z kamery."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Czujnik: z wyłączonego na włączony, na przykład gdy kogoś wykryje.",
           "switch": "Przełącznik: gdy ktoś go włączy.",
           "input_boolean": "Pomocnik przełącznika: gdy się włączy, na przykład z innej automatyzacji."
+        },
+        "finish": {
+          "label": "Jak chcesz tego użyć?",
+          "automation": "Utwórz automatyzację",
+          "automation_detail": "Tessera dodaje ją do Home Assistant, ze startem wybranym w kroku 1.",
+          "needs_trigger": "Najpierw wybierz w kroku 1, co ją uruchamia.",
+          "action": "Użyj we własnej automatyzacji",
+          "action_detail": "Skopiuj tylko akcję i wklej ją do automatyzacji, którą już masz.",
+          "paste": "W Home Assistant otwórz swoją automatyzację, dodaj akcję, wybierz w menu Edytuj w YAML i wklej to.",
+          "copy": "Kopiuj YAML"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "Co dzwoni?",
-            "help": "Wybierz, co mówi Home Assistant, że ktoś jest przy drzwiach. Najpierw twoje dzwonki; każdy czujnik, przycisk lub zdarzenie też zadziała."
+            "help": "Wybierz, co mówi Home Assistant, że ktoś jest przy drzwiach. Najpierw twoje dzwonki; każdy czujnik, przycisk lub zdarzenie też zadziała. Używasz tego w automatyzacji, którą już masz? Wtedy możesz pominąć ten krok."
           },
           "camera": {
             "title": "Która kamera?",
@@ -4317,8 +4355,8 @@
             "help": "Zadzwoń teraz raz, dokładnie tak, jak zrobi to automatyzacja. Spójrz na swoje ekrany."
           },
           "add": {
-            "title": "Dodaj do Home Assistant",
-            "help": "Sprawdź i dodaj. Działa od razu, bez restartu."
+            "title": "Zakończ",
+            "help": "Zrób z tego osobną automatyzację albo skopiuj akcję do automatyzacji, którą już masz."
           }
         }
       },

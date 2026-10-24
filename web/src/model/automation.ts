@@ -60,3 +60,5 @@ function lines(value: Record<string, unknown>, indent: string): string[] {
 }
 /** The automation as YAML, for "Edit in YAML" of a new automation. */
 export const automationYaml = (automation: Automation) => lines(automation as unknown as Record<string, unknown>, "").join("\n");
+/** One of its actions as YAML, for "Edit in YAML" of an action in an automation of the person's own. */
+export const actionYaml = (action: Record<string, unknown>) => lines(action, "").join("\n");

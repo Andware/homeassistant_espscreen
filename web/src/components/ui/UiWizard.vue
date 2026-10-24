@@ -1,7 +1,9 @@
 <script setup lang="ts">
 // A wizard in a window of its own (Reka UI's Dialog with its Stepper): one step at a time, each with its title, a line of
 // help and its own part (the slot named after the step), Back and Next below, and the steps above as numbered dots (the
-// current one with its name) to see where you are and go back to one already done. The page that opens it keeps what is chosen; `ready` says whether Next may go on.
+// current one with its name) to see where you are and go back to one already done. The page that opens it keeps what is
+// chosen; `ready` says whether Next may go on. It lies above the page and the palette (70) and below what opens from it:
+// a picker or menu (.ui-popover, 80), a toast (85) and a confirm (90).
 import { computed } from "vue";
 import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle,
   StepperIndicator, StepperItem, StepperRoot, StepperSeparator, StepperTitle, StepperTrigger } from "reka-ui";
@@ -51,8 +53,8 @@ const go = (step: number) => emit("update:step", Math.max(1, Math.min(props.step
 </template>
 
 <style scoped>
-.wizard-dim { position: fixed; inset: 0; z-index: 80; background: rgba(10, 12, 18, 0.36); animation: wizard-fade 0.14s ease-out; }
-.wizard { position: fixed; z-index: 81; left: 50%; top: 50%; translate: -50% -50%; width: min(660px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 48px));
+.wizard-dim { position: fixed; inset: 0; z-index: 74; background: rgba(10, 12, 18, 0.36); animation: wizard-fade 0.14s ease-out; }
+.wizard { position: fixed; z-index: 75; left: 50%; top: 50%; translate: -50% -50%; width: min(680px, calc(100vw - 32px)); height: min(640px, calc(100vh - 48px));
   display: grid; grid-template-rows: auto auto 1fr auto; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 16px;
   box-shadow: var(--pop-shadow); animation: wizard-in 0.16s ease-out; overflow: hidden; }
 .wizard:focus { outline: none; }
@@ -74,7 +76,7 @@ const go = (step: number) => emit("update:step", Math.max(1, Math.min(props.step
 .wizard-step[data-state="active"] .wizard-step-trigger { flex: none; }
 .wizard-step[data-state="active"] .wizard-step-title { position: static; width: auto; height: auto; overflow: visible; clip-path: none; color: var(--ink); font-weight: 600; }
 .wizard-line { flex: 1; height: 1px; min-width: 8px; background: var(--line); }
-.wizard-body { min-height: 300px; padding: 8px 20px 20px; overflow-y: auto; display: grid; gap: 12px; align-content: start; }
+.wizard-body { min-height: 0; padding: 8px 20px 20px; overflow-y: auto; display: grid; gap: 12px; align-content: start; }
 .wizard-body h3 { margin: 10px 0 0; font-size: 18px; font-weight: 600; }
 .wizard-help { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
 .wizard-foot { display: flex; align-items: center; gap: 8px; padding: 14px 20px 18px; }
@@ -83,7 +85,7 @@ const go = (step: number) => emit("update:step", Math.max(1, Math.min(props.step
 @keyframes wizard-fade { from { opacity: 0; } }
 @keyframes wizard-in { from { opacity: 0; scale: 0.97; } }
 @media (max-width: 640px) {
-  .wizard { top: auto; bottom: 0; translate: -50% 0; width: 100vw; max-height: 92vh; border-radius: 16px 16px 0 0; }
+  .wizard { top: auto; bottom: 0; translate: -50% 0; width: 100vw; height: 92vh; border-radius: 16px 16px 0 0; }
 }
 @media (prefers-reduced-motion: reduce) { .wizard, .wizard-dim { animation: none; } }
 </style>

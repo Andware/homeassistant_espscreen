@@ -43,7 +43,7 @@ const domain = computed(() => props.modelValue.split(".", 1)[0]);
   <div class="trigger-step">
     <UiChoiceCards v-if="suggestions?.length" :model-value="picked" :cards="cards" :label="t('editor.events.wizard.suggested')" @update:model-value="choose" />
     <div v-if="other || !suggestions?.length" class="trigger-row">
-      <UiPicker :id="id" :items="entities" :placeholder="t('editor.plugin_tile.search')" :empty="t('editor.events.wizard.none')" width="380px"
+      <UiPicker :id="id" :items="entities" :placeholder="t('editor.plugin_tile.search')" :empty="t('editor.events.wizard.none')" width="var(--reka-popover-trigger-width)"
         @pick="(entity: string) => emit('update:modelValue', entity)">
         <template #trigger><button type="button" class="ghost-btn trigger-pick"><Icon name="magnify" />{{ modelValue ? nameOf(modelValue) : t("editor.events.wizard.pick_trigger") }}</button></template>
       </UiPicker>

@@ -135,6 +135,11 @@ class TheAutomations(unittest.TestCase):
                 automations.checked('doorbell', wrong)
         self.assertEqual(automations.kind_of(automations.new_id('alert')), 'alert')
         self.assertIsNone(automations.kind_of('morning_lights'))
+        # A button's action rides inside our event, which the app performs when the button is pressed (the alert wizard).
+        buttons = {**self.automation, 'alias': 'Someone at the door', 'actions': [{'event': 'esp_screens_show_alert', 'event_data': {
+            'title': 'Someone at the door', 'button_text': 'Open', 'button_color': 'green', 'action': 'lock.unlock',
+            'data': {'entity_id': 'lock.front_door'}, 'button2_text': 'Not now'}}]}
+        self.assertEqual(automations.checked('alert', buttons)['actions'], buttons['actions'])
 
     def test_the_list_by_id_and_by_name(self):
         states = {'automation.tessera_doorbell': {'state': 'on', 'attributes': {'id': 'tessera_doorbell_0a1b2c3d', 'friendly_name': 'Tessera: Doorbell'}},

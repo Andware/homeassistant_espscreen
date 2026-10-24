@@ -8,7 +8,7 @@ rings, a button, anything.
 
 The editor's **Events** page (in the sidebar) has a wizard for it, behind **Create a doorbell automation**: one step at a
 time it asks what rings, the camera, the screens and a name, lets you ring once to see it, and then adds the automation
-to Home Assistant for you (its YAML is there to copy too). The wizard offers first the doorbells Home Assistant knows as
+to Home Assistant for you, or gives just its action as YAML to paste into an automation you already have. The wizard offers first the doorbells Home Assistant knows as
 such: an event entity of the doorbell class, and the doorbell sensors of Reolink (Visitor), UniFi Protect (Doorbell),
 Yale and August (Ding) and Skybell (Button). Under the step it says how the automation will read what you picked: a
 doorbell rings, an event fires, a sensor, switch or toggle helper turns on, a button is pressed.

@@ -3609,16 +3609,17 @@
         "with_picture": "A kamera képét mutatja",
         "without_picture": "Kép nélkül mutatja az értesítést",
         "summary": {
-          "says": "Szöveg"
+          "says": "Szöveg",
+          "buttons": "Gombok"
         },
         "steps": {
           "trigger": {
             "title": "Mi indítja?",
-            "help": "Válaszd ki, mitől jelenik meg az értesítés: egy bekapcsoló érzékelő, egy kapcsoló segítő, egy gomb vagy egy esemény."
+            "help": "Válaszd ki, mitől jelenik meg az értesítés: egy bekapcsoló érzékelő, egy kapcsoló segítő, egy gomb vagy egy esemény. Egy meglévő automatizálásban használod? Akkor ezt a lépést kihagyhatod."
           },
           "words": {
             "title": "Mit ír ki?",
-            "help": "Egy rövid cím, alatta egy sor és a gomb szövege. A kártyát úgy látod, ahogy a képernyő rajzolja."
+            "help": "Egy rövid cím és alatta egy sor. A kártyát úgy látod, ahogy a képernyő rajzolja."
           },
           "look": {
             "title": "Hogy néz ki?",
@@ -3633,9 +3634,36 @@
             "help": "Küldd el most egyszer, pontosan úgy, ahogy az automatizálás fogja. Nézd a képernyőidet."
           },
           "add": {
-            "title": "Hozzáadás a Home Assistanthez",
-            "help": "Ellenőrizd és add hozzá. Azonnal működik, újraindítás nélkül."
+            "title": "Befejezés",
+            "help": "Legyen belőle saját automatizálás, vagy másold a műveletet egy meglévő automatizálásodba."
+          },
+          "buttons": {
+            "title": "Melyik gombok?",
+            "help": "Egy gomb, vagy kettő egy választáshoz. Mindegyik tehet valamit a Home Assistantben, ha megnyomják, vagy csak bezárja az értesítést."
           }
+        },
+        "buttons": {
+          "one": "Egy gomb",
+          "one_detail": "OK, Jövök, Láttam: bezárja az értesítést és tehet egy dolgot.",
+          "two": "Két gomb",
+          "two_detail": "Választás, például Nyitás és Most nem, mindegyik saját művelettel.",
+          "first": "Jobb gomb",
+          "second": "Bal gomb",
+          "second_example": "Most nem",
+          "color": "Szín",
+          "own_color": "Saját szín",
+          "does": "Megnyomáskor",
+          "only_close": "Csak bezárja az értesítést",
+          "no_actions": "Ennek az entitásnak nincs olyan művelete, amely mást nem igényel. Válassz másikat.",
+          "closes": "bezárja az értesítést",
+          "only": "A gomb"
+        },
+        "try_action": "Figyelem: egy művelettel rendelkező gomb megnyomása tényleg végrehajtja azt, most is.",
+        "route": {
+          "event": "A(z) {event} eseményként küldve: az egyetlen út, amely kamerát, egy gomb műveletét és képernyők választását is visz. Az app minden képernyőnek abban a formában adja az értesítést, amelyet a firmware-je ismer.",
+          "one_button": "{screens}: a firmware régebbi, mint {version}, csak a jobb gombot mutatja.",
+          "action": "Az app egy gomb műveletét egyszer hajtja végre, bármelyik képernyőn nyomják meg. Az időkorlát vagy egy új értesítés után nem történik semmi.",
+          "no_picture": "{screens}: a kamera képe nélkül mutatja az értesítést."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Érzékelő: kiről bere vált, például amikor valakit észlel.",
           "switch": "Kapcsoló: amikor valaki bekapcsolja.",
           "input_boolean": "Kapcsoló segítő: amikor bekapcsol, például egy másik automatizálásból."
+        },
+        "finish": {
+          "label": "Hogyan szeretnéd használni?",
+          "automation": "Automatizálás létrehozása",
+          "automation_detail": "A Tessera hozzáadja a Home Assistanthez, az 1. lépésben választott indítással.",
+          "needs_trigger": "Először válaszd ki az 1. lépésben, mi indítja.",
+          "action": "Saját automatizálásban használom",
+          "action_detail": "Csak a műveletet másold ki, és illeszd be egy meglévő automatizálásodba.",
+          "paste": "A Home Assistantben nyisd meg az automatizálásodat, adj hozzá egy műveletet, a menüjében válaszd a Szerkesztés YAML-ben lehetőséget, és illeszd be ezt.",
+          "copy": "YAML másolása"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "Mi csenget?",
-            "help": "Válaszd ki, mi jelzi a Home Assistantnek, hogy valaki az ajtónál van. Elöl a csengőid; bármely érzékelő, gomb vagy esemény is jó."
+            "help": "Válaszd ki, mi jelzi a Home Assistantnek, hogy valaki az ajtónál van. Elöl a csengőid; bármely érzékelő, gomb vagy esemény is jó. Egy meglévő automatizálásban használod? Akkor ezt a lépést kihagyhatod."
           },
           "camera": {
             "title": "Melyik kamera?",
@@ -4317,8 +4355,8 @@
             "help": "Csengess most egyszer, pontosan úgy, ahogy az automatizálás fog. Nézd a képernyőidet."
           },
           "add": {
-            "title": "Hozzáadás a Home Assistanthez",
-            "help": "Ellenőrizd és add hozzá. Azonnal működik, újraindítás nélkül."
+            "title": "Befejezés",
+            "help": "Legyen belőle saját automatizálás, vagy másold a műveletet egy meglévő automatizálásodba."
           }
         }
       },

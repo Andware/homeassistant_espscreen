@@ -3609,16 +3609,17 @@
         "with_picture": "Montre l'image de la caméra",
         "without_picture": "Montre l'alerte sans image",
         "summary": {
-          "says": "Texte"
+          "says": "Texte",
+          "buttons": "Boutons"
         },
         "steps": {
           "trigger": {
             "title": "Qu’est-ce qui la déclenche ?",
-            "help": "Choisissez ce qui fait apparaître l'alerte : un capteur qui s'allume, une entrée booléenne, un bouton ou un événement."
+            "help": "Choisissez ce qui fait apparaître l'alerte : un capteur qui s'allume, une entrée booléenne, un bouton ou un événement. Vous l'utilisez dans une automatisation existante ? Vous pouvez alors passer cette étape."
           },
           "words": {
             "title": "Que dit-elle ?",
-            "help": "Un titre court, une ligne en dessous et le texte du bouton. Vous voyez la carte telle que l'écran la dessine."
+            "help": "Un titre court et une ligne en dessous. Vous voyez la carte telle que l'écran la dessine."
           },
           "look": {
             "title": "À quoi ressemble-t-elle ?",
@@ -3633,9 +3634,36 @@
             "help": "Envoyez-la une fois maintenant, exactement comme le fera l'automatisation. Regardez vos écrans."
           },
           "add": {
-            "title": "Ajouter à Home Assistant",
-            "help": "Vérifiez et ajoutez. Cela marche tout de suite, sans redémarrage."
+            "title": "Terminer",
+            "help": "Faites-en une automatisation à part, ou copiez l'action dans une automatisation que vous avez déjà."
+          },
+          "buttons": {
+            "title": "Quels boutons ?",
+            "help": "Un bouton, ou deux pour un choix. Chacun peut faire quelque chose dans Home Assistant quand on l'appuie, ou seulement fermer l'alerte."
           }
+        },
+        "buttons": {
+          "one": "Un bouton",
+          "one_detail": "OK, J'arrive, Vu : il ferme l'alerte et peut faire une chose.",
+          "two": "Deux boutons",
+          "two_detail": "Un choix, comme Ouvrir et Pas maintenant, chacun avec son action.",
+          "first": "Bouton de droite",
+          "second": "Bouton de gauche",
+          "second_example": "Pas maintenant",
+          "color": "Couleur",
+          "own_color": "Sa propre couleur",
+          "does": "À l'appui",
+          "only_close": "Ferme seulement l'alerte",
+          "no_actions": "Cette entité n'a pas d'action qui ne demande rien de plus. Choisissez-en une autre.",
+          "closes": "ferme l'alerte",
+          "only": "Le bouton"
+        },
+        "try_action": "Attention : appuyer sur un bouton avec une action l'exécute vraiment, même maintenant.",
+        "route": {
+          "event": "Envoyée comme l'événement {event} : la seule voie qui emporte une caméra, l'action d'un bouton et un choix d'écrans. L'app donne à chaque écran l'alerte sous la forme que son firmware connaît.",
+          "one_button": "{screens} : firmware antérieur à {version}, ne montre que le bouton de droite.",
+          "action": "L'app exécute l'action d'un bouton une fois, quel que soit l'écran où il est appuyé. Après le délai ou une nouvelle alerte, rien ne se passe.",
+          "no_picture": "{screens} : montre l'alerte sans l'image de la caméra."
         }
       },
       "hero": {
@@ -4237,6 +4265,16 @@
           "binary_sensor": "Un capteur : de éteint à allumé, par exemple quand il détecte quelqu'un.",
           "switch": "Un interrupteur : quand quelqu'un l'allume.",
           "input_boolean": "Une entrée booléenne : quand elle passe à allumé, par exemple depuis une autre automatisation."
+        },
+        "finish": {
+          "label": "Comment voulez-vous l'utiliser ?",
+          "automation": "Créer l'automatisation",
+          "automation_detail": "Tessera l'ajoute à Home Assistant, avec le déclencheur choisi à l'étape 1.",
+          "needs_trigger": "Choisissez d'abord à l'étape 1 ce qui la déclenche.",
+          "action": "Utiliser dans une automatisation à vous",
+          "action_detail": "Copiez seulement l'action et collez-la dans une automatisation que vous avez déjà.",
+          "paste": "Dans Home Assistant, ouvrez votre automatisation, ajoutez une action, choisissez Modifier en YAML dans son menu et collez ceci.",
+          "copy": "Copier le YAML"
         }
       },
       "install": {
@@ -4298,7 +4336,7 @@
         "steps": {
           "rings": {
             "title": "Qu’est-ce qui sonne ?",
-            "help": "Choisissez ce qui indique à Home Assistant que quelqu'un est à la porte. Vos sonnettes d'abord ; tout capteur, bouton ou événement convient aussi."
+            "help": "Choisissez ce qui indique à Home Assistant que quelqu'un est à la porte. Vos sonnettes d'abord ; tout capteur, bouton ou événement convient aussi. Vous l'utilisez dans une automatisation existante ? Vous pouvez alors passer cette étape."
           },
           "camera": {
             "title": "Quelle caméra ?",
@@ -4317,8 +4355,8 @@
             "help": "Sonnez une fois maintenant, exactement comme le fera l'automatisation. Regardez vos écrans."
           },
           "add": {
-            "title": "Ajouter à Home Assistant",
-            "help": "Vérifiez et ajoutez. Cela marche tout de suite, sans redémarrage."
+            "title": "Terminer",
+            "help": "Faites-en une automatisation à part, ou copiez l'action dans une automatisation que vous avez déjà."
           }
         }
       },
