@@ -3462,7 +3462,6 @@
       },
       "sections": "Szakaszok",
       "nav": {
-        "try": "Beállítás",
         "screens": "Kijelzőid",
         "howto": "Automatizmusban",
         "all": "Minden kijelző",
@@ -3487,8 +3486,6 @@
         "sending": "Küldés…",
         "send": "Figyelmeztetés küldése",
         "sent_all": "Elküldve {n} kijelzőre. | Elküldve {n} kijelzőre.",
-        "skipped": "1 kihagyva (offline vagy régi firmware). | {n} kihagyva (offline vagy régi firmware).",
-        "left_empty": "Üresen hagyva: {fields}.",
         "nothing": "Egyik kijelző sem tudta megjeleníteni: ellenőrizd, hogy van-e online kijelző {version} vagy újabb firmware-rel."
       },
       "white": "Fehér (alapértelmezett)",
@@ -3604,16 +3601,50 @@
         "direct": "Közvetlenül hívsz egy kijelzőt? A(z) {choice} művelete a show_alert mezőit és ezt a hármat fogadja; a második gomb {ending} eredménnyel zárja a figyelmeztetést."
       },
       "wizard": {
-        "text": "Mutasd meg, mi indítja az értesítést, töltsd ki, mit mond, és válaszd ki a képernyőket. Az alkalmazás felveszi neked az automatizálást a Home Assistantbe, vagy most küldesz egyet, hogy lásd.",
-        "step_trigger": "Mi indítja?",
-        "step_alert": "Mit mond?",
         "camera": "Kamera (nem kötelező)",
         "no_camera": "Nincs kamera",
-        "step_screens": "Mely képernyők?",
-        "screens_hint": "Nincs kiválasztva: minden képernyő, amely értesítést tud mutatni (most {ready}).",
-        "not_ready": "Előbb válaszd ki, mi indítja.",
-        "description": "A Tessera Eseményeiben készült: egy értesítés a képernyőkön."
-      }
+        "screens_hint": "Nincs kiválasztva: minden képernyő, amely értesítést tud mutatni.",
+        "description": "A Tessera Eseményeiben készült: egy értesítés a képernyőkön.",
+        "title": "Új értesítés-automatizálás",
+        "with_picture": "A kamera képét mutatja",
+        "without_picture": "Kép nélkül mutatja az értesítést",
+        "summary": {
+          "says": "Szöveg"
+        },
+        "steps": {
+          "trigger": {
+            "title": "Mi indítja?",
+            "help": "Válaszd ki, mitől jelenik meg az értesítés: egy bekapcsoló érzékelő, egy kapcsoló segítő, egy gomb vagy egy esemény."
+          },
+          "words": {
+            "title": "Mit ír ki?",
+            "help": "Egy rövid cím, alatta egy sor és a gomb szövege. A kártyát úgy látod, ahogy a képernyő rajzolja."
+          },
+          "look": {
+            "title": "Hogy néz ki?",
+            "help": "Egy ikon, egy szín, ha szeretnéd egy kamerakép, és hogy villogjon-e."
+          },
+          "screens": {
+            "title": "Mely képernyők?",
+            "help": "Válaszd ki a képernyőket, amelyek mutatják, és hogy meddig marad."
+          },
+          "try": {
+            "title": "Kipróbálás",
+            "help": "Küldd el most egyszer, pontosan úgy, ahogy az automatizálás fogja. Nézd a képernyőidet."
+          },
+          "add": {
+            "title": "Hozzáadás a Home Assistanthez",
+            "help": "Ellenőrizd és add hozzá. Azonnal működik, újraindítás nélkül."
+          }
+        }
+      },
+      "hero": {
+        "title": "Értesítés a képernyőiden",
+        "text": "Egy kártya mindenen felül a képernyőn, egy gombbal: amikor valaki az ajtónál van, kész a mosás, vagy nyitva maradt egy ablak. A varázsló végigvezet, és hozzáadja az automatizálást a Home Assistanthez.",
+        "create": "Értesítés-automatizálás létrehozása",
+        "empty": "Még nincs értesítés-automatizálás. Hozz létre egyet fent, és itt jelenik meg."
+      },
+      "reference": "Megírás saját kézzel"
     },
     "override": {
       "eyebrow": "Haladó · helyi felülírás",
@@ -4190,12 +4221,27 @@
           "event": "Indul minden alkalommal, amikor ez az esemény bekövetkezik.",
           "on": "Indul, amikor ez bekapcsol.",
           "press": "Indul minden megnyomáskor."
+        },
+        "back": "Vissza",
+        "next": "Tovább",
+        "done": "Kész",
+        "other": "Valami más",
+        "other_detail": "Bármely saját érzékelő, kapcsoló, segítő, gomb vagy esemény",
+        "every_screen": "Minden képernyő",
+        "summary": {
+          "starts": "Indítja",
+          "screens": "Képernyők",
+          "title": "Név a Home Assistantben"
+        },
+        "domain": {
+          "binary_sensor": "Érzékelő: kiről bere vált, például amikor valakit észlel.",
+          "switch": "Kapcsoló: amikor valaki bekapcsolja.",
+          "input_boolean": "Kapcsoló segítő: amikor bekapcsol, például egy másik automatizálásból."
         }
       },
       "install": {
         "add": "Hozzáadás a Home Assistanthez",
         "saving": "Hozzáadás…",
-        "save_again": "Módosítások mentése a Home Assistantbe",
         "saved": "Hozzáadva. Azonnal működik, újraindítás nélkül.",
         "open": "Megnyitás a Home Assistantben",
         "hint": "A neve „{title}” a Home Assistant automatizálásai között, ahol tovább módosíthatod.",
@@ -4213,11 +4259,6 @@
         "when": "Épp most",
         "sound": "Hang be"
       },
-      "steps": {
-        "ring": "Az automatizálás elküldi az eseményt a kamerával és, ha akarod, a képernyőkkel.",
-        "answer": "Az első megérintett képernyő fogadja; a többin bezárul.",
-        "missed": "Senki nem érintette meg: az időkorlát után bezárul, és nem fogadott csengetésként a felső sávban marad."
-      },
       "try": {
         "send": "Csengetés",
         "views": "Élőben megnyitva {n} képernyőn. | Élőben megnyitva {n} képernyőn.",
@@ -4230,13 +4271,10 @@
         "timeout": "Időkorlát (másodperc)"
       },
       "screens": {
-        "title": "A képernyőid",
-        "text": "Mit csinál minden képernyő egy csengetéssel.",
         "view": "Élőben, hanggal",
         "picture": "Értesítés képpel",
         "plain": "Értesítés kép nélkül"
       },
-      "fields_title": "Az esemény mezői",
       "after": {
         "title": "Utána",
         "text": "Csengetésenként egyszer az alkalmazás elküldi a(z) {answered} eseményt, ha valaki fogadta egy képernyőn, vagy a(z) {missed} eseményt, ha senki. Mindkettő tartalmazza a kamerát és a címet; az answered a képernyőt is.",
@@ -4248,17 +4286,50 @@
         "description": "A Tessera Eseményeiben készült: egy csengő a képernyőkön."
       },
       "wizard": {
-        "title": "Állítsd be a csengődet",
-        "text": "Mutasd meg, mi csenget nálad, a kameráját és a képernyőket. Az alkalmazás felveszi neked az automatizálást a Home Assistantbe, vagy kimásolod.",
-        "step_trigger": "Mi csenget?",
-        "step_camera": "Melyik kamera?",
-        "pick_camera": "Válaszd ki a csengő kameráját",
+        "title": "Új csengő-automatizálás",
         "camera_hint": "Egy P4 képernyő élőben, hanggal streameli, ha a kamerának van hangja; a többi képernyő a képét mutatja.",
-        "step_screens": "Mely képernyők?",
         "screens_hint": "Nincs kiválasztva: minden képernyő.",
-        "step_details": "Név és időkorlát",
-        "not_ready": "Előbb válaszd ki, mi csenget, és egy kamerát.",
-        "limits": "Nem minden csengő tud mindent: hang csak akkor van, ha a kamera streamjében van. A visszabeszélés és az ajtónyitás később jön."
+        "limits": "Nem minden csengő tud mindent: hang csak akkor van, ha a kamera streamjében van. A visszabeszélés és az ajtónyitás később jön.",
+        "more_cameras": "Másik kamera…",
+        "timeout_hint": "Meddig marad nyitva egy csengetés, ha senki nem érinti meg a képernyőt. Üres: az alapérték.",
+        "summary": {
+          "camera": "Kamera"
+        },
+        "steps": {
+          "rings": {
+            "title": "Mi csenget?",
+            "help": "Válaszd ki, mi jelzi a Home Assistantnek, hogy valaki az ajtónál van. Elöl a csengőid; bármely érzékelő, gomb vagy esemény is jó."
+          },
+          "camera": {
+            "title": "Melyik kamera?",
+            "help": "A kamera, amelyet a képernyők csengetéskor mutatnak. Általában a csengő saját kamerája."
+          },
+          "screens": {
+            "title": "Mely képernyők?",
+            "help": "Válaszd ki a képernyőket, amelyek a csengetést mutatják. Mindegyiknél látszik, mit tud vele kezdeni."
+          },
+          "name": {
+            "title": "Név és idő",
+            "help": "A cím a képernyőn, és meddig marad nyitva egy csengetés. Mindkettő üresen hagyható."
+          },
+          "try": {
+            "title": "Kipróbálás",
+            "help": "Csengess most egyszer, pontosan úgy, ahogy az automatizálás fog. Nézd a képernyőidet."
+          },
+          "add": {
+            "title": "Hozzáadás a Home Assistanthez",
+            "help": "Ellenőrizd és add hozzá. Azonnal működik, újraindítás nélkül."
+          }
+        }
+      },
+      "hero": {
+        "title": "Az ajtócsengőd a képernyőiden",
+        "text": "Valaki csenget, és a képernyőid megmutatják, ki áll az ajtó előtt: élőben hanggal egy P4 képernyőn, képként vagy értesítésként a többin. A varázsló végigvezet, és hozzáadja az automatizálást a Home Assistanthez.",
+        "create": "Csengő-automatizálás létrehozása",
+        "empty": "Még nincs csengő-automatizálás. Hozz létre egyet fent, és itt jelenik meg."
+      },
+      "by_hand": {
+        "title": "Az automatizálás megírása saját kézzel"
       }
     }
   }

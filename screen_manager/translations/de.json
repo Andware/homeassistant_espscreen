@@ -3462,7 +3462,6 @@
       },
       "sections": "Abschnitte",
       "nav": {
-        "try": "Einrichten",
         "screens": "Deine Bildschirme",
         "howto": "In einer Automation",
         "all": "Alle Bildschirme",
@@ -3487,8 +3486,6 @@
         "sending": "Wird gesendet…",
         "send": "Meldung senden",
         "sent_all": "An {n} Bildschirm gesendet. | An {n} Bildschirme gesendet.",
-        "skipped": "1 übersprungen (offline oder alte Firmware). | {n} übersprungen (offline oder alte Firmware).",
-        "left_empty": "Leer gelassen: {fields}.",
         "nothing": "Kein Bildschirm konnte sie anzeigen: Prüfe, ob ein Bildschirm mit Firmware {version} oder neuer online ist."
       },
       "white": "Weiß (Standard)",
@@ -3604,16 +3601,50 @@
         "direct": "Rufst du einen Bildschirm direkt auf? Seine Aktion {choice} nimmt die Felder von show_alert und diese drei; die zweite Taste beendet die Meldung mit {ending}."
       },
       "wizard": {
-        "text": "Zeige, was den Alert startet, fülle aus, was er sagt, und wähle die Bildschirme. Die App legt die Automatisierung für dich in Home Assistant an, oder du sendest jetzt einen zur Ansicht.",
-        "step_trigger": "Womit startet er?",
-        "step_alert": "Was sagt er?",
         "camera": "Kamera (optional)",
         "no_camera": "Keine Kamera",
-        "step_screens": "Welche Bildschirme?",
-        "screens_hint": "Keiner gewählt: jeder Bildschirm, der einen Alert zeigen kann (jetzt {ready}).",
-        "not_ready": "Wähle zuerst, womit er startet.",
-        "description": "Erstellt in den Events von Tessera: ein Alert auf den Bildschirmen."
-      }
+        "screens_hint": "Nichts gewählt: jeder Bildschirm, der eine Meldung zeigen kann.",
+        "description": "Erstellt in den Events von Tessera: ein Alert auf den Bildschirmen.",
+        "title": "Neue Meldungs-Automation",
+        "with_picture": "Zeigt das Bild der Kamera",
+        "without_picture": "Zeigt die Meldung ohne Bild",
+        "summary": {
+          "says": "Text"
+        },
+        "steps": {
+          "trigger": {
+            "title": "Was startet sie?",
+            "help": "Wähle, wodurch die Meldung erscheint: ein Sensor, der angeht, ein Schalter-Helfer, ein Taster oder ein Ereignis."
+          },
+          "words": {
+            "title": "Was steht darauf?",
+            "help": "Ein kurzer Titel, eine Zeile darunter und der Text auf der Taste. Du siehst die Karte so, wie der Bildschirm sie zeichnet."
+          },
+          "look": {
+            "title": "Wie sieht sie aus?",
+            "help": "Ein Symbol, eine Farbe, wenn du willst ein Kamerabild, und ob sie blinkt."
+          },
+          "screens": {
+            "title": "Welche Bildschirme?",
+            "help": "Wähle die Bildschirme, die sie zeigen, und wie lange sie bleibt."
+          },
+          "try": {
+            "title": "Ausprobieren",
+            "help": "Sende sie jetzt einmal, genau wie die Automation es tun wird. Schau auf deine Bildschirme."
+          },
+          "add": {
+            "title": "Zu Home Assistant hinzufügen",
+            "help": "Prüfe es und füge es hinzu. Es wirkt sofort, ohne Neustart."
+          }
+        }
+      },
+      "hero": {
+        "title": "Eine Meldung auf deinen Bildschirmen",
+        "text": "Eine Karte über allem auf dem Bildschirm, mit einer Taste: wenn jemand an der Tür ist, die Wäsche fertig ist oder ein Fenster offen steht. Der Assistent führt dich hindurch und legt die Automation in Home Assistant an.",
+        "create": "Meldungs-Automation erstellen",
+        "empty": "Noch keine Meldungs-Automation. Erstelle oben eine, dann erscheint sie hier."
+      },
+      "reference": "Selbst schreiben"
     },
     "override": {
       "eyebrow": "Erweitert · lokale Anpassung",
@@ -4190,12 +4221,27 @@
           "event": "Startet jedes Mal, wenn dieses Event auslöst.",
           "on": "Startet, wenn dies angeht.",
           "press": "Startet bei jedem Druck darauf."
+        },
+        "back": "Zurück",
+        "next": "Weiter",
+        "done": "Fertig",
+        "other": "Etwas anderes",
+        "other_detail": "Ein eigener Sensor, Schalter, Helfer, Taster oder ein Ereignis",
+        "every_screen": "Jeder Bildschirm",
+        "summary": {
+          "starts": "Startet bei",
+          "screens": "Bildschirme",
+          "title": "Name in Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Ein Sensor: von aus nach an, zum Beispiel wenn er jemanden erkennt.",
+          "switch": "Ein Schalter: wenn jemand ihn einschaltet.",
+          "input_boolean": "Ein Schalter-Helfer: wenn er angeht, zum Beispiel durch eine andere Automation."
         }
       },
       "install": {
         "add": "Zu Home Assistant hinzufügen",
         "saving": "Wird hinzugefügt…",
-        "save_again": "Änderungen in Home Assistant speichern",
         "saved": "Hinzugefügt. Es funktioniert sofort, ohne Neustart.",
         "open": "In Home Assistant öffnen",
         "hint": "Sie heißt „{title}“ in den Automatisierungen von Home Assistant, wo du sie weiter ändern kannst.",
@@ -4213,11 +4259,6 @@
         "when": "Gerade eben",
         "sound": "Ton an"
       },
-      "steps": {
-        "ring": "Die Automatisierung sendet das Event mit der Kamera und, wenn du willst, den Bildschirmen.",
-        "answer": "Der erste Bildschirm, den jemand berührt, nimmt ab; auf den anderen schließt es sich.",
-        "missed": "Niemand hat ihn berührt: er schließt nach seinem Timeout und bleibt als verpasstes Klingeln in der oberen Leiste."
-      },
       "try": {
         "send": "Klingeln",
         "views": "Live geöffnet auf {n} Bildschirm. | Live geöffnet auf {n} Bildschirmen.",
@@ -4230,13 +4271,10 @@
         "timeout": "Timeout (Sekunden)"
       },
       "screens": {
-        "title": "Deine Bildschirme",
-        "text": "Was jeder Bildschirm mit einem Klingeln macht.",
         "view": "Live mit Ton",
         "picture": "Alert mit Bild",
         "plain": "Alert ohne Bild"
       },
-      "fields_title": "Die Felder des Events",
       "after": {
         "title": "Danach",
         "text": "Einmal pro Klingeln sendet die App {answered}, wenn jemand auf einem Bildschirm abgenommen hat, oder {missed}, wenn niemand es tat. Beide tragen die Kamera und den Titel; answered nennt auch den Bildschirm.",
@@ -4248,17 +4286,50 @@
         "description": "Erstellt in den Events von Tessera: eine Türklingel auf den Bildschirmen."
       },
       "wizard": {
-        "title": "Richte deine Türklingel ein",
-        "text": "Zeige, was bei dir klingelt, die Kamera und die Bildschirme. Die App legt die Automatisierung für dich in Home Assistant an, oder du kopierst sie.",
-        "step_trigger": "Was klingelt?",
-        "step_camera": "Welche Kamera?",
-        "pick_camera": "Wähle die Kamera der Türklingel",
+        "title": "Neue Türklingel-Automation",
         "camera_hint": "Ein P4-Bildschirm streamt sie live mit Ton, wenn die Kamera Ton hat; andere Bildschirme zeigen ihr Bild.",
-        "step_screens": "Welche Bildschirme?",
         "screens_hint": "Keiner gewählt: jeder Bildschirm.",
-        "step_details": "Name und Timeout",
-        "not_ready": "Wähle zuerst, was klingelt, und eine Kamera.",
-        "limits": "Nicht jede Türklingel kann alles: Ton kommt nur, wenn der Stream der Kamera ihn hat. Zurücksprechen und die Tür öffnen kommen später."
+        "limits": "Nicht jede Türklingel kann alles: Ton kommt nur, wenn der Stream der Kamera ihn hat. Zurücksprechen und die Tür öffnen kommen später.",
+        "more_cameras": "Eine andere Kamera…",
+        "timeout_hint": "Wie lange ein Klingeln offen bleibt, wenn niemand den Bildschirm berührt. Leer: der Standard.",
+        "summary": {
+          "camera": "Kamera"
+        },
+        "steps": {
+          "rings": {
+            "title": "Was klingelt?",
+            "help": "Wähle, was Home Assistant sagt, dass jemand vor der Tür steht. Deine Türklingeln stehen oben; jeder Sensor, Taster oder jedes Ereignis geht auch."
+          },
+          "camera": {
+            "title": "Welche Kamera?",
+            "help": "Die Kamera, die die Bildschirme beim Klingeln zeigen. Meist die eigene Kamera der Türklingel."
+          },
+          "screens": {
+            "title": "Welche Bildschirme?",
+            "help": "Wähle die Bildschirme, die das Klingeln zeigen. Bei jedem steht, was er damit kann."
+          },
+          "name": {
+            "title": "Name und Dauer",
+            "help": "Der Titel auf dem Bildschirm und wie lange ein Klingeln offen bleibt. Beides darf leer bleiben."
+          },
+          "try": {
+            "title": "Ausprobieren",
+            "help": "Klingle jetzt einmal, genau wie die Automation es tun wird. Schau auf deine Bildschirme."
+          },
+          "add": {
+            "title": "Zu Home Assistant hinzufügen",
+            "help": "Prüfe es und füge es hinzu. Es wirkt sofort, ohne Neustart."
+          }
+        }
+      },
+      "hero": {
+        "title": "Deine Türklingel auf deinen Bildschirmen",
+        "text": "Jemand klingelt, und deine Bildschirme zeigen, wer vor der Tür steht: live mit Ton auf einem P4-Bildschirm, als Bild oder Meldung auf den anderen. Der Assistent führt dich hindurch und legt die Automation in Home Assistant an.",
+        "create": "Türklingel-Automation erstellen",
+        "empty": "Noch keine Türklingel-Automation. Erstelle oben eine, dann erscheint sie hier."
+      },
+      "by_hand": {
+        "title": "Die Automation selbst schreiben"
       }
     }
   }

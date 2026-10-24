@@ -3462,7 +3462,6 @@
       },
       "sections": "Secções",
       "nav": {
-        "try": "Configurar",
         "screens": "Os seus ecrãs",
         "howto": "Numa automatização",
         "all": "Todos os ecrãs",
@@ -3487,8 +3486,6 @@
         "sending": "A enviar…",
         "send": "Enviar alerta",
         "sent_all": "Enviado para {n} ecrã. | Enviado para {n} ecrãs.",
-        "skipped": "{n} ecrã ignorado (offline ou firmware antigo). | {n} ecrãs ignorados (offline ou firmware antigo).",
-        "left_empty": "Deixados vazios: {fields}.",
         "nothing": "Nenhum ecrã o conseguiu mostrar: verifique se há um ecrã online com o firmware {version} ou mais recente."
       },
       "white": "Branco (predefinido)",
@@ -3604,16 +3601,50 @@
         "direct": "Chama um ecrã diretamente? A sua ação {choice} recebe os campos de show_alert mais estes três; o segundo botão termina o alerta com {ending}."
       },
       "wizard": {
-        "text": "Indique o que inicia o alerta, o que ele diz e escolha os ecrãs. A app adiciona a automação ao Home Assistant por si, ou envie um agora para o ver.",
-        "step_trigger": "O que o inicia?",
-        "step_alert": "O que diz?",
         "camera": "Câmara (opcional)",
         "no_camera": "Sem câmara",
-        "step_screens": "Que ecrãs?",
-        "screens_hint": "Nenhum escolhido: todos os ecrãs que mostram alertas ({ready} agora).",
-        "not_ready": "Escolha primeiro o que o inicia.",
-        "description": "Criada nos Eventos do Tessera: um alerta nos ecrãs."
-      }
+        "screens_hint": "Nenhum escolhido: todos os ecrãs que podem mostrar um alerta.",
+        "description": "Criada nos Eventos do Tessera: um alerta nos ecrãs.",
+        "title": "Nova automação de alerta",
+        "with_picture": "Mostra a imagem da câmara",
+        "without_picture": "Mostra o alerta sem imagem",
+        "summary": {
+          "says": "Texto"
+        },
+        "steps": {
+          "trigger": {
+            "title": "O que o inicia?",
+            "help": "Escolha o que faz aparecer o alerta: um sensor que liga, um auxiliar de interruptor, um botão ou um evento."
+          },
+          "words": {
+            "title": "O que diz?",
+            "help": "Um título curto, uma linha por baixo e o texto do botão. Vê o cartão tal como o ecrã o desenha."
+          },
+          "look": {
+            "title": "Como fica?",
+            "help": "Um ícone, uma cor, uma imagem de câmara se quiser, e se pisca."
+          },
+          "screens": {
+            "title": "Que ecrãs?",
+            "help": "Escolha os ecrãs que o mostram e quanto tempo fica."
+          },
+          "try": {
+            "title": "Experimentar",
+            "help": "Envie-o uma vez agora, tal como a automação fará. Olhe para os seus ecrãs."
+          },
+          "add": {
+            "title": "Adicionar ao Home Assistant",
+            "help": "Verifique e adicione. Funciona logo, sem reiniciar."
+          }
+        }
+      },
+      "hero": {
+        "title": "Um alerta nos seus ecrãs",
+        "text": "Um cartão sobre tudo o que está no ecrã, com um botão: quando há alguém à porta, a roupa está pronta ou uma janela ficou aberta. O assistente guia-o e adiciona a automação ao Home Assistant.",
+        "create": "Criar uma automação de alerta",
+        "empty": "Ainda não há automação de alerta. Crie uma acima e ela aparece aqui."
+      },
+      "reference": "Escrevê-lo você mesmo"
     },
     "override": {
       "eyebrow": "Avançado · personalização local",
@@ -4190,12 +4221,27 @@
           "event": "Começa sempre que este evento dispara.",
           "on": "Começa quando isto liga.",
           "press": "Começa sempre que é premido."
+        },
+        "back": "Voltar",
+        "next": "Seguinte",
+        "done": "Concluído",
+        "other": "Outra coisa",
+        "other_detail": "Qualquer sensor, interruptor, auxiliar, botão ou evento seu",
+        "every_screen": "Todos os ecrãs",
+        "summary": {
+          "starts": "Começa com",
+          "screens": "Ecrãs",
+          "title": "Nome no Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Um sensor: de desligado para ligado, por exemplo quando deteta alguém.",
+          "switch": "Um interruptor: quando alguém o liga.",
+          "input_boolean": "Um auxiliar de interruptor: quando liga, por exemplo a partir de outra automação."
         }
       },
       "install": {
         "add": "Adicionar ao Home Assistant",
         "saving": "A adicionar…",
-        "save_again": "Guardar alterações no Home Assistant",
         "saved": "Adicionada. Funciona de imediato, sem reiniciar.",
         "open": "Abrir no Home Assistant",
         "hint": "Chama-se \"{title}\" nas automações do Home Assistant, onde a pode alterar.",
@@ -4213,11 +4259,6 @@
         "when": "Agora mesmo",
         "sound": "Som ligado"
       },
-      "steps": {
-        "ring": "A automação envia o evento com a câmara e, se quiser, os ecrãs.",
-        "answer": "O primeiro ecrã tocado atende; nos outros fecha.",
-        "missed": "Ninguém tocou: fecha após o tempo limite e fica na barra superior como toque perdido."
-      },
       "try": {
         "send": "Tocar",
         "views": "Aberto em direto em {n} ecrã. | Aberto em direto em {n} ecrãs.",
@@ -4230,13 +4271,10 @@
         "timeout": "Tempo limite (segundos)"
       },
       "screens": {
-        "title": "Os seus ecrãs",
-        "text": "O que cada ecrã faz com um toque.",
         "view": "Em direto com som",
         "picture": "Alerta com imagem",
         "plain": "Alerta sem imagem"
       },
-      "fields_title": "Os campos do evento",
       "after": {
         "title": "Depois",
         "text": "Uma vez por toque a app envia {answered} quando alguém atendeu num ecrã, ou {missed} quando ninguém o fez. Ambos levam a câmara e o título; answered também indica o ecrã.",
@@ -4248,17 +4286,50 @@
         "description": "Criada nos Eventos do Tessera: uma campainha nos ecrãs."
       },
       "wizard": {
-        "title": "Configure a sua campainha",
-        "text": "Indique o que toca em sua casa, a câmara e os ecrãs. A app adiciona a automação ao Home Assistant por si, ou copia-a.",
-        "step_trigger": "O que toca?",
-        "step_camera": "Que câmara?",
-        "pick_camera": "Escolha a câmara da campainha",
+        "title": "Nova automação de campainha",
         "camera_hint": "Um ecrã P4 transmite-a em direto com som se a câmara tiver som; os outros ecrãs mostram a imagem.",
-        "step_screens": "Que ecrãs?",
         "screens_hint": "Nenhum escolhido: todos os ecrãs.",
-        "step_details": "Nome e tempo limite",
-        "not_ready": "Escolha primeiro o que toca e uma câmara.",
-        "limits": "Nem todas as campainhas fazem tudo: o som só vem se o fluxo da câmara o tiver. Falar e abrir a porta virão mais tarde."
+        "limits": "Nem todas as campainhas fazem tudo: o som só vem se o fluxo da câmara o tiver. Falar e abrir a porta virão mais tarde.",
+        "more_cameras": "Outra câmara…",
+        "timeout_hint": "Quanto tempo um toque fica aberto se ninguém tocar no ecrã. Vazio: o valor predefinido.",
+        "summary": {
+          "camera": "Câmara"
+        },
+        "steps": {
+          "rings": {
+            "title": "O que toca?",
+            "help": "Escolha o que diz ao Home Assistant que há alguém à porta. As suas campainhas primeiro; qualquer sensor, botão ou evento também serve."
+          },
+          "camera": {
+            "title": "Que câmara?",
+            "help": "A câmara que os ecrãs mostram quando toca. Normalmente a da própria campainha."
+          },
+          "screens": {
+            "title": "Que ecrãs?",
+            "help": "Escolha os ecrãs que mostram o toque. Cada um diz o que consegue fazer com ele."
+          },
+          "name": {
+            "title": "Nome e tempo",
+            "help": "O título no ecrã e quanto tempo um toque fica aberto. Pode deixar ambos vazios."
+          },
+          "try": {
+            "title": "Experimentar",
+            "help": "Toque uma vez agora, tal como a automação fará. Olhe para os seus ecrãs."
+          },
+          "add": {
+            "title": "Adicionar ao Home Assistant",
+            "help": "Verifique e adicione. Funciona logo, sem reiniciar."
+          }
+        }
+      },
+      "hero": {
+        "title": "A sua campainha nos seus ecrãs",
+        "text": "Alguém toca, e os seus ecrãs mostram quem está à porta: ao vivo com som num ecrã P4, como imagem ou alerta nos outros. O assistente guia-o e adiciona a automação ao Home Assistant.",
+        "create": "Criar uma automação de campainha",
+        "empty": "Ainda não há automação de campainha. Crie uma acima e ela aparece aqui."
+      },
+      "by_hand": {
+        "title": "Escrever a automação você mesmo"
       }
     }
   }

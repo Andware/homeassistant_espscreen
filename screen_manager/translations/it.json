@@ -3462,7 +3462,6 @@
       },
       "sections": "Sezioni",
       "nav": {
-        "try": "Configura",
         "screens": "I tuoi schermi",
         "howto": "In un'automazione",
         "all": "Tutti gli schermi",
@@ -3487,8 +3486,6 @@
         "sending": "Invio…",
         "send": "Invia avviso",
         "sent_all": "Inviato a {n} schermo. | Inviato a {n} schermi.",
-        "skipped": "1 schermo saltato (offline o firmware troppo vecchio). | {n} schermi saltati (offline o firmware troppo vecchio).",
-        "left_empty": "Campi lasciati vuoti: {fields}.",
         "nothing": "Nessuno schermo ha potuto mostrarlo: verifica che uno schermo sia online con il firmware {version} o più recente."
       },
       "white": "Bianco (predefinito)",
@@ -3604,16 +3601,50 @@
         "direct": "Chiami uno schermo direttamente? La sua azione {choice} prende i campi di show_alert più questi tre; il secondo pulsante chiude l'avviso con {ending}."
       },
       "wizard": {
-        "text": "Indica cosa avvia l'avviso, compila cosa dice e scegli gli schermi. L'app aggiunge l'automazione a Home Assistant per te, oppure ne invii uno ora per vederlo.",
-        "step_trigger": "Cosa lo avvia?",
-        "step_alert": "Cosa dice?",
         "camera": "Telecamera (facoltativa)",
         "no_camera": "Nessuna telecamera",
-        "step_screens": "Quali schermi?",
-        "screens_hint": "Nessuno scelto: tutti gli schermi che possono mostrare un avviso ({ready} ora).",
-        "not_ready": "Scegli prima cosa lo avvia.",
-        "description": "Creata negli Eventi di Tessera: un avviso sugli schermi."
-      }
+        "screens_hint": "Nessuno scelto: tutti gli schermi che possono mostrare un avviso.",
+        "description": "Creata negli Eventi di Tessera: un avviso sugli schermi.",
+        "title": "Nuova automazione di avviso",
+        "with_picture": "Mostra l'immagine della telecamera",
+        "without_picture": "Mostra l'avviso senza immagine",
+        "summary": {
+          "says": "Testo"
+        },
+        "steps": {
+          "trigger": {
+            "title": "Cosa lo avvia?",
+            "help": "Scegli cosa fa comparire l'avviso: un sensore che si accende, un aiutante interruttore, un pulsante o un evento."
+          },
+          "words": {
+            "title": "Cosa dice?",
+            "help": "Un titolo breve, una riga sotto e il testo del pulsante. Vedi la scheda come la disegna lo schermo."
+          },
+          "look": {
+            "title": "Che aspetto ha?",
+            "help": "Un'icona, un colore, un'immagine della telecamera se vuoi, e se lampeggia."
+          },
+          "screens": {
+            "title": "Quali schermi?",
+            "help": "Scegli gli schermi che lo mostrano e quanto resta."
+          },
+          "try": {
+            "title": "Provalo",
+            "help": "Invialo una volta adesso, esattamente come farà l'automazione. Guarda i tuoi schermi."
+          },
+          "add": {
+            "title": "Aggiungi a Home Assistant",
+            "help": "Controlla e aggiungi. Funziona subito, senza riavvio."
+          }
+        }
+      },
+      "hero": {
+        "title": "Un avviso sui tuoi schermi",
+        "text": "Una scheda sopra tutto lo schermo, con un pulsante: quando c'è qualcuno alla porta, il bucato è pronto o una finestra resta aperta. La procedura guidata ti accompagna e aggiunge l'automazione a Home Assistant.",
+        "create": "Crea un'automazione di avviso",
+        "empty": "Nessuna automazione di avviso per ora. Creane una qui sopra e comparirà qui."
+      },
+      "reference": "Scriverlo da te"
     },
     "override": {
       "eyebrow": "Avanzate · personalizzazione locale",
@@ -4190,12 +4221,27 @@
           "event": "Parte ogni volta che scatta questo evento.",
           "on": "Parte quando questo si accende.",
           "press": "Parte ogni volta che viene premuto."
+        },
+        "back": "Indietro",
+        "next": "Avanti",
+        "done": "Fatto",
+        "other": "Altro",
+        "other_detail": "Qualsiasi tuo sensore, interruttore, aiutante, pulsante o evento",
+        "every_screen": "Tutti gli schermi",
+        "summary": {
+          "starts": "Parte con",
+          "screens": "Schermi",
+          "title": "Nome in Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Un sensore: da spento ad acceso, per esempio quando rileva qualcuno.",
+          "switch": "Un interruttore: quando qualcuno lo accende.",
+          "input_boolean": "Un aiutante interruttore: quando si accende, per esempio da un'altra automazione."
         }
       },
       "install": {
         "add": "Aggiungi a Home Assistant",
         "saving": "Aggiunta…",
-        "save_again": "Salva le modifiche in Home Assistant",
         "saved": "Aggiunta. Funziona subito, senza riavvio.",
         "open": "Apri in Home Assistant",
         "hint": "Si chiama \"{title}\" nelle automazioni di Home Assistant, dove puoi modificarla ancora.",
@@ -4213,11 +4259,6 @@
         "when": "Proprio ora",
         "sound": "Audio attivo"
       },
-      "steps": {
-        "ring": "L'automazione invia l'evento con la telecamera e, se vuoi, gli schermi.",
-        "answer": "Il primo schermo toccato risponde; sugli altri si chiude.",
-        "missed": "Nessuno l'ha toccato: si chiude dopo il suo timeout e resta nella barra in alto come squillo perso."
-      },
       "try": {
         "send": "Suona",
         "views": "Aperto dal vivo su {n} schermo. | Aperto dal vivo su {n} schermi.",
@@ -4230,13 +4271,10 @@
         "timeout": "Timeout (secondi)"
       },
       "screens": {
-        "title": "I tuoi schermi",
-        "text": "Cosa fa ogni schermo con uno squillo.",
         "view": "Dal vivo con audio",
         "picture": "Avviso con immagine",
         "plain": "Avviso senza immagine"
       },
-      "fields_title": "I campi dell'evento",
       "after": {
         "title": "Dopo",
         "text": "Una volta per squillo l'app invia {answered} quando qualcuno ha risposto su uno schermo, o {missed} quando nessuno l'ha fatto. Entrambi portano la telecamera e il titolo; answered nomina anche lo schermo.",
@@ -4248,17 +4286,50 @@
         "description": "Creata negli Eventi di Tessera: un campanello sugli schermi."
       },
       "wizard": {
-        "title": "Configura il tuo campanello",
-        "text": "Indica cosa suona a casa tua, la sua telecamera e gli schermi. L'app aggiunge l'automazione a Home Assistant per te, oppure la copi.",
-        "step_trigger": "Cosa suona?",
-        "step_camera": "Quale telecamera?",
-        "pick_camera": "Scegli la telecamera del campanello",
+        "title": "Nuova automazione del campanello",
         "camera_hint": "Uno schermo P4 la trasmette dal vivo con l'audio se la telecamera ce l'ha; gli altri schermi mostrano la sua immagine.",
-        "step_screens": "Quali schermi?",
         "screens_hint": "Nessuno scelto: tutti gli schermi.",
-        "step_details": "Nome e timeout",
-        "not_ready": "Scegli prima cosa suona e una telecamera.",
-        "limits": "Non tutti i campanelli possono tutto: l'audio arriva solo se lo stream della telecamera lo ha. Parlare e aprire la porta arriveranno più avanti."
+        "limits": "Non tutti i campanelli possono tutto: l'audio arriva solo se lo stream della telecamera lo ha. Parlare e aprire la porta arriveranno più avanti.",
+        "more_cameras": "Un'altra telecamera…",
+        "timeout_hint": "Quanto resta aperta una chiamata se nessuno tocca lo schermo. Vuoto: il valore predefinito.",
+        "summary": {
+          "camera": "Telecamera"
+        },
+        "steps": {
+          "rings": {
+            "title": "Cosa suona?",
+            "help": "Scegli cosa dice a Home Assistant che c'è qualcuno alla porta. Prima i tuoi campanelli; va bene anche qualsiasi sensore, pulsante o evento."
+          },
+          "camera": {
+            "title": "Quale telecamera?",
+            "help": "La telecamera che gli schermi mostrano quando suona. Di solito quella del campanello stesso."
+          },
+          "screens": {
+            "title": "Quali schermi?",
+            "help": "Scegli gli schermi che mostrano la chiamata. Ognuno dice cosa può farne."
+          },
+          "name": {
+            "title": "Nome e durata",
+            "help": "Il titolo sullo schermo e quanto resta aperta una chiamata. Puoi lasciarli vuoti entrambi."
+          },
+          "try": {
+            "title": "Provalo",
+            "help": "Suona una volta adesso, esattamente come farà l'automazione. Guarda i tuoi schermi."
+          },
+          "add": {
+            "title": "Aggiungi a Home Assistant",
+            "help": "Controlla e aggiungi. Funziona subito, senza riavvio."
+          }
+        }
+      },
+      "hero": {
+        "title": "Il tuo campanello sui tuoi schermi",
+        "text": "Qualcuno suona, e i tuoi schermi mostrano chi c'è alla porta: dal vivo con l'audio su uno schermo P4, come immagine o avviso sugli altri. La procedura guidata ti accompagna e aggiunge l'automazione a Home Assistant.",
+        "create": "Crea un'automazione del campanello",
+        "empty": "Nessuna automazione del campanello per ora. Creane una qui sopra e comparirà qui."
+      },
+      "by_hand": {
+        "title": "Scrivere l'automazione da te"
       }
     }
   }

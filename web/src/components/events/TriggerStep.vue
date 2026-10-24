@@ -1,54 +1,64 @@
 <script setup lang="ts">
-// The first step of a wizard of Events: what starts the automation. Any entity that can (model/automation.ts
-// triggerKind): an event entity, a sensor or switch that turns on, a button, offered in a searchable list of the
-// person's own, with the ones Home Assistant says fit best first (`suggestions`, such as its doorbells).
-import { computed } from "vue";
+// A wizard's step "what starts it" (Events): the ones Home Assistant says fit best first, as cards (`suggestions`, such
+// as its doorbells), and any other entity of the person's own that can start an automation (model/automation.ts
+// triggerKind: an event entity, a sensor, switch or helper that turns on, a button) in a searchable list. Under it, in
+// words, how the automation will read it, so a boolean, a doorbell's event or a button each say what they do.
+import { computed, ref } from "vue";
 import { t } from "../../i18n";
 import { triggerKind, type TriggerKind } from "../../model/automation";
 import { useInventoryStore } from "../../stores/inventory";
 import Icon from "../ui/Icon.vue";
+import UiChoiceCards from "../ui/UiChoiceCards.vue";
 import UiPicker from "../ui/UiPicker.vue";
 
 export type Suggestion = { trigger: string; kind: TriggerKind; name: string; detail?: string };
+const OTHER = "__other";
 const props = defineProps<{ modelValue: string; suggestions?: Suggestion[]; domains?: Record<string, TriggerKind>; mark?: string; id: string }>();
 const emit = defineEmits<{ "update:modelValue": [entity: string]; suggest: [suggestion: Suggestion] }>();
 const inv = useInventoryStore();
 const known = computed(() => Object.fromEntries((props.suggestions || []).map((s) => [s.trigger, s.kind])));
 const entities = computed(() => (inv.inventory.entities || []).filter((e) => triggerKind(e.id, known.value, props.domains))
-  .map((e) => ({ id: e.id, name: e.name || e.id, hint: e.area || e.id })));
+  .map((e) => ({ id: e.id, name: e.name || e.id, hint: [e.area, e.id].filter(Boolean).join(" · ") })));
 const nameOf = (id: string) => (inv.inventory.entities || []).find((e) => e.id === id)?.name || id;
 const kind = computed(() => (props.modelValue ? triggerKind(props.modelValue, known.value, props.domains) : null));
-function suggest(s: Suggestion) {
-  emit("update:modelValue", s.trigger);
-  emit("suggest", s);
+// The cards: the suggestions and "something else", which opens the list.
+const other = ref(!props.suggestions?.length || Boolean(props.modelValue && !props.suggestions?.some((s) => s.trigger === props.modelValue)));
+const cards = computed(() => [
+  ...(props.suggestions || []).map((s) => ({ value: s.trigger, title: s.name, detail: s.detail || s.trigger, glyph: props.mark })),
+  { value: OTHER, title: t("editor.events.wizard.other"), detail: t("editor.events.wizard.other_detail") },
+]);
+const picked = computed(() => (other.value ? OTHER : props.modelValue));
+function choose(value: string) {
+  if (value === OTHER) { other.value = true; return; }
+  other.value = false;
+  emit("update:modelValue", value);
+  const s = props.suggestions?.find((item) => item.trigger === value);
+  if (s) emit("suggest", s);
 }
+// What kind of entity it is, in words, for the line under it: a switch and a helper read "turns on" as a sensor does.
+const domain = computed(() => props.modelValue.split(".", 1)[0]);
 </script>
 
 <template>
   <div class="trigger-step">
-    <div v-if="suggestions?.length" class="trigger-suggestions">
-      <span class="hint">{{ t("editor.events.wizard.suggested") }}</span>
-      <button v-for="s in suggestions" :key="s.trigger" type="button" class="suggestion" :data-trigger="s.trigger"
-        :aria-pressed="modelValue === s.trigger ? 'true' : 'false'" @click="suggest(s)">
-        <span v-if="mark" class="mdi">{{ mark }}</span><span><strong>{{ s.name }}</strong><small>{{ s.detail || s.trigger }}</small></span>
-      </button>
-    </div>
-    <div class="trigger-row">
-      <UiPicker :id="id" :items="entities" :placeholder="t('editor.plugin_tile.search')" :empty="t('editor.events.wizard.none')" width="340px"
+    <UiChoiceCards v-if="suggestions?.length" :model-value="picked" :cards="cards" :label="t('editor.events.wizard.suggested')" @update:model-value="choose" />
+    <div v-if="other || !suggestions?.length" class="trigger-row">
+      <UiPicker :id="id" :items="entities" :placeholder="t('editor.plugin_tile.search')" :empty="t('editor.events.wizard.none')" width="380px"
         @pick="(entity: string) => emit('update:modelValue', entity)">
-        <template #trigger><button type="button" class="ghost-btn"><Icon name="magnify" />{{ modelValue ? nameOf(modelValue) : t("editor.events.wizard.pick_trigger") }}</button></template>
+        <template #trigger><button type="button" class="ghost-btn trigger-pick"><Icon name="magnify" />{{ modelValue ? nameOf(modelValue) : t("editor.events.wizard.pick_trigger") }}</button></template>
       </UiPicker>
-      <code v-if="modelValue">{{ modelValue }}</code>
     </div>
-    <p v-if="kind" class="hint" :id="`${id}-kind`">{{ t(`editor.events.wizard.kind.${kind}`) }}</p>
+    <div v-if="kind" class="understood" :id="`${id}-kind`" :data-kind="kind">
+      <Icon name="check" />
+      <span><b>{{ t(`editor.events.wizard.kind.${kind}`) }}</b><small><template v-if="nameOf(modelValue) !== modelValue">{{ nameOf(modelValue) }} · </template><code>{{ modelValue }}</code><template v-if="kind === 'on'"> · {{ t(`editor.events.wizard.domain.${domain}`) }}</template></small></span>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.trigger-step { display: grid; gap: 8px; }
-.trigger-row, .trigger-suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.suggestion { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
-.suggestion > span:last-child { display: grid; }
-.suggestion small { color: var(--muted); font-size: 11.5px; }
-.suggestion[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.trigger-step { display: grid; gap: 10px; }
+.trigger-pick { width: 100%; justify-content: flex-start; }
+.understood { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--ink); }
+.understood > span { display: grid; gap: 2px; }
+.understood small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 </style>

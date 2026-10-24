@@ -3462,7 +3462,6 @@
       },
       "sections": "Sections",
       "nav": {
-        "try": "Configurer",
         "screens": "Vos écrans",
         "howto": "Dans une automatisation",
         "all": "Tous les écrans",
@@ -3487,8 +3486,6 @@
         "sending": "Envoi…",
         "send": "Envoyer l'alerte",
         "sent_all": "Envoyée à {n} écran. | Envoyée à {n} écrans.",
-        "skipped": "{n} écran ignoré (hors ligne ou firmware trop ancien). | {n} écrans ignorés (hors ligne ou firmware trop ancien).",
-        "left_empty": "Champs laissés vides : {fields}.",
         "nothing": "Aucun écran n'a pu l'afficher : vérifiez qu'un écran est en ligne avec le firmware {version} ou plus récent."
       },
       "white": "Blanc (par défaut)",
@@ -3604,16 +3601,50 @@
         "direct": "Vous appelez un écran directement ? Son action {choice} prend les champs de show_alert plus ces trois ; le deuxième bouton termine l'alerte avec {ending}."
       },
       "wizard": {
-        "text": "Indiquez ce qui déclenche l'alerte, ce qu'elle dit, et choisissez les écrans. L'application ajoute l'automatisation à Home Assistant pour vous, ou vous en envoyez une maintenant pour la voir.",
-        "step_trigger": "Qu'est-ce qui la déclenche ?",
-        "step_alert": "Que dit-elle ?",
         "camera": "Caméra (facultatif)",
         "no_camera": "Aucune caméra",
-        "step_screens": "Quels écrans ?",
-        "screens_hint": "Aucun choisi : tous les écrans qui peuvent afficher une alerte ({ready} maintenant).",
-        "not_ready": "Choisissez d'abord ce qui la déclenche.",
-        "description": "Créée dans les Événements de Tessera : une alerte sur les écrans."
-      }
+        "screens_hint": "Aucun choisi : tous les écrans qui peuvent montrer une alerte.",
+        "description": "Créée dans les Événements de Tessera : une alerte sur les écrans.",
+        "title": "Nouvelle automatisation d’alerte",
+        "with_picture": "Montre l'image de la caméra",
+        "without_picture": "Montre l'alerte sans image",
+        "summary": {
+          "says": "Texte"
+        },
+        "steps": {
+          "trigger": {
+            "title": "Qu’est-ce qui la déclenche ?",
+            "help": "Choisissez ce qui fait apparaître l'alerte : un capteur qui s'allume, une entrée booléenne, un bouton ou un événement."
+          },
+          "words": {
+            "title": "Que dit-elle ?",
+            "help": "Un titre court, une ligne en dessous et le texte du bouton. Vous voyez la carte telle que l'écran la dessine."
+          },
+          "look": {
+            "title": "À quoi ressemble-t-elle ?",
+            "help": "Une icône, une couleur, une image de caméra si vous voulez, et si elle clignote."
+          },
+          "screens": {
+            "title": "Quels écrans ?",
+            "help": "Choisissez les écrans qui l'affichent, et combien de temps elle reste."
+          },
+          "try": {
+            "title": "Essayer",
+            "help": "Envoyez-la une fois maintenant, exactement comme le fera l'automatisation. Regardez vos écrans."
+          },
+          "add": {
+            "title": "Ajouter à Home Assistant",
+            "help": "Vérifiez et ajoutez. Cela marche tout de suite, sans redémarrage."
+          }
+        }
+      },
+      "hero": {
+        "title": "Une alerte sur vos écrans",
+        "text": "Une carte par-dessus tout l'écran, avec un bouton : quand quelqu'un est à la porte, que le linge est prêt ou qu'une fenêtre reste ouverte. L'assistant vous guide et ajoute l'automatisation à Home Assistant.",
+        "create": "Créer une automatisation d’alerte",
+        "empty": "Pas encore d'automatisation d'alerte. Créez-en une ci-dessus, elle apparaîtra ici."
+      },
+      "reference": "L’écrire vous-même"
     },
     "override": {
       "eyebrow": "Avancé · personnalisation locale",
@@ -4190,12 +4221,27 @@
           "event": "Démarre à chaque déclenchement de cet événement.",
           "on": "Démarre quand ceci s'allume.",
           "press": "Démarre à chaque appui."
+        },
+        "back": "Retour",
+        "next": "Suivant",
+        "done": "Terminé",
+        "other": "Autre chose",
+        "other_detail": "N'importe quel capteur, interrupteur, entrée, bouton ou événement à vous",
+        "every_screen": "Tous les écrans",
+        "summary": {
+          "starts": "Démarre sur",
+          "screens": "Écrans",
+          "title": "Nom dans Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Un capteur : de éteint à allumé, par exemple quand il détecte quelqu'un.",
+          "switch": "Un interrupteur : quand quelqu'un l'allume.",
+          "input_boolean": "Une entrée booléenne : quand elle passe à allumé, par exemple depuis une autre automatisation."
         }
       },
       "install": {
         "add": "Ajouter à Home Assistant",
         "saving": "Ajout…",
-        "save_again": "Enregistrer les changements dans Home Assistant",
         "saved": "Ajoutée. Elle fonctionne tout de suite, sans redémarrage.",
         "open": "Ouvrir dans Home Assistant",
         "hint": "Elle s'appelle « {title} » dans les automatisations de Home Assistant, où vous pouvez la modifier.",
@@ -4213,11 +4259,6 @@
         "when": "À l'instant",
         "sound": "Son activé"
       },
-      "steps": {
-        "ring": "L'automatisation envoie l'événement avec la caméra et, si vous voulez, les écrans.",
-        "answer": "Le premier écran touché répond ; elle se ferme sur les autres.",
-        "missed": "Personne ne l'a touchée : elle se ferme après son délai et reste dans la barre du haut comme sonnerie manquée."
-      },
       "try": {
         "send": "Sonner",
         "views": "Ouverte en direct sur {n} écran. | Ouverte en direct sur {n} écrans.",
@@ -4230,13 +4271,10 @@
         "timeout": "Délai (secondes)"
       },
       "screens": {
-        "title": "Vos écrans",
-        "text": "Ce que chaque écran fait d'une sonnerie.",
         "view": "En direct avec le son",
         "picture": "Alerte avec image",
         "plain": "Alerte sans image"
       },
-      "fields_title": "Les champs de l'événement",
       "after": {
         "title": "Ensuite",
         "text": "Une fois par sonnerie, l'application envoie {answered} quand quelqu'un a répondu sur un écran, ou {missed} quand personne ne l'a fait. Les deux portent la caméra et le titre ; answered nomme aussi l'écran.",
@@ -4248,17 +4286,50 @@
         "description": "Créée dans les Événements de Tessera : une sonnette sur les écrans."
       },
       "wizard": {
-        "title": "Configurez votre sonnette",
-        "text": "Indiquez ce qui sonne chez vous, sa caméra et les écrans. L'application ajoute l'automatisation à Home Assistant pour vous, ou vous la copiez.",
-        "step_trigger": "Qu'est-ce qui sonne ?",
-        "step_camera": "Quelle caméra ?",
-        "pick_camera": "Choisissez la caméra de la sonnette",
+        "title": "Nouvelle automatisation de sonnette",
         "camera_hint": "Un écran P4 la diffuse en direct avec le son si la caméra en a ; les autres écrans affichent son image.",
-        "step_screens": "Quels écrans ?",
         "screens_hint": "Aucun choisi : tous les écrans.",
-        "step_details": "Nom et délai",
-        "not_ready": "Choisissez d'abord ce qui sonne et une caméra.",
-        "limits": "Toutes les sonnettes ne peuvent pas tout : le son vient seulement si le flux de la caméra en a. Parler et ouvrir la porte viendront plus tard."
+        "limits": "Toutes les sonnettes ne peuvent pas tout : le son vient seulement si le flux de la caméra en a. Parler et ouvrir la porte viendront plus tard.",
+        "more_cameras": "Une autre caméra…",
+        "timeout_hint": "Combien de temps un appel reste ouvert si personne ne touche l'écran. Vide : la valeur par défaut.",
+        "summary": {
+          "camera": "Caméra"
+        },
+        "steps": {
+          "rings": {
+            "title": "Qu’est-ce qui sonne ?",
+            "help": "Choisissez ce qui indique à Home Assistant que quelqu'un est à la porte. Vos sonnettes d'abord ; tout capteur, bouton ou événement convient aussi."
+          },
+          "camera": {
+            "title": "Quelle caméra ?",
+            "help": "La caméra que montrent les écrans quand ça sonne. En général celle de la sonnette."
+          },
+          "screens": {
+            "title": "Quels écrans ?",
+            "help": "Choisissez les écrans qui montrent l'appel. Chacun dit ce qu'il peut en faire."
+          },
+          "name": {
+            "title": "Nom et durée",
+            "help": "Le titre à l'écran et combien de temps un appel reste ouvert. Les deux sont facultatifs."
+          },
+          "try": {
+            "title": "Essayer",
+            "help": "Sonnez une fois maintenant, exactement comme le fera l'automatisation. Regardez vos écrans."
+          },
+          "add": {
+            "title": "Ajouter à Home Assistant",
+            "help": "Vérifiez et ajoutez. Cela marche tout de suite, sans redémarrage."
+          }
+        }
+      },
+      "hero": {
+        "title": "Votre sonnette sur vos écrans",
+        "text": "Quelqu'un sonne, et vos écrans montrent qui est à la porte : en direct avec le son sur un écran P4, en image ou en alerte sur les autres. L'assistant vous guide et ajoute l'automatisation à Home Assistant.",
+        "create": "Créer une automatisation de sonnette",
+        "empty": "Pas encore d'automatisation de sonnette. Créez-en une ci-dessus, elle apparaîtra ici."
+      },
+      "by_hand": {
+        "title": "Écrire l'automatisation vous-même"
       }
     }
   }

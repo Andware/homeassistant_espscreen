@@ -575,8 +575,8 @@ class Editor(unittest.TestCase):
         self.assertIn('send(`screens/${encodeURIComponent(screen.id)}/identify`, "POST")', screen)
         self.assertIn('send("alerts/test", "POST", { screen: target, data })', screen)
         self.assertIn('id="identify"', self.page)
-        self.assertIn('id="alerts-try"', self.page)
-        self.assertIn('id="try-send"', self.page)
+        self.assertIn('id="alert-wizard-open"', self.page)
+        self.assertIn('id="alert-try"', self.page)
 
     def test_layouts_can_be_copied_exported_and_imported(self):
         for name in ('function copyLayoutFrom(', 'function exportLayout(', 'async function importLayout('):

@@ -1026,9 +1026,22 @@ details.log-wrap pre { margin-top: 8px; }
   .notice.choice .notice-text + .btn { margin-left: auto; }
 }
 
+/* Events: one big way into a part's wizard, its automations under it, the rest folded away */
+.event-create { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: center; padding: 26px 28px; }
+.event-create-text { display: grid; gap: 12px; justify-items: start; }
+.event-create-text h2 { font-size: 21px; margin: 0; }
+.event-create-text p { margin: 0; color: var(--muted); line-height: 1.55; max-width: 52ch; }
+.event-create-button { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; font-size: 15px; margin-top: 4px; }
+.wizard .field > .f-label { font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+.event-more > summary { cursor: pointer; font-weight: 600; }
+.event-more[open] { display: grid; gap: 12px; }
+
 /* Alerts cheatsheet */
+.alerts { display: grid; gap: 14px; }
 .alerts section { display: grid; gap: 10px; }
 .alerts h2 { font-size: 15px; }
+.alerts-reference { display: grid; gap: 10px; margin-top: 10px; }
+.alerts-reference p { margin: 0; color: var(--muted); }
 .alerts-nav { display: flex; flex-wrap: wrap; gap: 6px; }
 .alerts-nav button { background: var(--accent-soft); color: var(--accent); padding: 5px 11px; font-size: 12px; border-radius: 20px; font-weight: 500; }
 .alert-hero { display: grid; grid-template-columns: minmax(0, 300px) 1fr; gap: 20px; align-items: center; }
@@ -1117,6 +1130,7 @@ td code { white-space: nowrap; }
   .drawer-enter-active, .drawer-leave-active { transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .panel { padding: 16px; }
   .alert-hero { grid-template-columns: 1fr; }
+  .event-create { grid-template-columns: minmax(0, 1fr); padding: 20px; }
 }
 
 /* Updates with content: progress and what's new */

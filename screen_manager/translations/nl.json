@@ -3033,7 +3033,6 @@
       },
       "sections": "Onderdelen",
       "nav": {
-        "try": "Instellen",
         "screens": "Jouw schermen",
         "howto": "In een automatisering",
         "all": "Alle schermen",
@@ -3058,8 +3057,6 @@
         "sending": "Versturen…",
         "send": "Alert versturen",
         "sent_all": "Verstuurd naar {n} scherm. | Verstuurd naar {n} schermen.",
-        "skipped": "1 overgeslagen (offline of oude firmware). | {n} overgeslagen (offline of oude firmware).",
-        "left_empty": "Leeg gelaten: {fields}.",
         "nothing": "Geen enkel scherm kon hem tonen: controleer of er een scherm online is met firmware {version} of nieuwer."
       },
       "white": "Wit (standaard)",
@@ -3175,16 +3172,50 @@
         "direct": "Roep je een scherm direct aan? Zijn actie {choice} neemt de velden van show_alert plus deze drie; de tweede knop beëindigt de melding met {ending}."
       },
       "wizard": {
-        "text": "Wijs aan wat de alert start, vul in wat hij zegt, en kies de schermen. De app zet de automatisering voor je in Home Assistant, of je stuurt er nu een om hem te zien.",
-        "step_trigger": "Waarmee start hij?",
-        "step_alert": "Wat zegt hij?",
         "camera": "Camera (optioneel)",
         "no_camera": "Geen camera",
-        "step_screens": "Welke schermen?",
-        "screens_hint": "Niets gekozen: elk scherm dat een alert kan tonen (nu {ready}).",
-        "not_ready": "Kies eerst waarmee hij start.",
-        "description": "Gemaakt in Events van Tessera: een alert op de schermen."
-      }
+        "screens_hint": "Niets gekozen: elk scherm dat een alert kan tonen.",
+        "description": "Gemaakt in Events van Tessera: een alert op de schermen.",
+        "title": "Nieuwe alert-automatisering",
+        "with_picture": "Laat het beeld van de camera zien",
+        "without_picture": "Laat de alert zonder beeld zien",
+        "summary": {
+          "says": "Tekst"
+        },
+        "steps": {
+          "trigger": {
+            "title": "Wat start het?",
+            "help": "Kies waardoor de alert verschijnt: een sensor die aangaat, een schakelhelper, een knop of een event."
+          },
+          "words": {
+            "title": "Wat staat erop?",
+            "help": "Een korte titel, een regel eronder en de tekst op de knop. Je ziet de kaart zoals het scherm hem tekent."
+          },
+          "look": {
+            "title": "Hoe ziet het eruit?",
+            "help": "Een icoon, een kleur, als je wilt een camerabeeld, en of hij knippert."
+          },
+          "screens": {
+            "title": "Welke schermen?",
+            "help": "Kies de schermen die hem tonen, en hoe lang hij blijft staan."
+          },
+          "try": {
+            "title": "Probeer het",
+            "help": "Stuur hem nu één keer, precies zoals de automatisering het doet. Kijk naar je schermen."
+          },
+          "add": {
+            "title": "Toevoegen aan Home Assistant",
+            "help": "Controleer het en voeg het toe. Het werkt meteen, zonder herstart."
+          }
+        }
+      },
+      "hero": {
+        "title": "Een alert op je schermen",
+        "text": "Een kaart over alles op het scherm, met een knop: als er iemand aanbelt, de was klaar is of een raam openstaat. De wizard loopt het met je door en zet de automatisering in Home Assistant.",
+        "create": "Maak een alert-automatisering",
+        "empty": "Nog geen alert-automatisering. Maak er hierboven een, dan verschijnt hij hier."
+      },
+      "reference": "Zelf schrijven"
     },
     "override": {
       "eyebrow": "Geavanceerd · lokale override",
@@ -4190,12 +4221,27 @@
           "event": "Start elke keer dat dit event afgaat.",
           "on": "Start als dit aangaat.",
           "press": "Start elke keer dat hierop gedrukt wordt."
+        },
+        "back": "Terug",
+        "next": "Volgende",
+        "done": "Klaar",
+        "other": "Iets anders",
+        "other_detail": "Een sensor, schakelaar, helper, knop of event van jezelf",
+        "every_screen": "Elk scherm",
+        "summary": {
+          "starts": "Start bij",
+          "screens": "Schermen",
+          "title": "Naam in Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Een sensor: van uit naar aan, bijvoorbeeld als hij iemand ziet.",
+          "switch": "Een schakelaar: als iemand hem aanzet.",
+          "input_boolean": "Een schakelhelper: als hij aangaat, bijvoorbeeld door een andere automatisering."
         }
       },
       "install": {
         "add": "Toevoegen aan Home Assistant",
         "saving": "Toevoegen…",
-        "save_again": "Wijzigingen opslaan in Home Assistant",
         "saved": "Toegevoegd. Het werkt meteen, zonder herstart.",
         "open": "Openen in Home Assistant",
         "hint": "Hij heet \"{title}\" bij de automatiseringen van Home Assistant, waar je hem verder kunt aanpassen.",
@@ -4213,11 +4259,6 @@
         "when": "Zojuist",
         "sound": "Geluid aan"
       },
-      "steps": {
-        "ring": "De automatisering stuurt het event met de camera en, als je wilt, de schermen.",
-        "answer": "Het eerste scherm dat iemand aanraakt neemt op; op de andere gaat hij dicht.",
-        "missed": "Niemand raakte hem aan: hij sluit na de timeout en blijft als gemiste bel in de bovenbalk staan."
-      },
       "try": {
         "send": "Bellen",
         "views": "Live geopend op {n} scherm. | Live geopend op {n} schermen.",
@@ -4230,13 +4271,10 @@
         "timeout": "Timeout (seconden)"
       },
       "screens": {
-        "title": "Je schermen",
-        "text": "Wat elk scherm met een bel doet.",
         "view": "Live met geluid",
         "picture": "Alert met foto",
         "plain": "Alert zonder foto"
       },
-      "fields_title": "De velden van het event",
       "after": {
         "title": "Daarna",
         "text": "Eén keer per bel stuurt de app {answered} als iemand hem op een scherm opnam, of {missed} als niemand dat deed. Beide hebben de camera en de titel; answered noemt ook het scherm.",
@@ -4248,17 +4286,50 @@
         "description": "Gemaakt in Events van Tessera: een deurbel op de schermen."
       },
       "wizard": {
-        "title": "Stel je deurbel in",
-        "text": "Wijs aan wat bij jou thuis belt, de camera en de schermen. De app zet de automatisering voor je in Home Assistant, of je kopieert hem.",
-        "step_trigger": "Wat belt er?",
-        "step_camera": "Welke camera?",
-        "pick_camera": "Kies de camera van de deurbel",
+        "title": "Nieuwe deurbelautomatisering",
         "camera_hint": "Een P4-scherm streamt hem live met geluid als de camera geluid heeft; andere schermen tonen de foto.",
-        "step_screens": "Welke schermen?",
         "screens_hint": "Niets gekozen: elk scherm.",
-        "step_details": "Naam en timeout",
-        "not_ready": "Kies eerst wat belt en een camera.",
-        "limits": "Niet elke deurbel kan alles: geluid komt alleen als de stream van de camera het heeft. Terugpraten en de deur openen komen later."
+        "limits": "Niet elke deurbel kan alles: geluid komt alleen als de stream van de camera het heeft. Terugpraten en de deur openen komen later.",
+        "more_cameras": "Een andere camera…",
+        "timeout_hint": "Hoe lang een bel openblijft als niemand het scherm aanraakt. Leeg: de standaard.",
+        "summary": {
+          "camera": "Camera"
+        },
+        "steps": {
+          "rings": {
+            "title": "Wat belt er?",
+            "help": "Kies wat Home Assistant vertelt dat er iemand voor de deur staat. Je deurbellen staan bovenaan; elke sensor, knop of event werkt ook."
+          },
+          "camera": {
+            "title": "Welke camera?",
+            "help": "De camera die de schermen laten zien als er gebeld wordt. Meestal de eigen camera van de deurbel."
+          },
+          "screens": {
+            "title": "Welke schermen?",
+            "help": "Kies de schermen die de bel laten zien. Bij elk staat wat het ermee kan."
+          },
+          "name": {
+            "title": "Naam en tijd",
+            "help": "De titel op het scherm en hoe lang een bel openblijft. Je mag ze allebei leeg laten."
+          },
+          "try": {
+            "title": "Probeer het",
+            "help": "Bel nu één keer, precies zoals de automatisering het doet. Kijk naar je schermen."
+          },
+          "add": {
+            "title": "Toevoegen aan Home Assistant",
+            "help": "Controleer het en voeg het toe. Het werkt meteen, zonder herstart."
+          }
+        }
+      },
+      "hero": {
+        "title": "Je deurbel op je schermen",
+        "text": "Er belt iemand en je schermen laten zien wie er voor de deur staat: live met geluid op een P4-scherm, als foto of alert op de andere. De wizard loopt het met je door en zet de automatisering in Home Assistant.",
+        "create": "Maak een deurbelautomatisering",
+        "empty": "Nog geen deurbelautomatisering. Maak er hierboven een, dan verschijnt hij hier."
+      },
+      "by_hand": {
+        "title": "Zelf de automatisering schrijven"
       }
     }
   }

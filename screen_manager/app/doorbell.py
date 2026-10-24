@@ -85,8 +85,9 @@ def name_of(camera, device_name, states):
 # `doorbell`, an event entity of Home Assistant's doorbell class (its trigger doorbell.rang); `event`, any other event
 # entity (a new state); `on`, a sensor or switch that turns on while someone rings (Reolink's Visitor); `press`, a button.
 TRIGGER_DOMAINS = {'event': 'event', 'binary_sensor': 'on', 'switch': 'on', 'input_boolean': 'on', 'button': 'press', 'input_button': 'press'}
-# Press sensors Home Assistant's integrations name for a doorbell, by their translation key: Reolink's Visitor.
-PRESS_KEYS = {'visitor'}
+# The binary sensors Home Assistant's integrations make for a doorbell's button, by integration and translation key (read
+# from their binary_sensor.py): Reolink's Visitor, UniFi Protect's Doorbell, Yale's and August's Ding, Skybell's Button.
+PRESS_KEYS = {('reolink', 'visitor'), ('unifiprotect', 'doorbell'), ('yale', 'ding'), ('august', 'ding'), ('skybell', 'button')}
 
 
 def trigger_kind(entity, attributes=None):
@@ -107,7 +108,7 @@ def suggestions(states, registry, device_entries):
         entry = registry.get(entity) or {}
         if entity.startswith('event.') and attributes.get('device_class') == 'doorbell':
             kind = 'doorbell'
-        elif entity.startswith('binary_sensor.') and entry.get('translation_key') in PRESS_KEYS:
+        elif entity.startswith('binary_sensor.') and (entry.get('platform'), entry.get('translation_key')) in PRESS_KEYS:
             kind = 'on'
         else:
             continue

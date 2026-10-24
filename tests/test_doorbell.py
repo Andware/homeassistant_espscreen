@@ -44,12 +44,17 @@ class Suggestions(unittest.TestCase):
                   'event.button_press': {'state': 'unknown', 'attributes': {'device_class': 'button'}},
                   'binary_sensor.porch_visitor': {'state': 'off', 'attributes': {'friendly_name': 'Porch Visitor'}},
                   'binary_sensor.porch_person': {'state': 'off', 'attributes': {}},
+                  'binary_sensor.g4_doorbell': {'state': 'off', 'attributes': {'friendly_name': 'G4 Doorbell'}},
+                  'binary_sensor.other_visitor': {'state': 'off', 'attributes': {}},
                   'camera.front_door': {'state': 'idle'}, 'camera.porch_fluent': {'state': 'idle'}}
         registry = {'binary_sensor.porch_visitor': {'platform': 'reolink', 'translation_key': 'visitor'},
-                    'binary_sensor.porch_person': {'platform': 'reolink', 'translation_key': 'person'}}
+                    'binary_sensor.porch_person': {'platform': 'reolink', 'translation_key': 'person'},
+                    'binary_sensor.g4_doorbell': {'platform': 'unifiprotect', 'translation_key': 'doorbell'},
+                    'binary_sensor.other_visitor': {'platform': 'someone_else', 'translation_key': 'visitor'}}
         devices = {'event.front_door_doorbell': [{'entity_id': 'camera.front_door'}],
                    'binary_sensor.porch_visitor': [{'entity_id': 'camera.porch_clear', 'disabled_by': 'user'}, {'entity_id': 'camera.porch_fluent'}]}
         self.assertEqual(doorbell.suggestions(states, registry, lambda entity: devices.get(entity, [])), [
+            {'trigger': 'binary_sensor.g4_doorbell', 'kind': 'on', 'camera': None, 'name': 'G4 Doorbell'},
             {'trigger': 'binary_sensor.porch_visitor', 'kind': 'on', 'camera': 'camera.porch_fluent', 'name': 'Porch Visitor'},
             {'trigger': 'event.front_door_doorbell', 'kind': 'doorbell', 'camera': 'camera.front_door', 'name': 'Front door Doorbell'}])
 

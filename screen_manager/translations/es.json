@@ -3462,7 +3462,6 @@
       },
       "sections": "Secciones",
       "nav": {
-        "try": "Configurar",
         "screens": "Tus pantallas",
         "howto": "En una automatización",
         "all": "Todas las pantallas",
@@ -3487,8 +3486,6 @@
         "sending": "Enviando…",
         "send": "Enviar alerta",
         "sent_all": "Enviada a {n} pantalla. | Enviada a {n} pantallas.",
-        "skipped": "Se ha omitido 1 pantalla (sin conexión o firmware antiguo). | Se han omitido {n} pantallas (sin conexión o firmware antiguo).",
-        "left_empty": "Se dejaron vacíos: {fields}.",
         "nothing": "Ninguna pantalla ha podido mostrarla: comprueba que haya una pantalla en línea con el firmware {version} o posterior."
       },
       "white": "Blanco (predeterminado)",
@@ -3604,16 +3601,50 @@
         "direct": "¿Llamas a una pantalla directamente? Su acción {choice} toma los campos de show_alert más estos tres; el segundo botón termina el aviso con {ending}."
       },
       "wizard": {
-        "text": "Indica qué inicia la alerta, rellena lo que dice y elige las pantallas. La app añade la automatización a Home Assistant por ti, o envías una ahora para verla.",
-        "step_trigger": "¿Qué la inicia?",
-        "step_alert": "¿Qué dice?",
         "camera": "Cámara (opcional)",
         "no_camera": "Sin cámara",
-        "step_screens": "¿Qué pantallas?",
-        "screens_hint": "Ninguna elegida: todas las pantallas que pueden mostrar una alerta ({ready} ahora).",
-        "not_ready": "Elige primero qué la inicia.",
-        "description": "Creada en los Eventos de Tessera: una alerta en las pantallas."
-      }
+        "screens_hint": "Ninguna elegida: todas las pantallas que pueden mostrar una alerta.",
+        "description": "Creada en los Eventos de Tessera: una alerta en las pantallas.",
+        "title": "Nueva automatización de alerta",
+        "with_picture": "Muestra la imagen de la cámara",
+        "without_picture": "Muestra la alerta sin imagen",
+        "summary": {
+          "says": "Texto"
+        },
+        "steps": {
+          "trigger": {
+            "title": "¿Qué la inicia?",
+            "help": "Elige qué hace aparecer la alerta: un sensor que se enciende, un ayudante de interruptor, un botón o un evento."
+          },
+          "words": {
+            "title": "¿Qué dice?",
+            "help": "Un título corto, una línea debajo y el texto del botón. Ves la tarjeta tal como la dibuja la pantalla."
+          },
+          "look": {
+            "title": "¿Cómo se ve?",
+            "help": "Un icono, un color, una imagen de cámara si quieres, y si parpadea."
+          },
+          "screens": {
+            "title": "¿Qué pantallas?",
+            "help": "Elige las pantallas que la muestran y cuánto tiempo se queda."
+          },
+          "try": {
+            "title": "Pruébalo",
+            "help": "Envíala una vez ahora, igual que lo hará la automatización. Mira tus pantallas."
+          },
+          "add": {
+            "title": "Añadir a Home Assistant",
+            "help": "Revísalo y añádelo. Funciona al momento, sin reiniciar."
+          }
+        }
+      },
+      "hero": {
+        "title": "Una alerta en tus pantallas",
+        "text": "Una tarjeta sobre todo lo que hay en la pantalla, con un botón: cuando hay alguien en la puerta, la colada está lista o queda una ventana abierta. El asistente te guía y añade la automatización a Home Assistant.",
+        "create": "Crear una automatización de alerta",
+        "empty": "Aún no hay automatización de alerta. Crea una arriba y aparecerá aquí."
+      },
+      "reference": "Escribirla tú mismo"
     },
     "override": {
       "eyebrow": "Avanzado · personalización local",
@@ -4190,12 +4221,27 @@
           "event": "Empieza cada vez que se dispara este evento.",
           "on": "Empieza cuando esto se enciende.",
           "press": "Empieza cada vez que se pulsa."
+        },
+        "back": "Atrás",
+        "next": "Siguiente",
+        "done": "Hecho",
+        "other": "Otra cosa",
+        "other_detail": "Cualquier sensor, interruptor, ayudante, botón o evento tuyo",
+        "every_screen": "Todas las pantallas",
+        "summary": {
+          "starts": "Empieza con",
+          "screens": "Pantallas",
+          "title": "Nombre en Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Un sensor: de apagado a encendido, por ejemplo cuando detecta a alguien.",
+          "switch": "Un interruptor: cuando alguien lo enciende.",
+          "input_boolean": "Un ayudante de interruptor: cuando se enciende, por ejemplo desde otra automatización."
         }
       },
       "install": {
         "add": "Añadir a Home Assistant",
         "saving": "Añadiendo…",
-        "save_again": "Guardar cambios en Home Assistant",
         "saved": "Añadida. Funciona enseguida, sin reiniciar.",
         "open": "Abrir en Home Assistant",
         "hint": "Se llama \"{title}\" en las automatizaciones de Home Assistant, donde puedes cambiarla más.",
@@ -4213,11 +4259,6 @@
         "when": "Ahora mismo",
         "sound": "Sonido activado"
       },
-      "steps": {
-        "ring": "La automatización envía el evento con la cámara y, si quieres, las pantallas.",
-        "answer": "La primera pantalla que alguien toca contesta; en las demás se cierra.",
-        "missed": "Nadie la tocó: se cierra tras su tiempo límite y queda en la barra superior como llamada perdida."
-      },
       "try": {
         "send": "Llamar",
         "views": "Abierta en directo en {n} pantalla. | Abierta en directo en {n} pantallas.",
@@ -4230,13 +4271,10 @@
         "timeout": "Tiempo límite (segundos)"
       },
       "screens": {
-        "title": "Tus pantallas",
-        "text": "Lo que hace cada pantalla con una llamada.",
         "view": "En directo con sonido",
         "picture": "Alerta con imagen",
         "plain": "Alerta sin imagen"
       },
-      "fields_title": "Los campos del evento",
       "after": {
         "title": "Después",
         "text": "Una vez por llamada, la app envía {answered} cuando alguien contestó en una pantalla, o {missed} cuando nadie lo hizo. Ambos llevan la cámara y el título; answered también nombra la pantalla.",
@@ -4248,17 +4286,50 @@
         "description": "Creada en los Eventos de Tessera: un timbre en las pantallas."
       },
       "wizard": {
-        "title": "Configura tu timbre",
-        "text": "Indica qué suena en tu casa, su cámara y las pantallas. La app añade la automatización a Home Assistant por ti, o la copias.",
-        "step_trigger": "¿Qué suena?",
-        "step_camera": "¿Qué cámara?",
-        "pick_camera": "Elige la cámara del timbre",
+        "title": "Nueva automatización de timbre",
         "camera_hint": "Una pantalla P4 la transmite en directo con sonido si la cámara tiene sonido; las demás muestran su imagen.",
-        "step_screens": "¿Qué pantallas?",
         "screens_hint": "Ninguna elegida: todas las pantallas.",
-        "step_details": "Nombre y tiempo límite",
-        "not_ready": "Elige primero qué suena y una cámara.",
-        "limits": "No todos los timbres pueden con todo: el sonido llega solo si el flujo de la cámara lo tiene. Hablar y abrir la puerta llegarán más adelante."
+        "limits": "No todos los timbres pueden con todo: el sonido llega solo si el flujo de la cámara lo tiene. Hablar y abrir la puerta llegarán más adelante.",
+        "more_cameras": "Otra cámara…",
+        "timeout_hint": "Cuánto tiempo sigue abierta una llamada si nadie toca la pantalla. Vacío: el valor por defecto.",
+        "summary": {
+          "camera": "Cámara"
+        },
+        "steps": {
+          "rings": {
+            "title": "¿Qué suena?",
+            "help": "Elige lo que le dice a Home Assistant que hay alguien en la puerta. Tus timbres primero; cualquier sensor, botón o evento también sirve."
+          },
+          "camera": {
+            "title": "¿Qué cámara?",
+            "help": "La cámara que muestran las pantallas cuando suena. Normalmente la del propio timbre."
+          },
+          "screens": {
+            "title": "¿Qué pantallas?",
+            "help": "Elige las pantallas que muestran la llamada. Cada una dice qué puede hacer con ella."
+          },
+          "name": {
+            "title": "Nombre y tiempo",
+            "help": "El título en la pantalla y cuánto tiempo sigue abierta una llamada. Puedes dejar ambos vacíos."
+          },
+          "try": {
+            "title": "Pruébalo",
+            "help": "Llama una vez ahora, igual que lo hará la automatización. Mira tus pantallas."
+          },
+          "add": {
+            "title": "Añadir a Home Assistant",
+            "help": "Revísalo y añádelo. Funciona al momento, sin reiniciar."
+          }
+        }
+      },
+      "hero": {
+        "title": "Tu timbre en tus pantallas",
+        "text": "Alguien llama, y tus pantallas muestran quién está en la puerta: en directo con sonido en una pantalla P4, como imagen o alerta en las demás. El asistente te guía y añade la automatización a Home Assistant.",
+        "create": "Crear una automatización de timbre",
+        "empty": "Aún no hay automatización de timbre. Crea una arriba y aparecerá aquí."
+      },
+      "by_hand": {
+        "title": "Escribir la automatización tú mismo"
       }
     }
   }

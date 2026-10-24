@@ -6,8 +6,12 @@ screen, live, with its sound on; any other screen shows the camera's picture in 
 you choose what starts the automation: a doorbell Home Assistant knows as one, a sensor that turns on while someone
 rings, a button, anything.
 
-The editor's **Events** page (in the sidebar) has a wizard for it: point to what rings, the camera and the screens, and
-the app adds the automation to Home Assistant for you, or you copy its YAML.
+The editor's **Events** page (in the sidebar) has a wizard for it, behind **Create a doorbell automation**: one step at a
+time it asks what rings, the camera, the screens and a name, lets you ring once to see it, and then adds the automation
+to Home Assistant for you (its YAML is there to copy too). The wizard offers first the doorbells Home Assistant knows as
+such: an event entity of the doorbell class, and the doorbell sensors of Reolink (Visitor), UniFi Protect (Doorbell),
+Yale and August (Ding) and Skybell (Button). Under the step it says how the automation will read what you picked: a
+doorbell rings, an event fires, a sensor, switch or toggle helper turns on, a button is pressed.
 
 ## The event
 
@@ -38,7 +42,8 @@ What starts the automation is yours to pick:
 
 - A doorbell Home Assistant knows as one, an `event` entity of the doorbell class (UniFi Protect, Ring, Nest, DoorBird
   and others): `trigger: doorbell.rang`. Home Assistant made `ring` the standard event type of a doorbell in April 2026.
-- A doorbell that reports a press as a sensor (Reolink's Visitor): `trigger: state`, `from: "off"`, `to: "on"`.
+- A doorbell that reports a press as a sensor (Reolink's Visitor, UniFi Protect's Doorbell), or a toggle helper:
+  `trigger: state`, `from: "off"`, `to: "on"`.
 - Anything else: a button, a switch, a script. Each can fire the same event.
 
 ## What happens on the screens
@@ -97,7 +102,7 @@ listed too, but left alone.
 |---|---|
 | The event, its fields, the screens, answered and missed, the wizard's suggestions | `screen_manager/app/doorbell.py`, `Manager.doorbell_*` in `server.py` |
 | Automations into Home Assistant | `screen_manager/app/automations.py`, `api/automations` in `server.py` |
-| The Events page and its wizards | `web/src/components/EventsView.vue`, `DoorbellView.vue`, `alerts/AlertTry.vue`, `events/` |
+| The Events page and its wizards | `web/src/components/EventsView.vue`, `DoorbellView.vue`, `AlertsView.vue`, `events/` (the wizards, in `ui/UiWizard.vue`) |
 | The missed ring in the top bar | `page_service.sync_pages` (`with_missed`), the item's `b` |
 | The op `doorbell` | `page_receiver.cpp` |
 | The view, the chime, the times | `module_doorbell.cpp` (module doorbell), hooked into the camera full view of `runtime_tiles.h` |

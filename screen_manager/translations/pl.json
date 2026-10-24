@@ -3462,7 +3462,6 @@
       },
       "sections": "Sekcje",
       "nav": {
-        "try": "Ustaw",
         "screens": "Twoje ekrany",
         "howto": "W automatyzacji",
         "all": "Wszystkie ekrany",
@@ -3487,8 +3486,6 @@
         "sending": "Wysyłanie…",
         "send": "Wyślij alert",
         "sent_all": "Wysłano na {n} ekran. | Wysłano na {n} ekrany. | Wysłano na {n} ekranów.",
-        "skipped": "Pominięto 1 ekran (offline lub stary firmware). | Pominięto {n} ekrany (offline lub stary firmware). | Pominięto {n} ekranów (offline lub stary firmware).",
-        "left_empty": "Puste pola: {fields}.",
         "nothing": "Żaden ekran nie mógł go pokazać: sprawdź, czy któryś ekran jest online i ma firmware {version} lub nowszy."
       },
       "white": "Biały (domyślny)",
@@ -3604,16 +3601,50 @@
         "direct": "Wywołujesz ekran bezpośrednio? Jego akcja {choice} przyjmuje pola show_alert oraz te trzy; drugi przycisk kończy alert z {ending}."
       },
       "wizard": {
-        "text": "Wskaż, co uruchamia alert, wpisz, co mówi, i wybierz ekrany. Aplikacja doda automatyzację do Home Assistant za ciebie albo wyślesz go teraz, by zobaczyć.",
-        "step_trigger": "Co go uruchamia?",
-        "step_alert": "Co mówi?",
         "camera": "Kamera (opcjonalnie)",
         "no_camera": "Brak kamery",
-        "step_screens": "Które ekrany?",
-        "screens_hint": "Nic nie wybrano: każdy ekran, który może pokazać alert (teraz {ready}).",
-        "not_ready": "Najpierw wybierz, co go uruchamia.",
-        "description": "Utworzono w Zdarzeniach Tessery: alert na ekranach."
-      }
+        "screens_hint": "Nic nie wybrano: każdy ekran, który może pokazać alert.",
+        "description": "Utworzono w Zdarzeniach Tessery: alert na ekranach.",
+        "title": "Nowa automatyzacja alertu",
+        "with_picture": "Pokazuje obraz z kamery",
+        "without_picture": "Pokazuje alert bez obrazu",
+        "summary": {
+          "says": "Treść"
+        },
+        "steps": {
+          "trigger": {
+            "title": "Co go uruchamia?",
+            "help": "Wybierz, co sprawia, że alert się pojawia: czujnik, który się włącza, pomocnik przełącznika, przycisk lub zdarzenie."
+          },
+          "words": {
+            "title": "Co mówi?",
+            "help": "Krótki tytuł, linia pod nim i tekst na przycisku. Widzisz kartę tak, jak rysuje ją ekran."
+          },
+          "look": {
+            "title": "Jak wygląda?",
+            "help": "Ikona, kolor, jeśli chcesz obraz z kamery, i czy miga."
+          },
+          "screens": {
+            "title": "Które ekrany?",
+            "help": "Wybierz ekrany, które go pokazują, i jak długo zostaje."
+          },
+          "try": {
+            "title": "Wypróbuj",
+            "help": "Wyślij go teraz raz, dokładnie tak, jak zrobi to automatyzacja. Spójrz na swoje ekrany."
+          },
+          "add": {
+            "title": "Dodaj do Home Assistant",
+            "help": "Sprawdź i dodaj. Działa od razu, bez restartu."
+          }
+        }
+      },
+      "hero": {
+        "title": "Alert na twoich ekranach",
+        "text": "Karta nad wszystkim na ekranie, z przyciskiem: gdy ktoś jest przy drzwiach, pranie jest gotowe albo okno zostało otwarte. Kreator prowadzi cię krok po kroku i dodaje automatyzację do Home Assistant.",
+        "create": "Utwórz automatyzację alertu",
+        "empty": "Nie ma jeszcze automatyzacji alertu. Utwórz ją powyżej, a pojawi się tutaj."
+      },
+      "reference": "Napisz samodzielnie"
     },
     "override": {
       "eyebrow": "Zaawansowane · lokalne nadpisanie",
@@ -4190,12 +4221,27 @@
           "event": "Startuje za każdym razem, gdy wyzwoli się to zdarzenie.",
           "on": "Startuje, gdy to się włączy.",
           "press": "Startuje przy każdym naciśnięciu."
+        },
+        "back": "Wstecz",
+        "next": "Dalej",
+        "done": "Gotowe",
+        "other": "Coś innego",
+        "other_detail": "Dowolny twój czujnik, przełącznik, pomocnik, przycisk lub zdarzenie",
+        "every_screen": "Każdy ekran",
+        "summary": {
+          "starts": "Startuje od",
+          "screens": "Ekrany",
+          "title": "Nazwa w Home Assistant"
+        },
+        "domain": {
+          "binary_sensor": "Czujnik: z wyłączonego na włączony, na przykład gdy kogoś wykryje.",
+          "switch": "Przełącznik: gdy ktoś go włączy.",
+          "input_boolean": "Pomocnik przełącznika: gdy się włączy, na przykład z innej automatyzacji."
         }
       },
       "install": {
         "add": "Dodaj do Home Assistant",
         "saving": "Dodawanie…",
-        "save_again": "Zapisz zmiany w Home Assistant",
         "saved": "Dodano. Działa od razu, bez restartu.",
         "open": "Otwórz w Home Assistant",
         "hint": "Nazywa się „{title}” w automatyzacjach Home Assistant, gdzie możesz ją dalej zmienić.",
@@ -4213,11 +4259,6 @@
         "when": "Przed chwilą",
         "sound": "Dźwięk wł."
       },
-      "steps": {
-        "ring": "Automatyzacja wysyła zdarzenie z kamerą i, jeśli chcesz, ekranami.",
-        "answer": "Pierwszy dotknięty ekran odbiera; na pozostałych się zamyka.",
-        "missed": "Nikt go nie dotknął: zamyka się po limicie czasu i zostaje na górnym pasku jako nieodebrany dzwonek."
-      },
       "try": {
         "send": "Zadzwoń",
         "views": "Otwarto na żywo na {n} ekranie. | Otwarto na żywo na {n} ekranach. | Otwarto na żywo na {n} ekranach.",
@@ -4230,13 +4271,10 @@
         "timeout": "Limit czasu (sekundy)"
       },
       "screens": {
-        "title": "Twoje ekrany",
-        "text": "Co każdy ekran robi z dzwonkiem.",
         "view": "Na żywo z dźwiękiem",
         "picture": "Alert z obrazem",
         "plain": "Alert bez obrazu"
       },
-      "fields_title": "Pola zdarzenia",
       "after": {
         "title": "Potem",
         "text": "Raz na dzwonek aplikacja wysyła {answered}, gdy ktoś odebrał na ekranie, lub {missed}, gdy nikt tego nie zrobił. Oba zawierają kamerę i tytuł; answered podaje też ekran.",
@@ -4248,17 +4286,50 @@
         "description": "Utworzono w Zdarzeniach Tessery: dzwonek na ekranach."
       },
       "wizard": {
-        "title": "Ustaw swój dzwonek",
-        "text": "Wskaż, co u ciebie dzwoni, jego kamerę i ekrany. Aplikacja doda automatyzację do Home Assistant za ciebie albo ją skopiujesz.",
-        "step_trigger": "Co dzwoni?",
-        "step_camera": "Która kamera?",
-        "pick_camera": "Wybierz kamerę dzwonka",
+        "title": "Nowa automatyzacja dzwonka",
         "camera_hint": "Ekran P4 streamuje ją na żywo z dźwiękiem, jeśli kamera ma dźwięk; inne ekrany pokazują jej obraz.",
-        "step_screens": "Które ekrany?",
         "screens_hint": "Nic nie wybrano: każdy ekran.",
-        "step_details": "Nazwa i limit czasu",
-        "not_ready": "Najpierw wybierz, co dzwoni, i kamerę.",
-        "limits": "Nie każdy dzwonek potrafi wszystko: dźwięk jest tylko, gdy strumień kamery go ma. Rozmowa i otwieranie drzwi przyjdą później."
+        "limits": "Nie każdy dzwonek potrafi wszystko: dźwięk jest tylko, gdy strumień kamery go ma. Rozmowa i otwieranie drzwi przyjdą później.",
+        "more_cameras": "Inna kamera…",
+        "timeout_hint": "Jak długo dzwonek zostaje otwarty, gdy nikt nie dotknie ekranu. Puste: domyślnie.",
+        "summary": {
+          "camera": "Kamera"
+        },
+        "steps": {
+          "rings": {
+            "title": "Co dzwoni?",
+            "help": "Wybierz, co mówi Home Assistant, że ktoś jest przy drzwiach. Najpierw twoje dzwonki; każdy czujnik, przycisk lub zdarzenie też zadziała."
+          },
+          "camera": {
+            "title": "Która kamera?",
+            "help": "Kamera, którą ekrany pokazują, gdy ktoś dzwoni. Zwykle kamera samego dzwonka."
+          },
+          "screens": {
+            "title": "Które ekrany?",
+            "help": "Wybierz ekrany, które pokazują dzwonek. Przy każdym widać, co potrafi z nim zrobić."
+          },
+          "name": {
+            "title": "Nazwa i czas",
+            "help": "Tytuł na ekranie i jak długo dzwonek zostaje otwarty. Oba możesz zostawić puste."
+          },
+          "try": {
+            "title": "Wypróbuj",
+            "help": "Zadzwoń teraz raz, dokładnie tak, jak zrobi to automatyzacja. Spójrz na swoje ekrany."
+          },
+          "add": {
+            "title": "Dodaj do Home Assistant",
+            "help": "Sprawdź i dodaj. Działa od razu, bez restartu."
+          }
+        }
+      },
+      "hero": {
+        "title": "Twój dzwonek na twoich ekranach",
+        "text": "Ktoś dzwoni, a twoje ekrany pokazują, kto stoi przy drzwiach: na żywo z dźwiękiem na ekranie P4, jako obraz lub alert na pozostałych. Kreator prowadzi cię krok po kroku i dodaje automatyzację do Home Assistant.",
+        "create": "Utwórz automatyzację dzwonka",
+        "empty": "Nie ma jeszcze automatyzacji dzwonka. Utwórz ją powyżej, a pojawi się tutaj."
+      },
+      "by_hand": {
+        "title": "Napisz automatyzację samodzielnie"
       }
     }
   }
