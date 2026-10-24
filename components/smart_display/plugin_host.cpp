@@ -12,6 +12,7 @@
 #include "plugin_api.h"
 #include "touch_feedback_lvgl.h"
 #include "plugin_action.h"
+#include "capture_dot.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -41,72 +42,11 @@ void popup_close(const tessera::Plugin *plugin);
 bool popup_of(const tessera::Plugin *plugin);
 }  // namespace plugin_host
 
-// ---- The screen's own camera in use (docs/PICTURES.md "Capture", plugin API 0.17) ----
-// A dot in the glass's top right corner, on top of everything (LVGL's system layer: pages, cards, the full view, the
-// screensaver), while the screen's own camera is in use: Home Assistant taking pictures or a stream of it, which the core
-// sees by itself on the camera with the id ts_camera (the feature `camera`, smart_display.register_plugin binds it), or a
-// plugin that uses it on the screen itself (tessera::capturing). No plugin or setting takes it away. It lies in the top
-// bar's row, so it never lies over a live picture (live_view.h stops one under anything LVGL draws).
+// ---- The screen's own camera in use (capture_dot.h): the dot the core shows, and what it hears of the camera ----
 namespace plugin_host {
-// A picture keeps the camera in use this long: Home Assistant's dashboards ask for a new one every ten seconds. A
-// stream is in use while its pictures come; at five a second, a gap this long means it ended.
-constexpr uint32_t PICTURE_IN_USE_MS = 12000;
-constexpr uint32_t STREAM_QUIET_MS = 3000;
-std::vector<const tessera::Plugin *> &camera_users() {
-  static std::vector<const tessera::Plugin *> list;
-  return list;
-}
-static uint32_t camera_picture_at = 0;   // millis() of the camera's last picture to Home Assistant, 0 before the first
-static bool camera_streaming = false;
-static lv_obj_t *camera_dot = nullptr;
-static bool camera_dot_dark = false;
-static bool camera_in_use(uint32_t now) {
-  if (!camera_users().empty()) return true;
-  if (!camera_picture_at) return false;
-  return now - camera_picture_at < (camera_streaming ? STREAM_QUIET_MS : PICTURE_IN_USE_MS);
-}
-void camera_dot_update(uint32_t now) {
-  const bool on = camera_in_use(now);
-  if (!on) {
-    if (camera_dot) { lv_obj_delete(camera_dot); camera_dot = nullptr; ESP_LOGI("plugins", "the camera is no longer in use"); }
-    return;
-  }
-  if (!camera_dot) {
-    const int d = std::max(6, ::ui::mm(2));
-    camera_dot = lv_obj_create(lv_layer_sys());
-    lv_obj_remove_style_all(camera_dot);
-    lv_obj_remove_flag(camera_dot, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_remove_flag(camera_dot, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(camera_dot, d, d);
-    lv_obj_set_style_radius(camera_dot, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_opa(camera_dot, LV_OPA_COVER, 0);
-    lv_obj_align(camera_dot, LV_ALIGN_TOP_RIGHT, -std::max(3, ::ui::mm(1)), std::max(3, ::ui::mm(1)));
-    camera_dot_dark = !theme::dark;  // coloured below
-    ESP_LOGI("plugins", "the camera is in use: the dot shows");
-  }
-  if (camera_dot_dark != theme::dark) {
-    camera_dot_dark = theme::dark;
-    lv_obj_set_style_bg_color(camera_dot, lv_color_hex(theme::foreground(theme::ha::GREEN)), 0);
-  }
-}
+void camera_dot_update(uint32_t now) { capture_dot::update(now); }
 #ifdef USE_CAMERA
-// The camera as Home Assistant uses it, heard as ESPHome's API hears it: a picture, a stream that starts or stops.
-class CameraWatch : public esphome::camera::CameraListener {
- public:
-  void on_camera_image(const std::shared_ptr<esphome::camera::CameraImage> &) override { seen(); }
-  void on_stream_start() override { camera_streaming = true; seen(); }
-  void on_stream_stop() override { camera_streaming = false; camera_dot_update(esphome::millis()); }
-
- private:
-  static void seen() {
-    camera_picture_at = esphome::millis() | 1;
-    camera_dot_update(camera_picture_at);
-  }
-};
-void watch_camera(esphome::camera::Camera *camera) {
-  static CameraWatch watch;
-  if (camera) camera->add_listener(&watch);
-}
+void watch_camera(esphome::camera::Camera *camera) { capture_dot::watch(camera); }
 #endif
 }  // namespace plugin_host
 // ---- The register (plugin_api.h) ----
@@ -482,19 +422,11 @@ void wake(const Plugin *plugin) {
   if (plugin_host::wake) plugin_host::wake(std::string("plugin ") + (plugin ? plugin->plugin_id() : "?"));
 }
 
-// A plugin that uses the screen's own camera on the screen itself says so (0.17): the core's dot shows while one does.
+// A plugin that uses the screen's own camera on the screen itself says so (0.17): the core's dot shows while one does
+// (capture_dot.h).
 void capturing(const Plugin *plugin, Capture what, bool on) {
   if (what != Capture::CAMERA || !plugin) return;
-  auto &using_it = plugin_host::camera_users();
-  const auto found = std::find(using_it.begin(), using_it.end(), plugin);
-  if (on && found == using_it.end()) {
-    using_it.push_back(plugin);
-    ESP_LOGI("plugins", "%s uses the camera on the screen", plugin->plugin_id());
-  } else if (!on && found != using_it.end()) {
-    using_it.erase(found);
-    ESP_LOGI("plugins", "%s no longer uses the camera", plugin->plugin_id());
-  }
-  plugin_host::camera_dot_update(esphome::millis());
+  capture_dot::capturing(plugin, on);
 }
 
 namespace ui {

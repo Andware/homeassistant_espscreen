@@ -55,8 +55,9 @@ void live_places(const runtime_tiles::Widgets &w, const std::function<void(lv_ob
 bool picture_ask(const runtime_tiles::Widgets &w, const runtime_tiles::Tile &t, tile_picture::Ask &a);
 // The card's picture (an lv_image_dsc_t of the store, or nullptr for none) onto its places, each its own piece; a
 // place whose piece is not in it shows its block again.
-// The screen's own camera (docs/PICTURES.md "Capture"): the core watches the camera a plugin brings as ts_camera (the
-// feature `camera`, smart_display.register_plugin calls this) and shows its dot while Home Assistant uses it.
+// The screen's own camera (docs/PICTURES.md "Capture", capture_dot.h): the core watches the camera a plugin brings as
+// ts_camera (the feature `camera`, smart_display.register_plugin calls this) and shows its dot while Home Assistant uses
+// it or a plugin says it does (tessera::capturing).
 void watch_camera(esphome::camera::Camera *camera);
 void camera_dot_update(uint32_t now_ms);
 void picture_place(runtime_tiles::Widgets &w, void *picture);
