@@ -209,8 +209,9 @@ class Wiring(unittest.TestCase):
         view = (ROOT / 'web/src/components/AppSettingsView.vue').read_text()
         self.assertIn('id="video-install"', view)
         self.assertIn('id="video-restart"', view)
-        # A P4's network buffers: the video's send buffer, and all of it in PSRAM first (docs/CAMERA.md).
-        component = (ROOT / 'components/smart_display/__init__.py').read_text()
+        # A P4's network buffers: the video's send buffer, and all of it in PSRAM first (docs/CAMERA.md,
+        # components/smart_display/p4_build.py).
+        component = (ROOT / 'components/smart_display/p4_build.py').read_text()
         self.assertIn('"CONFIG_LWIP_TCP_SND_BUF_DEFAULT": 65534', component)
         self.assertIn('"CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP": True', component)
         # Nothing restarts Home Assistant without the person's yes.

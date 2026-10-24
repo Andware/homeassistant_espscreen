@@ -41,7 +41,6 @@ static const char *const TAG = "live";
 constexpr size_t CHUNK = 16 * 1024;
 constexpr uint32_t WAIT_MS = 500;  // a read waits this long, so a stop is seen within it
 // ---- The glass (glass.h): the panel, its frame buffer, the one-writer lock and the rooms LVGL keeps out of ----
-void bind(esphome::lvgl::LvglComponent *component) { glass::bind(component); }
 bool available() { return glass::direct(); }
 uint32_t misses() { return glass::misses(); }
 

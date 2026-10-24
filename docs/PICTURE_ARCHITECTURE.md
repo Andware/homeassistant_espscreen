@@ -35,7 +35,7 @@ its chip, its panel or its sensor, and the layers below are keyed on those facts
 | `plugin_host.cpp` (its picture parts) | a plugin's places measured and laid, `ui::picture`, `ui::set_picture`, `ui::live`; `tessera::capturing` reports to the dot | no | LVGL |
 | `capture_dot.h` | the dot while the screen's own camera is in use, and the listener on that camera (step 6, done) | no | LVGL, ESPHome's camera API |
 | `module_doorbell.cpp` | a ring's view over the camera full view | no | LVGL, speaker |
-| `__init__.py` (`_p4`) | on an ESP32-P4 with LVGL: the TCP window and the network buffers in PSRAM, `USE_LIVE_VIEW`, the three linker wraps, LVGL bound to `live_view` | | the build |
+| `__init__.py` (`_p4`), `p4_build.py` | on an ESP32-P4 with LVGL: the TCP window and the network buffers in PSRAM, the engine chosen by the chip and LVGL (`p4_build.picture_engine`: its define and its wraps), LVGL bound to the glass (step 7, done) | `p4_build.py`, `tests/test_live_view.py` | the build |
 | `packages/features/camera.yaml` | binds the three slots to `picture_fetch` (`BOOT_CAMERA_HOOKS`), the 50 ms hand-off, `SCREEN_PICTURES`, `LV_USE_IMAGE`, `LV_USE_SNAPSHOT`, the alert's frame | | the build |
 | `web/wasm/image_transport.h` | the editor's preview binding the same three slots to a fetch in the browser | | the browser |
 
@@ -284,8 +284,10 @@ The 2D-DMA's own facts are the engine's and nobody else's: its units of 64 pixel
 32-bit, its macro block of 16 rows on every P4 build ESPHome makes (`CONFIG_ESP32P4_SELECTS_REV_LESS_V3`), its FIFO of
 1536 bits, and the turned block with a small leftover that it never finishes (DIG-734), as `ppa_guard` holds them. The
 guard is proven on glass with every turned copy forced through its planner's cuts (ten thousand pieces in three minutes,
-pieces one pixel wide among them, the chrome correct): it is a block to keep, moved under the engine as it is, and the
-engine's `blit` is where every PPA call of the firmware passes, the streams', LVGL's and a plugin's alike.
+pieces one pixel wide among them, the chrome correct) and cleared as a cause of the restarts of October 2026 (the two
+P4 screens that restarted decoded to a blocked main loop without a line of the guard; section 8 says what blocked it):
+it is a block to keep, moved under the engine as it is, and the engine's `blit` is where every PPA call of the firmware
+passes, the streams', LVGL's and a plugin's alike.
 
 May know: the decoder, the PPA, the guard, the decoder's memory, the glass (to hold it is the caller's job, so the lock
 points stay where they are). May not know: streams, sockets, owners, LVGL objects. The MCU sums of the JPEG profile
@@ -371,10 +373,12 @@ points (`watch_camera`, `capturing`). Optional: it changes no behaviour and no i
 
 ### 3.9 Which engine, decided by the build
 
-`__init__.py` reads the facts and defines the engine; the C++ selects by define, as it does for modules. Today the facts
-are three and the define is one: the chip is an ESP32-P4 (a hardware JPEG decoder and the PPA), the display is MIPI-DSI
-(a frame buffer in PSRAM that ESP-IDF hands out) and LVGL is present. The define stays `USE_LIVE_VIEW` so that no YAML,
-test or render changes for the move; the Python names what it means. A future chip with its own decoder and 2D engine
+`__init__.py` reads the facts and defines the engine; the C++ selects by define, as it does for modules. The facts and
+the engines are a table in `p4_build.py` (free of ESPHome, `tests/test_live_view.py`): the chip is an ESP32-P4 (a
+hardware JPEG decoder and the PPA) and LVGL is present, which choose the P4 engine with its define and its three linker
+wraps; whether the display gave a frame buffer a task may write is a fact the glass finds at run time (`glass::direct`),
+so a P4 whose panel ESP-IDF did not make as MIPI-DSI shows stills. The define stays `USE_LIVE_VIEW` so that no YAML, test
+or render changes for the move; the Python names what it means. A future chip with its own decoder and 2D engine
 is a second `picture_engine_<chip>.cpp` and, for its panel kind, a second `glass_<panel>.cpp`, chosen by the same
 Python from its own facts; `picture_fetch`, `live_view`, `live_spots` and `runtime_tiles` see nothing of it. A P4 with
 an RGB panel is one function more in `glass` (the RGB panel's frame buffer) and nothing elsewhere.
@@ -523,21 +527,38 @@ in), the video (out), the wake word and the Bluetooth proxy ran the Wi-Fi co-pro
 (`H_SDIO_DRV: task still writing Rx data to queue!`, esp_hosted 2.12.12), with internal RAM at 60 to 80 KB and the wake
 word's ring buffer overrunning.
 
+What those restarts were, once the main loop's stack was kept across a watchdog (section 9): the loop blocked in a
+synchronous call to the Wi-Fi co-processor (`wait_for_sync_response` in esp_hosted's RPC; which call is not yet known:
+the power-save calls of the standby and the wake in `screen_power.h`, the signal strength every ten minutes and
+ESPHome's own Wi-Fi calls are the candidates) while the C6's answer never came, because the SDIO receive path drops a block when its copy task is still busy with the last one
+("task still writing Rx data to queue!", esp-hosted-mcu #197); the call waits the RPC's 5 seconds, ESPHome's task
+watchdog was 5 seconds too, and the watchdog won. Measured on a reTerminal D1001 with two live tiles (345 and 140 KB a
+second in; the larger one 10 pictures a second of 744 x 408, 87 ms of glass work each, the two together 1.3 seconds of
+glass work a second): the receive side fell behind the pictures. dev answers it in two steps: the task watchdog of every
+P4 board is 20 seconds (`packages/hardware/esp32p4-c6.yaml`), so a lost answer is a failed call and a 5-second stall of
+the main loop, not a restart; and this section, which keeps the load from getting there. So the inbound rate is bounded
+by the SDIO link and the glass work per picture, not by the decode, and a synchronous Wi-Fi call from the main loop is a
+5-second stall under load: the two calls of the standby's doze belong off the loop.
+
 The limits go in one place, `budgets.h`, worked out at boot from facts and never from a board's name:
 
 - **the PSRAM**: the picture budget, as today, and the streams' share of it;
 - **the internal RAM**: one floor every consumer of it honours (the streams' tasks, the video, the download), below
   which a part is dropped rather than taken, as the video does already;
 - **the Wi-Fi path**: an inbound rate for the streams together, from the path's kind (a co-processor over SDIO gives
-  about 2.6 MB/s on a P4; an S3's own radio far less) and a share of it that is the streams', as a share of the PSRAM is;
-- **the streams at once**, from the three above rather than a constant.
+  about 2.6 MB/s on a P4 to one download, and far less to several streams beside the RPC's answers; an S3's own radio
+  less again) and a share of it that is the streams', as a share of the PSRAM is;
+- **the glass work**: the lay-out cost of a picture of a stream's size (the engine's copies, measured in the stream
+  reports), so that two streams together never take more of each second than the main loop can spare;
+- **the streams at once**, from the four above rather than a constant.
 
 Every layer asks the budget instead of carrying a number. `live_view::open` refuses a stream that would take the inbound
 rate over its share, and the owner shows stills, as it does today when the seventh stream is taken. A stream's task
 drops a part when internal RAM is under the floor and says so in its report. The screen's question carries its stream
 budget beside `live` (as `cap` carries the picture's), so that `live_feed` sends a screen under load fewer pictures a
-second rather than the screen's Wi-Fi driver drowning in them; the back-pressure the app has (the next picture is made
-once the last has left the host) stays, and the screen's own say is added to it.
+second rather than the screen's Wi-Fi driver drowning in them, and fewer still while two streams are up; the
+back-pressure the app has (the next picture is made once the last has left the host) stays, and the screen's own say
+is added to it.
 
 The video needs a viewer model that cannot be driven into a storm. Today a viewer is a connection, three may play, and
 nothing keeps one peer from opening and closing one every second (the tester's log: "A viewer watches (one more)" dozens
@@ -558,10 +579,12 @@ Three gaps the restart hunt of October 2026 ran into, each a round of its own af
   keeps LVGL's render.
 - **A record of what the loop waited on.** A task watchdog with an idle program counter says the main loop was blocked,
   not on what: the crash record (`esp32.crash`) keeps the program counter and two frames of the crashing core's task,
-  and an abort keeps the assert machinery; the assert's text and the watchdog's culprit go to the console only. The
-  engine and the glass keep a small record in memory that survives a restart (the last copies, each with its block's
-  size, angle, scale and client; who holds the glass and since when), and the crash record names it, so a stall on a
-  copy says which copy and a lock held too long says by whom.
+  and an abort keeps the assert machinery; the assert's text and the watchdog's culprit go to the console only. dev has
+  the first piece (`loop_record.h`, `loop_record.cpp`, 2026-10-24): at a task watchdog the main loop's stack, every word
+  that points at code, is kept in memory that survives the restart and logged at the next boot, decoded by the
+  troubleshooting report; it is what named the C6's RPC above. The generalisation is a record per watched task, and
+  beside it what the engine and the glass know: the last copies, each with its block's size, angle, scale and client,
+  and who holds the glass and since when, so a stall on a copy says which copy and a lock held too long says by whom.
 - **The stream reports as the one place for the counts**: the panel's misses, the decode and lay-out times, the parts
   dropped for the floor, the inbound rate against the budget, so a tester's log answers whether a change helped
   without a console on the board.

@@ -328,22 +328,26 @@ class Encoder(unittest.TestCase):
 
 
 class P4Build(unittest.TestCase):
-    """The P4 boards build with the larger TCP window and the live view, keyed on the chip in the component."""
+    """The P4 boards build with the larger TCP window and the live view, keyed on the chip in the component
+    (components/smart_display/p4_build.py holds the facts; tests/test_live_view.py drives them)."""
 
     def test_the_window_and_the_live_view_are_the_p4s_alone(self):
         source = (ROOT / 'components/smart_display/__init__.py').read_text()
-        self.assertIn('"CONFIG_LWIP_TCP_WND_DEFAULT": 65534', source)
+        facts = (ROOT / 'components/smart_display/p4_build.py').read_text()
+        self.assertIn('"CONFIG_LWIP_TCP_WND_DEFAULT": 65534', facts)
         self.assertRegex(source, r'if _esp32_p4\(\):\n\s+await _p4\(config\)')
         self.assertIn('return get_esp32_variant() == VARIANT_ESP32P4', source)
-        self.assertIn('-Wl,--wrap=esp_lcd_new_panel_dpi', source)
-        self.assertIn('-Wl,--wrap=ppa_register_client', source)  # every PPA burst shorter: live_view.cpp
-        self.assertIn('-Wl,--wrap=ppa_do_scale_rotate_mirror', source)  # a turned copy in pieces: ppa_guard.cpp
+        # The engine's wraps come from the table: the panel as ESP-IDF makes it and every PPA burst shorter
+        # (glass_dsi.cpp), a turned copy in pieces (ppa_guard.cpp).
+        for wrap in ('esp_lcd_new_panel_dpi', 'ppa_register_client', 'ppa_do_scale_rotate_mirror'):
+            self.assertIn(f'"{wrap}"', facts)
+        self.assertIn('cg.add_build_flag(f"-Wl,--wrap={wrap}")', source)
         # The main loop's waits for the C6's answers (5 s each in esp_hosted) must fit the task watchdog, or a busy SDIO
         # link restarts the screen instead of failing a call (2026-10-24, the D1001, a Tab5 and a Guition 10.1).
         hardware = (ROOT / 'packages/hardware/esp32p4-c6.yaml').read_text()
         self.assertRegex(hardware, r'(?m)^esp32:\n(?:  .*\n)*?  watchdog_timeout: 20s\n', 'every P4 board waits 20 s on its main loop')
         # A screen's own sdkconfig_options keep the last word.
-        self.assertIn('if name not in own', source)
+        self.assertIn('if name not in own', facts)
 
 
 if __name__ == '__main__':

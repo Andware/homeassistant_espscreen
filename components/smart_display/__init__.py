@@ -11,7 +11,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.core import CORE
 
-from . import modules, screen_text_gen
+from . import modules, p4_build, screen_text_gen
 
 CODEOWNERS = []
 AUTO_LOAD = ["json"]
@@ -81,32 +81,9 @@ def _tier(config):
     _LOGGER.info("Tier %s: %s", tier, ", ".join(modules.modules_for(tier)) or "no modules")
 
 
-# ---- The ESP32-P4 boards (docs/CAMERA.md, "Live on the P4 boards") ----
-# Keyed on the chip, never on a board: a new P4 board has all of this without a line in its file, and the boards
-# with less memory never do.
-#
-# Every P4 board reaches its Wi-Fi through an ESP32-C6 over SDIO (esp_hosted), where a packet's round trip takes long
-# enough that ESP-IDF's default TCP receive window of four segments (5,760 bytes) held a download at about 0.7 MB/s.
-# A window of 64 KB, as Espressif's own esp_hosted throughput settings have it, gave 2.6 MB/s on the reTerminal D1001
-# (2026-10-10). The window applies to every connection, which is why it is the P4's alone: a CYD has 45 KB in one
-# piece. A screen's own `sdkconfig_options` keep the last word.
-#
-# The send buffer likewise: ESP-IDF's 5,760 bytes let one connection carry about 1.5 Mbit/s over the C6, and Screen
-# camera's video (one TCP connection a viewer, docs/CAMERA.md "The screen's own camera as video in Home Assistant") held
-# its sound up behind the picture for seconds. And all of it in PSRAM first (ESPHome's `wifi: use_psram` sets the same
-# option): what a connection holds unsent or unread lived in internal RAM, which a P4 runs short of. With live camera
-# tiles on the glass and the video playing, the reTerminal D1001 went from 160 KB to 13 KB free in two seconds and the
-# C6's driver aborted the chip (2026-10-21). A P4's panel is MIPI-DSI with PSRAM to spare, so the reason the ESP32-S3's
-# RGB panels keep these buffers inside (packages/hardware/esp32s3-rgb.yaml) does not hold here.
-P4_NETWORK = {
-    "CONFIG_LWIP_TCP_WND_DEFAULT": 65534,
-    "CONFIG_LWIP_TCP_SND_BUF_DEFAULT": 65534,
-    "CONFIG_LWIP_TCP_RECVMBOX_SIZE": 64,
-    "CONFIG_LWIP_TCPIP_RECVMBOX_SIZE": 64,
-    "CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP": True,
-}
-
-
+# ---- The ESP32-P4 boards (docs/CAMERA.md, "Live on the P4 boards"; docs/PICTURE_ARCHITECTURE.md, section 3.9) ----
+# Keyed on the chip, never on a board: a new P4 board has all of this without a line in its file, and the boards with
+# less memory never do. The facts themselves are p4_build.py's, free of ESPHome, so tests/test_live_view.py checks them.
 def _esp32_p4():
     if not CORE.is_esp32:
         return False
@@ -117,8 +94,8 @@ def _esp32_p4():
 
 
 def p4_network_options(own):
-    """The options a P4 gets, less those the screen's own sdkconfig_options set (tests/test_live_view.py)."""
-    return {name: value for name, value in P4_NETWORK.items() if name not in own}
+    """The options a P4 gets, less those the screen's own sdkconfig_options set (p4_build.network_options)."""
+    return p4_build.network_options(own)
 
 
 async def _p4(config):
@@ -127,25 +104,25 @@ async def _p4(config):
     own = ((CORE.config.get("esp32") or {}).get("framework") or {}).get("sdkconfig_options") or {}
     for name, value in p4_network_options(own).items():
         add_idf_sdkconfig_option(name, value)
-    # The camera live, full screen (live_view.h): the decoded pictures go into the panel's frame buffer past LVGL. The
-    # panel's handle is picked up as ESP-IDF makes it for ESPHome's display, whichever display platform that is
-    # (glass_dsi.cpp: the glass, docs/PICTURE_ARCHITECTURE.md).
+    # The picture engine and the glass (p4_build.picture_engine): on a P4 with LVGL the hardware JPEG decoder and the
+    # PPA write the decoded pictures into the panel's frame buffer past LVGL (picture_engine_p4.cpp, glass_dsi.cpp,
+    # live_view.cpp); the panel's handle is picked up as ESP-IDF makes it for ESPHome's display, whichever display
+    # platform that is. Every other build has the software engine: the headers' inline stubs, nothing added.
     lvgl = CORE.config.get("lvgl")
     lvgl = lvgl[0] if isinstance(lvgl, list) else lvgl
-    if not lvgl:
+    engine = p4_build.ENGINES[p4_build.picture_engine("esp32p4", bool(lvgl))]
+    if not engine["define"]:
         return
-    cg.add_define("USE_LIVE_VIEW")
-    cg.add_build_flag("-Wl,--wrap=esp_lcd_new_panel_dpi")
-    # Every PPA client on the screen moves in shorter bursts, so the panel's own DMA keeps up (glass.h, "The panel's
-    # share of the memory bus").
-    cg.add_build_flag("-Wl,--wrap=ppa_register_client")
-    # A turned copy of some sizes never finishes under ESP-IDF 5.5 and the screen restarts behind it (ppa_guard.h):
-    # every scale-rotate-mirror call goes through the guard, which copies such a block in pieces the engine finishes.
-    cg.add_build_flag("-Wl,--wrap=ppa_do_scale_rotate_mirror")
+    cg.add_define(engine["define"])
+    # The linker wraps the engine and the glass need: the panel as ESP-IDF makes it and every PPA client's bursts (so
+    # the panel's own DMA keeps up: glass.h, "The panel's share of the memory bus"), and the guard that copies a turned
+    # block the 2D-DMA would never finish in pieces (ppa_guard.h).
+    for wrap in engine["wraps"]:
+        cg.add_build_flag(f"-Wl,--wrap={wrap}")
     from esphome.const import CONF_ID
 
     component = await cg.get_variable(lvgl[CONF_ID])
-    cg.add(cg.RawExpression(f"live_view::bind({component})"))
+    cg.add(cg.RawExpression(f"glass::bind({component})"))
 
 
 # ---- Plugins (docs/PLUGINS.md) ----

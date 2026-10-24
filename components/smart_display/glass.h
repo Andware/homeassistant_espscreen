@@ -70,7 +70,7 @@ using Room = int;
 constexpr int MAX_ROOMS = 8;
 
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
-// LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot, through live_view::bind).
+// LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot).
 void bind(esphome::lvgl::LvglComponent *lvgl);
 Panel panel();      // 0 x 0 while ESP-IDF made no panel for LVGL
 int turn();         // LVGL's rotation now, degrees clockwise: read every time, the app can stand a screen up at run time

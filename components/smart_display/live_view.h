@@ -353,15 +353,9 @@ enum class Event : uint8_t {
   LIVE,    // its first live picture is on the glass, after FIRST (or with it): no more stills ("Until it is live")
 };
 // A P4 (USE_LIVE_VIEW, smart_display/__init__.py) that shows pictures at all (SCREEN_PICTURES, features/camera.yaml).
-// Its stills come as JPEG too, through the engine (picture_engine.h, docs/PICTURES.md "Formats").
+// Its stills come as JPEG too, through the engine (picture_engine.h, docs/PICTURES.md "Formats"); LVGL is bound to the
+// glass at boot (glass::bind, smart_display/__init__.py).
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
-}  // namespace live_view
-namespace esphome::lvgl {
-class LvglComponent;
-}
-namespace live_view {
-// LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot).
-void bind(esphome::lvgl::LvglComponent *lvgl);
 // Whether this screen streams: a P4 whose panel ESP-IDF made with an RGB565 frame buffer, and LVGL bound.
 bool available();
 // Streams `url` into `area`, the screen as LVGL lays it out, looking as `look` says. -1 when it cannot start (no room
