@@ -1,13 +1,17 @@
 #pragma once
 #include "runtime_tiles.h"
 #include "chunk_transport.h"
+#include "loop_record.h"
 #include "esphome/components/text/text.h"
 #include "esphome/core/component.h"
 namespace esphome::smart_display {
 // Command transport, not a stored JSON state. HA states stay well below 255 chars.
 class DashboardInbox : public text::Text, public Component {
  public:
-  void setup() override { this->publish_state("Ready for tile configuration"); }
+  void setup() override {
+    loop_record::report();  // what the main loop was doing when the last task watchdog restarted the screen, if one did
+    this->publish_state("Ready for tile configuration");
+  }
  protected:
   runtime_tiles::Chunks chunks_;
   void control(const std::string &value) override {

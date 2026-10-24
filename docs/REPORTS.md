@@ -12,7 +12,7 @@ the logs.
 | `report.md` | The facts first: board, versions, the plugins the app installed on the screen and the ones the screen's own hello named (a screen that was restarting while the report was made named none, so the installed ones stand in and the report says so), the last crash, warnings, the list of files. Start here. |
 | `summary.json` | The same facts as data, plus the hello's memory, the firmware's heap and Wi-Fi sensors, Last boot, the pages and tiles count and the card types. |
 | `profile.yaml`, `override.yaml`, `plugins.yaml` | The screen's own YAML and the files beside it, redacted. |
-| `screen.log` | The crashes the app saw this screen reboot from, decoded when the ELF is here, then 45 seconds of live log over the native API with the config dump (reset reason, partitions, versions). |
+| `screen.log` | The crashes the app saw this screen reboot from, decoded when the ELF is here, then 45 seconds of live log over the native API with the config dump (reset reason, partitions, versions). When the task watchdog restarted the screen because its main loop stopped, the record also holds the main loop's own stack at that moment (`LOOP0:` and on, newest first, from `loop_record.h`): ESPHome's own record then only names the idle task, since the main loop was waiting on something, and these lines say on what. |
 | `home-assistant.log` | Home Assistant's log lines about this screen (the ESPHome integration and its library), and the warnings and errors Home Assistant kept. |
 | `diagnostics.json` | Home Assistant's own diagnostics of the screen's ESPHome entry: config, device info, dashboard, versions, OS, repairs. |
 | `addon.log` | The app's own log. |

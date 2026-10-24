@@ -79,6 +79,30 @@ class Crashes(unittest.TestCase):
              '[E][esp32.crash:450] PC: 0x400d1234', '[E][esp32.crash:460] BT0: 0x400d5678', '[E][esp32.crash:470] Use: addr2line -pfiaC -e firmware.elf 0x400d1234',
              '[C][debug:020]   Reset Reason: exception/panic', '[I][app:100] ESPHome version 2026.9.0']
 
+    def test_the_screens_own_prefix_keeps_the_reason_and_the_addresses(self):
+        # The screen writes `[E][esp32.crash:437]:   Reason: ...`, a colon after the brackets, which the stored records
+        # dropped: every report said "unknown" and had no address to decode (TR-4EFBDE, 2026-10-23).
+        lines = ['[E][esp32.crash:432]: *** CRASH DETECTED ON PREVIOUS BOOT ***', '[E][esp32.crash:437]:   Reason: Task wdt',
+                 '[E][esp32.crash:439]:   Crashed core: 1', '[E][esp32.crash:446]:   PC:  0x4FF039FC  (fault location)',
+                 '[E][esp32.crash:355]:   BT0: 0x4FF039FC  (backtrace)', '[E][esp32.crash:471]: Use: addr2line -pfiaC -e firmware.elf 0x4FF039FC',
+                 '[I][app:151]: ESPHome version 2026.9.0 compiled on 2026-10-23 12:06:01 +0200']
+        crash = reports.crash_summary(lines, clock=lambda: 1_800_000_000)
+        self.assertEqual(crash['reason'], 'Task wdt')
+        self.assertEqual(len(crash['lines']), 6)
+        self.assertIn('0x4FF039FC', ' '.join(crash['lines']))
+
+    def test_the_main_loops_stack_at_a_task_watchdog_rides_with_the_crash(self):
+        lines = self.CRASH[:3] + ['[E][loop_record:044]: *** THE MAIN LOOP AT THE LAST TASK WATCHDOG *** (it waited; 2048 words of its stack in use; newest first)',
+                                  '[E][loop_record:049]:   LOOP0: 0x4FF23BEA', '[E][loop_record:049]:   LOOP1: 0x4812ABCD',
+                                  '[E][loop_record:054]:   Use: addr2line -pfiaC -e firmware.elf 0x4FF23BEA 0x4812ABCD',
+                                  '[I][picture:368]: live: loaded, 21064 bytes in 73 ms']
+        crash = reports.crash_summary(lines, clock=lambda: 1_800_000_000)
+        self.assertEqual(len(crash['lines']), 7)
+        self.assertTrue(any('LOOP1: 0x4812ABCD' in l for l in crash['lines']))
+        self.assertFalse(any('picture' in l for l in crash['lines']))
+        self.assertEqual(sorted(set(a for l in crash['lines'] for a in reports.ADDRESS.findall(l))),
+                         ['0x400d1234', '0x4812ABCD', '0x4FF23BEA'])
+
     def test_a_crash_block_is_a_crash_and_a_power_on_is_not(self):
         crash = reports.crash_summary(self.CRASH, clock=lambda: 1_800_000_000)
         self.assertEqual(crash['reason'], 'Fault - LoadProhibited (cause 28)')
