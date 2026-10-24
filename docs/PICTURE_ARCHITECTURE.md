@@ -30,7 +30,8 @@ its chip, its panel or its sensor, and the layers below are keyed on those facts
 | `picture_engine.h`, `picture_engine_p4.cpp` | the engine (step 4, done): the formats taken whole, the hardware JPEG decoder for stills and streams, the PPA copy through the guard, the one turn mapping (`ppa_angle`); the software engine is the stubs | `ppa_angle` and the stubs, `tests/test_picture_engine.cpp` | JPEG decoder, PPA, 2D-DMA |
 | `live_view.cpp` | the streams' tasks, the canvas of a tile and what goes over it, the camera's sound to the speaker | no | sockets, speaker |
 | `ppa_guard.h`, `.cpp` | a turned PPA copy the 2D-DMA would never finish goes in pieces (DIG-734) | yes, `tests/test_ppa_guard.cpp` | PPA, through a linker wrap |
-| `runtime_tiles.h` (the picture parts, about two thousand lines) | the owners (the full view, the alert, the media card's cover, every tile, the library, a vacuum's map, a plugin's card and saver), the slots bound from YAML (`ImageHooks`), the store bound to PSRAM, `pictures_round`, the full view (`camera_open`, `camera_close`, `camera_answer`), the live full view, the live tiles and the live places (three state machines), `drawn_over`, `live_stop_covered`, `live_tick` | no | LVGL |
+| `live_spots.h` | the one machine of the live tiles and a plugin's live places: what streams, asks, stops and gives up; the full view's handle and tries (`ViewStream`) (step 5, done) | yes, `tests/test_live_spots.cpp` | none |
+| `runtime_tiles.h` (the picture parts) | the owners (the full view, the alert, the media card's cover, every tile, the library, a vacuum's map, a plugin's card and saver), the slots bound from YAML (`ImageHooks`), the store bound to PSRAM, `pictures_round`, the full view (`camera_open`, `camera_close`, `camera_answer`), what binds the live spots (which may stream, their question, their look), `drawn_over`, `live_stop_covered`, `live_tick` | no | LVGL |
 | `plugin_host.cpp` (its picture parts) | a plugin's places measured and laid, `ui::picture`, `ui::set_picture`, `ui::live`, the capture dot and the listener on the screen's own camera (`CameraWatch`), `tessera::capturing` | no | LVGL, ESPHome's camera API |
 | `module_doorbell.cpp` | a ring's view over the camera full view | no | LVGL, speaker |
 | `__init__.py` (`_p4`) | on an ESP32-P4 with LVGL: the TCP window and the network buffers in PSRAM, `USE_LIVE_VIEW`, the three linker wraps, LVGL bound to `live_view` | | the build |
@@ -343,6 +344,11 @@ class Spots {
 name's snapshot) and binds the callbacks; `tests/test_live_spots.cpp` drives the machine through fast page turns, an
 answer that is no stream, a stream that fails three times, a turn of the glass and a spot that moved, as
 `test_picture_loader.cpp` drives the loader.
+
+As built (step 5): the tiles and the places are the one machine, `live_spots::Spots`, with the round protocol above. The
+full view is not a spot of it: the loader asks for the view's picture and the stream comes back as that question's
+answer, so forcing it into the round protocol would have changed when it asks. What it shares with the spots, the handle
+and the tries of one opening, is `live_spots::ViewStream`, in the same header, with the same `TRIES`.
 
 ### 3.6 The owners and the loader
 

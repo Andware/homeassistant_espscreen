@@ -250,7 +250,7 @@ void build(lv_obj_t *root, const std::string &name) {
   lv_obj_add_event_cb(sound_key, [](lv_event_t *) {
     touch();
     camera_muted = !camera_muted;
-    live_view::mute(camera.live_handle, camera_muted);
+    live_view::mute(camera.stream.handle, camera_muted);
     paint_sound();
   }, LV_EVENT_SHORT_CLICKED, nullptr);
   paint_sound();

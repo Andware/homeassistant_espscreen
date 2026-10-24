@@ -577,7 +577,10 @@ microphone listens only while someone watches, and the voice assistant can liste
   stream and a tile's pace (`live_pace`) (`tests/test_live_feed.py`); `components/smart_display/live_view.h` and
   `live_view.cpp`: the screen's streams, up to seven at once (`tests/test_live_view.cpp` checks the stream's framing,
   where a picture lies on a turned panel, how it is scaled, cut into a card and what is laid over it);
-  `runtime_tiles.h` (`live_tiles_round`, `live_tile_answer`, `live_tick`): which tiles stream and when.
+  `live_spots.h`: the one machine of the live tiles and a plugin's live places (what streams, asks, stops and gives up;
+  `tests/test_live_spots.cpp`), and the full view's handle and tries; `runtime_tiles.h` (`live_tiles_round`,
+  `live_spot_ask`, `live_spot_open`, `live_stop_covered`, `live_tick`) binds it: which spots may stream, their question,
+  their look.
 - Every step of every picture is in the screen's log at DEBUG (`logger: level: DEBUG` in a screen's Override YAML),
   under the tag `picture`: who wants which picture, the question and its answer, the download, the store keeping,
   renewing, retiring and freeing each copy (and why), a picture put on its card on the glass or on a kept page, and an
