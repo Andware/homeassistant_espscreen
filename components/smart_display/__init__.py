@@ -128,15 +128,16 @@ async def _p4(config):
     for name, value in p4_network_options(own).items():
         add_idf_sdkconfig_option(name, value)
     # The camera live, full screen (live_view.h): the decoded pictures go into the panel's frame buffer past LVGL. The
-    # panel's handle is picked up as ESP-IDF makes it for ESPHome's display, whichever display platform that is.
+    # panel's handle is picked up as ESP-IDF makes it for ESPHome's display, whichever display platform that is
+    # (glass_dsi.cpp: the glass, docs/PICTURE_ARCHITECTURE.md).
     lvgl = CORE.config.get("lvgl")
     lvgl = lvgl[0] if isinstance(lvgl, list) else lvgl
     if not lvgl:
         return
     cg.add_define("USE_LIVE_VIEW")
     cg.add_build_flag("-Wl,--wrap=esp_lcd_new_panel_dpi")
-    # Every PPA client on the screen moves in shorter bursts, so the panel's own DMA keeps up (live_view.cpp, "The
-    # panel's share of the memory bus").
+    # Every PPA client on the screen moves in shorter bursts, so the panel's own DMA keeps up (glass.h, "The panel's
+    # share of the memory bus").
     cg.add_build_flag("-Wl,--wrap=ppa_register_client")
     # A turned copy of some sizes never finishes under ESP-IDF 5.5 and the screen restarts behind it (ppa_guard.h):
     # every scale-rotate-mirror call goes through the guard, which copies such a block in pieces the engine finishes.

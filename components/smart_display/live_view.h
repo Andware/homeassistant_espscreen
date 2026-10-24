@@ -13,7 +13,7 @@
 // each with the hardware decoder and has the PPA copy it into the panel's frame buffer, turned the way LVGL turns its
 // own drawing (ESPHome's LvglComponent::draw_buffer_), and scaled to fill the room it has. The picture lies below the top bar, so the back key and the
 // name stay LVGL's to draw: nothing of LVGL lies under the picture, and LVGL never draws there while it streams.
-// The panel's handle comes from ESP-IDF as ESPHome makes it (a linker wrap of esp_lcd_new_panel_dpi, live_view.cpp),
+// The panel's handle comes from ESP-IDF as ESPHome makes it (a linker wrap of esp_lcd_new_panel_dpi, glass_dsi.cpp),
 // so every display platform on a P4 serves, and nothing of ESPHome's own classes is read.
 //
 // What a PC can check is here, free of sockets, LVGL and ESP-IDF (tests/test_live_view.cpp): the stream's framing,
@@ -26,6 +26,7 @@
 #include <functional>
 #include <string>
 
+#include "glass.h"
 #include "picture_fetch.h"
 // USE_LIVE_VIEW comes with ESPHome's defines (smart_display/__init__.py); a PC test has none and builds without it.
 #if __has_include("esphome/core/defines.h")
@@ -127,22 +128,9 @@ class Reader {
 };
 
 // ---- Where things lie ----
-struct Rect {
-  int x = 0, y = 0, w = 0, h = 0;
-  bool empty() const { return w <= 0 || h <= 0; }
-  bool operator==(const Rect &o) const { return x == o.x && y == o.y && w == o.w && h == o.h; }
-};
-// Where a rectangle of the screen as LVGL lays it out lies on a panel of pw x ph, LVGL turned `turn` degrees clockwise:
-// exactly ESPHome's own sums for a flushed area (LvglComponent::draw_buffer_), so a picture lands where LVGL would
-// have drawn it.
-inline Rect on_panel(const Rect &r, int turn, int pw, int ph) {
-  switch (turn) {
-    case 90: return {pw - r.y - r.h, r.x, r.h, r.w};
-    case 180: return {pw - r.x - r.w, ph - r.y - r.h, r.w, r.h};
-    case 270: return {r.y, ph - r.x - r.w, r.h, r.w};
-    default: return r;
-  }
-}
+// A rectangle of the screen as LVGL lays it out, and where it lies on a turned panel: the glass's (glass.h).
+using glass::Rect;
+using glass::on_panel;
 // The PPA scales in sixteenths (ESP-IDF's ppa_srm.c): a block of `n` pixels at `sixteenths` / 16 comes out this long.
 inline int scaled(int n, int sixteenths) { return (sixteenths / 16) * n + (sixteenths % 16) * n / 16; }
 // A picture of w x h as large as it fits in `area`, its proportions kept, in the middle: the app sends the camera's own
@@ -395,7 +383,7 @@ void mute(Handle handle, bool muted);
 void close(Handle handle);
 // The main loop, every 50 ms: frees what finished tasks left and tells each stream's owner what happened.
 void tick(const std::function<void(Handle, Event)> &tell);
-// How often the panel ran dry since boot (a frame of blue: live_view.cpp, "The panel's share of the memory bus").
+// How often the panel ran dry since boot (a frame of blue: glass.h, "The panel's share of the memory bus").
 uint32_t misses();
 // What the streams that run hold of the board's memory, about (docs/PICTURES.md: the streams take their share of the one
 // picture budget while they run): each stream's input and its decoded picture of its room, from what the main loop

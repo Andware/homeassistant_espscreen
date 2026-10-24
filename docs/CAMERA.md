@@ -348,7 +348,7 @@ update holds the loop and has its progress drawn at once.
 full view's black, a tile's still with its spinner and name) would cover the live picture until its next one. So the
 list of what LVGL is about to draw is cut against where the picture of every stream lies (a tile's whole card, a full
 view's picture as large as fits its room; beside a picture of another shape LVGL draws the room's black itself), once,
-as LVGL starts drawing (`LV_EVENT_RENDER_START`, `keep_out` in `live_view.cpp`). That one place catches every way LVGL
+as LVGL starts drawing (`LV_EVENT_RENDER_START`, `keep_out` in `glass_dsi.cpp`). That one place catches every way LVGL
 comes to draw there: a card that changes beside a tile, an area queued before a stream's first picture, two areas LVGL
 joined into one, and the whole glass, which LVGL draws when more areas come in one frame than its list holds. Each piece
 goes through the display's own rounding, as LVGL's own areas do. When a picture lies elsewhere or at another size (a
@@ -359,7 +359,7 @@ beside the new one. When a stream ends, LVGL draws its room again.
 every 16 ms. When another DMA holds the bus too long (the PPA scaling and turning a picture, the JPEG decoder, the
 DMA2D that copies what LVGL drew), the bridge runs dry and the panel shows a frame of blue, its colour for no data;
 ESP-IDF only logs that from its interrupt, on the UART. A tester with a Guition 10.1-inch P4 (pixel clock 70 MHz) saw
-such flashes while a camera streamed. So the firmware does two things on a P4 (`live_view.cpp`, "The panel's share of
+such flashes while a camera streamed. So the firmware does two things on a P4 (`glass.h`, "The panel's share of
 the memory bus"). It counts: the bridge's underrun flag is read every 50 ms and the count stands in every stream report
 (`the panel ran dry N times since boot`), so a log says whether a change helped. And it shortens every PPA burst on the
 screen from ESP-IDF's 128 bytes to 64, the streams' own clients and ESPHome's LVGL (which turns every flush of a turned
@@ -403,7 +403,7 @@ a wake under that load comes 5 seconds late. A screen whose main loop truly hang
 
 **One writer on the glass at a time.** LVGL holds the glass for the whole of each refresh (from `LV_EVENT_REFR_START`
 to `LV_EVENT_REFR_READY`: deciding what to draw, drawing it, flushing it to the panel) and a stream's task holds it for
-each copy of a picture, one recursive mutex in `live_view.cpp` (`glass`). Without it a stream's first picture could land
+each copy of a picture, one recursive mutex, the glass's (`glass.h`: `hold` and `release`). Without it a stream's first picture could land
 while LVGL was still drawing the still and the name it had decided on before the stream armed, and that drawing then lay
 over the picture until the next one: a tile's name stood over its live picture after the camera full screen closed
 (2026-10-12, the D1001). `close()` takes the same lock, so once it returns nothing of the stream writes the glass.
@@ -567,6 +567,9 @@ microphone listens only while someone watches, and the voice assistant can liste
   finished download, the `LV_USE_IMAGE` flag, the alert frame, and the diagnostic action `preview_camera` (an entity
   opens it, an empty entity closes it).
 - `tests/test_camera.py`: the app side and the words both sides share.
+- `components/smart_display/glass.h` and `glass_dsi.cpp`: the panel as a surface (docs/PICTURE_ARCHITECTURE.md): its
+  size and turn, the frame buffer a stream writes past LVGL, the one-writer lock LVGL holds for a refresh and a stream's
+  task for a copy, the rooms LVGL keeps out of, the panel's underrun count and the PPA bursts of every client.
 - `screen_manager/app/live_feed.py`: a camera live on a P4, its links, the source per camera (WebRTC or snapshots), the
   stream and a tile's pace (`live_pace`) (`tests/test_live_feed.py`); `components/smart_display/live_view.h` and
   `live_view.cpp`: the screen's streams, up to seven at once (`tests/test_live_view.cpp` checks the stream's framing,
