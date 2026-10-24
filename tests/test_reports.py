@@ -108,7 +108,7 @@ class Crashes(unittest.TestCase):
                 '[E][heap_watch:106]:   Lowest: 20372 bytes free, 5321 s after boot',
                 '[E][heap_watch:059]:   Failed: 3 allocations; the last 65536 bytes (caps 0x1800) in tcp_alloc, task tiT, '
                 '18000 bytes internal free, 5400 s after boot',
-                '[C][heap_watch:110]: Internal RAM: 248380 bytes free, 162344 at the lowest since boot (290 s after it), 0 failed allocations']
+                '[I][heap_watch:111]: Internal RAM: 248380 bytes free, 162344 at the lowest since boot (290 s after it), 0 failed allocations']
         crash = reports.crash_summary(self.CRASH[:3] + heap, clock=lambda: 1_800_000_000)
         self.assertEqual(len(crash['lines']), 6)
         self.assertTrue(any('Failed: 3 allocations' in l for l in crash['lines']))

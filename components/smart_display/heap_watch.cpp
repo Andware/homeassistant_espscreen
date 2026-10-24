@@ -109,7 +109,8 @@ void dump() {
              (unsigned) (previous.lowest_at / 1000));
     if (previous.failures != 0) log_failure(previous, true);
   }
-  ESP_LOGCONFIG(TAG, "Internal RAM: %u bytes free, %u at the lowest since boot (%u s after it), %u failed allocations",
+  // INFO, not CONFIG: the screens log at INFO, where ESPHome compiles every ESP_LOGCONFIG out.
+  ESP_LOGI(TAG, "Internal RAM: %u bytes free, %u at the lowest since boot (%u s after it), %u failed allocations",
                 (unsigned) internal_free(), (unsigned) record.lowest, (unsigned) (record.lowest_at / 1000),
                 (unsigned) record.failures);
 }
