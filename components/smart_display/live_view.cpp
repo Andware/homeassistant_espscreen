@@ -9,6 +9,7 @@
 // while nobody stopped the stream, so once close() returns nothing of it writes the glass any more and LVGL may draw
 // there at once. Buffers live in PSRAM and go when the task has ended (tick()).
 #include "live_view.h"
+#include "picture_jpeg.h"
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
 #include <atomic>
 #include <cerrno>
@@ -46,6 +47,12 @@ namespace live_view {
 static const char *const TAG = "live";
 constexpr size_t CHUNK = 16 * 1024;
 constexpr uint32_t WAIT_MS = 500;  // a read waits this long, so a stop is seen within it
+// The decoder's sampling, as picture_jpeg.h counts whole MCUs by it.
+static picture_jpeg::Sampling sampling_of(jpeg_down_sampling_type_t method) {
+  return method == JPEG_DOWN_SAMPLING_YUV420   ? picture_jpeg::Sampling::YUV420
+         : method == JPEG_DOWN_SAMPLING_YUV422 ? picture_jpeg::Sampling::YUV422
+                                               : picture_jpeg::Sampling::OTHER;
+}
 
 // ---- The panel ESPHome's display made (the wrap of esp_lcd_new_panel_dpi at the end of this file) and LVGL ----
 static esp_lcd_panel_handle_t panel = nullptr;
@@ -383,11 +390,10 @@ static void show(Stream &s, size_t length, bool still) {
     s.skipped++;
     return;
   }
-  // The decoder writes whole MCUs: rows as wide as the picture rounded up to 16 (4:2:0, 4:2:2) or 8 pixels.
-  const bool wide = info.sample_method == JPEG_DOWN_SAMPLING_YUV420 || info.sample_method == JPEG_DOWN_SAMPLING_YUV422;
-  const bool tall = info.sample_method == JPEG_DOWN_SAMPLING_YUV420;
-  const int stride_w = (info.width + (wide ? 15 : 7)) & ~(wide ? 15 : 7);
-  const int rows = (info.height + (tall ? 15 : 7)) & ~(tall ? 15 : 7);
+  // The decoder writes whole MCUs (picture_jpeg.h).
+  const picture_jpeg::Sampling sampling = sampling_of(info.sample_method);
+  const int stride_w = picture_jpeg::decoded_width(info.width, sampling);
+  const int rows = picture_jpeg::decoded_height(info.height, sampling);
   const int w = info.width, h = info.height;
   // Where it goes: a full view's picture as large as fits its room, a tile's into its card.
   int sixteenths = 0;
@@ -620,10 +626,9 @@ uint8_t *decode_still(const uint8_t *jpeg, size_t length, Still &out) {
   if (!stills_on.load(std::memory_order_acquire)) return nullptr;
   jpeg_decode_picture_info_t info{};
   if (jpeg_decoder_get_info(jpeg, length, &info) != ESP_OK) return nullptr;
-  const bool wide = info.sample_method == JPEG_DOWN_SAMPLING_YUV420 || info.sample_method == JPEG_DOWN_SAMPLING_YUV422;
-  const bool tall = info.sample_method == JPEG_DOWN_SAMPLING_YUV420;
-  const int stride_w = (info.width + (wide ? 15 : 7)) & ~(wide ? 15 : 7);
-  const int rows = (info.height + (tall ? 15 : 7)) & ~(tall ? 15 : 7);
+  const picture_jpeg::Sampling sampling = sampling_of(info.sample_method);
+  const int stride_w = picture_jpeg::decoded_width(info.width, sampling);
+  const int rows = picture_jpeg::decoded_height(info.height, sampling);
   jpeg_decode_memory_alloc_cfg_t o{.buffer_direction = JPEG_DEC_ALLOC_OUTPUT_BUFFER};
   size_t size = 0;
   auto *pixels = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(static_cast<size_t>(stride_w) * rows * 2, &o, &size));

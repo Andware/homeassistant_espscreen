@@ -134,6 +134,37 @@ class Rules(unittest.TestCase):
         self.assertIn('if (larger) out.emplace_back("cap", std::to_string(q.cap));', legacy_fields)
         self.assertEqual(question.count('emplace_back("cap"'), 1)
 
+    def test_the_jpeg_profile_is_one_rule_on_both_sides(self):
+        # The JPEG a P4 takes (picture_jpeg.h) is what picture_paint.encode makes: whole MCUs of the same size, the same
+        # mark on the APP15 segment that carries the shown size and the corners, the same most corners; and a live tile
+        # lays over each of its frames the shade the app bakes into a still (live_view.h, picture_paint._flat).
+        header = (ROOT / 'components/smart_display/picture_jpeg.h').read_text()
+        self.assertIn(f'constexpr int MCU = {picture_paint.MCU};', header)
+        self.assertIn(f'constexpr char NOTES_MARK[] = "{picture_paint.JPEG_SIZE.decode()}";', header)
+        self.assertIn(f'constexpr int MAX_CORNERS = {picture_paint.MAX_CORNERS};', header)
+        view = (ROOT / 'components/smart_display/live_view.h').read_text()
+        self.assertIn(f'constexpr int FADE_PERCENT = {round(picture_paint.FADE_SHARE * 100)};', view)
+        self.assertIn(f'constexpr int FADE_DEPTH = {picture_paint.FADE_DEPTH};', view)
+
+    @unittest.skipUnless(HAS_PIL, 'needs Pillow')
+    def test_the_jpeg_notes_lie_where_the_screen_reads_them(self):
+        # picture_jpeg::jpeg_notes reads the segment at fixed places: FF EF at 2, its length at 4, the mark at 6, the
+        # shown width and height at 10 and 12, the count of corners at 14 and eleven bytes a corner from 15 on (x, y, w,
+        # h as two bytes each, the radius as one, the ground as RGB565 in two). The picture behind it is whole MCUs.
+        from PIL import Image
+        body = picture_paint.encode(Image.new('RGB', (226, 254), (10, 20, 30)), 'jpeg', ((2, 3, 40, 30, 8, 0xE73C),))
+        self.assertEqual(body[:4], b'\xff\xd8\xff\xef')
+        self.assertEqual(body[6:10], picture_paint.JPEG_SIZE)
+        self.assertEqual((int.from_bytes(body[10:12], 'big'), int.from_bytes(body[12:14], 'big')), (226, 254))
+        self.assertEqual(body[14], 1)
+        self.assertEqual(body[15:26], bytes([0, 2, 0, 3, 0, 40, 0, 30, 8, 0xE7, 0x3C]))
+        length = int.from_bytes(body[4:6], 'big')
+        self.assertEqual(length, 2 + len(picture_paint.JPEG_SIZE) + 4 + 1 + 11)
+        self.assertEqual(body[4 + length], 0xFF)  # the next marker starts right after the segment
+        self.assertEqual(picture_paint.jpeg_notes(body), ((226, 254), ((2, 3, 40, 30, 8, 0xE73C),)))
+        with Image.open(io.BytesIO(body)) as padded:
+            self.assertEqual(padded.size, (240, 256))  # whole MCUs of picture_paint.MCU each way
+
     @unittest.skipUnless(HAS_PIL, 'needs Pillow')
     def test_a_turned_snapshot_is_measured_the_way_it_is_shown(self):
         from PIL import Image

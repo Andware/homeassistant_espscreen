@@ -141,7 +141,9 @@ The question names the formats the screen takes, best first (`fmt`), and the app
 (`picture_service.format_for`). Every board takes BMP: 8-bit where the owner allows it (a palette of the picture's own
 256 colours, dithered), 24-bit otherwise; the screen decodes it row by row as it comes, without a copy. An ESP32-P4 also takes JPEG (`live_view::STILLS_JPEG`, added by `runtime_tiles::picture_ask`): it gathers the
 whole JPEG (`picture_fetch::Gather`, at most `MAX_JPEG`) and decodes it with the hardware decoder its streams use
-(`live_view::decode_still`, under the same lock of the 2D-DMA), about a tenth of a BMP's bytes on the network. A
+(`live_view::decode_still`, under the same lock of the 2D-DMA), about a tenth of a BMP's bytes on the network. What such
+a JPEG is (baseline, whole MCUs of 16, the shown size and the flat places' corners in an APP15 segment the screen makes
+exact again) is one profile on both sides, `picture_jpeg.h` and `picture_paint.encode`, kept equal by `tests/test_camera.py`. A
 photograph (a camera, a cover, a photo, a poster) goes in the format the screen named first, JPEG on a P4; a drawn picture
 (a map, a vacuum's map: lines, words and flat colours, which JPEG blurs) goes as the first BMP the screen takes. Streams
 are JPEG on every P4 (`live_view`); the P4 has a hardware H.264 encoder but no decoder, so the app decodes a camera's

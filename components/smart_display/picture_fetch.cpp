@@ -206,7 +206,7 @@ static void download(Slot &slot) {
     }
     body += size;
     if (size && kind == 0) {
-      kind = live_view::STILLS_JPEG && is_jpeg(data, size) ? 2 : 1;
+      kind = live_view::STILLS_JPEG && picture_jpeg::is_jpeg(data, size) ? 2 : 1;
       if (kind == 2 && !jpeg.start(answer.has_length, answer.content_length, live_view::still_input)) {
         ESP_LOGW(TAG, "%s: a JPEG of %u bytes this screen cannot take", slot.name, (unsigned) answer.content_length);
         failed = true;
@@ -229,14 +229,14 @@ static void download(Slot &slot) {
     uint8_t *pixels = live_view::decode_still(jpeg.buffer, jpeg.have, still);
     // Shown at its own size (the rows and columns past it, made to fill whole MCUs, lie unseen in the stride), with
     // its places' corners exact again (jpeg_notes).
-    JpegNotes notes;
-    if (pixels && jpeg_notes(jpeg.buffer, jpeg.have, notes)) {
+    picture_jpeg::JpegNotes notes;
+    if (pixels && picture_jpeg::jpeg_notes(jpeg.buffer, jpeg.have, notes)) {
       if (notes.width <= still.w && notes.height <= still.h) {
         still.w = notes.width;
         still.h = notes.height;
       }
       for (const auto &corner : notes.corners)
-        mask_corners(reinterpret_cast<uint16_t *>(pixels), still.stride, still.w, still.h, corner);
+        picture_jpeg::mask_corners(reinterpret_cast<uint16_t *>(pixels), still.stride, still.w, still.h, corner);
     }
     if (pixels) {
       slot.fresh = reinterpret_cast<uint16_t *>(pixels);

@@ -558,6 +558,8 @@ microphone listens only while someone watches, and the voice assistant can liste
 - `components/smart_display/runtime_tiles.h`: what each picture wants (`pictures_round` and the `*_want` functions
   beside it), the full-screen view, the alert picture, the tiles' pictures (`card_picture_wants`, `tile_ask`,
   `tile_picture_place`), the store (`picture_of`, `pictures_collect`) and the `camera` message.
+- `components/smart_display/picture_jpeg.h`: the JPEG a screen takes, one profile with the app's `picture_paint`
+  (`tests/test_picture_jpeg.cpp`, and `tests/test_camera.py` for the two sides).
 - `components/smart_display/picture_fetch.h` and `picture_fetch.cpp`: the download beside the main loop, one task per
   picture, and the BMP decoder (`tests/test_picture_fetch.cpp` checks the link, the answer's head and the decoder).
 - `packages/features/camera.yaml` (included by every board with camera pictures): the three pictures bound to their
