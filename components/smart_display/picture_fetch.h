@@ -17,7 +17,7 @@
 // What online_image did for us, this keeps, so a screen behaves as before in every case that mattered: the ETag of the
 // last picture goes out as If-None-Match and a 304 reports the picture unchanged; a link that does not connect, an
 // answer that is not 200, a body that is no BMP or breaks off, a chunk that does not come within four seconds and a
-// picture that takes over thirty all end as a failure the card's own retry handles (camera_view::Feed); the BMP is
+// picture that takes over thirty all end as a failure the loader's own retry handles (picture_loader.h); the BMP is
 // decoded as it streams, so no copy of the file is kept, and the pixels of a camera's next frame land in the buffer of
 // the last; a picture of another size gets a new buffer, swapped in on the main loop. It decodes every BMP the add-on
 // writes (Pillow: 24-bit, or 8-bit on a palette, BITMAPINFOHEADER, bottom-up) and the other plain forms too (16 and 32

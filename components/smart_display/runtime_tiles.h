@@ -10875,7 +10875,8 @@ inline std::string vacuum_option(unsigned index) {
 // ---- Camera images (firmware 0.2.57+) ----
 // A camera or image tile, and an alert's image, open the camera full screen: the image as large as fits, the round back
 // key at the top left like on every card, the name beside it. ESP Screen Manager fetches the snapshot, sizes it for this
-// screen and serves it on its own port; camera_view::Feed decides when to ask for a link and when to load it again. The
+// screen and serves it on its own port; the loader decides when to ask for a link and when to load it again
+// (picture_loader.h, with the rhythm's constants of camera_view.h). The
 // board binds the two online_images (the full view and the alert's frame) through ImageHooks; a board without them (the
 // CYD) never opens the view. Nothing here exists while no camera is open, apart from the alert's small frame.
 namespace runtime_tiles {
