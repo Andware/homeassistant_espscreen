@@ -49,6 +49,7 @@
 #include "picture_fetch.h"
 #include "live_spots.h"
 #include "live_view.h"
+#include "boot_trial.h"
 #include "kept_pages.h"
 #include "tile_memory.h"
 #include "wifi_status.h"
@@ -11611,7 +11612,7 @@ inline live_view::Rect live_area() {
 // failed TRIES times for this opening.
 inline bool live_wanted() {
   if (!live_view::available() || !camera.open() || camera.entity.rfind("camera.", 0) != 0 || camera_map_index >= 0 ||
-      saver_camera || !camera.stream.may())
+      saver_camera || !camera.stream.may() || boot_trial::on(esphome::millis()))
     return false;
   const auto area = live_area();
   return !drawn_over(camera_root, area.x, area.y, area.w, area.h);
@@ -11884,8 +11885,9 @@ inline void live_tiles_halt() { spots.halt(); }
 // Every round of the pictures (250 ms): what streams, what stops, what asks.
 inline void live_tiles_round() {
   live_spots_bind();
-  const bool clear = page_clear() && model.ready();
   const uint32_t now = esphome::millis();
+  // A new firmware on trial streams nothing: the tiles keep their stills until it is confirmed (boot_trial.h).
+  const bool clear = page_clear() && model.ready() && !boot_trial::on(now);
   spots.begin();
   if (clear) {
     // A plugin's live places (0.17), asked only of an app that reads questions.

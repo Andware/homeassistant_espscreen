@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **An ESP32-P4 screen with live camera tiles no longer falls back to its old firmware after an update.** ESPHome keeps a new firmware on trial for its first minute and puts the old one back when the screen restarts in that minute. Live streams started in that same minute, and on a Tab5 with two live tiles that was enough to restart it on every update, so the update never stuck. Live tiles now show their stills until the new firmware is confirmed, then start streaming; an ordinary restart streams at once as before.
+
 - **Opening a camera full screen over live tiles no longer leaves a band of a tile's picture under its top bar.** On an ESP32-P4 screen the live tiles of the page stop before the full view's stream is opened instead of at the next drawing, and the screen draws the whole glass once more when the view's first picture arrives, so nothing a tile copied in the meantime stays on the glass (docs/CAMERA.md).
 
 - **The Waveshare ESP32-S3-Touch-LCD-4.3C, experimental.** The 4.3C (also in the 4.3C-BOX) has the 4.3's glass but

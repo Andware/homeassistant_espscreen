@@ -407,6 +407,17 @@ a wake under that load comes 5 seconds late. A screen whose main loop truly hang
 frequent of those questions was the top bar's: its Wi-Fi item read the signal at every draw, about once a second, so
 `wifi_status::link()` now asks it at most every five seconds (`wifi_status::Signal`) and remembers it in between.
 
+**A new firmware's first minute.** After an update ESPHome's safe mode keeps the new firmware on trial until it has
+run a minute (`boot_is_good_after`); a restart before that and the bootloader puts the old firmware back, with every
+fix it held and its crash record. A P4 screen with live tiles starts its streams in that same minute, while the Wi-Fi
+on the C6 is set up over the SDIO link the pictures come in on, and a Tab5 with two live tiles fell back that way on
+every update, the watchdog of 20 seconds or not. So live streams wait while the running firmware is on trial
+(`boot_trial.h`: the partition's state is `ESP_OTA_IMG_PENDING_VERIFY`, read every two seconds until it is confirmed):
+the live tiles and places show their stills and the full view asks for stills, and the first round after the
+confirmation starts them. The log says `boot_trial: A new firmware on trial` and later `The new firmware is
+confirmed`. An ordinary restart is never on trial, so its streams start as before. A restart after the minute leaves
+the new firmware in place, and its next boot logs where the main loop was (docs/REPORTS.md).
+
 **One writer on the glass at a time.** LVGL holds the glass for the whole of each refresh (from `LV_EVENT_REFR_START`
 to `LV_EVENT_REFR_READY`: deciding what to draw, drawing it, flushing it to the panel) and a stream's task holds it for
 each copy of a picture, one recursive mutex, the glass's (`glass.h`: `hold` and `release`). Without it a stream's first picture could land
