@@ -6,8 +6,9 @@
 //
 // So the watchdog's own hook (`esp_task_wdt_isr_user_handler`, which ESP-IDF calls in the watchdog's interrupt before
 // it aborts) takes the main loop's stack as it stands, blocked or running, and keeps every word of it that points at
-// code, newest first, in memory the reset leaves alone. The next boot logs them as `LOOP0: 0x...` lines after
-// ESPHome's own crash record; the troubleshooting report keeps them with the crash (reports.py CRASH_LINE) and decodes
+// code, newest first, in memory the reset leaves alone. The next boot takes them over and logs them as `LOOP0: 0x...`
+// lines with ESPHome's config dump, which every log subscriber asks for, as ESPHome hands its own crash record to the
+// first subscriber (logged at boot they reached the serial port alone, never a subscriber over the API); the troubleshooting report keeps them with the crash (reports.py CRASH_LINE) and decodes
 // them with the ELF, and `addr2line -pfiaC -e firmware.elf <addresses>` does the same by hand. On a RISC-V chip the
 // first two are the saved frame's MEPC and RA, the rest a scan of the stack: return addresses of the callers with,
 // between them, whatever else on the stack happens to look like code, which addr2line names as `??` and the report
@@ -28,7 +29,9 @@ inline int scan(const uint32_t *from, const uint32_t *end, uint32_t *out, int mo
   return n;
 }
 
-// At boot: logs the record the last task watchdog left, once, and forgets it.
+// At boot: takes over the record the last task watchdog left, and forgets it where the reset left it.
+void take();
+// With the config dump: logs the record taken at boot, if there was one.
 void report();
 
 }  // namespace loop_record

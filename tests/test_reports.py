@@ -103,6 +103,19 @@ class Crashes(unittest.TestCase):
         self.assertEqual(sorted(set(a for l in crash['lines'] for a in reports.ADDRESS.findall(l))),
                          ['0x400d1234', '0x4812ABCD', '0x4FF23BEA'])
 
+    def test_the_internal_ram_of_the_boot_before_rides_with_the_crash_and_alone_is_none(self):
+        heap = ['[E][heap_watch:105]: *** INTERNAL RAM ON PREVIOUS BOOT ***',
+                '[E][heap_watch:106]:   Lowest: 20372 bytes free, 5321 s after boot',
+                '[E][heap_watch:059]:   Failed: 3 allocations; the last 65536 bytes (caps 0x1800) in tcp_alloc, task tiT, '
+                '18000 bytes internal free, 5400 s after boot',
+                '[C][heap_watch:110]: Internal RAM: 248380 bytes free, 162344 at the lowest since boot (290 s after it), 0 failed allocations']
+        crash = reports.crash_summary(self.CRASH[:3] + heap, clock=lambda: 1_800_000_000)
+        self.assertEqual(len(crash['lines']), 6)
+        self.assertTrue(any('Failed: 3 allocations' in l for l in crash['lines']))
+        self.assertFalse(any('Internal RAM: 248380' in l for l in crash['lines']))
+        # A restart that was no crash keeps its record to itself.
+        self.assertIsNone(reports.crash_summary(heap, clock=lambda: 1_800_000_000))
+
     def test_a_crash_block_is_a_crash_and_a_power_on_is_not(self):
         crash = reports.crash_summary(self.CRASH, clock=lambda: 1_800_000_000)
         self.assertEqual(crash['reason'], 'Fault - LoadProhibited (cause 28)')

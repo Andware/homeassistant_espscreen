@@ -2,6 +2,7 @@
 #include "runtime_tiles.h"
 #include "chunk_transport.h"
 #include "loop_record.h"
+#include "heap_watch.h"
 #include "esphome/components/text/text.h"
 #include "esphome/core/component.h"
 namespace esphome::smart_display {
@@ -9,8 +10,15 @@ namespace esphome::smart_display {
 class DashboardInbox : public text::Text, public Component {
  public:
   void setup() override {
-    loop_record::report();  // what the main loop was doing when the last task watchdog restarted the screen, if one did
+    loop_record::take();  // what the main loop was doing when the last task watchdog restarted the screen, if one did
+    heap_watch::setup();  // the internal RAM's lowest and its failed allocations, of the previous boot and this one
     this->publish_state("Ready for tile configuration");
+  }
+  void loop() override { heap_watch::tick(millis()); }
+  // Every log subscriber asks for the config dump: the records of the previous boot go to each of them.
+  void dump_config() override {
+    loop_record::report();
+    heap_watch::dump();
   }
  protected:
   runtime_tiles::Chunks chunks_;

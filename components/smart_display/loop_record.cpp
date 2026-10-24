@@ -37,20 +37,29 @@ bool is_code(uint32_t word) { return esp_ptr_executable(reinterpret_cast<const v
 
 }  // namespace
 
-void report() {
+Record taken{};
+bool had = false;
+
+void take() {
   if (record.magic != MAGIC) return;
-  const uint32_t count = record.count > static_cast<uint32_t>(MOST) ? MOST : record.count;
+  taken = record;
+  had = true;
+  record.magic = 0;
+}
+
+void report() {
+  if (!had) return;
+  const uint32_t count = taken.count > static_cast<uint32_t>(MOST) ? MOST : taken.count;
   ESP_LOGE(TAG, "*** THE MAIN LOOP AT THE LAST TASK WATCHDOG *** (it %s; %u words of its stack in use; newest first)",
-           record.running ? "was running" : "waited", (unsigned) record.stack_words);
+           taken.running ? "was running" : "waited", (unsigned) taken.stack_words);
   std::string all;
   for (uint32_t i = 0; i < count; ++i) {
-    ESP_LOGE(TAG, "  LOOP%u: 0x%08X", (unsigned) i, (unsigned) record.at[i]);
+    ESP_LOGE(TAG, "  LOOP%u: 0x%08X", (unsigned) i, (unsigned) taken.at[i]);
     char hex[12];
-    snprintf(hex, sizeof hex, " 0x%08X", (unsigned) record.at[i]);
+    snprintf(hex, sizeof hex, " 0x%08X", (unsigned) taken.at[i]);
     all += hex;
   }
   ESP_LOGE(TAG, "  Use: addr2line -pfiaC -e firmware.elf%s", all.c_str());
-  record.magic = 0;
 }
 
 }  // namespace loop_record
@@ -79,6 +88,7 @@ extern "C" void esp_task_wdt_isr_user_handler(void) {
 }
 #else
 namespace loop_record {
+void take() {}
 void report() {}
 }  // namespace loop_record
 #endif
