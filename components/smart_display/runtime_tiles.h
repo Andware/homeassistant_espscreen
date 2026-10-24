@@ -11671,8 +11671,14 @@ inline void camera_warm(bool on) {
   lv_obj_set_pos(camera_warm_spinner, slot.x + (slot.w - size) / 2, slot.y + (slot.h - size) / 2);
   lv_obj_remove_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN);
 }
+inline void live_tiles_halt();
 inline void live_begin(const std::string &url) {
   ESP_LOGI("camera", "live link %u ms after the camera opened", (unsigned) (esphome::millis() - camera_opened_at));
+  // The live tiles and places of the page under the view stop before the view's stream exists, not at the next
+  // drawing (live_stop_covered): a tile's task could still copy its picture into the frame buffer after LVGL had drawn
+  // the view over the page, and a band of it stayed under the view's top bar until the view's first picture (2026-10-24,
+  // the reTerminal D1001, two live tiles). A page under a full view never streams anyway.
+  live_tiles_halt();
   camera.stream.opened(live_view::open(url, live_area(), live_view::Look{}, live_view::has_speaker()));
   if (camera.stream.live) {
     if (camera_muted) live_view::mute(camera.stream.handle, true);
@@ -11969,6 +11975,10 @@ inline void live_tick() {
         camera.shown = true;
         camera_note_text("");  // the spinner goes; LVGL no longer draws there while the camera streams
         camera_warm(true);     // in the top bar until the camera is live (LIVE, at once for a picture that is)
+        // LVGL draws the whole glass once more, now that the picture lies in its spot and the keep-out holds it: the
+        // bands of the room around the picture, the top bar, and anything a live tile's last copy left under the view
+        // before it stopped (live_begin). The start's twin of the redraw at a full view's end (live_view::tick).
+        glass::redraw_all();
       } else if (event == live_view::Event::LIVE) {
         camera_warm(false);
         if (camera_sound_waiting) camera_sound_show();  // its place is free now

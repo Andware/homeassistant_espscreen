@@ -316,8 +316,11 @@ asks for its stream with its picture's question and `live`, the card's size; the
 size (cut to fill it, or whole, as the tile says: the link ends in `?fit=contain` for a whole one), and the screen lays
 over each of them what the app bakes into a still: the card's rounded corners over the page, the shade under the name
 (the bottom 42 %, to 150/255 black) and the name as LVGL draws it. A camera opened full screen from a live tile has its
-first picture in about 0.3 seconds instead of five: the tile's streams stop, and the app's source of the camera, still
-running, has the newest frame ready. The other way round, the cameras of a screen's live tiles keep running in the app
+first picture in about 0.3 seconds instead of five: the tile's streams stop before the view's own stream is opened
+(`live_begin`, not the next drawing's `live_stop_covered`, so no tile's picture lands under the view once LVGL has drawn
+it), and the app's source of the camera, still running, has the newest frame ready. At the view's first picture the
+screen draws the whole glass once more (`glass::redraw_all`, as it does when the view's stream ends): the bands of the
+room around the picture, the top bar, and whatever a tile's last picture left under them. The other way round, the cameras of a screen's live tiles keep running in the app
 for as long as that screen's full view streams (`LiveFeed.hold`), so its tiles are live again within a tenth of a second
 when it closes, rather than after the seconds a WebRTC session takes to start. Measured on the reTerminal D1001 with the EZVIZ: a 2 x 2 tile of its substream at
 8 pictures a second (decoding 2 ms, laying out 32 ms), a single tile of its main stream at 15 (1 ms, 11 ms), beside each

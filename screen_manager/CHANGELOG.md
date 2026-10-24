@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **Opening a camera full screen over live tiles no longer leaves a band of a tile's picture under its top bar.** On an ESP32-P4 screen the live tiles of the page stop before the full view's stream is opened instead of at the next drawing, and the screen draws the whole glass once more when the view's first picture arrives, so nothing a tile copied in the meantime stays on the glass (docs/CAMERA.md).
+
 - **The Waveshare ESP32-S3-Touch-LCD-4.3C, experimental.** The 4.3C (also in the 4.3C-BOX) has the 4.3's glass but
   Waveshare's CH32V003 expander in place of the 4.3's CH422G, so a 4.3C built as a 4.3 started with its touch in reset
   ("touchscreen is marked FAILED: Calibration error") and a dark screen. It is a board of its own now, under New
