@@ -567,6 +567,9 @@ microphone listens only while someone watches, and the voice assistant can liste
   finished download, the `LV_USE_IMAGE` flag, the alert frame, and the diagnostic action `preview_camera` (an entity
   opens it, an empty entity closes it).
 - `tests/test_camera.py`: the app side and the words both sides share.
+- `components/smart_display/picture_engine.h` and `picture_engine_p4.cpp`: the picture engine (docs/PICTURE_ARCHITECTURE.md):
+  which formats this screen's decoder takes whole, the hardware JPEG decoder for the stills and the streams alike, and the
+  PPA copy with its scale and turn, through the guard; the software engine is the BMP rows of `picture_fetch`.
 - `components/smart_display/glass.h` and `glass_dsi.cpp`: the panel as a surface (docs/PICTURE_ARCHITECTURE.md): its
   size and turn, the frame buffer a stream writes past LVGL, the one-writer lock LVGL holds for a refresh and a stream's
   task for a copy, the rooms LVGL keeps out of, the panel's underrun count and the PPA bursts of every client.

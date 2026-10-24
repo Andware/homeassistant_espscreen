@@ -1112,11 +1112,13 @@ inline void picture_ask(const picture_question::Question &q, const char *kind, c
   // The values live until the request is sent: the request holds references to them.
   picture_question::Fields data = {{"inbox", inbox}, {"session", protocol_key(transfer.lease)}, {"rev", layout_rev}};
   if (app_reads_questions) {
-    // A P4 decodes JPEG in hardware (live_view::STILLS_JPEG): its question says so, and the app picks the format per
-    // picture, a photo as JPEG and a drawn map as BMP (docs/PICTURES.md, "Formats").
+    // A screen whose engine takes a format whole (a P4 decodes JPEG in hardware, picture_engine::whole_formats) names
+    // it first in its question, and the app picks the format per picture, a photo as JPEG and a drawn map as BMP
+    // (docs/PICTURES.md, "Formats").
     picture_question::Question asked = q;
-    if (live_view::STILLS_JPEG && std::find(asked.formats.begin(), asked.formats.end(), "jpeg") == asked.formats.end())
-      asked.formats.insert(asked.formats.begin(), "jpeg");
+    for (const auto &format : picture_engine::whole_formats())
+      if (std::find(asked.formats.begin(), asked.formats.end(), format) == asked.formats.end())
+        asked.formats.insert(asked.formats.begin(), format);
     data.emplace_back("n", std::to_string(picture_numbers.ask(kind, entity, own)));
     data.emplace_back("q", picture_question::json(asked));
   } else {

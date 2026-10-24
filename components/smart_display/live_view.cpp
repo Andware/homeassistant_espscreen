@@ -9,10 +9,11 @@
 // one writer at a time) and only while nobody stopped the stream, so once close() returns nothing of it writes the glass
 // any more and LVGL may draw there at once. Buffers live in PSRAM and go when the task has ended (tick()). The panel, its
 // frame buffer, the lock and the rooms LVGL keeps out of are the glass's (glass.h, glass_dsi.cpp); the decoder and the
-// PPA copies are here.
+// PPA copies are the engine's (picture_engine.h, picture_engine_p4.cpp). What is here is the stream's own: its task
+// and socket, the framing, the canvas of a tile and what goes over it, the loader, the sound, the reports.
 #include "live_view.h"
 #include "glass.h"
-#include "picture_jpeg.h"
+#include "picture_engine.h"
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
 #include <atomic>
 #include <cerrno>
@@ -23,8 +24,7 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
-#include <driver/jpeg_decode.h>
-#include <driver/ppa.h>
+#include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
@@ -40,20 +40,9 @@ namespace live_view {
 static const char *const TAG = "live";
 constexpr size_t CHUNK = 16 * 1024;
 constexpr uint32_t WAIT_MS = 500;  // a read waits this long, so a stop is seen within it
-// The decoder's sampling, as picture_jpeg.h counts whole MCUs by it.
-static picture_jpeg::Sampling sampling_of(jpeg_down_sampling_type_t method) {
-  return method == JPEG_DOWN_SAMPLING_YUV420   ? picture_jpeg::Sampling::YUV420
-         : method == JPEG_DOWN_SAMPLING_YUV422 ? picture_jpeg::Sampling::YUV422
-                                               : picture_jpeg::Sampling::OTHER;
-}
-
 // ---- The glass (glass.h): the panel, its frame buffer, the one-writer lock and the rooms LVGL keeps out of ----
 void bind(esphome::lvgl::LvglComponent *component) { glass::bind(component); }
 bool available() { return glass::direct(); }
-// The streams' PPA clients move in the glass's bursts (glass.h, "The panel's share of the memory bus").
-constexpr ppa_data_burst_length_t PPA_BURST = PPA_DATA_BURST_LENGTH_64;
-constexpr int PPA_BURST_BYTES = glass::PPA_BURST_BYTES;  // the same, for the log
-static_assert(glass::PPA_BURST_BYTES == 64, "the burst above is the one glass.h names");
 uint32_t misses() { return glass::misses(); }
 
 // ---- The camera's sound: the board's speaker (features/audio.yaml binds it) ----
@@ -80,7 +69,7 @@ struct Stream {
   // When the way to the first picture went by (ms after start, written once by the task, read after `shown`).
   uint32_t started_at = 0, connected_ms = 0, answered_ms = 0, first_bytes_ms = 0;
   uint32_t live_ms = 0;  // its first live picture (written once by the task, read after `live`)
-  ppa_client_handle_t ppa = nullptr;
+  picture_engine::Client ppa = nullptr;  // its client of the PPA (the engine's)
   uint8_t *input = nullptr, *picture = nullptr;
   uint16_t *canvas = nullptr;
   size_t input_size = 0, picture_size = 0, canvas_size = 0;
@@ -103,8 +92,6 @@ struct Stream {
 };
 static Stream *streams[MAX_STREAMS] = {};
 static_assert(MAX_STREAMS <= glass::MAX_ROOMS, "every stream has a room on the glass");
-// The hardware JPEG decoder: one engine for all, its calls are thread safe (made once on the main loop, decoder_ready).
-static jpeg_decoder_handle_t decoder = nullptr;
 
 static void free_stream(Stream *s) {
   if (s->sound) vStreamBufferDelete(s->sound);
@@ -115,39 +102,20 @@ static void free_stream(Stream *s) {
   if (s->canvas) free(s->canvas);
   if (s->name) free(s->name);
   if (s->under) free(s->under);
-  if (s->ppa) ppa_unregister_client(s->ppa);
+  picture_engine::drop(s->ppa);
   if (s->room >= 0) glass::give_back(s->room);
   delete s;
 }
 
-// The PPA's block copy, with its scale and turn: `bw` x `bh` at bx, by of a picture (`stride_w` x `rows`) to x, y of
-// another (ow x oh, `out_size` bytes).
-static esp_err_t copy(Stream &s, const void *in, int stride_w, int rows, int bx, int by, int bw, int bh, void *out,
+// The engine's copy (picture_engine::blit): the block `bw` x `bh` at bx, by of a picture (`in_w` x `rows`) to x, y of
+// another (ow x oh, `out_size` bytes), scaled by `sixteenths` and turned as LVGL turns.
+static esp_err_t copy(Stream &s, const void *in, int in_w, int rows, int bx, int by, int bw, int bh, void *out,
                       size_t out_size, int ow, int oh, int x, int y, int sixteenths, int turn) {
-  ppa_srm_oper_config_t srm{};
-  srm.in.buffer = in;
-  srm.in.pic_w = stride_w;
-  srm.in.pic_h = rows;
-  srm.in.block_w = bw;
-  srm.in.block_h = bh;
-  srm.in.block_offset_x = bx;
-  srm.in.block_offset_y = by;
-  srm.in.srm_cm = PPA_SRM_COLOR_MODE_RGB565;
-  srm.out.buffer = out;
-  srm.out.buffer_size = out_size;
-  srm.out.pic_w = ow;
-  srm.out.pic_h = oh;
-  srm.out.block_offset_x = x;
-  srm.out.block_offset_y = y;
-  srm.out.srm_cm = PPA_SRM_COLOR_MODE_RGB565;
-  // ESPHome's LVGL turns clockwise, the PPA counter-clockwise.
-  srm.rotation_angle = turn == 90    ? PPA_SRM_ROTATION_ANGLE_270
-                       : turn == 180 ? PPA_SRM_ROTATION_ANGLE_180
-                       : turn == 270 ? PPA_SRM_ROTATION_ANGLE_90
-                                     : PPA_SRM_ROTATION_ANGLE_0;
-  srm.scale_x = srm.scale_y = sixteenths / 16.0f;
-  srm.mode = PPA_TRANS_MODE_BLOCKING;
-  return ppa_do_scale_rotate_mirror(s.ppa, &srm);
+  picture_engine::Block block;
+  block.in = in, block.in_w = in_w, block.in_rows = rows, block.bx = bx, block.by = by, block.bw = bw, block.bh = bh;
+  block.out = out, block.out_size = out_size, block.out_w = ow, block.out_h = oh, block.x = x, block.y = y;
+  block.sixteenths = sixteenths, block.turn = turn;
+  return static_cast<esp_err_t>(picture_engine::blit(s.ppa, block));
 }
 
 // A tile's loader over a still (live_view.h, "Until it is live"): its square of the card as composed kept in `under`,
@@ -189,16 +157,15 @@ static void turn_loader(Stream &s) {
 // One picture of `length` bytes in the stream's input: decoded, laid out, and copied onto the glass. `still`: the
 // camera's still from before its stream came, with the loader over it on a tile.
 static void show(Stream &s, size_t length, bool still) {
-  jpeg_decode_picture_info_t info{};
-  if (jpeg_decoder_get_info(s.input, length, &info) != ESP_OK) {
+  picture_engine::Still info;
+  if (!picture_engine::info(s.input, length, info)) {
     s.skipped++;
     return;
   }
-  // The decoder writes whole MCUs (picture_jpeg.h).
-  const picture_jpeg::Sampling sampling = sampling_of(info.sample_method);
-  const int stride_w = picture_jpeg::decoded_width(info.width, sampling);
-  const int rows = picture_jpeg::decoded_height(info.height, sampling);
-  const int w = info.width, h = info.height;
+  // The decoder writes whole MCUs (picture_jpeg.h): `stride_w` pixels a row, `rows` of them.
+  const int stride_w = info.stride;
+  const int rows = static_cast<int>(info.bytes / 2 / info.stride);
+  const int w = info.w, h = info.h;
   // Where it goes: a full view's picture as large as fits its room, a tile's into its card.
   int sixteenths = 0;
   Rect where;
@@ -213,11 +180,10 @@ static void show(Stream &s, size_t length, bool still) {
     if (s.skipped++ == 0) ESP_LOGW(TAG, "a picture of %dx%d does not fit its room (%dx%d)", w, h, s.area.w, s.area.h);
     return;
   }
-  const size_t need = static_cast<size_t>(stride_w) * rows * 2;
+  const size_t need = info.bytes;
   if (need > s.picture_size) {
     if (s.picture) free(s.picture);
-    jpeg_decode_memory_alloc_cfg_t out{.buffer_direction = JPEG_DEC_ALLOC_OUTPUT_BUFFER};
-    s.picture = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(need, &out, &s.picture_size));
+    s.picture = picture_engine::output(need, &s.picture_size);
     if (!s.picture) {
       s.picture_size = 0;
       ESP_LOGW(TAG, "no memory for a picture of %dx%d", w, h);
@@ -226,23 +192,18 @@ static void show(Stream &s, size_t length, bool still) {
       return;
     }
   }
-  jpeg_decode_cfg_t cfg{};
-  cfg.output_format = JPEG_DECODE_OUT_FORMAT_RGB565;
-  cfg.rgb_order = JPEG_DEC_RGB_ELEMENT_ORDER_BGR;  // little-endian RGB565, as LVGL's own pixels
-  cfg.conv_std = JPEG_YUV_RGB_CONV_STD_BT601;
-  uint32_t written = 0;
   // The decoder works through the 2D-DMA, as the PPA and the panel's copy of each of LVGL's strips do: it decodes
-  // while it holds the glass (above, where the glass is).
+  // while it holds the glass (glass.h).
   glass::hold();
   if (s.stopping) {
     glass::release();
     return;
   }
   const int64_t t0 = esp_timer_get_time();
-  const esp_err_t decoded = jpeg_decoder_process(decoder, &cfg, s.input, length, s.picture, s.picture_size, &written);
+  const bool decoded = picture_engine::decode_into(s.input, length, s.picture, s.picture_size);
   const int64_t t1 = esp_timer_get_time();
   glass::release();
-  if (decoded != ESP_OK) {
+  if (!decoded) {
     s.skipped++;
     return;
   }
@@ -392,71 +353,13 @@ static void task_main(void *arg) {
   vTaskDelete(nullptr);
 }
 
-// The decoder, made once on the main loop; it stays for good (the lock of the 2D-DMA is the glass's, glass.h).
-static bool decoder_ready() {
-  if (!decoder) {
-    jpeg_decode_engine_cfg_t engine{.intr_priority = 0, .timeout_ms = 200};
-    if (jpeg_new_decoder_engine(&engine, &decoder) != ESP_OK) decoder = nullptr;
-  }
-  return decoder != nullptr;
-}
-
-// ---- Stills as JPEG (docs/PICTURES.md, "Formats") ----
-// A still decodes the way a stream's picture does (show, above): whole MCUs into a buffer of the decoder's own, RGB565
-// in LVGL's order, while the decode holds the glass. From then on LVGL holds the glass while it refreshes, as after a
-// first stream (glass::watch): a decode and LVGL's copy to the panel never run on the 2D-DMA at once.
-static std::atomic<bool> stills_on{false};
-bool prepare_stills() {
-  if (stills_on.load(std::memory_order_acquire)) return true;
-  if (!glass::watch() || !decoder_ready()) return false;
-  stills_on.store(true, std::memory_order_release);
-  return true;
-}
-uint8_t *still_input(size_t bytes, size_t *got) {
-  jpeg_decode_memory_alloc_cfg_t in{.buffer_direction = JPEG_DEC_ALLOC_INPUT_BUFFER};
-  size_t size = 0;
-  auto *buffer = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(bytes, &in, &size));
-  if (got) *got = buffer ? size : 0;
-  return buffer;
-}
-uint8_t *decode_still(const uint8_t *jpeg, size_t length, Still &out) {
-  if (!stills_on.load(std::memory_order_acquire)) return nullptr;
-  jpeg_decode_picture_info_t info{};
-  if (jpeg_decoder_get_info(jpeg, length, &info) != ESP_OK) return nullptr;
-  const picture_jpeg::Sampling sampling = sampling_of(info.sample_method);
-  const int stride_w = picture_jpeg::decoded_width(info.width, sampling);
-  const int rows = picture_jpeg::decoded_height(info.height, sampling);
-  jpeg_decode_memory_alloc_cfg_t o{.buffer_direction = JPEG_DEC_ALLOC_OUTPUT_BUFFER};
-  size_t size = 0;
-  auto *pixels = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(static_cast<size_t>(stride_w) * rows * 2, &o, &size));
-  if (!pixels) return nullptr;
-  jpeg_decode_cfg_t cfg{};
-  cfg.output_format = JPEG_DECODE_OUT_FORMAT_RGB565;
-  cfg.rgb_order = JPEG_DEC_RGB_ELEMENT_ORDER_BGR;  // little-endian RGB565, as LVGL's own pixels
-  cfg.conv_std = JPEG_YUV_RGB_CONV_STD_BT601;
-  uint32_t written = 0;
-  glass::hold();
-  const esp_err_t decoded = jpeg_decoder_process(decoder, &cfg, jpeg, length, pixels, size, &written);
-  glass::release();
-  if (decoded != ESP_OK) {
-    free(pixels);
-    return nullptr;
-  }
-  out.w = info.width;
-  out.h = info.height;
-  out.stride = stride_w;
-  out.bytes = size;
-  return pixels;
-}
-
 Handle open(const std::string &url, const Rect &area, const Look &look, bool sound) {
   if (!available() || area.empty()) return -1;
   int slot = -1;
   for (int i = 0; i < MAX_STREAMS && slot < 0; ++i)
     if (!streams[i]) slot = i;
   if (slot < 0) return -1;
-  decoder_ready();
-  if (!decoder || !glass::frame_buffer()) {
+  if (!picture_engine::start() || !glass::frame_buffer()) {
     ESP_LOGW(TAG, "cannot stream on this panel");
     return -1;
   }
@@ -467,13 +370,9 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   s->look.name = nullptr;
   s->turn = glass::turn();
   s->started_at = s->reported_at = esphome::millis();
-  ppa_client_config_t client{};
-  client.oper_type = PPA_OPERATION_SRM;
-  client.max_pending_trans_num = 1;
-  client.data_burst_length = PPA_BURST;
-  jpeg_decode_memory_alloc_cfg_t in{.buffer_direction = JPEG_DEC_ALLOC_INPUT_BUFFER};
-  s->input = static_cast<uint8_t *>(jpeg_alloc_decoder_mem(look.tile ? TILE_PICTURE : MAX_PICTURE, &in, &s->input_size));
-  bool ok = s->input && ppa_register_client(&client, &s->ppa) == ESP_OK;
+  s->input = picture_engine::input(look.tile ? TILE_PICTURE : MAX_PICTURE, &s->input_size);
+  s->ppa = picture_engine::client();
+  bool ok = s->input && s->ppa;
   if (ok && sound && has_speaker()) {
     s->sound = xStreamBufferCreate(SOUND_BUFFER, 1);
     s->sound_part = static_cast<uint8_t *>(heap_caps_malloc(SOUND_PART, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
@@ -516,7 +415,7 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   }
   glass::watch();
   ESP_LOGI(TAG, "stream %d into %dx%d at %d,%d%s, turned %d, PPA bursts of %d bytes", slot, area.w, area.h, area.x, area.y,
-           look.tile ? (look.contain ? " (a tile, whole picture)" : " (a tile)") : "", s->turn, PPA_BURST_BYTES);
+           look.tile ? (look.contain ? " (a tile, whole picture)" : " (a tile)") : "", s->turn, glass::PPA_BURST_BYTES);
   return slot;
 }
 

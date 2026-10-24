@@ -139,9 +139,11 @@ store let go meanwhile is loaded whole again (`runtime_tiles::picture_done`).
 
 The question names the formats the screen takes, best first (`fmt`), and the app picks per picture
 (`picture_service.format_for`). Every board takes BMP: 8-bit where the owner allows it (a palette of the picture's own
-256 colours, dithered), 24-bit otherwise; the screen decodes it row by row as it comes, without a copy. An ESP32-P4 also takes JPEG (`live_view::STILLS_JPEG`, added by `runtime_tiles::picture_ask`): it gathers the
-whole JPEG (`picture_fetch::Gather`, at most `MAX_JPEG`) and decodes it with the hardware decoder its streams use
-(`live_view::decode_still`, under the same lock of the 2D-DMA), about a tenth of a BMP's bytes on the network. What such
+256 colours, dithered), 24-bit otherwise; the screen decodes it row by row as it comes, without a copy. An ESP32-P4 also
+takes JPEG: its engine takes the format whole (`picture_engine::whole_formats`, which `runtime_tiles::picture_ask` names
+first in every question), so the download gathers the whole JPEG (`picture_fetch::Gather`, at most `MAX_JPEG`) and the
+engine decodes it with the hardware decoder its streams use (`picture_engine::decode`, under the same lock of the
+2D-DMA, the glass's), about a tenth of a BMP's bytes on the network. What such
 a JPEG is (baseline, whole MCUs of 16, the shown size and the flat places' corners in an APP15 segment the screen makes
 exact again) is one profile on both sides, `picture_jpeg.h` and `picture_paint.encode`, kept equal by `tests/test_camera.py`. A
 photograph (a camera, a cover, a photo, a poster) goes in the format the screen named first, JPEG on a P4; a drawn picture

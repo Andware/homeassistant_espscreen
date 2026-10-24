@@ -8,7 +8,7 @@
 // frame, as online_image did it), and into a new one otherwise, which tick() swaps in: a widget that drew the old one
 // is told about the new size by the slot's `done`, as it always was.
 #include "picture_fetch.h"
-#include "live_view.h"
+#include "picture_engine.h"
 // Only a board with pictures builds this (SCREEN_PICTURES, packages/features/camera.yaml): the CYD keeps its flash.
 #ifdef SCREEN_PICTURES
 #include "esphome/core/hal.h"
@@ -146,9 +146,9 @@ static void download(Slot &slot) {
   if (!a.ok) { ESP_LOGW(TAG, "%s: not a link: %s", slot.name, slot.task_url.c_str()); return; }
   const int fd = connect_to(a, RECV_MS);
   if (fd < 0) { ESP_LOGW(TAG, "%s: no connection to %s:%u", slot.name, a.host.c_str(), a.port); return; }
-  // A P4 takes JPEG as well (live_view::STILLS_JPEG); the app answers with the format the question named first.
+  // A P4 takes JPEG as well (picture_engine::JPEG); the app answers with the format the question named first.
   std::string request = "GET " + a.path + " HTTP/1.1\r\nHost: " + a.host + ":" + std::to_string(a.port) +
-                        (live_view::STILLS_JPEG ? "\r\nAccept: image/jpeg,image/bmp,*/*;q=0.8" : "\r\nAccept: image/bmp,*/*;q=0.8") +
+                        (picture_engine::JPEG ? "\r\nAccept: image/jpeg,image/bmp,*/*;q=0.8" : "\r\nAccept: image/bmp,*/*;q=0.8") +
                         "\r\nConnection: close\r\n";
   if (!slot.task_etag.empty()) request += "If-None-Match: " + slot.task_etag + "\r\n";
   request += "\r\n";
@@ -172,7 +172,7 @@ static void download(Slot &slot) {
     slot.fresh_stride = width;
     return slot.fresh;
   });
-  // A JPEG (a P4): gathered whole, then decoded at once in hardware (live_view::decode_still). 0 before the first byte
+  // A JPEG (a P4): gathered whole, then decoded at once in hardware (picture_engine::decode). 0 before the first byte
   // of the body says which, 1 a BMP, 2 a JPEG.
   Gather jpeg;
   int kind = 0;
@@ -206,8 +206,8 @@ static void download(Slot &slot) {
     }
     body += size;
     if (size && kind == 0) {
-      kind = live_view::STILLS_JPEG && picture_jpeg::is_jpeg(data, size) ? 2 : 1;
-      if (kind == 2 && !jpeg.start(answer.has_length, answer.content_length, live_view::still_input)) {
+      kind = picture_engine::JPEG && picture_jpeg::is_jpeg(data, size) ? 2 : 1;
+      if (kind == 2 && !jpeg.start(answer.has_length, answer.content_length, picture_engine::input)) {
         ESP_LOGW(TAG, "%s: a JPEG of %u bytes this screen cannot take", slot.name, (unsigned) answer.content_length);
         failed = true;
         break;
@@ -225,8 +225,8 @@ static void download(Slot &slot) {
   release_memory(chunk);
   if (kind == 2 && !slot.cached && !failed && jpeg.done()) {
     // The whole JPEG: decoded into a buffer of its own, which tick() swaps in as it does a BMP of a new size.
-    live_view::Still still;
-    uint8_t *pixels = live_view::decode_still(jpeg.buffer, jpeg.have, still);
+    picture_engine::Still still;
+    uint8_t *pixels = picture_engine::decode(jpeg.buffer, jpeg.have, still);
     // Shown at its own size (the rows and columns past it, made to fill whole MCUs, lie unseen in the stride), with
     // its places' corners exact again (jpeg_notes).
     picture_jpeg::JpegNotes notes;
@@ -306,7 +306,7 @@ void load(Slot &slot, const std::string &url) {
     return;
   }
   if (url != slot.url) { slot.url = url; slot.etag.clear(); }  // a new link: the ETag was the old one's
-  if (live_view::STILLS_JPEG) live_view::prepare_stills();  // the decoder for a JPEG, made on the main loop
+  if (picture_engine::JPEG) picture_engine::ready();  // the decoder for a JPEG, made on the main loop
   ESP_LOGD(TAG, "%s: loading %s", slot.name, url.c_str());
   start(slot);
 }
