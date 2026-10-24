@@ -130,41 +130,45 @@ same rule is written twice.
 10. **The P4 engine's build is spread.** What the P4 engine needs of the build (`USE_LIVE_VIEW`, the three wraps, LVGL
     bound) is in `__init__.py`, what it does with them in `live_view.cpp` and `ppa_guard.cpp`. Fine, but unnamed: the
     design names it.
+11. **The turn's mapping is written twice, in two repositories.** The PPA counts its angles counter-clockwise where
+    LVGL and ESPHome count clockwise: `live_view.cpp` (`copy`) maps 90 to the PPA's 270 and 270 to its 90, and the camera
+    plugin's copy of the driver does the same in `ppa_rotation_for_clockwise`. The engine's `blit` takes the turn as LVGL
+    counts it and maps once; the copied driver keeps its own, as a copy of an upstream must.
 
 ### 2.2 In ESP Screen Manager
 
-11. **`Sources` leans on the whole Manager.** `picture_sources.Sources` takes `server.Manager` and reaches some twenty
+12. **`Sources` leans on the whole Manager.** `picture_sources.Sources` takes `server.Manager` and reaches some twenty
     of its members (`layout_tiles`, `camera_allowed`, `saver_entities`, `map_render`, `map_meta`, `rest_render`, `rest_pools`,
     `thumbnail`, `shelves`, `photos`, `saver_choice`, `saver_picture`, `plugin_saver_kind`, `plugin_picture`,
     `plugin_picture_refused`, `followed`, `player_ground`, `device_entries`, `registry_index`, `ha.states`). The rules per
     source are tested, but only against a stand-in that mimics that whole object.
-12. **`live_feed.py` is three things**: what a camera gives (`Source.run`, `webrtc`, `rtc`, `snapshots`, `stills_until`,
+13. **`live_feed.py` is three things**: what a camera gives (`Source.run`, `webrtc`, `rtc`, `snapshots`, `stills_until`,
     `hear`, `heard`), what a screen gets of it (`size_for`, `size_to_cover`, `jpeg_size`, `remake`, `Encoder`, `Source.picture`,
     `make`) and how it travels (`Link`, `LiveFeed.serve`, the MJPEG writer, `hold`). `picture_service._stream` repeats the
     cover-or-contain decision in three branches.
-13. **The camera port's module finds the app's address.** `picture_links.py` holds the link table and, beside it,
+14. **The camera port's module finds the app's address.** `picture_links.py` holds the link table and, beside it,
     `base_url`, `lan_address`, `_read_lan` and `published_port`: where the screens reach the app is a fact of the network,
     not of the links.
 
 ### 2.3 In the Screen camera plugin
 
-14. **The frames are chained, not shared.** `esp_video_camera` takes one raw consumer. With the video on, the video is
+15. **The frames are chained, not shared.** `esp_video_camera` takes one raw consumer. With the video on, the video is
     that consumer and hands every frame on to sensing (`ScreenVideo::consume_raw_video_frame` calls
     `ScreenCamera::consume_raw_video_frame`; `take_frames_from_video` switches sensing over). A third reader (a plugin
     that wants frames, a future intercom) would be a third link in the chain. A fan-out is missing.
-15. **The camera's mode is a string and a table's order.** `resolution: auto` sends `VIDIOC_S_FMT` without a size and
+16. **The camera's mode is a string and a table's order.** `resolution: auto` sends `VIDIOC_S_FMT` without a size and
     reads back what the sensor took: the first mode of its driver's table. The OV02C10 got a 1280 x 720 mode put first
     for the video; a larger sensor is to be told a smaller mode in the part's YAML. The consumers' needs (the encoder's
     whole macroblocks of 16 and at most 1280 x 800, the frame rate, sensing's smallest useful frame) are known to the
     code and not to the choice.
-16. **The pipeline is a config word.** `device: jpeg` (RGB565 capture, the JPEG encoder on demand) or `device: csi`
+17. **The pipeline is a config word.** `device: jpeg` (RGB565 capture, the JPEG encoder on demand) or `device: csi`
     (YUV420 capture for the video) is set by the part's YAML, not decided from who consumes frames.
-17. **The sensors the build knows are a list in Python** (`CONFIG_CAMERA_SC202CS`, `OV5647`, `SC2336` and the SC202CS
+18. **The sensors the build knows are a list in Python** (`CONFIG_CAMERA_SC202CS`, `OV5647`, `SC2336` and the SC202CS
     tuning file in `esp_video_camera/__init__.py`), beside the OV02C10 that brings its own. Adding a sensor is a change
     in the copied driver's Python rather than a row in a table of the plugin's own.
-18. **Sensing reads two pixel layouts itself** (`RGB565_LE` and the encoder's `O_UYY_E_VYY`) in the middle of its motion
+19. **Sensing reads two pixel layouts itself** (`RGB565_LE` and the encoder's `O_UYY_E_VYY`) in the middle of its motion
     rule; a frame reader that gives the brightness of a point would keep the rule free of layouts.
-19. **The video does three things**: the frame path (cut, encode), the server (viewers, RTSP, RTP, RTCP) and the sound
+20. **The video does three things**: the frame path (cut, encode), the server (viewers, RTSP, RTP, RTCP) and the sound
     (microphone, Opus, the clock). Each is bounded by comments, none by a file.
 
 ### 2.4 Board-specific code inside shared code
@@ -178,6 +182,8 @@ fact of the hardware, and where:
 | the panel is MIPI-DSI | `live_view.cpp` (the wrap of `esp_lcd_new_panel_dpi`) | a P4 with an RGB panel would find no frame buffer and show stills |
 | the frame buffer is RGB565 | `live_view.cpp` (`panel_rgb565`) | `available()` |
 | the chip is a pre-v3 P4 | `ppa_guard.cpp` (`block.mb = 16`, a comment on `CONFIG_ESP32P4_SELECTS_REV_LESS_V3`) | the guard's macro block |
+| the Wi-Fi goes through a co-processor over SDIO | `__init__.py` (`P4_NETWORK`, keyed on the chip) | the TCP window and send buffer, the network's buffers in PSRAM |
+| how the glass is turned | `live_view.cpp` (`turn_now`, LVGL's rotation, read at every tick: the app can stand a screen up at run time) | every copy's angle, a stream ended with `TURNED` |
 | the board has PSRAM | `packages/features/camera.yaml` included or not (`SCREEN_PICTURES`), `picture_store::ENTRIES` | pictures at all |
 | the board has a speaker | `packages/features/audio.yaml` (`bind_speaker`) | the camera's sound |
 | the board has a camera sensor | the board file's `CAMERA_I2C`, `CAMERA_XCLK_PIN` (the feature `camera_sensor`) | the plugin's `esp_video_camera` |
@@ -228,6 +234,15 @@ Rect on_panel(const Rect &r, int turn, int pw, int ph);  // pure, as today
 }
 ```
 
+Two writers reach the frame buffer, and the lock covers both. LVGL's refresh, which on a turned glass goes through
+ESPHome's own PPA turn of each strip into an intermediate buffer in PSRAM (`rotate_buf_`) and then the panel's DMA copy,
+holds the glass from `REFR_START` to `REFR_READY`; a stream's blit goes straight into the frame buffer and holds it for
+each copy. `turn()` is read every time and never kept: the app can stand a screen up at run time (`LVGL_ROTATION`), and a
+stream opened for the other turn ends with `TURNED`, as today. The turned P4 glasses (the boards whose file sets
+`ROTATION_LANDSCAPE` to 90 or 270, and any screen stood up) draw with a 50 % LVGL draw buffer, so every strip LVGL
+flushes is a turned PPA copy too; that is why the panel's share of the bus (the 64-byte bursts of every client) and the
+guard hold for LVGL's copies as much as for a stream's.
+
 May know: ESP-IDF's panel, LVGL's display and refresh events, the DSI bridge's underrun flag. May not know: pictures,
 streams, JPEG, the PPA, owners. Without a direct frame buffer (every S3 and ESP32 board, the host renders, the editor's
 preview) `direct()` is false and the rest are inline stubs that cost no flash.
@@ -259,6 +274,13 @@ bool blit(Client client, const Block &block);       // today's copy(), the guard
 size_t held(Client client);                         // what a client's buffers hold of the picture budget
 }
 ```
+
+The 2D-DMA's own facts are the engine's and nobody else's: its units of 64 pixels for 16-bit output and 32 for 24- and
+32-bit, its macro block of 16 rows on every P4 build ESPHome makes (`CONFIG_ESP32P4_SELECTS_REV_LESS_V3`), its FIFO of
+1536 bits, and the turned block with a small leftover that it never finishes (DIG-734), as `ppa_guard` holds them. The
+guard is proven on glass with every turned copy forced through its planner's cuts (ten thousand pieces in three minutes,
+pieces one pixel wide among them, the chrome correct): it is a block to keep, moved under the engine as it is, and the
+engine's `blit` is where every PPA call of the firmware passes, the streams', LVGL's and a plugin's alike.
 
 May know: the decoder, the PPA, the guard, the decoder's memory, the glass (to hold it is the caller's job, so the lock
 points stay where they are). May not know: streams, sockets, owners, LVGL objects. The MCU sums of the JPEG profile
@@ -463,7 +485,8 @@ is checked by the firmware check at each step; the engine's stubs are inline and
 Not in this round, each a change in behaviour for a round of its own with a measurement on the bench: one YUV420
 capture for stills and video alike (the JPEG encoder on demand from the same frames, so the part Video stops changing
 the camera's mode); a software JPEG decoder for the S3 boards; the legacy question fields' removal (docs/PICTURES.md,
-"Compatibility"); runtime switching between engines, which nothing needs.
+"Compatibility"); runtime switching between engines, which nothing needs; the budgets and the viewer model of section 8
+and the diagnostics of section 9, which the layers make room for and which each need a measurement of their own.
 
 ## 7. What is left to decide
 
@@ -473,6 +496,62 @@ the camera's mode); a software JPEG decoder for the S3 boards; the legacy questi
   touches `__init__.py`, `live_view.h`, `ppa_guard.cpp` and the docs.
 - Whether steps 5 (the one live spot), 6 (the dot) and 8 (the app's three moves) go in this round or wait: each is
   independent of the others and of the engine.
+- Whether the video's viewer model (section 8) goes before the refactor, as the fix for the viewer storm a tester's
+  Guition 10.1 shows, and whether the integration's route for stills is checked first.
 - Where the mode chooser is called: in the copy of the camera driver as a marked change (the sensor's modes are known
   only once esp_video is up, inside the copy's setup), or in a component of the plugin's own that the copy hands the
   modes to through one added call. Both keep the copy's NOTICE honest; the second keeps the copy smaller.
+
+## 8. Budgets and back-pressure
+
+What a screen may take on at once is a set of numbers spread over files today: the picture budget (a fifth of the
+PSRAM, at most 6 MB, `pictures_kept`), the streams' share of it (`live_view::held_bytes`, at most half), seven streams
+a screen (`live_view::MAX_STREAMS`) and eight an app (`live_feed.MAX_STREAMS`), a stream's part of at most 1 MB, the
+video's floor of internal RAM (`screen_video` skips frames under 80 KB and starts again above 110 KB), the TCP window
+and send buffer of a P4, and nothing for the sum. A tester's Guition 10.1 with one live tile (360 to 480 KB a second
+in), the video (out), the wake word and the Bluetooth proxy ran the Wi-Fi co-processor's driver into its wedge
+(`H_SDIO_DRV: task still writing Rx data to queue!`, esp_hosted 2.12.12), with internal RAM at 60 to 80 KB and the wake
+word's ring buffer overrunning.
+
+The limits go in one place, `budgets.h`, worked out at boot from facts and never from a board's name:
+
+- **the PSRAM**: the picture budget, as today, and the streams' share of it;
+- **the internal RAM**: one floor every consumer of it honours (the streams' tasks, the video, the download), below
+  which a part is dropped rather than taken, as the video does already;
+- **the Wi-Fi path**: an inbound rate for the streams together, from the path's kind (a co-processor over SDIO gives
+  about 2.6 MB/s on a P4; an S3's own radio far less) and a share of it that is the streams', as a share of the PSRAM is;
+- **the streams at once**, from the three above rather than a constant.
+
+Every layer asks the budget instead of carrying a number. `live_view::open` refuses a stream that would take the inbound
+rate over its share, and the owner shows stills, as it does today when the seventh stream is taken. A stream's task
+drops a part when internal RAM is under the floor and says so in its report. The screen's question carries its stream
+budget beside `live` (as `cap` carries the picture's), so that `live_feed` sends a screen under load fewer pictures a
+second rather than the screen's Wi-Fi driver drowning in them; the back-pressure the app has (the next picture is made
+once the last has left the host) stays, and the screen's own say is added to it.
+
+The video needs a viewer model that cannot be driven into a storm. Today a viewer is a connection, three may play, and
+nothing keeps one peer from opening and closing one every second (the tester's log: "A viewer watches (one more)" dozens
+of times in 45 seconds, then every second). In the model a viewer is a peer address with one session; a session opened
+again within a cool-down of its own closing is refused with 503 and logged once with the address; and the stills Home
+Assistant asks for cost no session each. The first thing to check there is the integration's own route for a still:
+`async_camera_image` in `tessera_video/camera.py` falls back to ffmpeg when go2rtc gives no still, and ffmpeg opens an RTSP
+session for every still a dashboard asks for, which fits the log and is to be verified on the tester's Home Assistant
+before anything is built.
+
+## 9. Diagnostics the layers make room for
+
+Three gaps the restart hunt of October 2026 ran into, each a round of its own after the refactor:
+
+- **A snapshot that shows live pictures.** `ui_snapshot` (packages/features/snapshot.yaml) renders LVGL's tree, so a
+  live tile is a black room in it and a live picture cannot be seen from afar. With the glass a layer, a snapshot on a
+  P4 reads the frame buffer under the glass lock, the truth of what the panel shows; a board without a direct glass
+  keeps LVGL's render.
+- **A record of what the loop waited on.** A task watchdog with an idle program counter says the main loop was blocked,
+  not on what: the crash record (`esp32.crash`) keeps the program counter and two frames of the crashing core's task,
+  and an abort keeps the assert machinery; the assert's text and the watchdog's culprit go to the console only. The
+  engine and the glass keep a small record in memory that survives a restart (the last copies, each with its block's
+  size, angle, scale and client; who holds the glass and since when), and the crash record names it, so a stall on a
+  copy says which copy and a lock held too long says by whom.
+- **The stream reports as the one place for the counts**: the panel's misses, the decode and lay-out times, the parts
+  dropped for the floor, the inbound rate against the budget, so a tester's log answers whether a change helped
+  without a console on the board.
