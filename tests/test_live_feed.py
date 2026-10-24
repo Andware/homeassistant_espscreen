@@ -338,6 +338,10 @@ class P4Build(unittest.TestCase):
         self.assertIn('-Wl,--wrap=esp_lcd_new_panel_dpi', source)
         self.assertIn('-Wl,--wrap=ppa_register_client', source)  # every PPA burst shorter: live_view.cpp
         self.assertIn('-Wl,--wrap=ppa_do_scale_rotate_mirror', source)  # a turned copy in pieces: ppa_guard.cpp
+        # The main loop's waits for the C6's answers (5 s each in esp_hosted) must fit the task watchdog, or a busy SDIO
+        # link restarts the screen instead of failing a call (2026-10-24, the D1001, a Tab5 and a Guition 10.1).
+        hardware = (ROOT / 'packages/hardware/esp32p4-c6.yaml').read_text()
+        self.assertRegex(hardware, r'(?m)^esp32:\n(?:  .*\n)*?  watchdog_timeout: 20s\n', 'every P4 board waits 20 s on its main loop')
         # A screen's own sdkconfig_options keep the last word.
         self.assertIn('if name not in own', source)
 

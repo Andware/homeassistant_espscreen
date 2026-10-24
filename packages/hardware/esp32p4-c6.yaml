@@ -30,6 +30,19 @@ esp32:
   # compatible: a firmware built with this flag does not boot on rev3 silicon, and the other way round.
   # Checked on a real JC8012P4A1 (pull request #14); a panel that reports v3.0 or higher needs this set to false.
   engineering_sample: true
+  # The main loop asks the C6 things over esp_hosted's RPC and waits for the answer: the Wi-Fi signal, the access
+  # point, the power save mode at standby and at wake, and at boot the whole setup of the Wi-Fi. Each such wait gives
+  # up after 5 seconds (DEFAULT_RPC_RSP_TIMEOUT in esp_hosted), and ESPHome's task watchdog gives up on the main loop
+  # after 5 seconds too, so under a busy SDIO link (two live camera tiles, a video going out) a slow answer restarted
+  # the screen instead of failing one call: a reTerminal D1001 ten minutes after boot with two streams just started, a
+  # Tab5 in the first minute of every boot with two streams starting, a Guition 10.1 with a live tile and the video
+  # (2026-10-24; the main loop's stack at the watchdog read wait_for_sync_response in esp_hosted's rpc_core.c,
+  # docs/REPORTS.md). The answer is not slow, it is lost: esp_hosted's SDIO reader frees a received block whole when
+  # its copy task still holds the previous one ("task still writing Rx data to queue!", espressif/esp-hosted-mcu
+  # #197), and an answer in that block never comes. With the watchdog at 20 seconds a lost answer is a failed call
+  # and the screen goes on; three of them in a row still fit. A screen whose main loop truly hangs restarts after
+  # 20 seconds instead of 5.
+  watchdog_timeout: 20s
   framework:
     advanced:
       execute_from_psram: true

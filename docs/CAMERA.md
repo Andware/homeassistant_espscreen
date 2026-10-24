@@ -384,6 +384,23 @@ whole; two in almost every case, never more than six. A block the driver takes a
 the first eight such copies (`ppa_guard: a turned copy of WxH would hang the 2D-DMA`); `tests/test_ppa_guard.cpp`
 proves the pieces cover the block once and land where the whole would.
 
+**The main loop and the C6's answers.** On a P4 the Wi-Fi runs on the ESP32-C6, and some things the main loop asks
+about it (the signal strength for the Wi-Fi sensor, the access point, the power save mode at standby and at wake, the
+whole setup of the Wi-Fi at boot) are questions to that chip over esp_hosted's RPC, answered over the same SDIO link
+the pictures come in on. Each such wait gives up after 5 seconds, and ESPHome's task watchdog gave up on the main loop
+after 5 seconds too, so when the link was busy (two live tiles, the video going out) a lost answer restarted the
+screen instead of failing one call. Three screens showed it in one day: a reTerminal D1001 ten minutes after boot
+with two streams just started, a Tab5 in the first minute of every boot while its two streams started (and ESPHome's
+rollback then put the old firmware back), a Guition 10.1 with a live tile and the video. The main loop's stack at the
+watchdog (docs/REPORTS.md) read `wait_for_sync_response` in esp_hosted's `rpc_core.c`. The answer is not slow, the
+chip's work is microseconds: it is thrown away. esp_hosted's SDIO reader hands each received block to a copy task
+through a double buffer, and when that task still holds the previous block (it waits on a full queue) the reader
+frees the new block whole and logs `H_SDIO_DRV: task still writing Rx data to queue!` (espressif/esp-hosted-mcu #197,
+open); an answer in that block never arrives, and the main loop waits the full 5 seconds for nothing. So every P4
+board runs the task watchdog at 20 seconds (`packages/hardware/esp32p4-c6.yaml`): a lost answer is a failed call,
+logged by ESPHome as the Wi-Fi taking long, and the screen goes on. While it waits, LVGL stands still: a standby or
+a wake under that load comes 5 seconds late. A screen whose main loop truly hangs restarts after 20 seconds.
+
 **One writer on the glass at a time.** LVGL holds the glass for the whole of each refresh (from `LV_EVENT_REFR_START`
 to `LV_EVENT_REFR_READY`: deciding what to draw, drawing it, flushing it to the panel) and a stream's task holds it for
 each copy of a picture, one recursive mutex in `live_view.cpp` (`glass`). Without it a stream's first picture could land
