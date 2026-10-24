@@ -3,7 +3,7 @@
 Every picture a screen asks for, in the new shape (picture_question) or an older one (picture_legacy), is answered here
 the same way: each source checked against the rules (picture_sources.Sources.may), fetched or drawn (Sources.get),
 painted for exactly its places (picture_paint) and served on the camera port (picture_links), or, where the screen
-streams and the source is a camera, a stream (picture_stream). A painted picture is kept by what it shows, so a camera's
+streams and the source is a camera, a stream (live_stream). A painted picture is kept by what it shows, so a camera's
 tile that loads again before its camera changed, or a second screen of the same size, costs nothing.
 """
 import asyncio
@@ -36,6 +36,23 @@ def format_for(question, resolved):
         return next((f for f in formats if f != 'jpeg'), formats[0])
     return formats[0]
 
+
+def stream_of(question, tile=None):
+    """(entity, fit) of a question of one place that streams, fit 'contain' (the picture whole in its room) or 'cover'
+    (filling it); None for any other. The full view of a camera shows it whole; a camera tile set to Live (`tile`, the
+    layout's tile its source names) as its tile's fit says; a plugin tile's place set live (plugin API 0.17, ui::live),
+    the camera of its own entity (Sources.may checked it), as the place's fit says."""
+    source, owner = question.sources[0], question.owner
+    if source.kind == 'camera' and owner.kind == 'view' and source.ref.startswith('camera.'):
+        return source.ref, 'contain'
+    if source.kind == 'tile' and owner.kind == 'tile':
+        options = (tile or {}).get('options') or {}
+        if tile and options.get('display') == 'live' and tile['entity'].startswith('camera.'):
+            return tile['entity'], 'contain' if options.get('fit') == 'contain' else 'cover'
+        return None
+    if source.kind == 'camera' and owner.kind == 'plugin_tile' and source.ref.startswith('camera.'):
+        return source.ref, 'contain' if question.places[0].fit in ('contain', 'within', 'whole') else 'cover'
+    return None
 
 @dataclass
 class Answer:
@@ -98,27 +115,24 @@ class Service:
         return source.param('entity') or source.ref
 
     def _stream(self, inbox, screen, question, url_of):
-        """A stream's link for a question of one place that may stream: the full view of a camera, or a camera tile set
-        to Live, on a screen that names the rectangle it streams into. '' when the source is no camera that streams."""
-        source, owner = question.sources[0], question.owner
-        if source.kind == 'camera' and owner.kind == 'view' and source.ref.startswith('camera.'):
-            token = self.stream.link(source.ref, question.live, sound=question.sound, screen=inbox)
+        """A stream's link for a question of one place that may stream (stream_of). '' when it is no camera that
+        streams."""
+        tile = None
+        if question.sources[0].kind == 'tile' and question.owner.kind == 'tile':
+            tile = self.sources._tile(inbox, question.sources[0])
+        found = stream_of(question, tile)
+        if found is None:
+            return ''
+        entity, fit = found
+        if question.owner.kind == 'view':
+            token = self.stream.link(entity, question.live, sound=question.sound, screen=inbox)
             return url_of(token, 'mjpeg')
-        if source.kind == 'tile' and owner.kind == 'tile':
-            tile = self.sources._tile(inbox, source)
-            options = (tile or {}).get('options') or {}
-            if tile and options.get('display') == 'live' and tile['entity'].startswith('camera.'):
-                contain = options.get('fit') == 'contain'
-                token = self.stream.link(tile['entity'], question.live, cover=not contain, warm=question.sound, screen=inbox,
-                                         tile=True)
-                return url_of(token, 'mjpeg') + ('?fit=contain' if contain else '')
-        # A plugin tile's place set to live (plugin API 0.17, ui::live): the camera of its own entity (may() checked it),
-        # into the place's room, filled or whole as the place's fit says.
-        if source.kind == 'camera' and owner.kind == 'plugin_tile' and source.ref.startswith('camera.'):
-            contain = question.places[0].fit in ('contain', 'within', 'whole')
-            token = self.stream.link(source.ref, question.live, cover=not contain, screen=inbox, tile=True)
-            return url_of(token, 'mjpeg') + ('?fit=contain' if contain else '')
-        return ''
+        # A live tile's card or a plugin's place: the link says how its picture fills the room, and so does the address
+        # (?fit=contain, the screen's own reading of it). A camera tile's screen with a speaker warms the camera's sound.
+        contain = fit == 'contain'
+        warm = {'warm': question.sound} if question.owner.kind == 'tile' else {}
+        token = self.stream.link(entity, question.live, cover=not contain, **warm, screen=inbox, tile=True)
+        return url_of(token, 'mjpeg') + ('?fit=contain' if contain else '')
 
     # ----- painting -----
     async def render(self, recipe):

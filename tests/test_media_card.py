@@ -278,8 +278,8 @@ class Answer(unittest.TestCase):
 
     def setUp(self):
         # base_url keeps the last address for ten minutes; another test's Home Assistant may have left one behind.
-        import picture_links
-        picture_links.base_url.__defaults__[0].clear()
+        import lan_address
+        lan_address.base_url.__defaults__[0].clear()
 
     class HA:
         online = True

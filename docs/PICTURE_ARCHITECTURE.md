@@ -45,12 +45,15 @@ its chip, its panel or its sensor, and the layers below are keyed on those facts
 |---|---|---|
 | `picture_question.py` | the question read and checked, the caps, what a board can show (`BOXES` from `boards.json`), the answer | `tests/test_pictures.py` |
 | `picture_legacy.py` | every older shape read into the same question | `tests/test_pictures.py` |
-| `picture_sources.py` | the rules per source and owner (`may`), getting each source (`get`), the cameras' snapshots and the players' covers fetched once per camera in the screen's rhythm (`Snapshots`) | `tests/test_pictures.py`, `tests/test_camera.py` |
+| `picture_sources.py` | the rules per source and owner (`may`), getting each source (`get`), the cameras' snapshots and the players' covers fetched once per camera in the screen's rhythm (`Snapshots`); what it reads of the app is `Providers` (step 8, done) | `tests/test_pictures.py`, `tests/test_camera.py` |
 | `picture_paint.py` | one painter: fit, corners, shade, dim, turn, mirror, the atlas, and the three formats (`bmp8`, `bmp24`, `jpeg` with whole MCUs and the `TSSR` notes) | `tests/test_picture_paint.py` |
-| `picture_links.py` | the links on the camera port, stills and recipes, the 304s; and the app's address on the LAN (`base_url`, `lan_address`) | `tests/test_pictures.py` |
+| `picture_links.py` | the links on the camera port, stills and recipes, the 304s | `tests/test_pictures.py` |
+| `lan_address.py` | the app's address on the LAN the links carry (`base_url`, `lan_address`, the published port) (step 8, done) | `tests/test_camera.py` |
 | `picture_service.py` | a question in, a link or a stream out; the painted pictures kept by what they show | `tests/test_pictures.py` |
 | `plugin_pictures.py` | what a plugin's manifest allows its places; its addresses fetched and kept | `tests/test_plugins.py` |
-| `live_feed.py` | a camera live: the source per camera (WebRTC or snapshots, its stills first), the JPEG per room (`Encoder`, `remake`, `size_for`, `size_to_cover`), the sound resampled, the MJPEG writer on the camera port, the links, `hold` | `tests/test_live_feed.py` |
+| `camera_source.py` | a camera live: the source per camera (WebRTC or snapshots, its stills first), the sound resampled (step 8, done) | `tests/test_camera_source.py` |
+| `live_pictures.py` | the JPEG per room (`Encoder`, `remake`, `size_for`, `size_to_cover`, `Pictures`) (step 8, done) | `tests/test_live_pictures.py` |
+| `live_stream.py` | the MJPEG writer on the camera port, the links, `hold`, `live_pace` (step 8, done); `picture_service.stream_of` decides what streams and how it fits | `tests/test_live_stream.py`, `tests/test_pictures.py` |
 | `rest_mosaic.py`, `alert_layout.py`, `media_library.py` (thumbnails) | sources that draw themselves, the alert's frame, the library's covers | their own tests |
 | `ha_integration/tessera_video/` | the screen's own camera as a Home Assistant camera: its RTSP address and the password rule | `tests/test_screen_video.py` |
 | `server.py` (`Manager`) | `answer_camera`, `camera_allowed`, `saver_entities`, `plugin_picture`, `saver_picture`, `thumbnail`, `map_render`, `rest_render`, `link_base`, the hello's `pictures` and `live` | |
@@ -416,6 +419,16 @@ The app is layered already; three moves make the seams of section 2.2 explicit, 
 
 The three transports of section 1.4 stay as they are, byte for byte.
 
+As built (step 8): `Providers` has one field per fact, named after what the Manager offers (`tiles`, `states`,
+`mosaic`, `step_picture`, `plugin_refused` and the rest), and `Providers.of(manager)` binds each as a callable that reads
+the Manager when it is asked, so a dict the Manager keeps is read as it is then and a method a test replaces is the one
+called. The tests' stand-ins keep their names and go through `Providers.of`; `tests/test_pictures.py` also builds one
+from fakes alone, every fact it does not hand in failing when read. The JPEGs of a camera's frames (`Pictures`) are
+kept by `LiveFeed` beside each source, so `camera_source` knows no screen's room. The stream's fit is
+`picture_service.stream_of`: the full view whole, a Live tile as its tile says, a plugin's place as its fit says. The
+tests split along the modules (`tests/test_camera_source.py`, `tests/test_live_pictures.py`,
+`tests/test_live_stream.py`) with every case kept, and the P4 build's check of the component joined `tests/test_live_view.py`.
+
 ## 5. The layers in the Screen camera plugin
 
 ```
@@ -520,7 +533,7 @@ and the diagnostics of section 9, which the layers make room for and which each 
 
 What a screen may take on at once is a set of numbers spread over files today: the picture budget (a fifth of the
 PSRAM, at most 6 MB, `pictures_kept`), the streams' share of it (`live_view::held_bytes`, at most half), seven streams
-a screen (`live_view::MAX_STREAMS`) and eight an app (`live_feed.MAX_STREAMS`), a stream's part of at most 1 MB, the
+a screen (`live_view::MAX_STREAMS`) and eight an app (`live_stream.MAX_STREAMS`), a stream's part of at most 1 MB, the
 video's floor of internal RAM (`screen_video` skips frames under 80 KB and starts again above 110 KB), the TCP window
 and send buffer of a P4, and nothing for the sum. A tester's Guition 10.1 with one live tile (360 to 480 KB a second
 in), the video (out), the wake word and the Bluetooth proxy ran the Wi-Fi co-processor's driver into its wedge
@@ -555,7 +568,7 @@ The limits go in one place, `budgets.h`, worked out at boot from facts and never
 Every layer asks the budget instead of carrying a number. `live_view::open` refuses a stream that would take the inbound
 rate over its share, and the owner shows stills, as it does today when the seventh stream is taken. A stream's task
 drops a part when internal RAM is under the floor and says so in its report. The screen's question carries its stream
-budget beside `live` (as `cap` carries the picture's), so that `live_feed` sends a screen under load fewer pictures a
+budget beside `live` (as `cap` carries the picture's), so that `live_stream` sends a screen under load fewer pictures a
 second rather than the screen's Wi-Fi driver drowning in them, and fewer still while two streams are up; the
 back-pressure the app has (the next picture is made once the last has left the host) stays, and the screen's own say
 is added to it.

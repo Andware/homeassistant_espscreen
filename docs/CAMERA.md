@@ -253,7 +253,8 @@ left its host, always of the newest frame the camera gave, so a slow Wi-Fi gets 
 The app serves at most eight streams at once, of every screen together (a page of live tiles and a camera full
 screen); a stream it refuses leaves that screen with its stills. A screen runs at most seven of its own.
 
-**Where the pictures come from** (`screen_manager/app/live_feed.py`). Most of the work lands on Home Assistant's host,
+**Where the pictures come from** (`screen_manager/app/camera_source.py`; the JPEG per room is `live_pictures.py`, the
+stream on the camera port `live_stream.py`). Most of the work lands on Home Assistant's host,
 often a Raspberry Pi, so each kind of camera takes the cheapest road:
 
 - A camera with a stream of its own (an RTSP camera through Generic Camera, ONVIF, Reolink, UniFi Protect and others)
@@ -546,7 +547,8 @@ microphone listens only while someone watches, and the voice assistant can liste
 - The app's side is one picture system, docs/PICTURES.md: `picture_question.py` (the question and its answer),
   `picture_legacy.py` (an older screen's fields read as the same question), `picture_sources.py` (what each address
   is, fetched once per camera and checked against the layout), `picture_paint.py` (sizing, cutting, the shade and the
-  corners), `picture_links.py` (the links and the port) and `picture_service.py` (the question in, the link out);
+  corners), `picture_links.py` (the links and the port), `lan_address.py` (where the screens reach the app, the address
+  the links carry) and `picture_service.py` (the question in, the link out);
   `Manager.answer_camera` in `server.py` hands a screen's question to it.
 - `components/smart_display/camera_view.h`: when to ask for a link and when to load again
   (`tests/test_camera_view.cpp`).
@@ -573,8 +575,10 @@ microphone listens only while someone watches, and the voice assistant can liste
 - `components/smart_display/glass.h` and `glass_dsi.cpp`: the panel as a surface (docs/PICTURE_ARCHITECTURE.md): its
   size and turn, the frame buffer a stream writes past LVGL, the one-writer lock LVGL holds for a refresh and a stream's
   task for a copy, the rooms LVGL keeps out of, the panel's underrun count and the PPA bursts of every client.
-- `screen_manager/app/live_feed.py`: a camera live on a P4, its links, the source per camera (WebRTC or snapshots), the
-  stream and a tile's pace (`live_pace`) (`tests/test_live_feed.py`); `components/smart_display/live_view.h` and
+- `screen_manager/app/camera_source.py`: a camera live on a P4, the source per camera (WebRTC or snapshots, its stills
+  first, its sound) (`tests/test_camera_source.py`); `live_pictures.py`: the JPEG of a frame for a screen's room
+  (`tests/test_live_pictures.py`); `live_stream.py`: the links, the stream and a tile's pace (`live_pace`)
+  (`tests/test_live_stream.py`); `components/smart_display/live_view.h` and
   `live_view.cpp`: the screen's streams, up to seven at once (`tests/test_live_view.cpp` checks the stream's framing,
   where a picture lies on a turned panel, how it is scaled, cut into a card and what is laid over it);
   `live_spots.h`: the one machine of the live tiles and a plugin's live places (what streams, asks, stops and gives up;

@@ -20,12 +20,14 @@ import calendar_feed
 import doorbell
 import durations
 import picture_legacy
+import lan_address
 import picture_links
 import picture_paint
 import picture_question
 import picture_service
 import picture_sources
-import live_feed
+import camera_source
+import live_stream
 import claude_skill
 import screen_video
 import screen_hang
@@ -555,7 +557,7 @@ class HomeAssistant:
     @contextlib.asynccontextmanager
     async def websocket(self):
         """A websocket of its own, authenticated, for a conversation that has many answers (a live camera's WebRTC,
-        live_feed.py): it ends with the conversation, and Home Assistant ends the session with it."""
+        camera_source.py): it ends with the conversation, and Home Assistant ends the session with it."""
         async with self.session.ws_connect(self.ws_url(), heartbeat=30, max_msg_size=4*1024*1024) as ws:
             await ws.receive_json(timeout=15)
             await ws.send_json({'type': 'auth', 'access_token': self.token})
@@ -567,7 +569,7 @@ class HomeAssistant:
         """Whether a camera has a stream of its own (CameraEntityFeature.STREAM): an RTSP camera, not a snapshot one."""
         features = ((self.states.get(entity) or {}).get('attributes') or {}).get('supported_features') or 0
         try:
-            return bool(int(features) & live_feed.STREAM_FEATURE)
+            return bool(int(features) & camera_source.STREAM_FEATURE)
         except (TypeError, ValueError):
             return False
 
@@ -1059,11 +1061,11 @@ class Manager:
                                                    fetch_cover=lambda entity: self.ha.media_image(self.followed(entity)),
                                                    picture=lambda entity: self.ha.media_picture(self.followed(entity)))
         self.alert_cameras = {}
-        # A camera live on a P4 (live_feed.py): its links and the sources behind them, on the camera port.
-        self.live = live_feed.LiveFeed(lambda entity: self.ha.camera_image(entity), lambda: self.ha.websocket(),
+        # A camera live on a P4 (live_stream.py): its links and the sources behind them, on the camera port.
+        self.live = live_stream.LiveFeed(lambda entity: self.ha.camera_image(entity), lambda: self.ha.websocket(),
                                        lambda entity: self.ha.camera_streams(entity))
         self.links = picture_links.Links()
-        self.sources = picture_sources.Sources(self, self.snapshots)
+        self.sources = picture_sources.Sources(picture_sources.Providers.of(self), self.snapshots)
         self.pictures = picture_service.Service(self, self.sources, self.links, self.live)
         # The streets of the map cards (app 0.4.33): one tile source for every screen, through Home Assistant. And the
         # last maps drawn, by their mark, frame and look: a screen in dark mode and one in light mode each have their
@@ -1241,11 +1243,11 @@ class Manager:
         return 'view' if view else 'picture' if board_of(screen) in picture_question.BOXES else 'plain'
 
     def live_camera(self, screen):
-        """Whether this screen streams a camera live (live_feed.py): its hello while it is connected (`live`), else its
+        """Whether this screen streams a camera live (live_stream.py): its hello while it is connected (`live`), else its
         board (a P4 that draws pictures). The editor offers Live for its camera tiles, as their default."""
         sender = self.page_senders.get(self.aliases.get(screen.get('id'), screen.get('id')))
         if sender is not None and getattr(sender, 'protocol', None) is not None:
-            return live_feed.SCREEN_FEATURE in (getattr(sender, 'features', None) or ())
+            return live_stream.SCREEN_FEATURE in (getattr(sender, 'features', None) or ())
         shape = core.shape_of(screen) or {}
         return shape.get('chip') == 'ESP32-P4' and bool(shape.get('camera'))
 
@@ -1422,7 +1424,7 @@ class Manager:
 
     async def link_base(self, screen):
         """Where `screen` fetches this app's pictures: Home Assistant's address on the screen's own network (GitHub #276)."""
-        return await picture_links.base_url(self.ha.request, near=(screen or {}).get('ip'))
+        return await lan_address.base_url(self.ha.request, near=(screen or {}).get('ip'))
 
     def device_prefixes(self, device):
         registry = getattr(self.ha, 'registry', [])
@@ -2943,8 +2945,8 @@ class Manager:
             else: message['a']['supported_features']=reported
         else:
             drawn_controls(message, features)
-        # A camera tile set to Live: pace 0 to a screen that streams, the default pace to any other (live_feed.live_pace).
-        live_feed.live_pace(message, tile, features)
+        # A camera tile set to Live: pace 0 to a screen that streams, the default pace to any other (live_stream.live_pace).
+        live_stream.live_pace(message, tile, features)
         # The speaker, shuffle, repeat, the cover's colours and the library (firmware 0.24.0+): to a screen that draws
         # them, and to the editor's preview, which runs the newest firmware.
         if player and (features is None or media_library.FEATURE in features):

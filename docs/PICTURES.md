@@ -100,12 +100,15 @@ In `screen_manager/app/`:
 |---|---|
 | `picture_question.py` | reads a question (`q`) into one model and checks every number and text; what a screen can show (its boxes, its cap, its formats) |
 | `picture_legacy.py` | reads the questions of older firmware (every shape since 0.2.57) into the same model, with the `t` and `e` their answers go back with |
-| `picture_sources.py` | the source kinds: whether this screen may have one (one rule set for the core and for plugins), and getting it; the cameras' snapshots and the players' covers, fetched once for every screen, in the screen's own rhythm |
+| `picture_sources.py` | the source kinds: whether this screen may have one (one rule set for the core and for plugins), and getting it, reading the app through `Providers`; the cameras' snapshots and the players' covers, fetched once for every screen, in the screen's own rhythm |
 | `picture_paint.py` | one way to make a picture for its places: read (JPEG, PNG, HEIC, EXIF turned), fill or show whole, round, shade, dim, turn, mirror, the atlas of several places, and the format the screen takes (BMP 8-bit, 24-bit, baseline JPEG) |
 | `picture_links.py` | the camera port: links that last a while, a 304 for an unchanged picture, the streams' links beside them |
+| `lan_address.py` | where the screens reach the app: the address the links carry, on the screen's own network, with the published port |
 | `picture_service.py` | a question in, an answer out: authorise, get each source, paint, link or stream |
 | `plugin_pictures.py` | what a plugin's manifest allows its places, and the pictures at its addresses, kept by address |
-| `live_feed.py` | a camera live: one source per camera for every screen that watches it (Home Assistant's WebRTC, else snapshots), sized for the rectangle a screen asked for |
+| `camera_source.py` | a camera live: one source per camera for every screen that watches it (Home Assistant's WebRTC, else snapshots), its stills first and its sound |
+| `live_pictures.py` | a live camera's frame as the screen takes it: sized for the rectangle it asked for, its own JPEG untouched where the decoder takes it, made once per frame and room |
+| `live_stream.py` | how a live camera travels: its links, the stream on the camera port, the tiles' cameras a full view keeps running, a Live tile's pace |
 | `server.py` (`HomeAssistant.picture_bytes`, `picture_address`) | one way to read a picture from Home Assistant or the internet: a byte limit per kind, Home Assistant's token only to Home Assistant, no redirects, nothing from an address in the house unless Home Assistant serves it |
 
 A camera has one source in the app for both routes: while a stream of it runs for a screen, a still of it (a tile, an
@@ -149,7 +152,7 @@ exact again) is one profile on both sides, `picture_jpeg.h` and `picture_paint.e
 photograph (a camera, a cover, a photo, a poster) goes in the format the screen named first, JPEG on a P4; a drawn picture
 (a map, a vacuum's map: lines, words and flat colours, which JPEG blurs) goes as the first BMP the screen takes. Streams
 are JPEG on every P4 (`live_view`); the P4 has a hardware H.264 encoder but no decoder, so the app decodes a camera's
-H.264 and sends JPEG (`live_feed.py`).
+H.264 and sends JPEG (`camera_source.py`, `live_pictures.py`).
 
 ## Capture: the screen's own camera
 

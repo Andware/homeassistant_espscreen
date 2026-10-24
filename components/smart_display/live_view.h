@@ -287,7 +287,7 @@ inline void compose(uint16_t *px, int stride, int w, int h, const Look &look) {
 
 // ---- Until it is live ----
 // A camera's stream starts with its stills: the app sends the camera's still at once, again every few seconds, until
-// Home Assistant's WebRTC brings its first frame (live_feed.py), and marks each such part X-Picture: still. While those
+// Home Assistant's WebRTC brings its first frame (camera_source.py), and marks each such part X-Picture: still. While those
 // show, a live tile turns the firmware's spinner (runtime_tiles::spinner_create, LVGL's 900 ms turn) small in its top
 // right corner, on a round shade so it reads over any picture; the full view turns it in its top bar (runtime_tiles,
 // camera_warm). The first picture without the mark ends it (Event::LIVE). An app that marks nothing is live at once.

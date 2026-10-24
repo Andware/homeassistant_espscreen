@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / 'tools'))
 import profiles  # noqa: E402
 sys.path.insert(0, str(ROOT / 'screen_manager/app'))
 import picture_legacy  # noqa: E402
+import lan_address  # noqa: E402
 import picture_links  # noqa: E402
 import picture_paint  # noqa: E402
 import picture_question as pq  # noqa: E402
@@ -476,7 +477,7 @@ class Rig:
         waits = {} if sleep is None else {'sleep': sleep}
         self.snapshots = picture_sources.Snapshots(fetch, clock=self.clock, fetch_cover=fetch_cover, picture=picture, **waits)
         self.links = picture_links.Links(clock=self.clock)
-        self.sources = picture_sources.Sources(self, self.snapshots)
+        self.sources = picture_sources.Sources(picture_sources.Providers.of(self), self.snapshots)
         self.service = picture_service.Service(self, self.sources, self.links)
         self.tiles, self.allowed, self.saver = list(tiles), allowed, set(saver)
         self.ha = types.SimpleNamespace(states={})
@@ -784,7 +785,7 @@ def fake_ha(image=None):
 @unittest.skipUnless(HAS_AIOHTTP and HAS_PIL, 'Run using .venv-portal/bin/python for server tests')
 class App(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        picture_links.base_url.__defaults__[0].clear()
+        lan_address.base_url.__defaults__[0].clear()
 
     async def test_camera_alert_announcement_and_image_use_the_page_session(self):
         from page_delivery import Sender
@@ -1132,9 +1133,9 @@ class LiveTiles(unittest.TestCase):
     def test_the_live_display_and_its_pace_are_tile_settings(self):
         from core import LIVE_MIN_FIRMWARE, LIVE_REFRESH, LIVE_REFRESH_DEFAULT
         import catalogue
-        import live_feed
+        import live_stream
         # A tile's pace when it names none is the catalogue's default, the same for a still and a stream.
-        self.assertEqual((picture_sources.TILE_PACE, live_feed.DEFAULT_PACE), (LIVE_REFRESH_DEFAULT, LIVE_REFRESH_DEFAULT))
+        self.assertEqual((picture_sources.TILE_PACE, live_stream.DEFAULT_PACE), (LIVE_REFRESH_DEFAULT, LIVE_REFRESH_DEFAULT))
         self.assertEqual(LIVE_REFRESH, tuple(catalogue.of_type('camera')['picture']['refresh']))
         layout = validate_layout({'title': 'Hall', 'tiles': [{'entity': 'camera.front_door', 'name': '', 'options': {'display': 'live', 'refresh': 30}},
                                                              {'entity': 'image.doorbell', 'name': '', 'options': {'display': 'live'}}]})
@@ -1333,7 +1334,7 @@ class LiveTiles(unittest.TestCase):
 @unittest.skipUnless(HAS_AIOHTTP and HAS_PIL, 'Run using .venv-portal/bin/python for server tests')
 class LiveApp(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        picture_links.base_url.__defaults__[0].clear()
+        lan_address.base_url.__defaults__[0].clear()
 
     async def test_a_screen_asks_for_the_live_tiles_of_its_page(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1527,7 +1528,7 @@ class PublishedPort(unittest.IsolatedAsyncioTestCase):
     """GitHub #84: an owner who publishes 8098 as 8099 on Home Assistant OS gets links on 8099."""
 
     def setUp(self):
-        picture_links.base_url.__defaults__[0].clear()
+        lan_address.base_url.__defaults__[0].clear()
 
     async def base(self, info, env):
         from unittest import mock
@@ -1557,7 +1558,7 @@ class PublishedPort(unittest.IsolatedAsyncioTestCase):
             return {'adapters': [{'default': True, 'ipv4': [{'address': '192.168.1.5'}]}]}
 
         with mock.patch.dict('os.environ', env, clear=True), mock.patch('aiohttp.ClientSession', Session):
-            return await picture_links.base_url(request)
+            return await lan_address.base_url(request)
 
     async def test_the_link_carries_the_port_the_supervisor_published(self):
         info = {'result': 'ok', 'data': {'network': {'8098/tcp': 8099}}}
@@ -1565,13 +1566,13 @@ class PublishedPort(unittest.IsolatedAsyncioTestCase):
 
     async def test_8098_when_the_supervisor_says_nothing_usable(self):
         for info in ({'data': {'network': {'8098/tcp': None}}}, {'data': {}}, ConnectionError('x')):
-            picture_links.base_url.__defaults__[0].clear()
+            lan_address.base_url.__defaults__[0].clear()
             self.assertEqual(await self.base(info, {'SUPERVISOR_TOKEN': 't'}), 'http://192.168.1.5:8098')
 
     async def test_docker_keeps_its_own_setting(self):
         info = {'data': {'network': {'8098/tcp': 8099}}}
         self.assertEqual(await self.base(info, {}), 'http://192.168.1.5:8098')
-        picture_links.base_url.__defaults__[0].clear()
+        lan_address.base_url.__defaults__[0].clear()
         self.assertEqual(await self.base(info, {'SUPERVISOR_TOKEN': 't', 'SCREEN_CAMERA_PORT': '9000'}), 'http://192.168.1.5:9000')
 
     async def test_the_last_address_stands_while_home_assistant_does_not_say(self):
@@ -1584,11 +1585,11 @@ class PublishedPort(unittest.IsolatedAsyncioTestCase):
             raise TimeoutError()
 
         with mock.patch.dict('os.environ', {}, clear=True), mock.patch('time.monotonic', return_value=time.monotonic() + 601):
-            self.assertEqual(await picture_links.base_url(silent), 'http://192.168.1.5:8098')
+            self.assertEqual(await lan_address.base_url(silent), 'http://192.168.1.5:8098')
         # Without an address from before there is none to give.
-        picture_links.base_url.__defaults__[0].clear()
+        lan_address.base_url.__defaults__[0].clear()
         with mock.patch.dict('os.environ', {}, clear=True):
-            self.assertIsNone(await picture_links.base_url(silent))
+            self.assertIsNone(await lan_address.base_url(silent))
 
 
 class TwoNetworks(unittest.IsolatedAsyncioTestCase):
@@ -1601,8 +1602,8 @@ class TwoNetworks(unittest.IsolatedAsyncioTestCase):
         {'name': 'hassio', 'default': False, 'ipv4': [{'address': '172.30.32.1', 'network_prefix': 23}]}]}
 
     async def asyncSetUp(self):
-        picture_links.base_url.__defaults__[0].clear()
-        self.addCleanup(picture_links.base_url.__defaults__[0].clear)
+        lan_address.base_url.__defaults__[0].clear()
+        self.addCleanup(lan_address.base_url.__defaults__[0].clear)
 
     async def base(self, near, adapters=None, env=None):
         from unittest import mock
@@ -1610,7 +1611,7 @@ class TwoNetworks(unittest.IsolatedAsyncioTestCase):
         async def request(kind, **data):
             return adapters or self.ADAPTERS
         with mock.patch.dict('os.environ', env or {}, clear=True):
-            return await picture_links.base_url(request, near=near)
+            return await lan_address.base_url(request, near=near)
 
     async def test_each_screen_gets_the_address_on_its_own_network(self):
         self.assertEqual(await self.base('10.0.50.33'), 'http://10.0.50.2:8098')
@@ -1638,7 +1639,7 @@ class TwoNetworks(unittest.IsolatedAsyncioTestCase):
             return 'http://x:8098'
         from unittest import mock
         manager = type('M', (), {'ha': type('HA', (), {'request': None})()})()
-        with mock.patch.object(picture_links, 'base_url', base_url):
+        with mock.patch.object(lan_address, 'base_url', base_url):
             await server.Manager.link_base(manager, {'ip': '10.0.50.33'})
             await server.Manager.link_base(manager, None)
         self.assertEqual(asked, ['10.0.50.33', None])

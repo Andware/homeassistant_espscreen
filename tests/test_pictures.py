@@ -3,6 +3,7 @@ older firmware read into it (picture_legacy), the rules of each source for each 
 links on the camera port with their 304s (picture_links) and the service that answers (picture_service): a still, a
 stream, or no answer while a picture is on its way."""
 import asyncio
+import dataclasses
 import importlib.util
 import io
 import json
@@ -379,7 +380,7 @@ class Manager:
         self.rest_pools = {}
         self.photos = types.SimpleNamespace(raw=lambda inbox: None)
         self.snapshots = snapshots or picture_sources.Snapshots(None)
-        self.sources = picture_sources.Sources(self, self.snapshots)
+        self.sources = picture_sources.Sources(picture_sources.Providers.of(self), self.snapshots)
         self.links = picture_links.Links()
         self.service = picture_service.Service(self, self.sources, self.links)
 
@@ -484,6 +485,90 @@ class May(unittest.TestCase):
         saver = Owner('plugin_saver', -1, 'plugin:weather_art.rain', 'weather.home')
         self.assertIsNone(self.may(saver, Source('entity', 'weather.home')))
         self.assertIsNone(self.may(saver, Source('step')))
+
+
+class ProvidersAlone(unittest.IsolatedAsyncioTestCase):
+    """Sources reads the app through Providers alone (docs/PICTURE_ARCHITECTURE.md, section 4): built from fakes, with
+    every fact a test does not hand in failing when it is read, the rules and the getting work without a Manager."""
+
+    def providers(self, **facts):
+        def missing(name):
+            def read(*args, **options):
+                raise AssertionError(f'Sources read {name}, which this test did not hand in')
+            return read
+        names = [f.name for f in dataclasses.fields(picture_sources.Providers)]
+        self.assertFalse(set(facts) - set(names), 'a fact Providers does not have')
+        return picture_sources.Providers(**{name: facts.get(name) or missing(name) for name in names})
+
+    async def test_a_camera_tile_and_a_cover_tile_from_fakes(self):
+        tiles = [{'entity': 'camera.porch', 'name': '', 'options': {'display': 'live'}},
+                 {'entity': 'media_player.spotify', 'name': '', 'options': {'display': 'cover'}}]
+
+        async def fetch(entity):
+            return b'still of ' + entity.encode()
+
+        async def fetch_cover(entity):
+            return b'cover of ' + entity.encode()
+        snapshots = picture_sources.Snapshots(fetch, fetch_cover=fetch_cover, picture=lambda e: '/api/media_player_proxy/' + e)
+        app = self.providers(tiles=lambda inbox: tiles, camera_allowed=lambda inbox, entity: entity == 'camera.porch',
+                             states=lambda: {}, followed=lambda entity: entity)
+        sources = picture_sources.Sources(app, snapshots)
+
+        def question(owner, source):
+            return Question(owner, (source,), (100, 100), (Place(0, 0, 100, 100),))
+        # The rules: a pictured tile of the layout, a camera the layout has.
+        self.assertIsNone(sources.may('text.hall', GUITION, question(Owner('tile', 0), Source('tile', '0')), Source('tile', '0')))
+        self.assertIsNone(sources.may('text.hall', GUITION, question(Owner('view'), Source('camera', 'camera.porch')),
+                                      Source('camera', 'camera.porch')))
+        self.assertIn('not on the layout', sources.may('text.hall', GUITION, question(Owner('view'), Source('camera', 'camera.yard')),
+                                                       Source('camera', 'camera.yard')))
+        # The getting: the camera's still with its stream, the player's cover (not at rest: no mosaic).
+        place = Place(0, 0, 100, 100)
+        still = await sources.get('text.hall', GUITION, question(Owner('tile', 0), Source('tile', '0')), Source('tile', '0'), place)
+        self.assertEqual((still.raw, still.stream, still.mark.startswith('camera:camera.porch:')), (b'still of camera.porch', 'cover', True))
+        cover = await sources.get('text.hall', GUITION, question(Owner('tile', 1), Source('tile', '1')), Source('tile', '1'), place)
+        self.assertEqual((cover.raw, cover.mark.startswith('cover:')), (b'cover of media_player.spotify', True))
+
+    def test_the_manager_binding_reads_as_it_is_called(self):
+        # Providers.of reads the Manager when a fact is asked, never before: its states as they are then, a method
+        # replaced later.
+        manager = Manager()
+        app = picture_sources.Providers.of(manager)
+        manager.ha.states['light.hall'] = {'state': 'on'}
+        self.assertEqual(app.state('light.hall'), {'state': 'on'})
+        manager.ha = types.SimpleNamespace(states={'light.hall': {'state': 'off'}})
+        self.assertEqual(app.state('light.hall'), {'state': 'off'})
+        manager.layout_tiles = lambda inbox: ['replaced']
+        self.assertEqual(app.tiles('text.hall'), ['replaced'])
+        manager.rest_pools['media_player.spotify'] = (1.0, ['a'])
+        self.assertEqual(app.rest_pool('media_player.spotify'), (1.0, ['a']))
+
+
+class StreamOf(unittest.TestCase):
+    """Which camera a question of one place streams, and how its picture fits its room (picture_service.stream_of)."""
+
+    def test_the_full_view_a_live_tile_and_a_plugins_place(self):
+        def question(owner, source, fit='cover'):
+            return Question(owner, (source,), (100, 100), (Place(0, 0, 100, 100, fit=fit),))
+        of = picture_service.stream_of
+        # The full view of a camera: whole.
+        self.assertEqual(of(question(Owner('view'), Source('camera', 'camera.porch'))), ('camera.porch', 'contain'))
+        self.assertIsNone(of(question(Owner('view'), Source('camera', 'image.door'))))
+        # A camera tile set to Live: as its tile says.
+        live = {'entity': 'camera.drive', 'options': {'display': 'live'}}
+        self.assertEqual(of(question(Owner('tile', 9), Source('tile', '9')), live), ('camera.drive', 'cover'))
+        self.assertEqual(of(question(Owner('tile', 9), Source('tile', '9')), dict(live, options={'display': 'live', 'fit': 'contain'})),
+                         ('camera.drive', 'contain'))
+        for tile in (None, {'entity': 'camera.drive', 'options': {}}, {'entity': 'image.door', 'options': {'display': 'live'}}):
+            self.assertIsNone(of(question(Owner('tile', 9), Source('tile', '9')), tile), tile)
+        # A plugin tile's place set live: as the place's fit says.
+        place = Owner('plugin_tile', 6, 'plugin:door.view')
+        self.assertEqual(of(question(place, Source('camera', 'camera.porch'))), ('camera.porch', 'cover'))
+        for fit in ('contain', 'within', 'whole'):
+            self.assertEqual(of(question(place, Source('camera', 'camera.porch'), fit)), ('camera.porch', 'contain'), fit)
+        # Anything else streams not: a cover, a camera of a card.
+        self.assertIsNone(of(question(Owner('view'), Source('cover', 'media_player.spotify'))))
+        self.assertIsNone(of(question(Owner('card'), Source('camera', 'camera.porch'))))
 
 
 # ----- the links on the camera port (picture_links) -----

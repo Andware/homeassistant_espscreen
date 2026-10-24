@@ -26,7 +26,7 @@ from core import SCREENSAVER_MIN_FIRMWARE, media_extras, short, validate_layout 
 
 HAS_AIOHTTP = importlib.util.find_spec('aiohttp') is not None
 if HAS_AIOHTTP:
-    import picture_links
+    import lan_address
     import picture_sources
     from server import Manager
 
@@ -474,15 +474,15 @@ class TheApp(unittest.IsolatedAsyncioTestCase):
 
             async def base_url(request, *args, **kwargs):
                 return 'http://addon:8098'
-            original = picture_links.base_url
-            picture_links.base_url = base_url
+            original = lan_address.base_url
+            lan_address.base_url = base_url
             try:
                 ha.changed.clear()
                 ha.request = None
                 screen['online'] = True
                 await m.answer_camera({'inbox': 'text.d1_tiles', 'saver': 'media', 'entity': PLAYER})
             finally:
-                picture_links.base_url = original
+                lan_address.base_url = original
             self.assertEqual(answers[-1]['u'], '')
             self.assertTrue(ha.changed.is_set(), 'a pass right away')
             self.assertTrue(m.snapshots.cover_broken(PLAYER))
