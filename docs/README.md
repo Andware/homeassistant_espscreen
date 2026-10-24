@@ -71,6 +71,8 @@
 - [FLASH_LAYOUT.md](FLASH_LAYOUT.md): the partition table of a board with 4 MB of flash, and how a screen gets it
   without losing its settings (the technical side of UPDATING_4MB_SCREENS.md).
 - [CAMERA.md](CAMERA.md): camera pictures and album covers, from Home Assistant to the screen.
+- [PICTURE_ARCHITECTURE.md](PICTURE_ARCHITECTURE.md): the building blocks under pictures and cameras in the firmware,
+  the app and the Screen camera plugin, their seams, and the layers they are moved into (a design with its recipe).
 - [DOORBELL.md](DOORBELL.md): a doorbell's ring from an automation, its camera live with sound on the P4 screens, and
   the Events page's wizards that add such automations to Home Assistant.
 - [MAP.md](MAP.md): the map card, drawn by the add-on and sent as a picture.

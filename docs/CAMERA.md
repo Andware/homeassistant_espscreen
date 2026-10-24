@@ -524,6 +524,8 @@ microphone listens only while someone watches, and the voice assistant can liste
 
 ## For developers
 
+- The layers under all of this, on the screen, in the app and in the Screen camera plugin, and where the code is still
+  being moved into them: docs/PICTURE_ARCHITECTURE.md.
 - The app's side is one picture system, docs/PICTURES.md: `picture_question.py` (the question and its answer),
   `picture_legacy.py` (an older screen's fields read as the same question), `picture_sources.py` (what each address
   is, fetched once per camera and checked against the layout), `picture_paint.py` (sizing, cutting, the shade and the

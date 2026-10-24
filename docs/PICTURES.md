@@ -10,7 +10,8 @@ one service in ESP Screen Manager:
 | **Capture** | the screen to Home Assistant | the screen's own camera, as an ESPHome camera | not on the glass | a board whose files name a camera sensor (`camera_sensor`) |
 
 docs/CAMERA.md says what a person sees of cameras on a screen; docs/PLUGINS.md what a plugin may do with pictures.
-This file is the design every one of them follows.
+This file is the design every one of them follows; docs/PICTURE_ARCHITECTURE.md is the code under it, the layers it is
+built in and the seams between them.
 
 ## The words
 
