@@ -400,7 +400,9 @@ frees the new block whole and logs `H_SDIO_DRV: task still writing Rx data to qu
 open); an answer in that block never arrives, and the main loop waits the full 5 seconds for nothing. So every P4
 board runs the task watchdog at 20 seconds (`packages/hardware/esp32p4-c6.yaml`): a lost answer is a failed call,
 logged by ESPHome as the Wi-Fi taking long, and the screen goes on. While it waits, LVGL stands still: a standby or
-a wake under that load comes 5 seconds late. A screen whose main loop truly hangs restarts after 20 seconds.
+a wake under that load comes 5 seconds late. A screen whose main loop truly hangs restarts after 20 seconds. The most
+frequent of those questions was the top bar's: its Wi-Fi item read the signal at every draw, about once a second, so
+`wifi_status::link()` now asks it at most every five seconds (`wifi_status::Signal`) and remembers it in between.
 
 **One writer on the glass at a time.** LVGL holds the glass for the whole of each refresh (from `LV_EVENT_REFR_START`
 to `LV_EVENT_REFR_READY`: deciding what to draw, drawing it, flushing it to the panel) and a stream's task holds it for
