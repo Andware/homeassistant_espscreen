@@ -64,8 +64,8 @@ its chip, its panel or its sensor, and the layers below are keyed on those facts
 |---|---|---|
 | `components/esp_video_camera/` | a copy of the ESP32-P4 camera driver of ESPHome pull request 16944 (its NOTICE lists the copy's own changes): esp_video (V4L2) brought up with the sensors it auto-detects, the capture task, the mode negotiated as a string (`resolution`), an optional PPA transform (a turn, a scale down) for the JPEG path, the hardware JPEG encoder, two taps (`RawVideoFrameConsumer`, `JpegFrameConsumer`, one of each), ESPHome's camera API for Home Assistant's stills and streams, the sensor's exposure read for a consumer | MIPI-CSI, ISP, PPA, JPEG encoder |
 | `components/sc202cs/`, `components/ov02c10/` | a sensor's black level, a sensor driver and its tuning that esp_cam_sensor lacks | I2C, the driver's own section |
-| `components/screen_camera/` | the plugin: light level and motion from the frames on the camera's task, the dot (`tessera::capturing`), wake on motion; `take_frames_from_video` | the camera's task |
-| `components/screen_video/` | the camera's one raw consumer when the part Video is on: a cut to whole macroblocks by the PPA, the H.264 encoder, the RTSP server with its viewers, RTP and RTCP, the microphone as Opus, the memory rules | PPA, H.264 encoder, sockets, microphone |
+| `components/screen_camera/` | the plugin: light level and motion from the frames on the camera's task, the dot (`tessera::capturing`), wake on motion; the frame hub every consumer takes the camera's frames from (`frame_hub.h`), the reader of a frame (`frame_reader.h`, `tests/test_frame_reader.cpp`) and the sensors the camera finds by itself (`sensors.py`) (step 9, done) | the camera's task |
+| `components/screen_video/` | the part Video, one of the hub's consumers: a cut to whole macroblocks by the PPA and the H.264 encoder (`video_encoder.cpp`), the RTSP server with its viewers, RTP and RTCP (`rtsp_server.cpp`), the microphone as Opus (`opus_sound.cpp`), the memory rules (step 9, done) | PPA, H.264 encoder, sockets, microphone |
 | `components/esp_h264_placeholder/` | an empty encoder for a build without the video | the build |
 | `plugin.yaml`, `parts/video.yaml` | the camera in its JPEG mode, or in its raw mode with the video | |
 
@@ -466,6 +466,23 @@ tests split along the modules (`tests/test_camera_source.py`, `tests/test_live_p
   requests, RTP and RTCP) and the sound (`opus_sound`: the microphone, the encoder, the clock), three files under
   `screen_video/` with one component and one YAML key as today.
 - **The pipeline** stays `device: jpeg` or `device: csi` by the part's YAML in this round (section 6 says why).
+
+As built (step 9, Screen camera 0.4.3): the frame hub (`screen_camera/frame_hub.h`) is the camera's one raw consumer;
+the video adds itself in its setup with the encoder's YUV420 and is on from boot, sensing adds itself in its own setup
+reading either layout and is on while the setting is, and the hub starts the camera when the first consumer is on and
+stops it when none is, so the camera runs exactly as it did. Each consumer keeps its own pace. The sensors esp_cam_sensor
+drives, and the SC202CS's tuning, are the rows of `screen_camera/sensors.py`, applied by that component with the same
+Kconfig options and build file the copy set; the copy's NOTICE says so. The video's one class keeps its header and has
+its code in three files by concern beside its life (`screen_video.cpp`). The plugin's rules raise its version with every
+change and a changelog line under that version (its `tools/check.py` refuses an Unreleased heading), so this is 0.4.3.
+
+The mode chooser is not built. esp_video 2.4 answers `VIDIOC_ENUM_FRAMESIZES` on the MIPI-CSI device with one entry,
+the size the sensor runs at now (`common_video_enum_framesizes`, index 0 only), not the sensor's table, and the mode a
+sensor starts in is esp_cam_sensor's own default (a Kconfig choice for the SC202CS, the first row of the OV02C10's
+table). Choosing by capability needs the sensor's format array (`esp_cam_sensor_query_format`, which esp_video does not
+hand out through V4L2) and `VIDIOC_S_SENSOR_FMT` to switch the sensor and the ISP before the stream starts: a change in
+how the camera comes up, to be measured with both sensors on real glass (the OV02C10 on a Guition 10.1, the SC202CS on a
+D1001), in a round of its own.
 
 What each may and may not know: a sensor driver knows I2C and its registers, never a consumer; the camera source knows
 esp_video, the PPA for its own transform and the modes, never who watches; the hub knows frames and consumers, never
