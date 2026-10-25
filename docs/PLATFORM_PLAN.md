@@ -173,7 +173,12 @@ only the one under it:
 
 What this needs beyond 3.1 to 3.4: a `parts/` directory with the codecs and sensors the boards use today (five audio
 parts, three camera sensors, the panel drivers), each board file rewritten to declarations only, and a Python test
-that reads every board file and fails on anything but substitutions and includes. `PROFILES.md` describes the
+that reads every board file and fails on anything but substitutions and includes. That test is a ratchet: it lists,
+per top-level key a board file may still hold, the boards that hold it (`display: [tab5, wavesharep4, ...]`), fails on a
+key or a board that is not listed, prints what is left when it passes, and a key leaves the list once its boards are
+empty. Audio and the camera become parts first, with the Tab5 and the Waveshare set as the proof that a board builds to
+the same sdkconfig and components from declarations; the panels and touch come last, because their files carry each
+board's LVGL settings today and move only once those settings have a part of their own. `PROFILES.md` describes the
 layering; it gains the part layer and the rule "declare below, resolve above". `ADDING_A_BOARD.md` then says: name the
 parts, give the pins, done.
 
