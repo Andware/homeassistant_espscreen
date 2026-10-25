@@ -244,6 +244,12 @@ The add-on knows every room it serves. Two rules it gains, both in `live_picture
 
 Done when: five tiles on a D1001 stream within the budget and `heap_watch` logs no failed allocation over an hour.
 
+Open, for the add-on: a camera's source that falls far behind. On 2026-10-25 at 14:23 camera.max fell up to 10 s
+behind ("Live camera.max video: 1.09 s behind the camera on average, 9.88 s at most"); its two live tiles on the D1001
+went quiet, and the add-on answered their next streams 503 while the source connected again ("first WebRTC frame
+9.9 s"). The screen did as it should (stills at the tile's pace). Whether the add-on should cut a source that falls
+that far behind and start it again, and why WebRTC took ten seconds to give its first frame, is to be seen.
+
 ### 4.3 A memory governor
 
 `heap_watch` sees the internal low-water mark every 250 ms. Instead of logging alone, it offers one action: when the
@@ -295,6 +301,25 @@ without `roomy` asking. ESPHome hard-codes `SPIRAM_USE_CAPS_ALLOC` in its psram 
 upstream option or a sdkconfig override that the build verifies; the soak of 4.4 is the measure, LVGL's draw times the
 risk. If it holds, `roomy` becomes a thin name for "large and read by the screen alone" rather than the only road to
 PSRAM.
+
+### 4.6 The whole field of view, binned in the sensor (later, after the sensing steps)
+
+Max wants a screen's own camera to show all it sees, not its middle. Scaling a larger mode down on the P4 is not the
+way: the PPA is one device for the video and the live tiles, and a forced pass of 1280 x 720 into 960 x 528 beside two
+live tiles took 77 to 89 ms a frame, the video fell from 12-13 to 7-9 fps and the tiles from 12-14 to 6-9 pictures a
+second (CAMERA.md, "What travels"; PICTURE_ARCHITECTURE.md 2.4). A sensor that bins 2 x 2 itself gives the whole field
+in fewer bytes than today, so the bus, the ISP and the PPA get it for free. It is the one way that costs them nothing.
+
+- The board file names the sensor and how it is mounted, nothing more.
+- The sensor's driver (the part: the OV02C10 in the screen camera plugin, the SC202CS through esp_cam_sensor) gains a
+  binned mode, the OV02C10's about 964 x 544 over the whole field. It is register work: the Linux driver has no such
+  mode. Checked on the glass with a ruler for the field and a colour chart for the Bayer phase.
+- The FrameHub picks the mode from what is wanted of the camera, as it picks the frame rate.
+- `hw::caps()` names the modes a screen's camera has.
+- One setting per screen, "Field of view: whole / sharp", whole by default once a binned mode exists; the editor shows
+  the choice and nothing else.
+
+The sender of TR-YVP7YV, who also runs a Guition 10.1 and asked for its whole field of view (via Max, 2026-10-25), is the first to try it on an OV02C10, before it is anyone's default.
 
 ## 5. The doorbell's talk-back, prepared
 
