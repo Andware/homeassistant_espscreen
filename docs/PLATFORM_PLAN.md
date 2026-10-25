@@ -336,6 +336,15 @@ an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black l
 - What came for free: an output in whole macroblocks (800 x 592) is encoded without the PPA's cut (0.0 ms, against
   47.8 ms a frame for 800 x 600), at 12 fps, and the encoder holds 65 KB of internal RAM instead of 103 KB.
 
+- The nearest relative with a binned mode is the SC2355 (chip id 0xeb2c, the same 1/5" 1600 x 1200 family):
+  Rockchip's `drivers/media/i2c/sc2355.c` (rockchip-linux/kernel, develop-5.10) has
+  `sc2355_1lane_10bit_360Mbps_800x600_30fps_regs`, 29 registers apart from its 1600 x 1200 table: 0x301f 0x0c, 0x303f
+  0x82, the output size, offsets 2, 0x3215 0x31, 0x3220 0x01, 0x5000 0x46, 0x5900 0xf1, 0x5901 0x04, its PLL and MIPI
+  timing (0x36eb, 0x36ed, 0x4819-0x4829), 0x3904 and the exposure. It is a monochrome sensor (Y10), so its column
+  merging need not keep a Bayer pattern. On the SC202CS, with our own PLL and timing: with 0x301f 0x0c and 0x303f
+  0x82 the sensor sends no frame at all (DQBUF timed out, recovery exhausted); without them, 0x3220 0x01 with the
+  0x59xx block gives comb edges and the left 800 columns again.
+
 Where it stands: the whole field on the SC202CS needs the columns halved in the sensor, and that register is not
 known without SmartSens' datasheet. Halving them on the PPA instead (a full-width 1600 x 592) is the pass that cost
 the video and the tiles half their pictures. The registers above are all the test wrote beyond esp_cam_sensor's
