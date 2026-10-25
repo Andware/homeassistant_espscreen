@@ -78,7 +78,9 @@ namespace tessera {
 // 0.18: popups (show_popup, close_popup, popup_shown, Popup): the alert's card in the middle of the glass with what the
 // plugin draws in it, as high as that, over everything but an alert, for a voice assistant that listens, thinks and
 // answers; and ui::animate and ui::still, a part of it that pulses, spins or ripples while something goes on.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 18;
+// 0.19: camera_turn(), how far a plugin that drives the screen's own camera turns its picture to stand upright: the
+// board's mounting of the sensor and the screen turned half way round.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 19;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -565,6 +567,12 @@ enum class Capture : uint8_t { CAMERA };
 // Assistant taking pictures or a stream of the camera (`ts_camera`, the feature `camera`) the core sees by itself; what a
 // plugin does on the screen it must say here. Call it from the plugin's own calls (the screen's loop).
 void capturing(const Plugin *plugin, Capture what, bool on);
+// How far the screen's own camera turns its picture to stand upright (0.19), 0 or 180: half way round when the board
+// mounts its sensor upside down against the glass (its CAMERA_ORIENTATION), and half way again while the screen is
+// turned half way round from lying down. A quarter turn (a screen stood up) changes nothing; the picture stays lying
+// down. Read it now and then from the plugin's own calls (it follows the screen's rotation, which the app changes
+// without a build) and turn the sensor's picture by it, so every picture of the camera stands the same way.
+int camera_turn();
 // A Home Assistant action on an entity, as a tile's tap sends it: action("light.toggle", entity), or with one field
 // (action("climate.set_temperature", entity, "temperature", "21")). The screen must be allowed to perform actions.
 // The plugin's manifest names every action it calls under permissions.home_assistant_actions so that a person can read

@@ -502,6 +502,14 @@ camera on average but in bursts of 1.5 to 3 s behind now and then (a reTerminal 
 "behind the camera" line), where another camera through Home Assistant stays within 0.3 s. Likely the wait for a key
 frame or the encoder on the screen while it streams two tiles; not looked into yet.
 
+**Which way up.** The camera turns its picture upright by itself (plugin API 0.19, `camera_turn.h`): half way round
+on a board whose sensor sits upside down against the glass (the board file's `CAMERA_ORIENTATION: "180"`, the Tab5),
+and half way again while the screen is turned half way round from lying down. The sensor turns its own readout
+(Screen camera's `FrameHub::turn`, its flip and mirror), so the pictures, the video and the light level and motion all
+stand the same way, at no cost. A screen stood up (a quarter turn) keeps the picture lying down, as the sensor sees the
+room: a quarter turn of the picture is not built. For a screen mounted the other way round from how its board is built,
+the plugin's setting **Camera upside down** turns it half way on top.
+
 **Setting it up.** Add the plugin Screen camera to the screen; its part **Video** is on when it is added (the plugin's
 details, on the screen's Plugins tab, turn it off). Then, once for the whole home, open **Settings, Video in Home
 Assistant** in Tessera, press **Install in Home Assistant** and then **Restart Home Assistant**. From then on Tessera
@@ -537,7 +545,13 @@ microphone listens only while someone watches, and the voice assistant can liste
   chip. So on every P4 the network's buffers go to PSRAM first (`CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP`, the option
   ESPHome's `wifi: use_psram` sets), and the video skips frames while less than 80 KB is free, starting again with a
   key frame above 110 KB.
-- The encoder keeps its reference frame in internal RAM. It is made once, at the camera's first frame, on the camera's
+- The encoder keeps its reference frame in internal RAM: a strip of three rows of macroblocks across the picture (92 KB
+  at 1280 wide, esp_h264 1.3.8), most of the 104 KB. In PSRAM it would free that, and its DMA reaches PSRAM, but its
+  traffic then shares the memory bus with the panel's frame buffer: on a reTerminal D1001 with two live camera tiles
+  and three viewers of the video (2026-10-25), the panel ran dry 39 to 53 times within a minute (blue frames over the
+  live tiles; 0 with the strip inside) and laying out a live picture went from 60 to 78 ms, for 100 KB more internal
+  RAM free. So it stays inside: PSRAM is one bus with the panel (docs/PLATFORM_PLAN.md, 4.4a). The video's line every minute gives the encoder's time a frame (48 to 50 ms there, at
+  12 to 13 fps) and what it holds of internal RAM. It is made once, at the camera's first frame, on the camera's
   own task, with the camera started at boot. Made when someone starts watching, after the pages were built, there was
   no memory left for it. Made in `setup()`, before the camera driver ran, the first frame hung the whole chip.
 - An encoder whose output did not fit stays stuck, so its output buffer holds 1 MB (a key frame of a dark room is over

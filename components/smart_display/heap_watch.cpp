@@ -1,6 +1,7 @@
 // What asks the internal RAM for room (heap_watch.h says why): the lowest since boot and the allocations that failed,
 // kept across a reset and logged with the config dump.
 #include "heap_watch.h"
+#include "glass.h"
 #include "esphome/core/defines.h"
 #ifdef USE_ESP32
 #include <cstring>
@@ -97,8 +98,11 @@ void tick(uint32_t now) {
              (unsigned) internal_free());
   if (now - counted_at >= COUNT_MS) {
     counted_at = now;
-    ESP_LOGI(TAG, "%u tasks; internal RAM %u bytes free (%u at the lowest), PSRAM %u free", (unsigned) uxTaskGetNumberOfTasks(),
-             (unsigned) internal_free(), (unsigned) record.lowest, (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    // The panel's dry runs beside the memory: PSRAM is one bus with the panel's frame buffer, and a buffer moved there
+    // can starve the panel (blue frames), which every measurement of memory should see (docs/CAMERA.md).
+    ESP_LOGI(TAG, "%u tasks; internal RAM %u bytes free (%u at the lowest), PSRAM %u free; the panel ran dry %u times since boot",
+             (unsigned) uxTaskGetNumberOfTasks(), (unsigned) internal_free(), (unsigned) record.lowest,
+             (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM), (unsigned) glass::misses());
   }
   const uint32_t failures = record.failures;
   if (failures != logged_failures) {

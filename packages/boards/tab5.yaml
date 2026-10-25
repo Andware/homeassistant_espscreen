@@ -75,6 +75,9 @@ substitutions:
   # (switch below). A camera plugin drives it (screen_camera).
   CAMERA_I2C: tab5_bus
   CAMERA_XCLK_PIN: "36"
+  # The sensor sits upside down against the glass: lying down as built, Home Assistant showed its picture on its head
+  # (a tester's report, 2026-10-25). The camera turns it upright (camera_turn.h).
+  CAMERA_ORIENTATION: "180"
 
 # ============================================================
 # No need to edit below this line.

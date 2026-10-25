@@ -13,6 +13,8 @@
 #include "touch_feedback_lvgl.h"
 #include "plugin_action.h"
 #include "capture_dot.h"
+#include "camera_turn.h"
+#include "glass.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -427,6 +429,13 @@ void wake(const Plugin *plugin) {
 void capturing(const Plugin *plugin, Capture what, bool on) {
   if (what != Capture::CAMERA || !plugin) return;
   capture_dot::capturing(plugin, on);
+}
+
+int camera_turn() {
+#ifndef SCREEN_CAMERA_ORIENTATION
+#define SCREEN_CAMERA_ORIENTATION 0
+#endif
+  return camera_turn::degrees(SCREEN_CAMERA_ORIENTATION, glass::turn(), rt::landscape_turn);
 }
 
 namespace ui {

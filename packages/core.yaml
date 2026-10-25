@@ -50,6 +50,9 @@ substitutions:
   ROTATION_LANDSCAPE: "0"                          # the LVGL angle that lays the panel out lying down
   LVGL_ROTATION: "${ROTATION_LANDSCAPE}"           # which way it is built to hang (New screen writes it for one standing
                                                    # up); the editor turns it later without a build (runtime_tiles::hang)
+  # How the camera's sensor sits against the glass: 0 as the glass, 180 upside down (the Tab5). Only those two; the
+  # camera turns its picture upright from this and the screen's rotation (camera_turn.h, plugin API 0.19).
+  CAMERA_ORIENTATION: "0"
   TOUCH_SWAP_XY: "false"                           # the touch panel's axes against the display's own pixels
   TOUCH_MIRROR_X: "false"
   TOUCH_MIRROR_Y: "false"
@@ -2706,6 +2709,7 @@ script:
 # (components/smart_display).
 smart_display:
   language: ${LANGUAGE}
+  camera_orientation: ${CAMERA_ORIENTATION}
 
 # HA blueprint transport; never publishes the JSON command as an HA state.
 text:

@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.18 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.19 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -233,6 +233,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | Entities chosen per tile (0.15) | nothing new: the tile reads `x.entities.<option id>` (state, name, attributes, updated) from its data | an option of kind `entity` (`plugin_manifest.check_option`, `option_value`); `Plugins.tile_message` puts each chosen entity's `state_part` under `entities`, `related_entities` follows them | the tile's inspector: a searchable entity picker per option (`PluginOptions.vue`) |
 | A screensaver (0.14) | `Saver`, `add_saver(id, step, make)`, `SaverContext`; `ui::takes_taps` (only for `taps: true`, `Plugin::set_taps`); `wish()`; `drift()`; "A screensaver" below | the manifest's `savers`; `Plugins.saver_kinds`, `saver_plugins`, `saver_step`, `refresh_savers`; `screen_saver.message`'s `pf`; `answer_plugin_pictures` with `question.saver` and `saver:picture` | the Screensaver card: a face per step, a step of its own in the order, its options |
 | A popup (0.18) | `Popup`, `show_popup`, `close_popup`, `popup_shown`, `PopupWidth`; `ui::animate` with `Motion` and `ui::still`; `plugin_host` "A plugin's popup"; "A popup" below | nothing | nothing |
+| The camera's turn (0.19) | `tessera::camera_turn()`: `camera_turn.h` from the board's `CAMERA_ORIENTATION` (`smart_display: camera_orientation`, 0 or 180), `glass::turn` and `runtime_tiles::landscape_turn` | nothing | nothing |
 | A board's own hardware | the plugin's `plugin.yaml` (audio codecs, a relay), its `boards` in the manifest | offered only to the screens of those boards | the Plugins page says which boards |
 
 ## Touch feedback

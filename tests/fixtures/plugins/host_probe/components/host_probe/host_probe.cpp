@@ -428,6 +428,11 @@ void HostProbe::on_message(JsonObjectConst message) {
     tessera::wake(this);
     return;
   }
+  // {"do": "camera_turn"}: how far the screen's camera turns its picture (plugin API 0.19), 0 on a board without one.
+  if (std::string(what) == "camera_turn") {
+    ESP_LOGI(TAG, "camera_turn=%d", tessera::camera_turn());
+    return;
+  }
   // {"do": "popup"} (or "popup_self", one that closes itself on a tap), {"do": "popup_close"}: plugin API 0.18.
   if (std::string(what) == "popup" || std::string(what) == "popup_self") {
     ProbePopup::plugin = this;

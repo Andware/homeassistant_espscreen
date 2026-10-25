@@ -28,11 +28,23 @@ def _language(value):
 
 
 CONF_FLASH_MB = "flash_mb"
+CONF_CAMERA_ORIENTATION = "camera_orientation"
+
+
+def _camera_orientation(value):
+    """How the board mounts its camera's sensor against the glass (CAMERA_ORIENTATION): as the glass, or upside down."""
+    value = cv.int_(value)
+    if value not in (0, 180):
+        raise cv.Invalid(f"CAMERA_ORIENTATION {value}: only 0 and 180 are supported; a sensor turned a quarter against "
+                         f"the glass is not (camera_turn.h)")
+    return value
+
 
 CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_LANGUAGE, default="en"): _language,
     # The flash a host build stands in for (tools/render/host.py), which has no esp32 block to read it from.
     cv.Optional(CONF_FLASH_MB): cv.positive_int,
+    cv.Optional(CONF_CAMERA_ORIENTATION, default=0): _camera_orientation,
 })
 
 
@@ -43,6 +55,7 @@ DIAGNOSTIC_WRAPS = ("panic_abort",)
 
 async def to_code(config):
     wanted = config[CONF_LANGUAGE]
+    cg.add_define("SCREEN_CAMERA_ORIENTATION", config[CONF_CAMERA_ORIENTATION])
     language, code = screen_text_gen.definitions(wanted)
     if language != wanted:
         # ESP Screens only writes languages it has; a hand-written one it lacks builds in the nearest it does have.
@@ -137,7 +150,7 @@ async def _p4(config):
 # The plugin API this core offers: plugin_api.h's PLUGIN_API_MAJOR/MINOR and the add-on's plugin_manifest.PLUGIN_API
 # (a test keeps the three equal). A plugin builds on the same major from its own minor up, unless a minor between its
 # own and this one changed a name while the major is 0 (PLUGIN_API_BREAKS, the same as plugin_manifest.py's).
-PLUGIN_API = (0, 18)
+PLUGIN_API = (0, 19)
 PLUGIN_API_BREAKS = {0: (4,)}
 PLUGIN_MANIFEST = "tessera-plugin.yaml"
 

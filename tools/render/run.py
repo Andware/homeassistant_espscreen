@@ -1130,6 +1130,11 @@ class Run:
             start = len(self.lines)
             await self.send({'v': 2, 'op': 'plugin', 'p': 'host_probe', 'm': {'do': 'wake'}})
             await self.until(lambda l: 'Wake from plugin host_probe, screen on' in l, 10, 'tessera::wake on a lit screen', start)
+            # How far the camera turns its picture (tessera::camera_turn, plugin API 0.19): 0 on a board that mounts no
+            # camera upside down, lying down as built.
+            start = len(self.lines)
+            await self.send({'v': 2, 'op': 'plugin', 'p': 'host_probe', 'm': {'do': 'camera_turn'}})
+            await self.until(lambda l: probe(l, 'camera_turn=0'), 10, 'tessera::camera_turn on a board lying down', start)
         await self.call('render_page', page=0)
         await self.page_done(0)
         # A card that closes itself, or opens another in its place, from inside one of its own calls (the probe's
