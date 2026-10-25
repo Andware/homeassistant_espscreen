@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A doorbell ring could restart a busy screen.** The chime, 60 KB, was made at the first ring in the chip's own memory, and a screen with many plugins and pages had no free block that large left (an M5Stack Tab5 with nine plugins and six pages). It is made in PSRAM now.
+
 - **A camera with sound no longer turns into loud noise after a hiccup in its stream.** A change on dev of 2026-10-25 (never in a release) left the screen's sound buffer one byte short of an even size. When it ran full, a part went in cut to the room left, an odd number of bytes, and every sample after it was a byte off: seconds of full-scale noise, until it came right by chance. The buffer is even again, and a part goes in whole or not at all.
 
 - **The editor says which live cameras wait their turn.** A screen streams four live camera tiles at once; on a page with more, the editor marks the others "Live paused" and the tile's settings say that this screen plays four cameras live at once while the others show a picture every 15 seconds, and that with two cameras each one runs more smoothly than with four. The number comes from the screen itself.

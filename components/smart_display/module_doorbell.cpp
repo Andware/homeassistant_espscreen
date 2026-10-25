@@ -25,6 +25,7 @@
 #include "settings_screen.h"
 #ifdef USE_SPEAKER
 #include "plugin_sound.h"
+#include "roomy.h"
 #endif
 
 namespace runtime_tiles {
@@ -71,7 +72,10 @@ void touch() {
 esphome::speaker::Speaker *speaker = nullptr;
 tessera::SoundPlayer player;
 tessera::Sound chime_sound;
-std::vector<int16_t> chime_samples;
+// In PSRAM (roomy.h): 60 KB, made at the first ring, when a full screen may have no block that large inside the chip. A
+// plain vector there aborted a Tab5 with nine plugins and six pages at its first ring (TR-YVP7YV, 2026-10-25). Only the
+// sound player reads it, through the speaker's copy.
+roomy::List<int16_t> chime_samples;
 
 void make_chime() {
   constexpr int RATE = 16000;
