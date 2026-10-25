@@ -109,7 +109,8 @@ ready Bambu Studio print profile and no supports needed.
   round base with a dock, tilted 30 degrees. Two printed rails hold the screen by its VESA holes, with four M4 x 8 mm
   screws. The ESP32-P4 inside plays your cameras live and talks to Assist.
 - **[Wedge stand](https://makerworld.com/en/models/3410079)** for the Guition 4" ESP32-S3-4848S040: a calm wedge that
-  holds the square screen at a comfortable angle. Push the screen in, no screws.
+  holds the square screen at a comfortable angle. Take the small back plate off the screen first (two tiny screws on
+  its back), then push it in.
 - **[Upright stand](https://makerworld.com/en/models/3389654)** for the same Guition 4": the first Tessera stand, with a
   small heart in its speaker grille. Push the screen in, no screws.
 
