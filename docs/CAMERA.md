@@ -519,7 +519,12 @@ turned off. Nobody types a password or an address.
 **What travels.** The camera hands its frames to the ESP32-P4's hardware H.264 encoder at the camera's own size, at
 15 frames a second, 1 Mbit/s, a key frame every second. The encoder wants whole macroblocks of 16 pixels, so a camera
 whose size is not (the Guition screens' OV02C10 gives 1288 x 728) has the edge of its frames cut off on the way, by
-the P4's pixel engine: the middle, 1280 x 720. The encoder keeps its reference frame in internal RAM and that grows
+the P4's pixel engine: the middle, 1280 x 720. The whole of a larger mode, scaled down in the same pass, was measured
+and left out (a reTerminal D1001, 2026-10-25, a forced pass of its 1280 x 720 into 960 x 528 beside two live tiles and
+three viewers): the panel never ran dry, but the pass took 77 to 89 ms a frame, the video fell from 12-13 to 7-9 fps,
+and the live tiles from 12-14 to 6-9 pictures a second with laying out a picture going from 60 to 92-137 ms. The PPA
+is one device that the video and the tiles share (PICTURE_ARCHITECTURE.md, section 2.4, has what its driver allows), so
+the Guition shows the middle of its camera. The encoder keeps its reference frame in internal RAM and that grows
 with the size, so the video takes no camera above 1280 x 800; a sensor whose modes are all larger gets a smaller one
 in the part's YAML (`esp_video_camera: resolution`), never in a board file. The microphone goes as Opus, 16 kHz in one channel at 32 kbit/s. A small
 RTSP server on the screen (port 8554, RTP over the RTSP connection) serves up to three viewers from the one encoder.
