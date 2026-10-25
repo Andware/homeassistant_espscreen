@@ -2,10 +2,14 @@
 // A task whose stack lies in PSRAM, ended by the main loop. A FreeRTOS task's stack is internal RAM unless it asks
 // otherwise, and the stream and download tasks of a screen (live_view.cpp, picture_fetch.cpp) asked nothing: 6 KB each,
 // beside the Wi-Fi link's buffers that run a P4 short of internal RAM (heap_watch.h). PSRAM does for them, as it does
-// for Screen camera's video server (CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM), on two conditions:
-// - such a task never writes the flash itself (NVS, OTA, spi_flash): while the flash cache is off the PSRAM is out of
-//   reach, and its own stack with it (ESP-IDF, "Support for External RAM", restrictions). The streams and downloads only
-//   read sockets, decode and log; anything that keeps a setting goes through the main loop.
+// for Screen camera's video server. ESP-IDF allows a stack there on every chip but the ESP32
+// (CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM defaults to y elsewhere; without it xPortcheckValidStackMem would assert),
+// on two conditions:
+// - such a task never writes the flash itself (NVS, OTA, spi_flash): where the flash cache is turned off for a write the
+//   PSRAM is out of reach, and its own stack with it (ESP-IDF, "Support for External RAM", restrictions). The P4 screens
+//   execute from PSRAM (CONFIG_SPIRAM_XIP_FROM_PSRAM), which keeps it in reach while the flash is written, so on them
+//   this is a precaution; the streams and downloads only read sockets, decode and log, and anything that keeps a
+//   setting goes through the main loop.
 // - it is not deleted from itself: ESP-IDF's vTaskDeleteWithCaps(NULL) makes a cleanup task for it and aborts when there
 //   is no room for one, which is when internal RAM runs short (freertos/esp_additions/idf_additions.c).
 // So the task says it is done and suspends itself (finish), and the main loop deletes it (reap): vTaskDeleteWithCaps

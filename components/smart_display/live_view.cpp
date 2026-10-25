@@ -81,9 +81,10 @@ struct Stream {
   // Its storage in PSRAM, its control (with the spinlock its critical sections take) inside the chip: made static over
   // memory of the stream's own (sound_control, sound_storage), never with xStreamBufferCreateWithCaps. ESP-IDF 5.5.5's
   // vStreamBufferDeleteWithCaps deletes a stream buffer as a queue (vSemaphoreDelete), reads a byte past the control
-  // as the queue's "statically allocated" flag and, when that byte is 0, frees the control twice: a restart (tlsf_free,
-  // "block already marked as free") at the close of a camera with sound, now and then (reTerminal D1001, 2026-10-25;
-  // idf_additions.c, fixed on ESP-IDF's master as vStreamBufferDelete).
+  // as the queue's "statically allocated" flag and, when that byte is 0, frees the control twice (espressif/esp-idf
+  // #18855, on release/v5.5 after 5.5.5). A test build that moved this buffer to PSRAM with the WithCaps pair restarted
+  // a reTerminal D1001 that way at the close of a camera with sound (2026-10-25, tlsf_free "block already marked as
+  // free"); no release ever built it so, the buffer was an ordinary xStreamBufferCreate before.
   StreamBufferHandle_t sound = nullptr;
   StaticStreamBuffer_t *sound_control = nullptr;
   uint8_t *sound_storage = nullptr;

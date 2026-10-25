@@ -1,7 +1,6 @@
 ## Unreleased
 
 - **An ESP32-P4 screen keeps more of its internal RAM free with live cameras and the screen's own video.** The Wi-Fi chip's driver now keeps its packet buffers in PSRAM, and the tasks that stream a camera or download a picture keep their stacks there. With two live camera tiles and the video playing, a reTerminal D1001 stays at about 175 KB of internal RAM free (it fell to 60 KB before), with no allocation that found no room in hours of testing and the same frame rates.
-- **A screen no longer restarts now and then as a camera with sound closes.** ESP-IDF 5.5.5 frees one kind of buffer twice when it deletes it (fixed in later ESP-IDF); the camera's sound no longer uses that kind.
 - **A picture's download had almost no stack left.** Since the screen decodes JPEG pictures itself, a download used nearly all of its 6 KB of stack; it has 10 KB now, at no cost of internal RAM.
 - **A restart after an abort says which.** A failed assert or an abort now leaves what it said and who called it, and the next boot logs it; the troubleshooting report keeps it with the crash (docs/REPORTS.md).
 
