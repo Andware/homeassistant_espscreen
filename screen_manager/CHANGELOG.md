@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **The M5Stack Tab5 gets what the other P4 screens got.** Its hardware file kept a copy of its own of the chip's settings and so missed the longer task watchdog and the Wi-Fi driver's buffers in PSRAM: a Tab5 with live cameras restarted every few minutes where the other P4 screens kept going. Every P4 screen now builds on one shared file, and a check keeps the next board on it.
+
 - **An ESP32-P4 screen keeps more of its internal RAM free with live cameras and the screen's own video.** The Wi-Fi chip's driver now keeps its packet buffers in PSRAM, and the tasks that stream a camera or download a picture keep their stacks there. With two live camera tiles and the video playing, a reTerminal D1001 stays at about 175 KB of internal RAM free (it fell to 60 KB before), with no allocation that found no room in hours of testing and the same frame rates.
 - **A picture's download had almost no stack left.** Since the screen decodes JPEG pictures itself, a download used nearly all of its 6 KB of stack; it has 10 KB now, at no cost of internal RAM.
 - **A restart after an abort says which.** A failed assert or an abort now leaves what it said and who called it, and the next boot logs it; the troubleshooting report keeps it with the crash (docs/REPORTS.md).
