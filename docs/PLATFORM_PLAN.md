@@ -321,6 +321,27 @@ in fewer bytes than today, so the bus, the ISP and the PPA get it for free. It i
 
 The sender of TR-YVP7YV, who also runs a Guition 10.1 and asked for its whole field of view (via Max, 2026-10-25), is the first to try it on an OV02C10, before it is anyone's default.
 
+**Step 0, the SC202CS, measured (2026-10-25, the home reTerminal D1001, a test build not committed).** We have no
+register map of the SC202CS, only its kinship with SmartSens' SC200AI, whose binned 960 x 540 mode is in Rockchip's
+driver; every SC202CS driver found (esp_cam_sensor 2.4.0, Ingenic, Sophgo, MediaTek) knows only 1600 x 1200 and crops of
+it. The test handed the sensor a format of its own through `VIDIOC_S_SENSOR_FMT` (`sc202cs_set_format` writes any table
+it gets, and esp_video takes the size from it), so nothing of esp_cam_sensor was patched: the 1600 x 1200 RAW8 table,
+an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black level.
+
+- Rows: 0x3215 = 0x31 halves them over the whole height, with the colours right (no cast); with 0x3220 = 0x01 as well
+  the picture looked calmer, as if the rows were averaged rather than skipped.
+- Columns: nothing found. 0x3214 = 0x31 (the column twin of 0x3215 on other sensors) changes nothing; the SC200AI's
+  0x3220 = 0x17 with 0x5000 = 0x46, 0x5900 = 0xf1, 0x5901 = 0x04 gives comb edges and still the left 800 columns at
+  full resolution. So the output was the left half of the field, squashed to half its height.
+- What came for free: an output in whole macroblocks (800 x 592) is encoded without the PPA's cut (0.0 ms, against
+  47.8 ms a frame for 800 x 600), at 12 fps, and the encoder holds 65 KB of internal RAM instead of 103 KB.
+
+Where it stands: the whole field on the SC202CS needs the columns halved in the sensor, and that register is not
+known without SmartSens' datasheet. Halving them on the PPA instead (a full-width 1600 x 592) is the pass that cost
+the video and the tiles half their pictures. The registers above are all the test wrote beyond esp_cam_sensor's
+1600 x 1200 RAW8 table. The OV02C10 (the Guition) is the other road: its binning bits are documented (0x3814/0x3815,
+0x3820/0x3821).
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community
