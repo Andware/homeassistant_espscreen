@@ -2444,7 +2444,9 @@
       "refresh": {
         "label": "Atualizar",
         "seconds": "A cada {n} s",
-        "live": "Ao vivo"
+        "live": "Ao vivo",
+        "paused": "Ao vivo em pausa",
+        "cap": "Este ecrã mostra {n} câmaras ao vivo de cada vez; as outras mostram uma imagem a cada 15 segundos."
       },
       "picture": {
         "fit": {

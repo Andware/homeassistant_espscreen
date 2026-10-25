@@ -2444,7 +2444,9 @@
       "refresh": {
         "label": "Frissítés",
         "seconds": "{n} mp-enként",
-        "live": "Élő"
+        "live": "Élő",
+        "paused": "Élő szünetel",
+        "cap": "Ez a képernyő egyszerre {n} kamerát mutat élőben; a többi 15 másodpercenként mutat egy képet."
       },
       "picture": {
         "fit": {

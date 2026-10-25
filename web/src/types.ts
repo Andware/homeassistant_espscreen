@@ -315,7 +315,12 @@ export type Screen = {
   /** Streams a camera live (a P4 whose hello says `live`, or such a board while it is offline): Live is a camera tile's
    * first and default pace there (app dev). */
   live_camera?: boolean;
+  /** What its hardware can do, from its last hello (firmware hw.h, docs/PLATFORM_PLAN.md 3.3): null until it said so. */
+  caps?: ScreenCaps | null;
 };
+// A screen's capability record (page_delivery.caps_of): `live_tiles`, the most live camera tiles it streams at once.
+export type ScreenCaps = { live: boolean; speaker: boolean; microphone: boolean; echo_cancel: boolean; camera: boolean;
+  live_tiles: number | null; psram_kb: number | null; internal_kb: number | null };
 export type ScreenShape = NonNullable<Screen["shape"]>;
 // Language & region of the screens (app 0.2.90): the language setting ("auto" follows Home Assistant), the language that
 // gives, Home Assistant's own, and every language there is, by its own name; the time and number format, each "auto"

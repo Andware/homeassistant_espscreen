@@ -2444,7 +2444,9 @@
       "refresh": {
         "label": "Auffrischen",
         "seconds": "Alle {n} s",
-        "live": "Live"
+        "live": "Live",
+        "paused": "Live pausiert",
+        "cap": "Dieser Bildschirm zeigt {n} Kameras gleichzeitig live; die anderen zeigen alle 15 Sekunden ein Bild."
       },
       "picture": {
         "fit": {

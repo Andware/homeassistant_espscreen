@@ -94,6 +94,14 @@ class AppSide(unittest.TestCase):
                          'cancellation, 28272 KB PSRAM, 519 KB internal RAM')
         self.assertEqual(page_delivery.caps_line(page_delivery.caps_of({'features': ['pictures']})), 'no echo cancellation')
 
+    def test_the_editor_gets_the_record(self):
+        # The inventory's screen carries it (server.py, caps_of_screen) and the editor marks a live camera beyond
+        # caps.live_tiles (web/src/model/live-tiles.ts, tests/live-tiles.spec.ts).
+        source = (ROOT / 'screen_manager' / 'app' / 'server.py').read_text()
+        self.assertIn("screen['caps'] = manager.caps_of_screen(screen)", source)
+        model = (ROOT / 'web' / 'src' / 'model' / 'live-tiles.ts').read_text()
+        self.assertIn('export function pausedLive(', model)
+
     def test_the_apps_503_is_a_safety_net(self):
         # A screen that reads its own record streams at most caps.live_tiles at once (runtime_tiles live_tiles_round), so
         # the app's 503 for a stream beyond them (live_stream.py) is never reached by such a firmware: it is the net for

@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **The editor says which live cameras wait their turn.** A screen streams four live camera tiles at once; on a page with more, the editor marks the others "Live paused" and the tile's settings say that this screen plays four cameras live at once while the others show a picture every 15 seconds. The number comes from the screen itself.
+
 - **A fifth live camera on a P4 page gets its picture.** A screen streams four live tiles at once and shows the others as stills every 15 seconds; with the screen's own video watched as well, the fifth tile's still found no free connection and was tried every second. A P4 screen now counts its streams and downloads (and Screen camera its video's viewers) into the connections the firmware allows, and a picture that could not be fetched waits its tile's pace before it is tried again.
 
 - **A screen's camera follows how its board mounts it and how the screen is turned.** A board whose camera sits upside down against the glass (the M5Stack Tab5) now says so, and a screen turned half way round turns its camera's picture with it, so Home Assistant shows the room upright; Screen camera 0.5.0 adds a setting to turn it once more, for a screen mounted the other way round. Tab5 owners on dev: check that the camera stands upright in Home Assistant, and say so.

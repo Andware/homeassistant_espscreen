@@ -2015,7 +2015,9 @@
       "refresh": {
         "label": "Refresh",
         "seconds": "Every {n} s",
-        "live": "Live"
+        "live": "Live",
+        "paused": "Live paused",
+        "cap": "This screen plays {n} cameras live at once; the others show a picture every 15 seconds."
       },
       "picture": {
         "fit": {

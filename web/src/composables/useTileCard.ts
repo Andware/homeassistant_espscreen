@@ -6,6 +6,7 @@
 import { computed, proxyRefs, reactive, watch } from "vue";
 import { t } from "../i18n";
 import { dimensions, displayName, isFull, isWide, keysOf, pageTarget, sizeOf } from "../model/layout";
+import { pausedLive } from "../model/live-tiles";
 import { clockSample } from "../model/clock";
 import rules from "../model/page-rules.json";
 import { energyPaints, tileActive, tilePalette } from "../model/tile-palette";
@@ -345,6 +346,11 @@ export function useTileCard(props: TileCardProps) {
   // A live camera fills its card on every size (app 0.3.13; 1x2 and 2x2 since 0.3.8): the add-on's picture, cut the way
   // the tile asks, with the name at the bottom or nothing on it. Until the picture is here, the head as on the screen.
   const cameraPicture = computed(() => face.value.kind === "camera" ? `api/camera-preview?entity=${encodeURIComponent(props.tile.entity)}` : "");
+  // A live camera beyond the screen's live tiles at once (its caps.live_tiles, docs/PLATFORM_PLAN.md 4.1): on the screen
+  // it shows a picture every 15 seconds instead of streaming, and the card says so.
+  const livePaused = computed(() => !foreign.value && face.value.kind === "camera" && Boolean(props.tile.id) &&
+    pausedLive(doc.layout?.tiles ?? [], scr.currentScreen?.caps?.live_tiles, grid.value.slots,
+      Boolean(scr.currentScreen?.live_camera)).has(props.tile.id!));
   // A favourite (app 0.4.42): what it plays fills the card, dimmed as an album cover over a card is, with its name, its
   // line and a round play key; on a screen without pictures the ordinary tile with the icon of what it plays.
   const favoritePicture = computed(() => face.value.kind === "favorite" && scr.pictures && favoritePlay.value?.thumb
@@ -371,7 +377,7 @@ export function useTileCard(props: TileCardProps) {
   return proxyRefs({
     tile: computed(() => props.tile), preview: computed(() => Boolean(props.preview)), placeholder: computed(() => Boolean(props.placeholder)),
     grid, foreign, domain, shape, goesTo, current, gone, face, texts, fill, lit, on, palette, background, icon, chip, wideFit, glassScale, sliderStyle, head, panel, pill, glassStyle, tall, tallStyle, full, fullStyle,
-    watchFace, watchStyle, clock, energy: energyPaints(), pluginTile, pluginRow, artwork, cameraPicture, favoritePicture, favoriteIcon, loaded,
+    watchFace, watchStyle, clock, energy: energyPaints(), pluginTile, pluginRow, artwork, cameraPicture, livePaused, favoritePicture, favoriteIcon, loaded,
     keyPlaces, chosen, live, features: computed(() => Number(current.value?.a?.supported_features || 0)),
     key,
   });

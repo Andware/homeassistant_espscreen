@@ -1259,6 +1259,14 @@ class Manager:
         shape = core.shape_of(screen) or {}
         return shape.get('chip') == 'ESP32-P4' and bool(shape.get('camera'))
 
+    def caps_of_screen(self, screen):
+        """The capability record of the screen's last hello (page_delivery.caps_of), or None until a hello in this run
+        brought one (an older firmware's falls back on its features there)."""
+        sender = self.page_senders.get(self.aliases.get(screen.get('id'), screen.get('id')))
+        if sender is None or getattr(sender, 'protocol', None) is None:
+            return None
+        return dict(getattr(sender, 'caps', None) or {}) or None
+
     def has_battery(self, screen):
         """Whether this screen has a battery the top bar can show (core.has_battery): its Screen features or its hello
         while it is connected, else its board."""
@@ -4201,6 +4209,9 @@ def create_app(manager, development=False):
             # And whether it has a battery for the top bar (firmware 0.41.0): what its hello said, else its board.
             screen['battery'] = manager.has_battery(screen)
             screen['live_camera'] = manager.live_camera(screen)
+            # What its hardware can do, from its last hello (firmware hw.h): the editor marks a live camera beyond its
+            # live tiles at once (caps.live_tiles) as one that shows a picture every 15 seconds.
+            screen['caps'] = manager.caps_of_screen(screen)
             # The Dock (docs/MODULES.md): the editor offers "Show in Dock" on a page of a board that has it.
             screen['dock'] = has_module(screen, 'dock')
             # A vacuum's larger tile (docs/VACUUM.md, "A larger tile"): its map, rooms and routines on a board with the
