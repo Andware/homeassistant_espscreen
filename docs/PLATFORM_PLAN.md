@@ -153,6 +153,12 @@ same role replaces its holder (a second camera's full view takes over from the f
   Found then, and kept: a camera's stream stops under every popup (LVGL draws over its room), so a voice session's
   popup ends the camera's sound with its stream, and the view asks again and claims the speaker anew after it. Whether a
   stream may go on under a popup is a question of its own, for later.
+- A ring's view claims the speaker and the microphone (live_view, role DOORBELL, both sides), so the wake word rests
+  during a ring and listens again after it ("doorbell took the microphone from voice", "doorbell gave the microphone
+  back: voice has it again"; the voice plugin's claims, voice_assist 0.4.0). Open: the claim lives with the ring's
+  stream, so a stream that breaks and opens again claims anew (the same role replaces itself, harmless), and one that
+  ends while the ring's view stays (stills after three breaks) lets the wake word back under an open ring. The clean
+  way is module_doorbell holding the claim for as long as the ring is up, which waits for the talk's design (section 5).
 
 ### 3.5 Allocation as a seam
 
@@ -272,8 +278,10 @@ same scene twice): with the H.264 encoder's reference strip inside the chip the 
 lay-out took 60 to 63 ms, the video ran at 12 to 13 pictures a second, and about 243 KB of internal RAM was free; with
 the strip in PSRAM the panel ran dry 39 to 53 times a minute (blue frames over the live tiles), lay-out took 77 to
 80 ms, and 344 KB was free. The strip stays inside the chip: 100 KB of internal RAM is the price of a panel without
-blue frames. A smaller DMA burst for the encoder (as the PPA got, 64 bytes) is the one experiment left on it, and a
-move that passes on a D1001 is measured on a Guition 10.1 before it is anyone's default.
+blue frames. A smaller burst for the encoder's DMA with the strip in PSRAM (64 bytes, the rule every other 2D-DMA
+client keeps; tried the same day) saves the panel (0 dry runs) and halves the video (encoding 105 to 130 ms a frame, 6
+to 7 fps): the strip stays inside, and every wrap of the test is gone. A move that passes on a D1001 is measured on a
+Guition 10.1 before it is anyone's default.
 
 ### 4.5 The allocation policy, after the release
 

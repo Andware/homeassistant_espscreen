@@ -16,8 +16,12 @@ class Wiring(unittest.TestCase):
         # The role is the opener's: CAMERA_SOUND by default, DOORBELL for the view a ring opened; released as claimed.
         self.assertIn('bool sound, audio_owner::Role role)', source)
         self.assertIn('claim.role = role;', source)
-        self.assertIn('audio_owner::the().claim(audio_owner::Side::OUT, claim);', source)
-        self.assertIn('audio_owner::the().release(audio_owner::Side::OUT, s->sound_role, static_cast<uint32_t>(slot));', source)
+        # The speaker, and for a ring the microphone too (the wake word rests while someone is at the door); released as
+        # claimed.
+        self.assertIn('s->claimed = role == audio_owner::Role::DOORBELL ? audio_owner::Side::BOTH : audio_owner::Side::OUT;',
+                      source)
+        self.assertIn('audio_owner::the().claim(s->claimed, claim);', source)
+        self.assertIn('if (s->claims) audio_owner::the().release(s->claimed, s->sound_role, static_cast<uint32_t>(slot));', source)
         header = (COMPONENT / 'live_view.h').read_text()
         self.assertEqual(header.count('audio_owner::Role role = audio_owner::Role::CAMERA_SOUND'), 1)
         # What it lost holds the sound back as a mute does, in the task and on the main loop.

@@ -566,7 +566,11 @@ microphone listens only while someone watches, and the voice assistant can liste
   traffic then shares the memory bus with the panel's frame buffer: on a reTerminal D1001 with two live camera tiles
   and three viewers of the video (2026-10-25), the panel ran dry 39 to 53 times within a minute (blue frames over the
   live tiles; 0 with the strip inside) and laying out a live picture went from 60 to 78 ms, for 100 KB more internal
-  RAM free. So it stays inside: PSRAM is one bus with the panel (docs/PLATFORM_PLAN.md, 4.4a). The video's line every minute gives the encoder's time a frame (48 to 50 ms there, at
+  RAM free. So it stays inside: PSRAM is one bus with the panel (docs/PLATFORM_PLAN.md, 4.4a). With the encoder's DMA
+  in bursts of 64 bytes instead of its 128 as well (a wrap of h264_dma_hal_init, the same day, eight minutes), the
+  panel never ran dry and laying out stayed at 50 to 70 ms, but encoding took 105 to 130 ms a frame and the video fell
+  to 6 to 7 fps: a smaller burst saves the panel and halves the video, so the strip stays inside and the test's wraps
+  are gone. The video's line every minute gives the encoder's time a frame (48 to 50 ms there, at
   12 to 13 fps) and what it holds of internal RAM. It is made once, at the camera's first frame, on the camera's
   own task, with the camera started at boot. Made when someone starts watching, after the pages were built, there was
   no memory left for it. Made in `setup()`, before the camera driver ran, the first frame hung the whole chip.
