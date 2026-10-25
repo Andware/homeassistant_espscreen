@@ -326,6 +326,17 @@ when it closes, rather than after the seconds a WebRTC session takes to start. M
 8 pictures a second (decoding 2 ms, laying out 32 ms), a single tile of its main stream at 15 (1 ms, 11 ms), beside each
 other.
 
+**Four at once.** A P4 screen streams at most four live tiles at a time (`caps.live_tiles`, PLATFORM_PLAN.md 4.1): the
+first four on the page stream, the others show a still every 15 seconds, and the log says so ("4 live tiles stream; 1
+more on the page keep their stills (at most 4 at once)"). What four cost, measured on a reTerminal D1001 with its own
+video watched by three viewers beside them (2026-10-25): 4.2 to 5.4 pictures a second each with laying out a picture at
+122 to 134 ms, against 12 to 14 at 60 ms with two; the video kept 12 fps, the panel never ran dry and 142 KB of internal
+RAM stayed free. The PPA, one device for every copy to the glass, is the limit, not the memory, and that is the reason
+for four. A screen counts the connections of its streams and downloads into ESPHome's socket total
+(`smart_display/__init__.py`, `_sockets`, and the video's server in Screen camera): with ESPHome's own count of 12 the
+four streams and the video's viewers took every socket, and the fifth tile's still found no connection. A still that
+fails waits its tile's pace before it is tried again (`picture_loader.h`), where it was tried every second.
+
 **The camera's sound.** On a P4 with a speaker (a board that includes `features/audio.yaml`) the full view plays the
 camera's sound, with a key at the right of its top bar that mutes it; muted stays muted for every camera until the
 screen starts again. The screen asks with `sound`; the app takes the sound through Home Assistant's WebRTC too, makes it

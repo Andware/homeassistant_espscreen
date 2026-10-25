@@ -9,6 +9,7 @@ import logging
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome.components import socket
 from esphome.core import CORE
 
 from . import hw_build, modules, p4_build, screen_text_gen
@@ -46,6 +47,24 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_FLASH_MB): cv.positive_int,
     cv.Optional(CONF_CAMERA_ORIENTATION, default=0): _camera_orientation,
 })
+
+
+# The connections a P4 screen holds open at once beside the ones ESPHome's own components count: a live stream for each
+# of live_view::MAX_STREAMS (live_view.h: four tiles, the full view, a plugin's places) and a download in each of
+# picture_fetch's three slots (full, thumb, live). ESPHome sums every component's count into CONFIG_LWIP_MAX_SOCKETS and
+# allocates a socket only once it opens, so a count that covers them costs a few bytes each. Without it a D1001 had 12:
+# four live tiles and the video's three viewers took them, and a fifth tile's still found no connection.
+P4_STREAM_SOCKETS = 7
+PICTURE_SOCKETS = 3
+
+
+def _sockets(config):
+    if _esp32_p4():
+        socket.consume_sockets(P4_STREAM_SOCKETS + PICTURE_SOCKETS, "smart_display")(config)
+    return config
+
+
+FINAL_VALIDATE_SCHEMA = _sockets
 
 
 # The linker wraps every ESP32 build gets, beside the picture engine's (p4_build.ENGINES): what an abort said, kept

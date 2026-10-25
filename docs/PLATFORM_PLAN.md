@@ -148,8 +148,11 @@ same role replaces its holder (a second camera's full view takes over from the f
 - The mixer and the half-duplex interval stay as they are: the owner decides who may start; the mixer mixes the
   announcement input over the media input as before.
 - Still to do: the voice plugin's claims (tessera-plugins), the IN side for the doorbell's talk (section 5), and the
-  proof on a D1001 (a camera with sound while music plays; a ring while the wake word listens; a voice session over a
-  camera's sound and the sound coming back).
+  proof on a D1001 of a ring while the wake word listens. Proven on the D1001 (2026-10-25): music under a ring (the ring
+  takes the speaker, the music stays paused after it), music started during a ring (refused, paused within a second).
+  Found then, and kept: a camera's stream stops under every popup (LVGL draws over its room), so a voice session's
+  popup ends the camera's sound with its stream, and the view asks again and claims the speaker anew after it. Whether a
+  stream may go on under a popup is a question of its own, for later.
 
 ### 3.5 Allocation as a seam
 

@@ -342,8 +342,11 @@ class Loader {
   }
   bool should_load(const Job &job, uint32_t now) const {
     if (job.phase != Phase::LINKED) return false;
-    // A failed load is tried again after the gap; a picture that refreshes keeps its rhythm.
-    if (job.finished_at && now - job.finished_at < camera_view::GAP_MS) return false;
+    // A failed load is tried again after the gap; a picture that refreshes keeps its rhythm, after a failure too: a camera
+    // tile that found no connection (the screen's sockets all taken by its live streams and the video's viewers) asked
+    // again every second and logged every failure (a reTerminal D1001 with five live cameras on a page, 2026-10-25).
+    const uint32_t gap = job.failures && job.want.every > camera_view::GAP_MS ? job.want.every : camera_view::GAP_MS;
+    if (job.finished_at && now - job.finished_at < gap) return false;
     if (job.want.every && job.kept_at && now - job.kept_at < job.want.every) return false;
     return true;
   }

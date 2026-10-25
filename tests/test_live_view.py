@@ -70,6 +70,19 @@ class P4Build(unittest.TestCase):
             self.assertIn(f"defined({p4_build.ENGINES['p4']['define']})", (COMPONENT / name).read_text(), name)
 
 
+class Sockets(unittest.TestCase):
+    """A P4 screen counts its streams and downloads into ESPHome's socket total (smart_display/__init__.py, _sockets):
+    the count follows live_view.h's MAX_STREAMS, and the downloads are picture_fetch's three slots."""
+
+    def test_the_count_follows_the_code(self):
+        init = (COMPONENT / '__init__.py').read_text()
+        streams = re.search(r'constexpr int MAX_STREAMS = (\d+);', (COMPONENT / 'live_view.h').read_text())
+        self.assertIn(f'P4_STREAM_SOCKETS = {streams[1]}', init)
+        slots = re.findall(r'^Slot &(\w+)\(\);', (COMPONENT / 'picture_fetch.h').read_text(), re.M)
+        self.assertIn(f'PICTURE_SOCKETS = {len(slots)}', init)
+        self.assertIn('FINAL_VALIDATE_SCHEMA = _sockets', init)
+
+
 class ChipFactsBehindTheEngine(unittest.TestCase):
     """The P4's facts live behind the picture engine (docs/PLATFORM_PLAN.md 3.2): outside the engine's own files the
     code names no sixteenths, no PPA, no JPEG driver and no MIPI panel; it asks picture_engine (limits, fit, cut, blit)

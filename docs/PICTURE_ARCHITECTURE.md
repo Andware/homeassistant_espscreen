@@ -555,6 +555,13 @@ and the diagnostics of section 9, which the layers make room for and which each 
   only once esp_video is up, inside the copy's setup), or in a component of the plugin's own that the copy hands the
   modes to through one added call. Both keep the copy's NOTICE honest; the second keeps the copy smaller.
 
+- Whether the video's cut of a camera a few pixels over the stream (the Guition's 1288 x 728, a PPA pass of about 60 ms
+  a frame) goes away by letting the H.264 encoder read the window itself: esp_h264 1.3.8 has no stride in its public
+  input (`esp_h264_enc_in_frame_t` is a buffer and a length), but the YUV input's 2D-DMA descriptor is set in
+  `esp_h264_enc_hw_cfg_dma_yuv_bs` (hw/src/esp_h264_enc_hw_param.c, 491-497, `ha` = the picture's width), a function
+  of another file than its caller, so a linker wrap could give it the camera's stride and the window's start. Possible
+  with a wrap of internal API; not built.
+
 ## 8. Budgets and back-pressure
 
 What a screen may take on at once is a set of numbers spread over files today: the picture budget (a fifth of the
