@@ -21,6 +21,44 @@ def jpeg(width, height, **options):
     return out.getvalue()
 
 
+class Lag(unittest.TestCase):
+    """How far a camera's pictures come behind the camera (camera_source.Lag): this host's clock against the frames'."""
+
+    def test_pictures_that_keep_up_are_not_behind_and_a_backlog_is(self):
+        now = [100.0]
+        lag = camera_source.Lag(clock=lambda: now[0])
+        for i in range(10):  # 10 a second, as the camera makes them
+            now[0] = 100.0 + i / 10
+            self.assertAlmostEqual(lag.feed(i / 10), 0.0)
+        now[0] += 2.0  # the app was busy: the frames of the second after come at once, two seconds late
+        for i in range(10, 20):
+            self.assertGreater(lag.feed(i / 10), 0.9)
+        self.assertAlmostEqual(lag.feed(1.95), (now[0] - 100.0) - 1.95)
+
+    def test_a_jump_of_the_cameras_clock_starts_the_count_again(self):
+        now = [0.0]
+        lag = camera_source.Lag(clock=lambda: now[0])
+        lag.feed(0.0)
+        now[0] = 1.0
+        self.assertEqual(lag.feed(50.0), 0.0)  # timestamps leapt ahead (a new key frame): the new origin
+        now[0] = 1.5
+        self.assertAlmostEqual(lag.feed(50.5), 0.0)
+
+    def test_it_reports_once_a_minute_with_the_average_and_the_most(self):
+        now = [0.0]
+        lag = camera_source.Lag(clock=lambda: now[0])
+        lag.feed(0.0)
+        now[0] = 2.0
+        lag.feed(1.0)  # one second behind
+        self.assertIsNone(lag.report())
+        now[0] = camera_source.LAG_REPORT_SECONDS
+        average, most, pictures = lag.report()
+        self.assertEqual(pictures, 2)
+        self.assertAlmostEqual(most, 1.0)
+        self.assertAlmostEqual(average, 0.5)
+        self.assertIsNone(lag.report())  # nothing new since
+
+
 class WaitForWebRTC(unittest.TestCase):
     """A camera with a stream until WebRTC's first frame: its stills keep the screen's stream going (the screen closes one
     silent for 6 s, live_view::QUIET_MS), and an offer Home Assistant refuses gives way to the snapshots at once."""

@@ -32,6 +32,7 @@ LOG = logging.getLogger(__name__)
 LINGER_SECONDS = 5        # a camera nobody watches any more stops after this (a screen that asks again at once finds it)
 SNAPSHOT_FPS = 15         # a camera without a stream is asked no more often than this
 WEBRTC_FIRST_SECONDS = 20  # a WebRTC session without a frame by then gives way to the snapshots
+LAG_REPORT_SECONDS = 60   # how often a camera's WebRTC pictures say how far behind the camera they are (Lag)
 STILL_SECONDS = 2          # the camera's still, again this often, until WebRTC's first frame (the screen's
                            # live_view::QUIET_MS closes a stream silent for 6 s)
 SOUND_RATE = 16000        # a full view's sound: 16-bit mono at this rate (the board's resampler makes it its bus's)
@@ -45,6 +46,35 @@ class Frame:
 
     def __init__(self, number, jpeg=None, video=None, still=False):
         self.number, self.jpeg, self.video, self.at, self.still = number, jpeg, video, time.monotonic(), still
+
+
+class Lag:
+    """How far a camera's pictures come behind the camera: the time since the first picture on this host's clock less
+    the time since it on the camera's (a frame's `time`, which aiortc starts at 0 with the first frame). A frame that
+    came ahead of the first one's pace (the camera's timestamps jumped, as after a new key frame) starts the count again.
+    Measured first, before anything acts on it: whether the pictures fall behind a screen over hours (2026-10-25, a
+    D1001 with two live tiles, by eye), and where (`waiting`: decoded frames aiortc holds for this app)."""
+
+    def __init__(self, clock=time.monotonic):
+        self.clock, self.origin, self.seen, self.reported = clock, None, [], clock()
+
+    def feed(self, at):
+        """The seconds behind the camera of a frame of camera time `at`."""
+        now = self.clock()
+        if self.origin is None:
+            self.origin = (now, at)
+        behind = (now - self.origin[0]) - (at - self.origin[1])
+        if behind < 0:
+            self.origin, behind = (now, at), 0.0
+        self.seen.append(behind)
+        return behind
+
+    def report(self):
+        """(average, most, pictures) since the last report once LAG_REPORT_SECONDS went by, else None."""
+        if not self.seen or self.clock() - self.reported < LAG_REPORT_SECONDS:
+            return None
+        seen, self.seen, self.reported = self.seen, [], self.clock()
+        return sum(seen) / len(seen), max(seen), len(seen)
 
 
 class Source:
@@ -169,10 +199,20 @@ class Source:
                 return
 
             async def pull():
+                lag = Lag()
                 while True:
                     frame = await track.recv()
                     if track.kind == kind:
                         first.set()
+                    if track.kind == 'video' and frame.time is not None:
+                        lag.feed(frame.time)
+                        told = lag.report()
+                        if told:
+                            # aiortc's own queue of decoded frames, read for the log alone (no public way to it).
+                            waiting = getattr(track, '_queue', None)
+                            LOG.info('Live %s: %.2f s behind the camera on average, %.2f s at most, over %d pictures; '
+                                     '%s decoded waiting', self.entity, *told,
+                                     waiting.qsize() if waiting is not None else '?')
                     await take(track.kind, frame)
             pulls.append(asyncio.create_task(pull()))
 
