@@ -43,13 +43,18 @@ constexpr uint32_t REPORT_MS = 10000;
 // A stream that failed this often for one opening of the view gives way to the stills of every board.
 constexpr uint8_t TRIES = 3;
 // A full view's sound: 16-bit mono at this rate (the board's resampler makes it its bus's), in parts of at most
-// SOUND_PART bytes, and SOUND_BUFFER of it held between the stream and the speaker (half a second).
+// SOUND_PART bytes, and SOUND_BUFFER of it held between the stream and the speaker (a second). The buffer is room for a
+// burst, not a delay: after a hiccup the app sends what it held back at once (up to 1.8 s of a camera's sound on a
+// reTerminal D1001, 2026-10-25), and the main loop that catches up (SOUND_HIGH) comes by only every tick, about 50 ms
+// in a ring's view. A burst can be larger than any buffer here, so a part that finds it full is still left out whole
+// (173 in a ring of five minutes with a second, 227 and 237 with half a second): the buffer holds what fits, the main
+// loop leaves out the oldest of it.
 constexpr uint32_t SOUND_RATE = 16000;
 constexpr size_t SOUND_PART = 4096;
-constexpr size_t SOUND_BUFFER = 16384;
+constexpr size_t SOUND_BUFFER = 32768;
 // The sound keeps up with the picture: with more than SOUND_HIGH held (a burst after a hiccup in the stream) the oldest
 // goes, down to SOUND_LOW, which is also what the speaker waits for before it starts; the app's own queue drops its
-// oldest the same way. Without it the sound would stay up to the buffer's half second behind the picture.
+// oldest the same way. Without it the sound would stay up to the buffer's second behind the picture.
 constexpr size_t SOUND_LOW = SOUND_RATE * 2 * 150 / 1000;   // 150 ms
 constexpr size_t SOUND_HIGH = SOUND_RATE * 2 * 400 / 1000;  // 400 ms
 static_assert(SOUND_PART % 2 == 0 && SOUND_BUFFER % 2 == 0 && SOUND_LOW % 2 == 0 && SOUND_HIGH % 2 == 0,

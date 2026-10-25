@@ -32,7 +32,9 @@ class Wiring(unittest.TestCase):
                       'whole, 0);', source)
         self.assertEqual(source.count('xStreamBufferSend('), 1)
         # The sound keeps up with the picture: the main loop leaves the oldest out above SOUND_HIGH, down to SOUND_LOW.
-        self.assertIn('if (held > SOUND_HIGH) {', source)
+        # Every tick, before the speaker is fed: a speaker that is full does not hold the catching up back.
+        self.assertIn('if (held > SOUND_HIGH && (s.piece_at & 1) == 0) {', source)
+        self.assertLess(source.index('if (held > SOUND_HIGH'), source.index('for (int rounds = 0; rounds < 8; ++rounds) {'))
         self.assertIn('for (size_t drop = held - SOUND_LOW; drop > 0;) {', source)
         self.assertIn('if (xStreamBufferBytesAvailable(s.sound) < SOUND_LOW) return;', source)
         self.assertIn('speak(*s, !s->stopping && !s->muted && !s->yielded);', source)

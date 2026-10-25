@@ -522,20 +522,24 @@ static void speak(Stream &s, bool on) {
     speaker->start();
     s.speaking = true;
   }
+  // Behind the picture (a burst after a hiccup in the stream): the oldest goes, down to SOUND_LOW, the rest of the piece
+  // the speaker had not taken first. Every tick, whatever the speaker takes, so a speaker that is full does not hold it
+  // back until the buffer runs full. Whole samples: the buffer holds only those, both marks are even, and a piece goes
+  // only from a sample's first byte.
+  const size_t held = xStreamBufferBytesAvailable(s.sound);
+  if (held > SOUND_HIGH && (s.piece_at & 1) == 0) {
+    ++s.caught_up;
+    s.caught_up_bytes += s.piece_left;
+    s.piece_left = 0;
+    for (size_t drop = held - SOUND_LOW; drop > 0;) {
+      const size_t n = xStreamBufferReceive(s.sound, s.sound_piece, std::min(drop, SOUND_PART), 0);
+      if (n == 0) break;
+      s.caught_up_bytes += n;
+      drop -= n;
+    }
+  }
   for (int rounds = 0; rounds < 8; ++rounds) {
     if (s.piece_left == 0) {
-      // Behind the picture: the oldest goes, down to SOUND_LOW, read into the piece that is free now. Whole samples, as
-      // the buffer holds only those and both marks are even.
-      const size_t held = xStreamBufferBytesAvailable(s.sound);
-      if (held > SOUND_HIGH) {
-        ++s.caught_up;
-        for (size_t drop = held - SOUND_LOW; drop > 0;) {
-          const size_t n = xStreamBufferReceive(s.sound, s.sound_piece, std::min(drop, SOUND_PART), 0);
-          if (n == 0) break;
-          s.caught_up_bytes += n;
-          drop -= n;
-        }
-      }
       s.piece_left = xStreamBufferReceive(s.sound, s.sound_piece, SOUND_PART, 0);
       s.piece_at = 0;
       if (s.piece_left == 0) return;
