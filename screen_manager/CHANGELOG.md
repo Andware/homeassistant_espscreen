@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **Guition owners with a camera: try the whole field of view.** Screen camera 0.6.0 (tessera-plugins dev) has a setting **Camera field of view**. Sharp is the old behaviour; switch back to it if anything looks odd. Try **Full (subsampling)** and **Full (sensor scale)** and say which of the two worked, how much of the room you see compared with Sharp, the colours, the frames a second, and whether it stays stable over a few minutes. Both are off until someone confirms them; a mode that gives no picture goes back to Sharp by itself. The camera of the M5Stack Tab5 and the reTerminal D1001 keeps Sharp: its sensor has no such mode we know of.
+
 - **A camera picture beside four live tiles comes within a second.** On an ESP32-P4 page with four live camera tiles, the fifth tile's picture and a media cover could take half a minute to two minutes: the picture waited for its turn on the glass behind the live tiles, which always went first. It waits in turn with them now; on a reTerminal D1001 187 pictures in 40 minutes took 0.3 s in the middle and 0.8 s at most, and the live tiles ran smoother too.
 
 - **A doorbell ring could restart a busy screen.** The chime, 60 KB, was made at the first ring in the chip's own memory, and a screen with many plugins and pages had no free block that large left (an M5Stack Tab5 with nine plugins and six pages). It is made in PSRAM now.
