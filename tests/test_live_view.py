@@ -61,6 +61,10 @@ class P4Build(unittest.TestCase):
         for name in ('glass_dsi.cpp', 'ppa_guard.cpp', 'live_view.cpp', 'picture_engine_p4.cpp'):
             defined |= set(re.findall(r'__wrap_(\w+)\(', (COMPONENT / name).read_text()))
         self.assertEqual(defined, set(p4_build.ENGINES['p4']['wraps']))
+        # The diagnostic wraps every ESP32 gets come from their own table, and abort_record.cpp defines exactly those.
+        self.assertIn('for wrap in DIAGNOSTIC_WRAPS:', init)
+        diagnostic = set(re.findall(r'__wrap_(\w+)\(', (COMPONENT / 'abort_record.cpp').read_text()))
+        self.assertEqual(diagnostic, set(re.search(r'DIAGNOSTIC_WRAPS = \(([^)]*)\)', init)[1].replace('"', '').replace(',', ' ').split()))
         # The define the engine builds under is the one the headers test.
         for name in ('live_view.h', 'glass.h', 'picture_engine.h'):
             self.assertIn(f"defined({p4_build.ENGINES['p4']['define']})", (COMPONENT / name).read_text(), name)

@@ -116,6 +116,16 @@ class Crashes(unittest.TestCase):
         # A restart that was no crash keeps its record to itself.
         self.assertIsNone(reports.crash_summary(heap, clock=lambda: 1_800_000_000))
 
+    def test_what_an_abort_said_rides_with_the_crash(self):
+        abort = ['[E][abort_record:047]: *** ABORT ON PREVIOUS BOOT *** (in task loopTask)',
+                 '[E][abort_record:048]:   Details: assert failed: 0x48002d48',
+                 '[E][abort_record:052]:   AT0: 0x4FF19D94', '[E][abort_record:052]:   AT1: 0x480D3270',
+                 '[E][abort_record:057]:   Use: addr2line -pfiaC -e firmware.elf 0x4FF19D94 0x480D3270']
+        crash = reports.crash_summary(self.CRASH[:3] + abort, clock=lambda: 1_800_000_000)
+        self.assertEqual(len(crash['lines']), 8)
+        self.assertTrue(any('Details: assert failed: 0x48002d48' in l for l in crash['lines']))
+        self.assertIn('0x480D3270', reports.ADDRESS.findall(' '.join(crash['lines'])))
+
     def test_a_crash_block_is_a_crash_and_a_power_on_is_not(self):
         crash = reports.crash_summary(self.CRASH, clock=lambda: 1_800_000_000)
         self.assertEqual(crash['reason'], 'Fault - LoadProhibited (cause 28)')

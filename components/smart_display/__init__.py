@@ -36,6 +36,11 @@ CONFIG_SCHEMA = cv.Schema({
 })
 
 
+# The linker wraps every ESP32 build gets, beside the picture engine's (p4_build.ENGINES): what an abort said, kept
+# across the reset (abort_record.h, which defines them).
+DIAGNOSTIC_WRAPS = ("panic_abort",)
+
+
 async def to_code(config):
     wanted = config[CONF_LANGUAGE]
     language, code = screen_text_gen.definitions(wanted)
@@ -55,6 +60,9 @@ async def to_code(config):
         from esphome.components import ota
 
         ota.request_ota_state_listeners()
+    if CORE.is_esp32:
+        for wrap in DIAGNOSTIC_WRAPS:
+            cg.add_build_flag(f"-Wl,--wrap={wrap}")
     if _esp32_p4():
         await _p4(config)
     _tier(config)
