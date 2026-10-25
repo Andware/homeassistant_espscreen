@@ -355,6 +355,18 @@ an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black l
   00. Every value read back as written, at 13 fps throughout: the block is there. 0x5000 bit 6 turns it on, 0x5901
   bit 2 brings the comb edges and a black strip on the left, 0x5900 0xf5 a pink cast (it works on the Bayer pattern).
   No value halves the columns: the picture stays the left 800 columns at full width.
+- github.com/youkorr/esphome_esp-video names an SC202CS "800x600 with 2x2 binning" in its notes; its table is a centre
+  crop (window 396..1203 x 296..903, no 0x3215, 0x3220 or 0x59xx), and its own header says the sensor has no binning.
+  Nothing to build on.
+
+For the OV02C10 (step 3, the Guition), two variants go to the tester behind the setting, both off until he confirms
+them: (A) 2 x 2 binning with the documented bits (0x3814/0x3815, 0x3820/0x3821), the whole window, an output of about
+964 x 544 cut to 960 x 544; (B) the same youkorr repository's "sensor scaling": the whole window (0x3800-0x3807 =
+0..1935 x 4..1091) with a smaller output and no binning (0x3814/0x3815 = 0x01), 0x4500 0x38 and 0x4501 0x18 where
+its other tables keep 0x07 and 0x00, and its 0x3910, 0x3d85/0x3d8c/0x3d8d, 0x4033 and 0x4050/0x4051. B is unproven:
+its own notes ask for validation on hardware and report watchdog time-outs at 960 x 540, and a raw sensor whose output
+is smaller than its window usually crops rather than scales. The tester reports the field (a ruler or a known room),
+the colours, the frame rate and whether the stream holds.
 
 Where it stands: the whole field on the SC202CS needs the columns halved in the sensor, and that register is not
 known without SmartSens' datasheet. Halving them on the PPA instead (a full-width 1600 x 592) is the pass that cost
