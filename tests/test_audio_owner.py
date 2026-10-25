@@ -25,7 +25,16 @@ class Wiring(unittest.TestCase):
         header = (COMPONENT / 'live_view.h').read_text()
         self.assertEqual(header.count('audio_owner::Role role = audio_owner::Role::CAMERA_SOUND'), 1)
         # What it lost holds the sound back as a mute does, in the task and on the main loop.
-        self.assertIn('if (!s.muted && !s.yielded) xStreamBufferSend', source)
+        self.assertIn('if (s.muted || s.yielded) return;', source)
+        # A part goes in whole or not at all: a static stream buffer holds one byte less than its storage, and a part cut
+        # to the room left was an odd count that put every later sample a byte off (full-scale noise, 2026-10-25).
+        self.assertIn('if (xStreamBufferSpacesAvailable(s.sound) >= whole)\n            xStreamBufferSend(s.sound, s.sound_part, '
+                      'whole, 0);', source)
+        self.assertEqual(source.count('xStreamBufferSend('), 1)
+        # The sound keeps up with the picture: the main loop leaves the oldest out above SOUND_HIGH, down to SOUND_LOW.
+        self.assertIn('if (held > SOUND_HIGH) {', source)
+        self.assertIn('for (size_t drop = held - SOUND_LOW; drop > 0;) {', source)
+        self.assertIn('if (xStreamBufferBytesAvailable(s.sound) < SOUND_LOW) return;', source)
         self.assertIn('speak(*s, !s->stopping && !s->muted && !s->yielded);', source)
         self.assertLess(source.index('t->yielded = true;'), source.index('t->yielded = false;'))
 

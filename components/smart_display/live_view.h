@@ -47,6 +47,14 @@ constexpr uint8_t TRIES = 3;
 constexpr uint32_t SOUND_RATE = 16000;
 constexpr size_t SOUND_PART = 4096;
 constexpr size_t SOUND_BUFFER = 16384;
+// The sound keeps up with the picture: with more than SOUND_HIGH held (a burst after a hiccup in the stream) the oldest
+// goes, down to SOUND_LOW, which is also what the speaker waits for before it starts; the app's own queue drops its
+// oldest the same way. Without it the sound would stay up to the buffer's half second behind the picture.
+constexpr size_t SOUND_LOW = SOUND_RATE * 2 * 150 / 1000;   // 150 ms
+constexpr size_t SOUND_HIGH = SOUND_RATE * 2 * 400 / 1000;  // 400 ms
+static_assert(SOUND_PART % 2 == 0 && SOUND_BUFFER % 2 == 0 && SOUND_LOW % 2 == 0 && SOUND_HIGH % 2 == 0,
+              "the sound moves in whole samples, two bytes each");
+static_assert(SOUND_LOW < SOUND_HIGH && SOUND_HIGH < SOUND_BUFFER, "the sound catches up before its buffer runs full");
 
 // A link to a stream rather than to a still: the app serves both on its camera port, a still as .bmp.
 inline bool is_stream(const std::string &url) {

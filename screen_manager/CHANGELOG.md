@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A camera with sound no longer turns into loud noise after a hiccup in its stream.** A change on dev of 2026-10-25 (never in a release) left the screen's sound buffer one byte short of an even size. When it ran full, a part went in cut to the room left, an odd number of bytes, and every sample after it was a byte off: seconds of full-scale noise, until it came right by chance. The buffer is even again, and a part goes in whole or not at all.
+
 - **The editor says which live cameras wait their turn.** A screen streams four live camera tiles at once; on a page with more, the editor marks the others "Live paused" and the tile's settings say that this screen plays four cameras live at once while the others show a picture every 15 seconds. The number comes from the screen itself.
 
 - **A fifth live camera on a P4 page gets its picture.** A screen streams four live tiles at once and shows the others as stills every 15 seconds; with the screen's own video watched as well, the fifth tile's still found no free connection and was tried every second. A P4 screen now counts its streams and downloads (and Screen camera its video's viewers) into the connections the firmware allows, and a picture that could not be fetched waits its tile's pace before it is tried again.

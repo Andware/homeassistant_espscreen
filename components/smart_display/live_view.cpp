@@ -15,6 +15,7 @@
 #include "glass.h"
 #include "picture_engine.h"
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
+#include <algorithm>
 #include <atomic>
 #include <cerrno>
 #include <cstdlib>
@@ -92,6 +93,12 @@ struct Stream {
   uint8_t *sound_part = nullptr;
   uint8_t *sound_piece = nullptr;  // what the speaker took part of, the rest of it next tick
   size_t piece_left = 0, piece_at = 0;
+  // Whole samples only (s16le, two bytes each): parts of an odd length cut to even (the task) and writes the speaker
+  // took an odd number of bytes of (the main loop), counted for the stream's last line, which should say none.
+  std::atomic<uint32_t> odd_parts{0};
+  std::atomic<uint32_t> full_parts{0};  // parts left out because the buffer had no room for all of it
+  uint32_t odd_taken = 0;
+  uint32_t caught_up = 0, caught_up_bytes = 0;  // the times the main loop left the oldest out (SOUND_HIGH), and how much
   std::atomic<bool> muted{false}, heard{false};
   // The speaker is someone else's for now (audio_owner.h: a voice session or a doorbell took it): the sound is held back
   // as when muted, and plays again once the owner gives the speaker back. Set on the main loop, read by the task.
@@ -358,9 +365,19 @@ static void stream(Stream &s) {
             show(s, length, reader.still());
             return;
           }
-          // Sound: into the buffer the main loop plays from; none of it while muted, and none when it is full.
+          // Sound: into the buffer the main loop plays from; none of it while muted. Whole samples only, so the buffer,
+          // every piece read from it and every write to the speaker stay on a sample's first byte: a speaker one byte
+          // off plays seconds of full-scale noise (a ring on a reTerminal D1001, 2026-10-25), until another odd write
+          // puts it right by chance. So a part goes in whole or not at all, never cut to the room left.
           s.heard = true;
-          if (!s.muted && !s.yielded) xStreamBufferSend(s.sound, s.sound_part, length, 0);
+          if (length & 1) s.odd_parts.fetch_add(1, std::memory_order_relaxed);
+          if (s.muted || s.yielded) return;
+          const size_t whole = length & ~static_cast<size_t>(1);
+          // Only this task sends, so the room it saw is there when it sends (the main loop only takes out or empties).
+          if (xStreamBufferSpacesAvailable(s.sound) >= whole)
+            xStreamBufferSend(s.sound, s.sound_part, whole, 0);
+          else
+            s.full_parts.fetch_add(1, std::memory_order_relaxed);
         });
     if (!ok) {
       ESP_LOGW(TAG, "not a stream of pictures (answer %d)", reader.status());
@@ -408,9 +425,11 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     // read it), its control inside the chip (see Stream::sound).
     s->sound_control = static_cast<StaticStreamBuffer_t *>(
         heap_caps_malloc(sizeof(StaticStreamBuffer_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
-    s->sound_storage = static_cast<uint8_t *>(roomy::allocate(SOUND_BUFFER));
+    // A static stream buffer holds a byte less than its storage (FreeRTOS keeps one free; xStreamBufferCreate adds it
+    // itself): one more, so it holds SOUND_BUFFER, an even count of bytes.
+    s->sound_storage = static_cast<uint8_t *>(roomy::allocate(SOUND_BUFFER + 1));
     if (s->sound_control && s->sound_storage)
-      s->sound = xStreamBufferCreateStatic(SOUND_BUFFER, 1, s->sound_storage, s->sound_control);
+      s->sound = xStreamBufferCreateStatic(SOUND_BUFFER + 1, 1, s->sound_storage, s->sound_control);
     s->sound_part = static_cast<uint8_t *>(roomy::allocate(SOUND_PART));
     s->sound_piece = static_cast<uint8_t *>(roomy::allocate(SOUND_PART));
     ok = s->sound && s->sound_part && s->sound_piece;
@@ -498,18 +517,33 @@ static void speak(Stream &s, bool on) {
     return;
   }
   if (!s.speaking) {
-    if (xStreamBufferBytesAvailable(s.sound) < SOUND_RATE * 2 * 150 / 1000) return;
+    if (xStreamBufferBytesAvailable(s.sound) < SOUND_LOW) return;
     speaker->set_audio_stream_info(esphome::audio::AudioStreamInfo(16, 1, SOUND_RATE));
     speaker->start();
     s.speaking = true;
   }
   for (int rounds = 0; rounds < 8; ++rounds) {
     if (s.piece_left == 0) {
+      // Behind the picture: the oldest goes, down to SOUND_LOW, read into the piece that is free now. Whole samples, as
+      // the buffer holds only those and both marks are even.
+      const size_t held = xStreamBufferBytesAvailable(s.sound);
+      if (held > SOUND_HIGH) {
+        ++s.caught_up;
+        for (size_t drop = held - SOUND_LOW; drop > 0;) {
+          const size_t n = xStreamBufferReceive(s.sound, s.sound_piece, std::min(drop, SOUND_PART), 0);
+          if (n == 0) break;
+          s.caught_up_bytes += n;
+          drop -= n;
+        }
+      }
       s.piece_left = xStreamBufferReceive(s.sound, s.sound_piece, SOUND_PART, 0);
       s.piece_at = 0;
       if (s.piece_left == 0) return;
     }
+    // Every piece is whole samples (the task writes only those); a write the speaker took an odd number of bytes of goes
+    // on from the very next byte, the other half of that sample first, so its count is even again.
     const size_t taken = speaker->play(s.sound_piece + s.piece_at, s.piece_left, 0);
+    if (taken & 1) ++s.odd_taken;
     s.piece_at += taken;
     s.piece_left -= taken;
     if (taken == 0) return;  // the speaker's own buffer is full: the rest next tick
@@ -567,6 +601,12 @@ void tick(const std::function<void(Handle, Event)> &tell) {
       ESP_LOGI(TAG, "ended %d: its task's stack was in %s, %u of %u bytes of it never used", slot,
                in_psram ? "PSRAM" : "internal RAM", (unsigned) s->stack_left.load(std::memory_order_relaxed),
                (unsigned) STACK_BYTES);
+      if (s->sound)
+        ESP_LOGI(TAG, "ended %d: its sound caught up with the picture %u times (%u bytes of the oldest left out), had %u "
+                 "parts left out for a full buffer, %u parts of an odd length and %u odd writes to the speaker", slot,
+                 (unsigned) s->caught_up, (unsigned) s->caught_up_bytes,
+                 (unsigned) s->full_parts.load(std::memory_order_relaxed),
+                 (unsigned) s->odd_parts.load(std::memory_order_relaxed), (unsigned) s->odd_taken);
       const bool turned = s->turn != turn, ended = s->stopping && !s->failed;
       glass::disarm(s->room, false);  // its task has ended: nothing of it copies, and LVGL draws the room again
       streams[slot] = nullptr;
