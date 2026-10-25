@@ -343,7 +343,10 @@ an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black l
   timing (0x36eb, 0x36ed, 0x4819-0x4829), 0x3904 and the exposure. It is a monochrome sensor (Y10), so its column
   merging need not keep a Bayer pattern. On the SC202CS, with our own PLL and timing: with 0x301f 0x0c and 0x303f
   0x82 the sensor sends no frame at all (DQBUF timed out, recovery exhausted); without them, 0x3220 0x01 with the
-  0x59xx block gives comb edges and the left 800 columns again.
+  0x59xx block gives comb edges and the left 800 columns again. The colour SC200AI's binned mode changes 0x301f as
+  well (0x01 to 0x4e), so 0x301f might have been the switch of the 0x59xx block: with 0x301f 0x4e and with 0x0c (no
+  0x303f) the frames come at 12 fps and the picture is the same as without it. 0x301f is not that switch, and 0x303f
+  0x82 alone stopped the frames.
 
 Where it stands: the whole field on the SC202CS needs the columns halved in the sensor, and that register is not
 known without SmartSens' datasheet. Halving them on the PPA instead (a full-width 1600 x 592) is the pass that cost
