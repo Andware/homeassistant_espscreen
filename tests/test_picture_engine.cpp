@@ -27,7 +27,9 @@ int main() {
   assert(client() == nullptr);
   drop(nullptr);
   Block block;
-  assert(block.sixteenths == 16 && block.turn == 0);
+  assert(block.scale == AS_IS && block.turn == 0);
+  // The software engine takes no stream's pictures at all, and asks no burst of a 2D-DMA it does not have.
+  static_assert(limits().burst_bytes == 0 && limits().picture_bytes == 0 && limits().tile_picture_bytes == 0, "none");
   assert(blit(nullptr, block) != 0);
   // LVGL's clockwise turn as the PPA's counter-clockwise angle, in the PPA's own order (0, 90, 180, 270 as 0 to 3):
   // a glass turned 90 clockwise copies at the PPA's 270, and the other way round; 180 is 180; anything else flat.

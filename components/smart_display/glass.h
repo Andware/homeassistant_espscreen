@@ -57,8 +57,8 @@ inline Rect on_panel(const Rect &r, int turn, int pw, int ph) {
 // a frame of blue, its colour for no data. So every PPA client on the screen moves in bursts of this many bytes instead
 // of ESP-IDF's 128, and the bus turns to the bridge between bursts (lvgl/lvgl #9590 took the same way for the same
 // underrun): the streams' own clients and a plugin's ask for it, and ESPHome's LVGL, which turns every flush of a turned
-// glass with the PPA, gets it through the wrap of ppa_register_client in glass_dsi.cpp.
-constexpr int PPA_BURST_BYTES = 64;
+// glass with the PPA, gets it through the wrap of ppa_register_client in glass_dsi.cpp. The burst is the engine's
+// (picture_engine::limits().burst_bytes).
 
 // The panel as ESP-IDF made it: its size, and whether its frame buffer is RGB565 (the one format a task writes).
 struct Panel {

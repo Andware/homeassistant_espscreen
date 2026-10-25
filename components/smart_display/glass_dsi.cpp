@@ -3,6 +3,7 @@
 // the PPA bursts of every client. Moved out of live_view.cpp as it was (docs/PICTURE_ARCHITECTURE.md, section 6, step 3):
 // the lock's reach, the keep-out's rule and the invalidations are those of the streams before the move.
 #include "glass.h"
+#include "picture_engine.h"
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
 #include <atomic>
 
@@ -307,10 +308,10 @@ extern "C" esp_err_t __wrap_esp_lcd_new_panel_dpi(esp_lcd_dsi_bus_handle_t bus, 
   if (err == ESP_OK && made && config) glass::panel_made(*made, config);
   return err;
 }
-// Every PPA client on this screen, ESPHome's for LVGL's turned flushes included, moves in PPA_BURST_BYTES a burst, so
+// Every PPA client on this screen, ESPHome's for LVGL's turned flushes included, moves in the engine's burst, so
 // the panel's DMA gets its turn on the bus ("The panel's share of the memory bus", glass.h). The streams' own clients
 // ask for it already; a client that asks for less keeps its own.
-static_assert(glass::PPA_BURST_BYTES == 64, "the burst below is the one glass.h names");
+static_assert(picture_engine::limits().burst_bytes == 64, "the burst below is the engine's");
 extern "C" esp_err_t __real_ppa_register_client(const ppa_client_config_t *config, ppa_client_handle_t *ret_client);
 extern "C" esp_err_t __wrap_ppa_register_client(const ppa_client_config_t *config, ppa_client_handle_t *ret_client) {
   if (!config) return __real_ppa_register_client(config, ret_client);

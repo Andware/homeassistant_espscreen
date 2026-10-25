@@ -124,13 +124,13 @@ static void free_stream(Stream *s) {
 }
 
 // The engine's copy (picture_engine::blit): the block `bw` x `bh` at bx, by of a picture (`in_w` x `rows`) to x, y of
-// another (ow x oh, `out_size` bytes), scaled by `sixteenths` and turned as LVGL turns.
+// another (ow x oh, `out_size` bytes), at the engine's `scale` (picture_engine::fit, cut) and turned as LVGL turns.
 static esp_err_t copy(Stream &s, const void *in, int in_w, int rows, int bx, int by, int bw, int bh, void *out,
-                      size_t out_size, int ow, int oh, int x, int y, int sixteenths, int turn) {
+                      size_t out_size, int ow, int oh, int x, int y, int scale, int turn) {
   picture_engine::Block block;
   block.in = in, block.in_w = in_w, block.in_rows = rows, block.bx = bx, block.by = by, block.bw = bw, block.bh = bh;
   block.out = out, block.out_size = out_size, block.out_w = ow, block.out_h = oh, block.x = x, block.y = y;
-  block.sixteenths = sixteenths, block.turn = turn;
+  block.scale = scale, block.turn = turn;
   return static_cast<esp_err_t>(picture_engine::blit(s.ppa, block));
 }
 
@@ -183,14 +183,16 @@ static void show(Stream &s, size_t length, bool still) {
   const int rows = static_cast<int>(info.bytes / 2 / info.stride);
   const int w = info.w, h = info.h;
   // Where it goes: a full view's picture as large as fits its room, a tile's into its card.
-  int sixteenths = 0;
+  int scale = 0;
   Rect where;
-  Cut into;
+  picture_engine::Cut into;
   if (s.look.tile) {
-    into = cut(w, h, s.area.w, s.area.h, s.look.contain);
+    into = picture_engine::cut(w, h, s.area.w, s.area.h, s.look.contain);
     if (into.ok) where = s.area;
   } else {
-    where = fit(w, h, s.area, sixteenths);
+    const picture_engine::Fit f = picture_engine::fit(w, h, s.area.x, s.area.y, s.area.w, s.area.h);
+    if (!f.empty()) where = Rect{f.x, f.y, f.w, f.h};
+    scale = f.scale;
   }
   if (where.empty()) {
     if (s.skipped++ == 0) ESP_LOGW(TAG, "a picture of %dx%d does not fit its room (%dx%d)", w, h, s.area.w, s.area.h);
@@ -249,7 +251,7 @@ static void show(Stream &s, size_t length, bool still) {
     // Into the card's canvas, not the glass, but through the PPA all the same: with the glass held.
     glass::hold();
     err = copy(s, s.picture, stride_w, rows, into.in_x, into.in_y, into.in_w, into.in_h, s.canvas, s.canvas_size, cw,
-               ch, into.out_x, into.out_y, into.sixteenths, 0);
+               ch, into.out_x, into.out_y, into.scale, 0);
     glass::release();
     if (err == ESP_OK) {
       compose(s.canvas, cw, cw, ch, s.look);
@@ -259,7 +261,7 @@ static void show(Stream &s, size_t length, bool still) {
       if (!s.stopping) {
         glass::place(s.room, s.area);  // from now on LVGL draws nothing here
         err = copy(s, s.canvas, cw, ch, 0, 0, cw, ch, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
-                   target.y, 16, s.turn);
+                   target.y, picture_engine::AS_IS, s.turn);
       }
       glass::release();
     }
@@ -270,7 +272,7 @@ static void show(Stream &s, size_t length, bool still) {
     if (!s.stopping) {
       glass::place(s.room, where);
       err = copy(s, s.picture, stride_w, rows, 0, 0, w, h, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
-                 target.y, sixteenths, s.turn);
+                 target.y, scale, s.turn);
     }
     glass::release();
   }
@@ -317,7 +319,8 @@ static void stream(Stream &s) {
     timeval step{0, static_cast<suseconds_t>(LOADER_STEP_MS * 1000)};
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &step, sizeof(step));
   }
-  Reader reader;
+  const picture_engine::Limits most = picture_engine::limits();
+  Reader reader(s.look.tile ? most.tile_picture_bytes : most.picture_bytes);
   uint32_t heard = esphome::millis();
   while (!s.stopping) {
     const int n = recv(fd, chunk, CHUNK, 0);
@@ -389,7 +392,8 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   s->look.name = nullptr;
   s->turn = glass::turn();
   s->started_at = s->reported_at = esphome::millis();
-  s->input = picture_engine::input(look.tile ? TILE_PICTURE : MAX_PICTURE, &s->input_size);
+  s->input = picture_engine::input(look.tile ? picture_engine::limits().tile_picture_bytes : picture_engine::limits().picture_bytes,
+                                   &s->input_size);
   s->ppa = picture_engine::client();
   bool ok = s->input && s->ppa;
   if (ok && sound && has_speaker()) {
@@ -440,7 +444,7 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   }
   glass::watch();
   ESP_LOGI(TAG, "stream %d into %dx%d at %d,%d%s, turned %d, PPA bursts of %d bytes", slot, area.w, area.h, area.x, area.y,
-           look.tile ? (look.contain ? " (a tile, whole picture)" : " (a tile)") : "", s->turn, glass::PPA_BURST_BYTES);
+           look.tile ? (look.contain ? " (a tile, whole picture)" : " (a tile)") : "", s->turn, picture_engine::limits().burst_bytes);
   return slot;
 }
 

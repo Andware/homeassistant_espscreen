@@ -102,7 +102,7 @@ uint8_t *decode(const uint8_t *data, size_t length, Still &out) {
 }
 
 // ---- The PPA ----
-static_assert(glass::PPA_BURST_BYTES == 64, "the burst below is the one glass.h names");
+static_assert(limits().burst_bytes == 64, "the burst below is the engine's");
 Client client() {
   ppa_client_config_t config{};
   config.oper_type = PPA_OPERATION_SRM;
@@ -135,7 +135,7 @@ int blit(Client client, const Block &b) {
   srm.out.srm_cm = PPA_SRM_COLOR_MODE_RGB565;
   // ESPHome's LVGL turns clockwise, the PPA counter-clockwise (ppa_angle).
   srm.rotation_angle = static_cast<ppa_srm_rotation_angle_t>(ppa_angle(b.turn));
-  srm.scale_x = srm.scale_y = b.sixteenths / 16.0f;
+  srm.scale_x = srm.scale_y = b.scale / 16.0f;  // sixteenths (fit, cut)
   srm.mode = PPA_TRANS_MODE_BLOCKING;
   return ppa_do_scale_rotate_mirror(static_cast<ppa_client_handle_t>(client), &srm);
 }

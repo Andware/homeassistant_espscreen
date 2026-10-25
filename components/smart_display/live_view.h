@@ -36,14 +36,11 @@
 
 namespace live_view {
 
-// A picture's part is never larger than this (a 1280 x 800 JPEG of a busy camera is 150 to 250 KB).
-constexpr size_t MAX_PICTURE = 1024 * 1024;
 constexpr size_t MAX_HEAD = 2048;    // the answer's head or a part's head
 constexpr uint32_t QUIET_MS = 6000;  // no byte for this long: the stream is gone
 constexpr uint32_t REPORT_MS = 10000;
 // A stream that failed this often for one opening of the view gives way to the stills of every board.
 constexpr uint8_t TRIES = 3;
-constexpr size_t TILE_PICTURE = 384 * 1024;  // a tile's picture is smaller (MAX_PICTURE is the full view's)
 // A full view's sound: 16-bit mono at this rate (the board's resampler makes it its bus's), in parts of at most
 // SOUND_PART bytes, and SOUND_BUFFER of it held between the stream and the speaker (half a second).
 constexpr uint32_t SOUND_RATE = 16000;
@@ -62,9 +59,10 @@ inline bool is_stream(const std::string &url) {
 // a piece of the camera's sound (audio/L16, 16-bit mono at SOUND_RATE). Its bytes go where `room(length, audio)` says
 // (nullptr: skip that part, one the task cannot take now) and `done(length, audio)` follows once they are all there.
 // It returns false once the stream is no good: an answer other than 200, a head without its length or too long, a part
-// over MAX_PICTURE.
+// over `most` bytes (the engine's picture limit, picture_engine::limits(); 0 takes none).
 class Reader {
  public:
+  explicit Reader(size_t most) : most_(most) {}
   template<typename Room, typename Done> bool feed(const uint8_t *data, size_t size, Room room, Done done) {
     while (size > 0 && !this->broken_) {
       if (!this->in_body_) {
@@ -88,7 +86,7 @@ class Reader {
           if (h.status != 200) this->broken_ = true;
           continue;
         }
-        if (!h.has_length || h.content_length == 0 || h.content_length > MAX_PICTURE) {
+        if (!h.has_length || h.content_length == 0 || h.content_length > this->most_) {
           this->broken_ = true;
           continue;
         }
@@ -121,6 +119,7 @@ class Reader {
 
  private:
   std::string head_;
+  size_t most_ = 0;
   bool answered_ = false, in_body_ = false, broken_ = false, audio_ = false, still_ = false;
   int status_ = 0;
   size_t need_ = 0, got_ = 0;
@@ -132,26 +131,6 @@ class Reader {
 // A rectangle of the screen as LVGL lays it out, and where it lies on a turned panel: the glass's (glass.h).
 using glass::Rect;
 using glass::on_panel;
-// The PPA scales in sixteenths (ESP-IDF's ppa_srm.c): a block of `n` pixels at `sixteenths` / 16 comes out this long.
-inline int scaled(int n, int sixteenths) { return (sixteenths / 16) * n + (sixteenths % 16) * n / 16; }
-// A picture of w x h as large as it fits in `area`, its proportions kept, in the middle: the app sends the camera's own
-// size where that is smaller than the glass (a substream of 512 x 288 costs Home Assistant a fraction of a 1280 x 720
-// JPEG), and the PPA scales it on its way to the frame buffer. `sixteenths` is the scale for the PPA; the rectangle is
-// empty when even 1/16 does not fit, or for a picture larger than the screen takes (MAX_SIDE).
-constexpr int MAX_SIDE = 2048;
-constexpr int MAX_SCALE = 16 * 16;  // sixteen times: a 80 x 50 picture still fills the glass
-inline Rect fit(int w, int h, const Rect &area, int &sixteenths) {
-  sixteenths = 0;
-  if (w <= 0 || h <= 0 || w > MAX_SIDE || h > MAX_SIDE || area.empty()) return {};
-  int s = std::min(16 * area.w / w, 16 * area.h / h);
-  s = std::min(s, MAX_SCALE - 1);
-  // The PPA's sums floor each part on their own: a step back where they round a pixel over the area.
-  while (s > 0 && (scaled(w, s) > area.w || scaled(h, s) > area.h)) --s;
-  if (s <= 0) return {};
-  sixteenths = s;
-  const int fw = scaled(w, s), fh = scaled(h, s);
-  return {area.x + (area.w - fw) / 2, area.y + (area.h - fh) / 2, fw, fh};
-}
 // What the screen asks the app for: the room it has, "1280x720".
 inline std::string box_text(const Rect &area) { return std::to_string(area.w) + "x" + std::to_string(area.h); }
 
@@ -176,51 +155,6 @@ struct Look {
   int loader = 0, loader_margin = 0, loader_arc = 0;
   uint16_t loader_ring = 0, loader_turn = 0;  // RGB565: the ring, and the arc that turns on it
 };
-// Where a picture of w x h goes in a card of cw x ch: the PPA reads the block in_* of it and writes out_* at
-// `sixteenths` / 16. Filling: the middle of the picture, scaled up only when it is smaller than the card. Whole
-// (contain): all of it, as large as fits, in the middle.
-struct Cut {
-  int in_x = 0, in_y = 0, in_w = 0, in_h = 0;
-  int out_x = 0, out_y = 0, out_w = 0, out_h = 0;
-  int sixteenths = 0;
-  bool ok = false;
-  bool covers(int cw, int ch) const { return ok && out_x == 0 && out_y == 0 && out_w == cw && out_h == ch; }
-};
-inline Cut cut(int w, int h, int cw, int ch, bool contain) {
-  Cut c;
-  if (w <= 0 || h <= 0 || cw <= 0 || ch <= 0 || w > MAX_SIDE || h > MAX_SIDE) return c;
-  if (contain) {
-    const Rect r = fit(w, h, Rect{0, 0, cw, ch}, c.sixteenths);
-    if (r.empty()) return c;
-    c.in_w = w;
-    c.in_h = h;
-    c.out_x = r.x, c.out_y = r.y, c.out_w = r.w, c.out_h = r.h;
-    c.ok = true;
-    return c;
-  }
-  // The least scale at which the picture covers the card: 16 (as it is) for a picture the app sent at the card's size.
-  int s = 16;
-  while (s < MAX_SCALE - 1 && (scaled(w, s) < cw || scaled(h, s) < ch)) ++s;
-  while (s > 1 && scaled(w, s - 1) >= cw && scaled(h, s - 1) >= ch) --s;
-  if (scaled(w, s) < cw || scaled(h, s) < ch) return c;
-  // The largest block of the picture that, scaled, stays within the card.
-  auto block = [s](int n, int room) {
-    int in = std::min(n, (room * 16 + s - 1) / s);
-    while (in > 1 && scaled(in, s) > room) --in;
-    return in;
-  };
-  c.sixteenths = s;
-  c.in_w = block(w, cw);
-  c.in_h = block(h, ch);
-  c.in_x = (w - c.in_w) / 2;
-  c.in_y = (h - c.in_h) / 2;
-  c.out_w = scaled(c.in_w, s);
-  c.out_h = scaled(c.in_h, s);
-  c.out_x = (cw - c.out_w) / 2;
-  c.out_y = (ch - c.out_h) / 2;
-  c.ok = true;
-  return c;
-}
 // RGB565 in the chip's own byte order (as LVGL's and the decoder's), and LVGL's ARGB8888 (0xAARRGGBB).
 inline uint16_t rgb565(uint32_t rgb) {
   return static_cast<uint16_t>(((rgb >> 8) & 0xF800) | ((rgb >> 5) & 0x07E0) | ((rgb >> 3) & 0x001F));

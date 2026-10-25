@@ -497,6 +497,11 @@ The rest of this page is about pictures coming to a screen. This section goes th
 its own (the reTerminal D1001 and the M5Stack Tab5, the feature `camera_sensor`) as a live camera in Home Assistant,
 with sound, playing in the browser and the app with about a third of a second of delay.
 
+Measured and open: watched as a live tile on the screen itself, the video comes to the app at about 0.1 s behind the
+camera on average but in bursts of 1.5 to 3 s behind now and then (a reTerminal D1001, 2026-10-25, camera_source's
+"behind the camera" line), where another camera through Home Assistant stays within 0.3 s. Likely the wait for a key
+frame or the encoder on the screen while it streams two tiles; not looked into yet.
+
 **Setting it up.** Add the plugin Screen camera to the screen; its part **Video** is on when it is added (the plugin's
 details, on the screen's Plugins tab, turn it off). Then, once for the whole home, open **Settings, Video in Home
 Assistant** in Tessera, press **Install in Home Assistant** and then **Restart Home Assistant**. From then on Tessera

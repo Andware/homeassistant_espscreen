@@ -28,7 +28,7 @@ class P4Build(unittest.TestCase):
         self.assertIn('cg.add_build_flag(f"-Wl,--wrap={wrap}")', source)
         # The main loop's waits for the C6's answers (5 s each in esp_hosted) must fit the task watchdog, or a busy SDIO
         # link restarts the screen instead of failing a call (2026-10-24, the D1001, a Tab5 and a Guition 10.1).
-        hardware = (ROOT / 'packages/hardware/esp32p4-c6.yaml').read_text()
+        hardware = (ROOT / 'packages/hardware/esp32p4-core.yaml').read_text()
         self.assertRegex(hardware, r'(?m)^esp32:\n(?:  .*\n)*?  watchdog_timeout: 20s\n', 'every P4 board waits 20 s on its main loop')
         # A screen's own sdkconfig_options keep the last word.
         self.assertIn('if name not in own', facts)
@@ -68,6 +68,32 @@ class P4Build(unittest.TestCase):
         # The define the engine builds under is the one the headers test.
         for name in ('live_view.h', 'glass.h', 'picture_engine.h'):
             self.assertIn(f"defined({p4_build.ENGINES['p4']['define']})", (COMPONENT / name).read_text(), name)
+
+
+class ChipFactsBehindTheEngine(unittest.TestCase):
+    """The P4's facts live behind the picture engine (docs/PLATFORM_PLAN.md 3.2): outside the engine's own files the
+    code names no sixteenths, no PPA, no JPEG driver and no MIPI panel; it asks picture_engine (limits, fit, cut, blit)
+    and glass. Comments and strings may name them."""
+    ALLOWED = {'picture_engine.h', 'picture_engine_p4.cpp', 'ppa_guard.h', 'ppa_guard.cpp', 'picture_jpeg.h',
+               'glass_dsi.cpp'}
+    RULES = {'sixteenths': r'\bsixteenths\b', 'PPA': r'\bppa_\w+\s*\(|\bPPA_[A-Z0-9_]+',
+             'JPEG driver': r'\bjpeg_(?:decoder|decode|alloc|new|del)\w*', 'MIPI': r'\bmipi\w*|\bMIPI\w*|\besp_lcd_\w+'}
+
+    @staticmethod
+    def code(text):
+        text = re.sub(r'//[^\n]*', '', text)
+        text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
+        return re.sub(r'"(?:\\.|[^"\\])*"', '""', text)
+
+    def test_no_chip_fact_outside_the_engine(self):
+        found = []
+        for path in sorted(COMPONENT.glob('*')):
+            if path.suffix not in ('.h', '.cpp') or path.name in self.ALLOWED:
+                continue
+            body = self.code(path.read_text())
+            for name, rx in self.RULES.items():
+                found += [f'{path.name}: {name} ({m.group(0)})' for m in re.finditer(rx, body)]
+        self.assertEqual(found, [])
 
 
 if __name__ == '__main__':

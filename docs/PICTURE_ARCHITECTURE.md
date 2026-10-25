@@ -187,8 +187,11 @@ fact of the hardware, and where:
 | Fact | Where it is read | Where it has effect |
 |---|---|---|
 | the chip is an ESP32-P4 | `__init__.py` (`_esp32_p4`) | `P4_NETWORK`, `USE_LIVE_VIEW`, the three wraps |
-| the panel is MIPI-DSI | `live_view.cpp` (the wrap of `esp_lcd_new_panel_dpi`) | a P4 with an RGB panel would find no frame buffer and show stills |
-| the frame buffer is RGB565 | `live_view.cpp` (`panel_rgb565`) | `available()` |
+| the panel is MIPI-DSI | `glass_dsi.cpp` (the wrap of `esp_lcd_new_panel_dpi`) | a P4 with an RGB panel would find no frame buffer and show stills |
+| the frame buffer is RGB565 | `glass_dsi.cpp` | `glass::direct()`, `live_view::available()` |
+| each 2D-DMA client's burst | `picture_engine::limits().burst_bytes` (64 on the P4: the panel's bridge runs dry on ESP-IDF's 128, lvgl/lvgl #9590) | the streams' and LVGL's PPA clients (`glass_dsi.cpp`) |
+| the largest picture a stream's part may be | `picture_engine::limits()` (`picture_bytes` 1 MB, `tile_picture_bytes` 384 KB on the P4, over a busy camera's 150 to 250 KB at 1280 x 800, CAMERA.md 2026-10-10; 0 elsewhere, no part at all) | `live_view::Reader`, a stream's input buffer |
+| how the engine scales | `picture_engine::fit`, `cut` (the P4's PPA in sixteenths) | every copy's `scale`, which the shared code hands on and never counts in |
 | the chip is a pre-v3 P4 | `ppa_guard.cpp` (`block.mb = 16`, a comment on `CONFIG_ESP32P4_SELECTS_REV_LESS_V3`) | the guard's macro block |
 | the Wi-Fi goes through a co-processor over SDIO | `__init__.py` (`P4_NETWORK`, keyed on the chip) | the TCP window and send buffer, the network's buffers in PSRAM |
 | how the glass is turned | `live_view.cpp` (`turn_now`, LVGL's rotation, read at every tick: the app can stand a screen up at run time) | every copy's angle, a stream ended with `TURNED` |
@@ -196,6 +199,11 @@ fact of the hardware, and where:
 | the board has a speaker | `packages/features/audio.yaml` (`bind_speaker`) | the camera's sound |
 | the board has a camera sensor | the board file's `CAMERA_I2C`, `CAMERA_XCLK_PIN` (the feature `camera_sensor`) | the plugin's `esp_video_camera` |
 | which sensor | the sensor's id over I2C at run time (esp_cam_sensor's auto-detect, `sc202cs`, `ov02c10`) | its driver and tuning |
+
+The rule for a chip's fact: shared code reads it from `picture_engine::limits()`, `fit`, `cut` or a wrap, never from a
+header of its own; outside the engine's files (`picture_engine*.h`, `picture_engine_p4.cpp`, `ppa_guard.*`,
+`picture_jpeg.h`, `glass_dsi.cpp`) the code names no sixteenths, PPA, JPEG driver or MIPI panel, which
+`tests/test_live_view.py` (ChipFactsBehindTheEngine) keeps so.
 
 So the rule holds today. What the design adds is a place for each fact to be read once, so a new chip or panel kind is
 one implementation beside the P4's rather than an `#if` in the shared files.
