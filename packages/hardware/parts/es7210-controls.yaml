@@ -1,6 +1,10 @@
-# ES7210 controls shared by the native-I2S and AEC paths. The reference ADC is excluded by the driver.
+# ESP Screens - the ES7210's microphone gain and ALC as settings a person changes (Home Assistant and the screen's
+# settings page), for a board that includes this beside parts/es7210.yaml, on either transport; the driver leaves the
+# reference input out. Not a part but a feature: rows on the settings page are behaviour, not a fact of the chip. It
+# becomes one that comes along by itself once the part declares AUDIO_MIC_ALC: true for the boards that have it
+# (tests/test_board_declarations.py, STILL_TO_MOVE).
 substitutions:
-  BOOT_BOARD_SETTINGS: |-
+  BOOT_MIC_CONTROLS: |-
     // Restore codec gain inside the core's boot hook; a separate on_boot replaces that whole trigger.
     const float gain = id(board_saved_microphone_gain);
     if (gain >= 0 && gain <= 36 && int(gain) % 3 == 0)
@@ -13,7 +17,6 @@ substitutions:
     settings_screen::board_rows.push_back(settings_screen::toggle(screen_text::txt::settings_automatic_gain,
         []() -> int32_t { return id(board_automatic_gain).state ? 1 : 0; },
         [](int32_t on) { if (on) id(board_automatic_gain).turn_on(); else id(board_automatic_gain).turn_off(); }));
-    ${P4_AEC_SETTINGS}
 
 globals:
   - id: board_saved_microphone_gain

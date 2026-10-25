@@ -221,7 +221,7 @@ LINT_KEEP = {
     # writes them, and the reasons an action is refused, which only the app's log and the plugin's maker see.
     'True', 'False', 'too many fields', "a field's name is a-z, 0-9 and _", 'entity_id is given twice', 'a field is given twice',
     'a value is no JSON', 'the fields are larger than 1 KB',
-    # The ES7210's diagnostic sensor (packages/hardware/es7210-aec.yaml): the states of a diagnostic entity in Home
+    # The ES7210's diagnostic sensor (packages/hardware/parts/es7210/aec.yaml): the states of a diagnostic entity in Home
     # Assistant, in English as Home Assistant's own diagnostics are.
     'Error', 'Starting', 'Enabled', 'Bypass',
     # Home Assistant's own values and units the code compares with, not words it shows.

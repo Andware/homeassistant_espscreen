@@ -77,6 +77,9 @@ substitutions:
   # A board's extras on the settings page (docs/SETTINGS.md, "A board's own settings"): rows a feature or the board file
   # puts in settings_screen::board_rows. A screen without any has no Extras page.
   BOOT_AUDIO: ""                                   # features/audio.yaml: the speaker's bus, the microphone
+  BOOT_SPEAKER_PART: ""                            # the speaker's codec (packages/hardware/parts/)
+  BOOT_MIC_CONTROLS: ""                            # the microphones' gain and ALC (parts/es7210-controls.yaml)
+  BOOT_MICROPHONE_PART: ""                         # the microphones' codec and its transport (parts/es7210.yaml)
   BOOT_BOARD_SETTINGS: ""                          # the board file's own
   # The screen's moments (every 250 ms, the cards closing, the settings page opening, away from page 1, an alert) are
   # lists, not substitutions (screen_hooks.h): a feature adds to them at boot, a plugin through the plugin API.
@@ -323,6 +326,9 @@ esphome:
           runtime_tiles::bind_pages();
           ${BOOT_CARDS_TAIL}
           ${BOOT_AUDIO}
+          ${BOOT_SPEAKER_PART}
+          ${BOOT_MIC_CONTROLS}
+          ${BOOT_MICROPHONE_PART}
           ${BOOT_BOARD_SETTINGS}
           plugin_host::ready();
       # The settings page the screen opens on its own (0.2.44+): the same values ESP Screen Manager

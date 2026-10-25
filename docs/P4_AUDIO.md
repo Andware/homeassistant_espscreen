@@ -5,7 +5,7 @@ AI provider, conversation backend, Spotify control or Ethernet implementation is
 The two relays are ordinary HA switches; [WAVESHAREP4.md](WAVESHAREP4.md) describes them.
 
 Three other Waveshare ESP32-P4 boards wire their audio exactly as the 86 panel does, per Waveshare's
-schematics, and take the same codecs (`packages/hardware/wavesharep4-audio/codecs.yaml`), transports and
+schematics, and take the same codecs (declared in `packages/hardware/wavesharep4-audio.yaml`, the parts in `packages/hardware/parts/`), transports and
 settings: the [ESP32-P4-WIFI6-Touch-LCD-7B](WAVESHAREP47B.md), the [ESP32-P4-WIFI6-Touch-LCD-7](WAVESHAREP47.md)
 and the [ESP32-P4-WIFI6-Touch-LCD-10.1](WAVESHARE101.md). All three are experimental; their pages say who tried what.
 
@@ -50,8 +50,10 @@ retain the last accepted value and try to restore the previous codec registers. 
 **Echo cancellation status** is Enabled, Bypass, Starting or Error. Enabled means cancellation
 is selected and the DSP initialized; it is not a measurement of echo suppression quality.
 
-The Waveshare P4 boards select `P4_AUDIO_TRANSPORT: "aec"`. To omit the audio stack/AEC
-libraries entirely, select `P4_AUDIO_TRANSPORT: "i2s"` in Override YAML and rebuild. This keeps
+The ES7210's part takes `AUDIO_TRANSPORT: "aec"` by default, since its MIC3 carries a playback reference. To omit
+the audio stack/AEC libraries entirely, select `AUDIO_TRANSPORT: "i2s"` in Override YAML and rebuild
+(`P4_AUDIO_TRANSPORT` and `TAB5_AUDIO_TRANSPORT`, the old names, still work in firmware 0.58 and go in the release
+after). This keeps
 the original half-duplex I2S transport, gain and ALC. No AEC entity is present in that build.
 Other boards retain their default codecs and transport; the Tab5 can opt into the same
 AEC transport with its own wiring ([Tab5 notes](TAB5.md#optional-echo-cancellation)). The extended codec is named

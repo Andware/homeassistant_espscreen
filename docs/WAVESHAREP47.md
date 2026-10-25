@@ -54,14 +54,16 @@ Waveshare's schematic of the ESP32-P4-WIFI6-Touch-LCD-X main board, which this 7
 the audio exactly as on the [Waveshare ESP32-P4 86 panel](WAVESHAREP4.md): an ES8311 for the speaker (its ADC is not
 wired), an ES7210 with the two microphones on its MIC1 and MIC2 and the speaker circuit's output, through an
 attenuator, on its MIC3 as the echo cancellation's reference, one I2S bus for both, and an NS4150B amplifier. So the
-board takes the 86 panel's audio (`packages/hardware/wavesharep4-audio/`): its codecs, its transport with echo
+board takes the 86 panel's audio (`packages/hardware/wavesharep4-audio.yaml`): its codecs, its transport with echo
 cancellation by default, and its Extras. [P4_AUDIO.md](P4_AUDIO.md) says how the echo cancellation works and how to
 choose the plain half-duplex transport instead:
 
 ```yaml
 substitutions:
-  P4_AUDIO_TRANSPORT: "i2s"
+  AUDIO_TRANSPORT: "i2s"
 ```
+
+`P4_AUDIO_TRANSPORT`, the old name, still works in firmware 0.58 and goes in the release after.
 
 This is **experimental**: the contributor ran the same audio on the board (below), the project has not.
 
