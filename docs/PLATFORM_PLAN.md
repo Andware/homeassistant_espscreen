@@ -359,29 +359,32 @@ an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black l
   crop (window 396..1203 x 296..903, no 0x3215, 0x3220 or 0x59xx), and its own header says the sensor has no binning.
   Nothing to build on.
 
-For the OV02C10 (step 3, the Guition), two variants go to the tester behind the setting, both off until he confirms
-them: (A) 2 x 2 subsampling with OmniVision's increments (odd 3, even 1 in 0x3814-0x3817), the whole window, 960 x 528
-out of the 968 x 544 it leaves (skipped, not averaged: fine patterns may shimmer; averaging waits for the sensor's
-binning bits); (B) the same youkorr repository's "sensor scaling": the whole window (0x3800-0x3807 =
-0..1935 x 4..1091) with a smaller output and no binning (0x3814/0x3815 = 0x01), 0x4500 0x38 and 0x4501 0x18 where
-its other tables keep 0x07 and 0x00, and its 0x3910, 0x3d85/0x3d8c/0x3d8d, 0x4033 and 0x4050/0x4051. B is unproven:
-its own notes ask for validation on hardware and report watchdog time-outs at 960 x 540, and a raw sensor whose output
-is smaller than its window usually crops rather than scales. The tester reports the field (a ruler or a known room),
-the colours, the frame rate and whether the stream holds.
+For the OV02C10 (step 3, the Guition) OmniVision's datasheet is known (OV02C10 product specification v2.01, in
+Guition's own repository; the numbers below are its tables). The sensor has no scaler, only a window, binning and
+skipping (table 2-1: "sub2 ... bin2 or skip2", "1280x720 crop from full"); a horizontal size must be a multiple of 8
+(section 2.3). 0x3814-0x3817 step the columns and lines (X_INC_ODD/EVEN, Y_INC_ODD/EVEN), 0x3820 (FORMAT1) bit 1
+(hbin2_o) bins two columns and bit 0 (vbinf_o) two lines, bit 3 mirrors and bit 4 flips, and 0x4501 (HBIN_CTRL) bits
+3:2 at 00 average the binned pixels (table 3-1). The ISP reports what it does in 0x5024 (ISP_TOP_36: bit 5 x_bin2,
+bit 4 y_bin2) and can be told by hand in 0x5003 (ISP_TOP_3: man_bin_en, man_x_bin2, man_y_bin2). So youkorr's "sensor
+scaling" cannot exist: a smaller output than the window is a crop.
 
 The test build is out (Screen camera 0.6.0 on tessera-plugins dev, 2026-10-25): the setting "Camera field of view"
-(Sharp, Full (subsampling), Full (sensor scale); Sharp by default) asks the sensor's driver for the mode
-(`tessera_camera_field_format`, the OV02C10's only), the capture task stops, hands the sensor the format and starts
-again, and the video's encoder is made anew at the new size. A camera without the modes, and a mode that gives no
-frame, go back to Sharp by themselves, and the setting shows it. The log says the mode, its size, and its frames a
-second over its first ten seconds. What the tester sends: the field (a ruler, or a room he knows), the colours, those
-frames a second, and whether the stream held.
+(Sharp, Full (binning), Full (skip); Sharp by default). Both Full modes are the 1920x1080 table's whole window with
+increments of 3 and 1 and a 960 x 528 output (the middle of 968 x 544, in whole macroblocks for the encoder); Full
+(binning) also sets hbin2_o and vbinf_o (0x3820 0xa3) with 0x4501's averaging, Full (skip) reads every other pair
+only, so fine patterns may shimmer. The setting asks the sensor's driver for the mode (`tessera_camera_field_format`,
+the OV02C10's only), the capture task stops, hands the sensor the format and starts again, and the video's encoder is
+made anew at the new size. A camera without the modes, and a mode that gives no frame, go back to Sharp by themselves,
+and the setting shows it. Ten seconds after a change the log says the mode, its size and its frames a second, and what
+the sensor says it does (0x3820 and 0x5024's x_bin2 and y_bin2). What the tester sends: which of the two worked, the
+field (a ruler, or a room he knows, against Sharp), the colours, those frames a second, and whether the stream held
+over a few minutes.
 
 Where it stands: the whole field on the SC202CS needs the columns halved in the sensor, and that register is not
 known without SmartSens' datasheet. Halving them on the PPA instead (a full-width 1600 x 592) is the pass that cost
 the video and the tiles half their pictures. The registers above are all the test wrote beyond esp_cam_sensor's
-1600 x 1200 RAW8 table. The OV02C10 (the Guition) is the other road: its skipping increments are OmniVision's
-(0x3814-0x3817).
+1600 x 1200 RAW8 table. The OV02C10 (the Guition) is the other road: its binning and skipping are in OmniVision's
+datasheet (table 3-1, above).
 
 ## 5. The doorbell's talk-back, prepared
 
