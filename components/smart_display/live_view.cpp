@@ -463,7 +463,7 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     return -1;
   }
   streams[slot] = s;
-  if (!psram_task::start(s->task, task_main, "live_view", STACK_BYTES, s, 5, 1)) {
+  if (!psram_task::start(s->task, task_main, "live_view", STACK_BYTES, s, glass::WRITER_PRIORITY, 1)) {
     streams[slot] = nullptr;
     free_stream(s);
     return -1;

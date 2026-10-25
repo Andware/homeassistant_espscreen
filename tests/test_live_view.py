@@ -109,5 +109,26 @@ class ChipFactsBehindTheEngine(unittest.TestCase):
         self.assertEqual(found, [])
 
 
+
+class GlassTurns(unittest.TestCase):
+    """The glass is a mutex FreeRTOS gives to its highest waiter (glass.h): a still's download, at priority 1, waited
+    for it behind four live tiles for up to two minutes (a reTerminal D1001, 2026-10-25, "11011 ms waiting for the
+    glass, 2 ms holding it"). Every writer waits at one priority."""
+
+    def test_a_still_waits_at_the_streams_priority(self):
+        self.assertIn('constexpr unsigned WRITER_PRIORITY = 5;', (COMPONENT / 'glass.h').read_text())
+        live = (COMPONENT / 'live_view.cpp').read_text()
+        self.assertIn('"live_view", STACK_BYTES, s, glass::WRITER_PRIORITY, 1)', live)
+        engine = (COMPONENT / 'picture_engine_p4.cpp').read_text()
+        decode = engine[engine.index('uint8_t *decode('):engine.index('// ---- The PPA ----')]
+        # Raised before the wait, held only around the glass, and back at its own once it let go.
+        order = ['vTaskPrioritySet(nullptr, glass::WRITER_PRIORITY);', 'glass::hold();', 'glass::release();',
+                 'vTaskPrioritySet(nullptr, own);']
+        self.assertEqual([decode.index(step) for step in order], sorted(decode.index(step) for step in order))
+        # A slow still says where its time went.
+        fetch = (COMPONENT / 'picture_fetch.cpp').read_text()
+        self.assertIn('waiting for the glass, %u ms holding it)', fetch)
+
+
 if __name__ == '__main__':
     unittest.main()

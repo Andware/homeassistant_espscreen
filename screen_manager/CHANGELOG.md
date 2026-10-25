@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A camera picture beside four live tiles comes within a second.** On an ESP32-P4 page with four live camera tiles, the fifth tile's picture and a media cover could take half a minute to two minutes: the picture waited for its turn on the glass behind the live tiles, which always went first. It waits in turn with them now; on a reTerminal D1001 187 pictures in 40 minutes took 0.3 s in the middle and 0.8 s at most, and the live tiles ran smoother too.
+
 - **A doorbell ring could restart a busy screen.** The chime, 60 KB, was made at the first ring in the chip's own memory, and a screen with many plugins and pages had no free block that large left (an M5Stack Tab5 with nine plugins and six pages). It is made in PSRAM now.
 
 - **A camera with sound no longer turns into loud noise after a hiccup in its stream.** A change on dev of 2026-10-25 (never in a release) left the screen's sound buffer one byte short of an even size. When it ran full, a part went in cut to the room left, an odd number of bytes, and every sample after it was a byte off: seconds of full-scale noise, until it came right by chance. The buffer is even again, and a part goes in whole or not at all.

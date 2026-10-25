@@ -11,6 +11,9 @@
 #include "picture_jpeg.h"
 
 #include <driver/jpeg_decode.h>
+#include <esp_timer.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <driver/ppa.h>
 
 namespace picture_engine {
@@ -89,9 +92,19 @@ uint8_t *decode(const uint8_t *data, size_t length, Still &out) {
   size_t size = 0;
   uint8_t *pixels = output(still.bytes, &size);
   if (!pixels) return nullptr;
+  // The glass goes to its highest waiter, and the streams' tasks wait at WRITER_PRIORITY: a download at its own
+  // priority 1 waited behind four live tiles for up to two minutes (a reTerminal D1001, 2026-10-25). It waits at theirs,
+  // in turn with them, and is back at its own once it let go.
+  const UBaseType_t own = uxTaskPriorityGet(nullptr);
+  if (own < glass::WRITER_PRIORITY) vTaskPrioritySet(nullptr, glass::WRITER_PRIORITY);
+  const int64_t asked = esp_timer_get_time();
   glass::hold();
+  const int64_t got = esp_timer_get_time();
   const bool decoded = decode_into(data, length, pixels, size);
   glass::release();
+  if (own < glass::WRITER_PRIORITY) vTaskPrioritySet(nullptr, own);
+  still.waited_ms = static_cast<uint32_t>((got - asked) / 1000);
+  still.held_ms = static_cast<uint32_t>((esp_timer_get_time() - got) / 1000);
   if (!decoded) {
     free(pixels);
     return nullptr;

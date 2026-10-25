@@ -40,6 +40,7 @@ constexpr uint32_t RECV_MS = 4000;      // a chunk that does not come in this lo
 constexpr uint32_t WHOLE_MS = 30000;    // and a picture that takes longer than this altogether
 constexpr size_t CHUNK = 8192;          // what one recv takes at most
 constexpr size_t HEAD_MAX = 4096;       // an answer's head larger than this is no picture
+constexpr uint32_t SLOW_MS = 2000;      // a picture that took longer says where the time went
 // The task's stack: a socket, the head, a row of a BMP, and on a P4 the decode of a whole JPEG (the hardware decoder's
 // driver and the PPA's, picture_engine_p4.cpp). 6 KB from the days of BMP alone left 61 bytes unused on a reTerminal
 // D1001 (2026-10-24, a cover of 1.5 KB), and the stack's canary turns an overflow into a restart; 10 KB, in PSRAM
@@ -69,6 +70,9 @@ struct Slot {
   // What the task was given, and what it gives back (written before `state` becomes DONE).
   std::string task_url, task_etag;
   uint32_t started = 0;
+  // Its way, in ms after `started`: connected, its first bytes, all of it, and decoded (a JPEG, in the glass's turn).
+  uint32_t connected_ms = 0, first_ms = 0, body_ms = 0, decoded_ms = 0;
+  uint32_t waited_ms = 0, held_ms = 0;  // of the decoding: its wait for the glass, then its hold of it
   bool ok = false, cached = false;
   int status = 0;
   size_t received = 0;
@@ -131,6 +135,7 @@ static void download(Slot &slot) {
   if (!a.ok) { ESP_LOGW(TAG, "%s: not a link: %s", slot.name, slot.task_url.c_str()); return; }
   const int fd = connect_to(a, RECV_MS);
   if (fd < 0) { ESP_LOGW(TAG, "%s: no connection to %s:%u", slot.name, a.host.c_str(), a.port); return; }
+  slot.connected_ms = esphome::millis() - slot.started;
   // A P4 takes JPEG as well (picture_engine::JPEG); the app answers with the format the question named first.
   std::string request = "GET " + a.path + " HTTP/1.1\r\nHost: " + a.host + ":" + std::to_string(a.port) +
                         (picture_engine::JPEG ? "\r\nAccept: image/jpeg,image/bmp,*/*;q=0.8" : "\r\nAccept: image/bmp,*/*;q=0.8") +
@@ -172,6 +177,7 @@ static void download(Slot &slot) {
       break;
     }
     if (n == 0) { closed = true; break; }
+    if (slot.received == 0) slot.first_ms = esphome::millis() - slot.started;
     slot.received += static_cast<size_t>(n);
     const uint8_t *data = chunk;
     size_t size = static_cast<size_t>(n);
@@ -208,10 +214,14 @@ static void download(Slot &slot) {
   }
   close(fd);
   roomy::release(chunk);
+  slot.body_ms = slot.decoded_ms = esphome::millis() - slot.started;
   if (kind == 2 && !slot.cached && !failed && jpeg.done()) {
     // The whole JPEG: decoded into a buffer of its own, which tick() swaps in as it does a BMP of a new size.
     picture_engine::Still still;
     uint8_t *pixels = picture_engine::decode(jpeg.buffer, jpeg.have, still);
+    slot.decoded_ms = esphome::millis() - slot.started;
+    slot.waited_ms = still.waited_ms;
+    slot.held_ms = still.held_ms;
     // Shown at its own size (the rows and columns past it, made to fill whole MCUs, lie unseen in the stride), with
     // its places' corners exact again (jpeg_notes).
     picture_jpeg::JpegNotes notes;
@@ -274,6 +284,7 @@ static void start(Slot &slot) {
   slot.ok = slot.cached = false;
   slot.status = 0;
   slot.received = 0;
+  slot.connected_ms = slot.first_ms = slot.body_ms = slot.decoded_ms = slot.waited_ms = slot.held_ms = 0;
   slot.fresh = nullptr;
   slot.fresh_bytes = 0;
   slot.fresh_w = slot.fresh_h = slot.fresh_stride = 0;
@@ -362,9 +373,15 @@ static void take_over(Slot &slot) {
     slot.dsc.data = reinterpret_cast<const uint8_t *>(slot.pixels);
   }
   if (slot.ok && !slot.cached) slot.etag = slot.fresh_etag;
+  const uint32_t took = esphome::millis() - slot.started;
   if (slot.ok)
     ESP_LOGI(TAG, "%s: %s, %u bytes in %u ms%s", slot.name, slot.cached ? "unchanged" : "loaded", (unsigned) slot.received,
-             (unsigned) (esphome::millis() - slot.started), cancelled ? " (no longer wanted)" : "");
+             (unsigned) took, cancelled ? " (no longer wanted)" : "");
+  if (took > SLOW_MS)
+    ESP_LOGW(TAG, "%s: %u ms: connected after %u, its first bytes after %u, all of it after %u, decoded after %u (%u ms "
+             "waiting for the glass, %u ms holding it)", slot.name, (unsigned) took, (unsigned) slot.connected_ms,
+             (unsigned) slot.first_ms, (unsigned) slot.body_ms, (unsigned) slot.decoded_ms, (unsigned) slot.waited_ms,
+             (unsigned) slot.held_ms);
   slot.state.store(IDLE, std::memory_order_release);
   if (cancelled) {
     slot.cancel.store(false);

@@ -68,6 +68,9 @@ struct Panel {
 // A room LVGL keeps out of while a stream writes there; -1 for none.
 using Room = int;
 constexpr int MAX_ROOMS = 8;
+// The FreeRTOS priority a writer waits for the glass at: a stream's task runs at it, and a still's download waits at it
+// in turn with them (picture_engine::decode), as a mutex goes to its highest waiter.
+constexpr unsigned WRITER_PRIORITY = 5;
 
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
 // LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot).

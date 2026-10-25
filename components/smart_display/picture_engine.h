@@ -32,6 +32,7 @@ namespace picture_engine {
 struct Still {
   int w = 0, h = 0, stride = 0;
   size_t bytes = 0;
+  uint32_t waited_ms = 0, held_ms = 0;  // decode's wait for the glass, then its hold of it (the P4's hardware decoder)
 };
 // One copy: the block `bw` x `bh` at bx, by of the picture `in` (`in_w` pixels a row, `in_rows` rows, RGB565) to x, y
 // of the picture `out` (`out_w` x `out_h`, `out_size` bytes), scaled by `scale` (the engine's own unit, as fit and cut
