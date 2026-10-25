@@ -11,7 +11,9 @@ from collections import OrderedDict
 from dataclasses import dataclass, field, replace
 import hashlib
 import logging
+import time
 
+import live_pictures
 import picture_paint
 import picture_question as pq
 from picture_sources import Resolved, _Drawn
@@ -145,6 +147,7 @@ class Service:
 
     async def picture(self, inbox, screen, question):
         """The question's picture now (Painted), or None while its one source is on its way."""
+        started = time.monotonic()
         resolved = await asyncio.gather(*(self.sources.get(inbox, screen, question, source, place)
                                           for source, place in zip(question.sources, question.places)))
         if len(resolved) == 1 and resolved[0].state == 'pending':
@@ -172,7 +175,19 @@ class Service:
         body = self.kept.get(key)
         if body is None:
             try:
-                body = await asyncio.get_running_loop().run_in_executor(None, picture_paint.paint, painted, raws, fmt)
+                # How long a still waits for a thread, and behind how many frames of the live streams (docs/CAMERA.md):
+                # logged when frames waited or the wait was long, the case of a screen with four live tiles.
+                behind, asked, ran = live_pictures.encoding, time.monotonic(), []
+
+                def paint():
+                    ran.append(time.monotonic())
+                    return picture_paint.paint(painted, raws, fmt)
+                body = await asyncio.get_running_loop().run_in_executor(None, paint)
+                done = time.monotonic()
+                if ran and (behind or ran[0] - asked > 1):
+                    LOG.info('Picture of %s: its sources %d ms, then %d ms waiting for a thread behind %d frames of the '
+                             'live streams, painted in %d ms', ', '.join(s.text for s in question.sources),
+                             (asked - started) * 1000, (ran[0] - asked) * 1000, behind, (done - ran[0]) * 1000)
             except Exception as error:  # noqa: BLE001 - a picture Pillow cannot read
                 LOG.info('The picture of %s cannot be painted (%s)', ', '.join(s.text for s in question.sources), type(error).__name__)
                 return Painted('none', shown=tuple('' for _ in shown))

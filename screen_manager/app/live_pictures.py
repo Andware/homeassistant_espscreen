@@ -106,6 +106,9 @@ def remake(raw, box, cover=False):
     return out.getvalue(), (time.thread_time() - started) * 1000
 
 
+# The frames of every stream that wait for a thread or have one now: picture_service's line on a slow still reads it.
+encoding = 0
+
 class Encoder:
     """JPEGs of decoded video frames at one size, made straight from the decoder's YUV (ffmpeg's mjpeg)."""
 
@@ -152,20 +155,31 @@ class Pictures:
             return jpeg
 
     async def make(self, frame, box, cover=False):
+        global encoding
         loop = asyncio.get_running_loop()
         sizing = size_to_cover if cover else size_for
         if frame.jpeg is not None:
             size = jpeg_size(frame.jpeg)
             # A JPEG the P4 takes as it is goes out untouched, when it is no larger than it needs to be: the screen
             # scales and cuts it itself.
-            jpeg, ms = (frame.jpeg, 0.0) if size and size == sizing(*size, box) else \
-                await loop.run_in_executor(None, remake, frame.jpeg, box, cover)
+            if size and size == sizing(*size, box):
+                jpeg, ms = frame.jpeg, 0.0
+            else:
+                encoding += 1
+                try:
+                    jpeg, ms = await loop.run_in_executor(None, remake, frame.jpeg, box, cover)
+                finally:
+                    encoding -= 1
         else:
             size = sizing(frame.video.width, frame.video.height, box)
             encoder = self.encoders.get(size)
             if encoder is None:
                 encoder = self.encoders[size] = Encoder(*size)
-            jpeg, ms = await loop.run_in_executor(None, encoder.encode, frame.video)
+            encoding += 1
+            try:
+                jpeg, ms = await loop.run_in_executor(None, encoder.encode, frame.video)
+            finally:
+                encoding -= 1
         self.made += 1
         self.made_ms += ms
         return jpeg
