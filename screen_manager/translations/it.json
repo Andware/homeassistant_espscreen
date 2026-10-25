@@ -2446,7 +2446,7 @@
         "seconds": "Ogni {n} s",
         "live": "Dal vivo",
         "paused": "Live in pausa",
-        "cap": "Questo schermo mostra {n} telecamere dal vivo alla volta; le altre mostrano un'immagine ogni 15 secondi."
+        "cap": "Questo schermo mostra {n} telecamere dal vivo alla volta; le altre mostrano un'immagine ogni 15 secondi. Con due telecamere, ognuna è più fluida che con quattro."
       },
       "picture": {
         "fit": {

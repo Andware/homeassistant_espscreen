@@ -2446,7 +2446,7 @@
         "seconds": "Toutes les {n} s",
         "live": "En direct",
         "paused": "Direct en pause",
-        "cap": "Cet écran diffuse {n} caméras en direct à la fois ; les autres affichent une image toutes les 15 secondes."
+        "cap": "Cet écran diffuse {n} caméras en direct à la fois ; les autres affichent une image toutes les 15 secondes. Avec deux caméras, chacune est plus fluide qu'avec quatre."
       },
       "picture": {
         "fit": {

@@ -215,7 +215,10 @@ parts, give the pins, done.
 
 Four live tiles a screen, plus the full view (which halts the tiles anyway), on every P4 board; a fifth live tile on a
 page shows the camera's still with a small "live paused" badge and a line in its settings ("This screen plays 4 cameras
-live at once; the others show a picture every 15 seconds"). The number lives in one place, the firmware's
+live at once; the others show a picture every 15 seconds. With two cameras, each one runs more smoothly than with
+four."). The four are what is on the glass: a live tile streams only while its page is open, so it is four on the page
+the screen shows, and the other pages cost nothing. Two tiles run at 12 to 14 pictures a second each, four at 4 to 5
+(the D1001, 2026-10-25): one PPA lays out every picture. The number lives in one place, the firmware's
 `hw::caps().live_tiles`, and reaches:
 
 - the firmware's `live_tiles_round`, which starts the first four by tile order and leaves the rest at

@@ -2017,7 +2017,7 @@
         "seconds": "Every {n} s",
         "live": "Live",
         "paused": "Live paused",
-        "cap": "This screen plays {n} cameras live at once; the others show a picture every 15 seconds."
+        "cap": "This screen plays {n} cameras live at once; the others show a picture every 15 seconds. With two cameras, each one runs more smoothly than with four."
       },
       "picture": {
         "fit": {

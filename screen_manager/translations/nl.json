@@ -2017,7 +2017,7 @@
         "seconds": "Elke {n} s",
         "live": "Live",
         "paused": "Live gepauzeerd",
-        "cap": "Dit scherm speelt {n} camera's tegelijk live; de andere tonen elke 15 seconden een plaatje."
+        "cap": "Dit scherm speelt {n} camera's tegelijk live; de andere tonen elke 15 seconden een plaatje. Met twee camera's loopt elke camera vloeiender dan met vier."
       },
       "picture": {
         "fit": {

@@ -2446,7 +2446,7 @@
         "seconds": "{n} mp-enként",
         "live": "Élő",
         "paused": "Élő szünetel",
-        "cap": "Ez a képernyő egyszerre {n} kamerát mutat élőben; a többi 15 másodpercenként mutat egy képet."
+        "cap": "Ez a képernyő egyszerre {n} kamerát mutat élőben; a többi 15 másodpercenként mutat egy képet. Két kamerával mindegyik gördülékenyebben fut, mint néggyel."
       },
       "picture": {
         "fit": {

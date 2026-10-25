@@ -2446,7 +2446,7 @@
         "seconds": "A cada {n} s",
         "live": "Ao vivo",
         "paused": "Ao vivo em pausa",
-        "cap": "Este ecrã mostra {n} câmaras ao vivo de cada vez; as outras mostram uma imagem a cada 15 segundos."
+        "cap": "Este ecrã mostra {n} câmaras ao vivo de cada vez; as outras mostram uma imagem a cada 15 segundos. Com duas câmaras, cada uma fica mais fluida do que com quatro."
       },
       "picture": {
         "fit": {

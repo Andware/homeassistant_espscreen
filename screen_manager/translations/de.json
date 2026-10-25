@@ -2446,7 +2446,7 @@
         "seconds": "Alle {n} s",
         "live": "Live",
         "paused": "Live pausiert",
-        "cap": "Dieser Bildschirm zeigt {n} Kameras gleichzeitig live; die anderen zeigen alle 15 Sekunden ein Bild."
+        "cap": "Dieser Bildschirm zeigt {n} Kameras gleichzeitig live; die anderen zeigen alle 15 Sekunden ein Bild. Mit zwei Kameras läuft jede flüssiger als mit vier."
       },
       "picture": {
         "fit": {
