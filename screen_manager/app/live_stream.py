@@ -64,8 +64,11 @@ class LiveFeed:
     `websocket()` an authenticated websocket of Home Assistant (an async context manager), `streams(entity)` whether
     the camera has a stream."""
 
-    def __init__(self, fetch, websocket, streams, clock=time.monotonic):
+    def __init__(self, fetch, websocket, streams, clock=time.monotonic, live_tiles=None):
         self.fetch, self.websocket, self.streams, self.clock = fetch, websocket, streams, clock
+        # `live_tiles(screen)`: how many live tiles that screen streams at once, from its hello (firmware hw.h, the app's
+        # page_delivery.caps_of), or None for a screen that did not say (an older firmware, which keeps its own count).
+        self.live_tiles = live_tiles or (lambda screen: None)
         self.links, self.sources = {}, {}
         # Each source's pictures (live_pictures.Pictures), made once per frame and room for every screen that watches it.
         self.pictures = {}
@@ -116,6 +119,10 @@ class LiveFeed:
     def streaming(self):
         return sum(link.streaming for link in self.links.values())
 
+    def tiles_streaming(self, screen):
+        """How many live tiles of `screen` stream now (the full view is not a tile)."""
+        return sum(link.streaming for link in self.links.values() if link.tile and link.screen == screen)
+
     async def latest(self, entity, fresh=2.0):
         """The JPEG of a camera's newest frame while a stream of it runs (docs/PICTURES.md: one source per camera for
         stills and streams), at the camera's own size up to MAX_SIDE; None while none runs or its last frame is older than
@@ -147,6 +154,11 @@ class LiveFeed:
             return web.Response(status=404, text='Unknown link')
         if self.streaming() >= MAX_STREAMS:
             return web.Response(status=503, text='Too many live cameras')
+        # A screen's own count (hw.h LIVE_TILES, docs/PLATFORM_PLAN.md 4.1): its fifth live tile is refused here as the
+        # firmware refuses it there, so a screen whose firmware and app disagree never streams more than the lower says.
+        cap = self.live_tiles(link.screen) if link.tile and link.screen is not None else None
+        if cap is not None and self.tiles_streaming(link.screen) >= cap:
+            return web.Response(status=503, text=f'This screen plays {cap} cameras live at once')
         link.streaming += 1
         source = self.source(link.entity)
         jpegs = self.pictures_of(link.entity)

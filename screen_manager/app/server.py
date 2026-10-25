@@ -1063,7 +1063,7 @@ class Manager:
         self.alert_cameras = {}
         # A camera live on a P4 (live_stream.py): its links and the sources behind them, on the camera port.
         self.live = live_stream.LiveFeed(lambda entity: self.ha.camera_image(entity), lambda: self.ha.websocket(),
-                                       lambda entity: self.ha.camera_streams(entity))
+                                       lambda entity: self.ha.camera_streams(entity), live_tiles=self.live_tiles_of)
         self.links = picture_links.Links()
         self.sources = picture_sources.Sources(picture_sources.Providers.of(self), self.snapshots)
         self.pictures = picture_service.Service(self, self.sources, self.links, self.live)
@@ -1241,6 +1241,14 @@ class Manager:
         else:
             view = has_module(screen, 'doorbell') and self.live_camera(screen)
         return 'view' if view else 'picture' if board_of(screen) in picture_question.BOXES else 'plain'
+
+    def live_tiles_of(self, inbox):
+        """How many live camera tiles the screen of `inbox` streams at once, from its hello (page_delivery.caps_of,
+        firmware hw.h), or None while it is not connected or its firmware did not say."""
+        sender = self.page_senders.get(self.aliases.get(inbox, inbox))
+        if sender is None or getattr(sender, 'protocol', None) is None:
+            return None
+        return (getattr(sender, 'caps', None) or {}).get('live_tiles')
 
     def live_camera(self, screen):
         """Whether this screen streams a camera live (live_stream.py): its hello while it is connected (`live`), else its

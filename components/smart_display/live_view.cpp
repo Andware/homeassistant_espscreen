@@ -31,6 +31,7 @@
 #include <freertos/stream_buffer.h>
 #include <freertos/task.h>
 
+#include "audio_owner.h"
 #include "psram_task.h"
 #include "roomy.h"
 #ifdef USE_SPEAKER
@@ -92,6 +93,10 @@ struct Stream {
   uint8_t *sound_piece = nullptr;  // what the speaker took part of, the rest of it next tick
   size_t piece_left = 0, piece_at = 0;
   std::atomic<bool> muted{false}, heard{false};
+  // The speaker is someone else's for now (audio_owner.h: a voice session or a doorbell took it): the sound is held back
+  // as when muted, and plays again once the owner gives the speaker back. Set on the main loop, read by the task.
+  std::atomic<bool> yielded{false};
+  audio_owner::Role sound_role = audio_owner::Role::CAMERA_SOUND;  // the role its sound claimed (open), released with it
   // Until it is live (live_view.h): the picture on the glass is a still (the task turns a tile's loader over it), and a
   // live one was shown. `under` holds the loader's square of the card as composed, its last turn drawn at `turned_at`.
   std::atomic<bool> warming{false}, live{false};
@@ -353,7 +358,7 @@ static void stream(Stream &s) {
           }
           // Sound: into the buffer the main loop plays from; none of it while muted, and none when it is full.
           s.heard = true;
-          if (!s.muted) xStreamBufferSend(s.sound, s.sound_part, length, 0);
+          if (!s.muted && !s.yielded) xStreamBufferSend(s.sound, s.sound_part, length, 0);
         });
     if (!ok) {
       ESP_LOGW(TAG, "not a stream of pictures (answer %d)", reader.status());
@@ -375,7 +380,7 @@ static void task_main(void *arg) {
   psram_task::finish(in_psram);
 }
 
-Handle open(const std::string &url, const Rect &area, const Look &look, bool sound) {
+Handle open(const std::string &url, const Rect &area, const Look &look, bool sound, audio_owner::Role role) {
   if (!available() || area.empty()) return -1;
   int slot = -1;
   for (int i = 0; i < MAX_STREAMS && slot < 0; ++i)
@@ -441,6 +446,25 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     streams[slot] = nullptr;
     free_stream(s);
     return -1;
+  }
+  if (s->sound) {
+    // The camera's sound claims the speaker (audio_owner.h) in the role its opener gave: as CAMERA_SOUND music pauses
+    // for it, and a voice session or a doorbell takes it and gives it back, since the camera stays open; as DOORBELL
+    // (the view a ring opened) nothing takes it. Given back in tick when the stream ends.
+    s->sound_role = role;
+    audio_owner::Claim claim;
+    claim.role = role;
+    claim.id = static_cast<uint32_t>(slot);
+    claim.lost = [slot]() {
+      Stream *t = streams[slot];
+      if (!t || !t->sound) return;
+      t->yielded = true;
+      xStreamBufferReset(t->sound);  // as mute() does: what waited is stale by the time the speaker is back
+    };
+    claim.regained = [slot]() {
+      if (Stream *t = streams[slot]) t->yielded = false;
+    };
+    audio_owner::the().claim(audio_owner::Side::OUT, claim);
   }
   glass::watch();
   ESP_LOGI(TAG, "stream %d into %dx%d at %d,%d%s, turned %d, PPA bursts of %d bytes", slot, area.w, area.h, area.x, area.y,
@@ -544,6 +568,7 @@ void tick(const std::function<void(Handle, Event)> &tell) {
       // board). The redraw at closing comes while the task may still be busy with its last picture, and its first strip
       // is that bar; this one comes after. The whole glass, as the view covered all of it.
       if (!s->look.tile) glass::redraw_all();
+      if (s->sound) audio_owner::the().release(audio_owner::Side::OUT, s->sound_role, static_cast<uint32_t>(slot));
       free_stream(s);
       tell(slot, turned ? Event::TURNED : ended ? Event::ENDED : Event::FAILED);
       continue;
@@ -552,7 +577,7 @@ void tick(const std::function<void(Handle, Event)> &tell) {
     glass::follow(s->room);
     // The glass turned (a setting): this stream's place is gone; its owner asks again for its new shape.
     if (s->turn != turn && !s->stopping) close(slot);
-    speak(*s, !s->stopping && !s->muted);
+    speak(*s, !s->stopping && !s->muted && !s->yielded);
     if (!s->told_sound && s->heard) {
       s->told_sound = true;
       tell(slot, Event::SOUND);

@@ -714,6 +714,11 @@ api:
                     // types (plugin_host::hello).
                     features.add("plugins");
                     plugin_host::hello(root);
+                    // caps (hw.h, docs/PLATFORM_PLAN.md 3.3): what this screen's hardware can do, in one record: live
+                    // video, speaker, microphone, echo cancellation, a camera of its own, the live tiles it runs at
+                    // once, its memory. ESP Screens reads it where it reads a screen's features; the features "live"
+                    // and "doorbell" below stay for an app that reads only those.
+                    hw::hello(root);
                     // weather_week: the weather card draws the week (weather_chart.h), so ESP Screens sends seven days
                     // with their weekday, the next 48 hours with their hour, and the wind's bearing, the air pressure,
                     // the visibility and the rain's unit.

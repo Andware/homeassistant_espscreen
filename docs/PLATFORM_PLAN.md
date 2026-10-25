@@ -99,40 +99,57 @@ struct Caps {           // hw.h, read at boot, constant after
 const Caps &caps();
 ```
 
-- The firmware fills it from the engine, the glass and the audio and camera ids the board file binds (the
-  `BOOT_AUDIO` block already knows them).
-- The hello lists the features it implies ("live", "doorbell", "sound", "talk" later) and the numbers (`live_tiles`),
-  so the add-on and the editor read the screen's own word, not `boards.json`'s guess. `boards.json` stays for screens
-  that have not said hello yet.
-- The plugin API (0.19) gets `tessera::hw::caps()`, read-only. `ui::live()` keeps degrading to stills, but a plugin can
-  now say why on its own card.
+Built (branch platform-core, 2026-10-25) as two halves. The build's half is `hw_build.py`: it reads the configuration
+ESPHome validated and defines `HW_SPEAKER`, `HW_MICROPHONE`, `HW_ECHO_CANCEL` and `HW_CAMERA` when a component of that
+kind is in it, wherever it came from (a part file, a feature, an override); it reads no id, no board name, no chip. The
+boot's half is what only the running screen knows: `live_view::available()` and the two heaps. `hw::resolve()` puts
+them together, pure and tested on a PC (`tests/test_hw.cpp`); `hw::caps()` resolves once on its first call.
+
+- The hello carries the record as `caps` beside the features; "live" and "doorbell" stay for an app that reads only
+  those. The add-on reads it in `page_delivery.caps_of`, with `live` from the features for an older firmware and
+  `None` for a count it did not give, so an older screen is taken for what it says, never for more.
+- The plugin API (0.19) gets `hw::caps()`, read-only, through `plugin_api.h`. `ui::live()` keeps degrading to stills,
+  but a plugin can now say why on its own card.
+- Still to do: the editor reads `caps.live_tiles` for its text and badge (section 4.1), and `boards.json` stays for
+  screens that have not said hello yet.
 
 Done when: the add-on's `live_pace`, the doorbell's feature check and the editor's live-tile count all read the hello,
 and `FIRMWARE_API.md` documents `hw::caps()` with the rule that a plugin never infers hardware from a board name.
 
 ### 3.4 An audio owner
 
-One module, `audio_owner.h`, pure and host-tested, with the ESPHome speakers and microphone bound at boot as
-`live_view::bind_speaker` is today:
+Built (branch platform-core, 2026-10-25): `audio_owner.h`, pure and host-tested (`tests/test_audio_owner.cpp`), one
+owner of the loudspeaker (OUT) and the microphone (IN), the way iOS owns a device's audio session: whoever wants a
+side claims it in a role, hears `lost` when a higher role takes it, and `regained` when that role gives it back, if it
+asked to wait.
 
 ```
-enum class Role { DOORBELL, CAMERA_SOUND, VOICE, MEDIA, SOUND };   // highest first
-bool claim(Role, Side side /* OUT, IN, BOTH */, std::function<void()> lost);
-void release(Role, Side);
-Role holder(Side);   // what plays or listens now
+enum class Role { MEDIA, CAMERA_SOUND, VOICE, DOORBELL };   // lowest first
+bool claim(Side side /* OUT, IN, BOTH */, const Claim &c);  // role, id, lost, regained
+void release(Side, Role, id);
+Role holder(Side); bool held(Side); bool would_grant(Side, Role);
 ```
 
-- A higher role takes the side and calls the lower holder's `lost`; a lower role is refused and may try again.
-- The camera's sound claims OUT when the full view opens with sound and releases at its end; Home Assistant's media
-  claims OUT through the media player's start; the voice plugin claims IN for the wake word and BOTH for a session;
-  the doorbell claims BOTH for a ring with talk-back (section 5).
-- The half-duplex interval and the mixer stay as they are: the owner decides who may start, the mixer still mixes
-  what two holders of different inputs play (an announcement over media).
-- `hw::caps()` tells a plugin the sides exist; `tessera::audio::holder()` tells it whether to speak now. The voice
-  plugin stops its wake word while the doorbell holds IN, which is what Max asked for.
+The ranking as Max set it (2026-10-25), highest first: a doorbell's ring (and later its talk) takes everything and
+nothing takes it; the voice assistant takes the speaker from a camera's sound and gives it back after the session; a
+camera's sound takes the speaker from music, which does not start again by itself; short sounds (the tap, a plugin's
+click) and Home Assistant's announcements never claim, they mix on the announcement input over whatever plays. The
+same role replaces its holder (a second camera's full view takes over from the first).
 
-Done when: opening a camera with sound while music plays, and a doorbell ring while the wake word listens, each leave
-one holder per side and the loser's `lost` runs, on the host test and on a D1001.
+- The core's own claims: `live_view.cpp` claims the speaker for a full view with sound in the role its opener gives
+  (`live_view::open`'s `role`): CAMERA_SOUND for a camera someone opened (`lost` holds the sound back as a mute does,
+  `regained` lets it through again), DOORBELL for the view a ring opened (`runtime_tiles` `live_begin` reads
+  `doorbell::shown()`), so the ring's own camera sound plays and nothing takes the speaker from it; the ring itself
+  claims nothing, its chime mixes on the announcement input. `features/audio-player.yaml` claims MEDIA through the
+  media player's `on_play` (its `lost` pauses it; music that starts while a higher role holds the speaker is paused at
+  once) and releases on `on_pause` and `on_idle`.
+- The plugin API (0.19) offers it as `tessera::audio`. The voice plugin claims VOICE IN while its wake word listens
+  (`lost` stops the wake word, `regained` starts it) and BOTH for a session, on tessera-plugins dev.
+- The mixer and the half-duplex interval stay as they are: the owner decides who may start; the mixer mixes the
+  announcement input over the media input as before.
+- Still to do: the voice plugin's claims (tessera-plugins), the IN side for the doorbell's talk (section 5), and the
+  proof on a D1001 (a camera with sound while music plays; a ring while the wake word listens; a voice session over a
+  camera's sound and the sound coming back).
 
 ### 3.5 Allocation as a seam
 
@@ -231,6 +248,29 @@ watchdog and abort restarts, the task count and both heaps (heap_watch's five-mi
 stops going through `heap_caps_aligned_alloc`. The configuration with the lower drop count is the release's. The three
 failure paths of `psram_task` are forced once in a test build (a start without PSRAM room, a download that overflows
 its stack, a stream that ends while the main loop is in a long lay-out), and the lifecycle gets a host test.
+
+### 4.4a The PSRAM bus is shared with the panel
+
+PSRAM is not free memory: it is one bus, and the panel reads its frame buffer out of it every refresh (glass.h, "The
+panel's share of the memory bus"; `glass::misses()` counts the frames it ran dry). The camera's frames, the JPEG
+decoder, the PPA, the H.264 encoder and lwIP's copies all ride the same bus, and when it is full the picture tears
+before anything else fails (Max, 2026-10-25, from the encoder's strip in PSRAM). So "to PSRAM" is a choice per buffer,
+not a default:
+
+- A buffer that is read or written in a tight loop many times a second, or by a DMA that must not wait (the encoder's
+  reference strip, a stream buffer's control block, a task's hot stack) stays inside the chip, as long as it is small.
+- A buffer that is large and touched once per frame or less (pictures, frame copies, documents, strings, the streams'
+  read buffers) goes to PSRAM.
+- Every move to PSRAM is measured against `glass::misses()` under load (four live tiles and the video) as well as
+  against internal RAM: a move that frees 90 KB and costs frames is not taken.
+
+Measured on the reTerminal D1001 (2026-10-25, two live tiles and three RTSP viewers of the screen's own video, the
+same scene twice): with the H.264 encoder's reference strip inside the chip the panel ran dry 0 times, a picture's
+lay-out took 60 to 63 ms, the video ran at 12 to 13 pictures a second, and about 243 KB of internal RAM was free; with
+the strip in PSRAM the panel ran dry 39 to 53 times a minute (blue frames over the live tiles), lay-out took 77 to
+80 ms, and 344 KB was free. The strip stays inside the chip: 100 KB of internal RAM is the price of a panel without
+blue frames. A smaller DMA burst for the encoder (as the PPA got, 64 bytes) is the one experiment left on it, and a
+move that passes on a D1001 is measured on a Guition 10.1 before it is anyone's default.
 
 ### 4.5 The allocation policy, after the release
 

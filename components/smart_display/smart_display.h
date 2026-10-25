@@ -4,6 +4,9 @@
 #include "loop_record.h"
 #include "heap_watch.h"
 #include "abort_record.h"
+#include "hw.h"
+#include "hw_hello.h"
+#include "audio_owner.h"
 #include "esphome/components/text/text.h"
 #include "esphome/core/component.h"
 namespace esphome::smart_display {
@@ -14,6 +17,8 @@ class DashboardInbox : public text::Text, public Component {
     loop_record::take();  // what the main loop was doing when the last task watchdog restarted the screen, if one did
     abort_record::take();  // what the last abort or failed assert said, if one restarted it
     heap_watch::setup();  // the internal RAM's lowest and its failed allocations, of the previous boot and this one
+    // Who may play and listen (audio_owner.h): every change of hands is one INFO line, the proof of the ranking on glass.
+    audio_owner::the().log = [](const char *line) { ESP_LOGI("audio", "%s", line); };
     this->publish_state("Ready for tile configuration");
   }
   void loop() override { heap_watch::tick(millis()); }

@@ -177,6 +177,27 @@ class Stream(unittest.TestCase):
         # The mark is a line of the part's own head, before its length, as picture_fetch::parse_head reads it.
         self.assertRegex(self.heads[0], rb'--frame\r\nContent-Type: image/jpeg\r\nX-Picture: still\r\nContent-Length: \d+')
 
+    def test_a_screens_fifth_live_tile_is_refused_by_its_own_count(self):
+        """hw.h LIVE_TILES (docs/PLATFORM_PLAN.md 4.1): a screen's hello says how many live tiles it streams at once, and
+        the app refuses the next tile stream of that screen, not another screen's and not its full view."""
+        counts = {'a': 4, 'b': None}
+        feed = live_stream.LiveFeed(None, None, lambda e: True, live_tiles=lambda screen: counts.get(screen))
+        for camera in ('camera.one', 'camera.two', 'camera.three', 'camera.four'):
+            feed.links[feed.link(camera, (434, 244), cover=True, screen='a', tile=True)].streaming = 1
+        self.assertEqual(feed.tiles_streaming('a'), 4)
+        self.assertEqual(feed.tiles_streaming('b'), 0)
+        fifth = feed.link('camera.five', (434, 244), cover=True, screen='a', tile=True)
+        answer = asyncio.run(feed.serve(None, fifth))  # refused before the request is read
+        self.assertEqual(answer.status, 503)
+        self.assertIn('4 cameras live at once', answer.text)
+        # Another screen, a screen whose firmware did not say, and this screen's full view are not held to it.
+        self.assertIsNone(feed.live_tiles('b'))
+        for token in (feed.link('camera.six', (434, 244), cover=True, screen='b', tile=True),
+                      feed.link('camera.one', (1280, 715), screen='a')):
+            link = feed.links[token]
+            cap = feed.live_tiles(link.screen) if link.tile and link.screen is not None else None
+            self.assertTrue(cap is None or feed.tiles_streaming(link.screen) < cap)
+
     def test_an_unknown_link_and_too_many_streams_are_refused(self):
         (head, got), _, asked = self.run_stream(token='x' * 24, parts=1)
         self.assertEqual(got, [])

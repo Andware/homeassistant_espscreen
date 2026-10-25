@@ -26,6 +26,7 @@
 #include <functional>
 #include <string>
 
+#include "audio_owner.h"
 #include "glass.h"
 #include "picture_engine.h"
 #include "picture_fetch.h"
@@ -294,8 +295,10 @@ enum class Event : uint8_t {
 bool available();
 // Streams `url` into `area`, the screen as LVGL lays it out, looking as `look` says. -1 when it cannot start (no room
 // for another stream, no memory): its owner shows its stills. `sound`: the stream may carry the camera's sound, which
-// goes to the board's speaker (bind_speaker) unless muted.
-Handle open(const std::string &url, const Rect &area, const Look &look = Look{}, bool sound = false);
+// goes to the board's speaker (bind_speaker) unless muted, claimed from the audio owner (audio_owner.h) in `role`:
+// CAMERA_SOUND for a camera someone opened, DOORBELL for the view a ring opened, which nothing takes the speaker from.
+Handle open(const std::string &url, const Rect &area, const Look &look = Look{}, bool sound = false,
+            audio_owner::Role role = audio_owner::Role::CAMERA_SOUND);
 // Whether this board plays a live camera's sound: a speaker is bound (features/audio.yaml).
 bool has_speaker();
 // A stream's sound off or on again.
@@ -314,7 +317,10 @@ size_t held_bytes();
 #else
 inline size_t held_bytes() { return 0; }
 inline bool available() { return false; }
-inline Handle open(const std::string &, const Rect &, const Look & = Look{}, bool = false) { return -1; }
+inline Handle open(const std::string &, const Rect &, const Look & = Look{}, bool = false,
+                   audio_owner::Role = audio_owner::Role::CAMERA_SOUND) {
+  return -1;
+}
 inline bool has_speaker() { return false; }
 inline void mute(Handle, bool) {}
 inline void close(Handle) {}

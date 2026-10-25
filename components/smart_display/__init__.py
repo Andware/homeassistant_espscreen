@@ -11,7 +11,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.core import CORE
 
-from . import modules, p4_build, screen_text_gen
+from . import hw_build, modules, p4_build, screen_text_gen
 
 CODEOWNERS = []
 AUTO_LOAD = ["json"]
@@ -78,6 +78,10 @@ async def to_code(config):
             cg.add_build_flag(f"-Wl,--wrap={wrap}")
     if _esp32_p4():
         await _p4(config)
+    # The capability record's build half (hw.h, docs/PLATFORM_PLAN.md 3.3): what the configuration contains, a speaker, a
+    # microphone, an echo canceller, a camera of the board's own, as defines; the boot adds what only it knows.
+    for define in hw_build.defines(CORE.config):
+        cg.add_define(define)
     _tier(config)
 
 

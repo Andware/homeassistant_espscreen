@@ -105,6 +105,21 @@ media_player:
     volume_initial: 0.5
     volume_min: ${ ((AUDIO_VOLUME_DB_LOW | float) - (AUDIO_DAC_DB_AT_0 | float)) / ((AUDIO_DAC_DB_AT_1 | float) - (AUDIO_DAC_DB_AT_0 | float)) }
     volume_max: ${ ((AUDIO_VOLUME_DB_HIGH | float) - (AUDIO_DAC_DB_AT_0 | float)) / ((AUDIO_DAC_DB_AT_1 | float) - (AUDIO_DAC_DB_AT_0 | float)) }
+    # Who may play (components/smart_display/audio_owner.h, docs/PLATFORM_PLAN.md 3.4): music claims the speaker as
+    # MEDIA when it starts playing and gives it back when it pauses or ends. A camera's sound, the voice assistant or a
+    # doorbell outranks it and pauses it, and the music does not start again by itself; while one of them holds the
+    # speaker, music that starts is paused at once. Announcements take the mixer's other input and are not claimed.
+    on_play:
+      - lambda: |-
+          audio_owner::Claim claim;
+          claim.role = audio_owner::Role::MEDIA;
+          claim.lost = []() { id(ts_media_player).make_call().set_command(media_player::MEDIA_PLAYER_COMMAND_PAUSE).perform(); };
+          if (!audio_owner::the().claim(audio_owner::Side::OUT, claim))
+            id(ts_media_player).make_call().set_command(media_player::MEDIA_PLAYER_COMMAND_PAUSE).perform();
+    on_pause:
+      - lambda: audio_owner::the().release(audio_owner::Side::OUT, audio_owner::Role::MEDIA);
+    on_idle:
+      - lambda: audio_owner::the().release(audio_owner::Side::OUT, audio_owner::Role::MEDIA);
     announcement_pipeline:
       speaker: ts_speaker
       sources: [ts_announcement_source]

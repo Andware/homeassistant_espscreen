@@ -346,6 +346,9 @@ void ring(const std::string &camera_entity, const std::string &name, const std::
   touch_ms = 0;
   camera_open(camera_entity, name);
   if (!camera_root) { active = false; return; }
+  // The ring's view claims the speaker as DOORBELL when its stream opens (runtime_tiles live_begin, audio_owner.h): music
+  // pauses, a camera's sound and the voice assistant step back, and nothing takes it from a ring. The chime itself goes
+  // through the announcement input and mixes.
   chime();
 }
 

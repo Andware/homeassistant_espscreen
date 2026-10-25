@@ -49,6 +49,7 @@
 #include "picture_fetch.h"
 #include "live_spots.h"
 #include "live_view.h"
+#include "hw.h"
 #include "boot_trial.h"
 #include "kept_pages.h"
 #include "tile_memory.h"
@@ -11680,7 +11681,13 @@ inline void live_begin(const std::string &url) {
   // the view over the page, and a band of it stayed under the view's top bar until the view's first picture (2026-10-24,
   // the reTerminal D1001, two live tiles). A page under a full view never streams anyway.
   live_tiles_halt();
-  camera.stream.opened(live_view::open(url, live_area(), live_view::Look{}, live_view::has_speaker()));
+  // The view a ring opened (module doorbell) holds the speaker as the ring, which nothing takes it from; any other
+  // full view as a camera's sound, which the voice assistant may borrow and a ring takes (audio_owner.h).
+  audio_owner::Role role = audio_owner::Role::CAMERA_SOUND;
+#ifdef SD_MOD_DOORBELL
+  if (doorbell::shown()) role = audio_owner::Role::DOORBELL;
+#endif
+  camera.stream.opened(live_view::open(url, live_area(), live_view::Look{}, live_view::has_speaker(), role));
   if (camera.stream.live) {
     if (camera_muted) live_view::mute(camera.stream.handle, true);
     return;
@@ -11898,12 +11905,25 @@ inline void live_tiles_round() {
         if (room.w < 64 || room.h < 64 || drawn_over(place, room.x, room.y, room.w, room.h)) return;
         spots.want(place_spot(w, place, camera, contain, room));
       });
+    // At most hw::LIVE_TILES camera tiles stream at once (hw.h, docs/PLATFORM_PLAN.md 4.1), the first by tile order; the
+    // rest keep their stills, which a live tile loads every 15 s anyway (its asker's `every`). The app gives those tiles
+    // the same count from the hello, and the editor says so on the fifth tile. Logged when the count of tiles left out
+    // changes, so the log says which page did it.
+    size_t streaming = 0, left_out = 0;
     each_card([&](Widgets &w) {
       if (w.index >= model.count) return;
       const Tile &t = model.tiles[w.index];
       if (!live_tile_wanted(w, t)) return;
+      if (streaming >= hw::caps().live_tiles) { ++left_out; return; }
+      ++streaming;
       spots.want(tile_spot(w, t));
     });
+    static size_t left_out_before = 0;
+    if (left_out != left_out_before) {
+      left_out_before = left_out;
+      if (left_out) ESP_LOGI("camera", "%u live tiles stream; %u more on the page keep their stills (at most %u at once)",
+                             (unsigned) streaming, (unsigned) left_out, (unsigned) hw::caps().live_tiles);
+    }
   }
   spots.end(now);
 }

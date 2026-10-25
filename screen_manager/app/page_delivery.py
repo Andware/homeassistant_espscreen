@@ -158,6 +158,29 @@ def prepare(inbox, record, region, values, bars, bar=()):
     return begin, initial_tiles, initial_bars, live_values
 
 
+CAP_FLAGS = ("live", "speaker", "microphone", "echo_cancel", "camera")
+CAP_COUNTS = ("live_tiles", "psram_kb", "internal_kb")
+
+
+def caps_of(answer):
+    """The capability record of a hello (firmware hw.h, docs/PLATFORM_PLAN.md 3.3): the flags of CAP_FLAGS as booleans and
+    the counts of CAP_COUNTS as ints, or None for a count the screen did not give. A firmware without the record (before
+    it existed) gets `live` from its features, and False for every other flag: an older screen is taken for what its
+    features say, never for more."""
+    answer = answer if isinstance(answer, dict) else {}
+    record = answer.get("caps")
+    record = record if isinstance(record, dict) else {}
+    features = answer.get("features")
+    features = {name for name in features if isinstance(name, str)} if isinstance(features, list) else set()
+    caps = {flag: record.get(flag) is True for flag in CAP_FLAGS}
+    if "live" not in record:
+        caps["live"] = "live" in features
+    for count in CAP_COUNTS:
+        value = record.get(count)
+        caps[count] = value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+    return caps
+
+
 def plugins_of(answer):
     """The plugin API and plugins of a hello (docs/PLUGINS.md): ("0.4", [{"id", "version", "tiles"}]), or (None, [])."""
     api = answer.get("plugin_api") if isinstance(answer, dict) else None
@@ -264,6 +287,8 @@ class Sender:
         self.tile_repeats = False
         self.free_pages = False
         self.features = set()
+        # What its hardware can do (caps_of): nothing until its hello.
+        self.caps = caps_of({})
         # The plugin API the firmware offers and the plugins built into it (docs/PLUGINS.md): None and [] for a firmware
         # without plugins, which refuses a plugin's tile.
         self.plugin_api, self.plugins = None, []
@@ -286,6 +311,7 @@ class Sender:
         self.tile_repeats = False
         self.free_pages = False
         self.features = set()
+        self.caps = caps_of({})
         self.plugin_api, self.plugins = None, []
         self.max_tiles = self.max_pages = self.max_bar_items = self.memory = None
         self.grids = None
@@ -326,6 +352,9 @@ class Sender:
             # and none of its own here. climate_range: a thermostat's range on its -/+. The older flags above stay.
             listed = answer.get("features")
             self.features = {name for name in listed if isinstance(name, str)} if isinstance(listed, list) else set()
+            # Its hardware's record (firmware hw.h): live video, speaker, microphone, echo cancellation, a camera of its
+            # own, the live tiles it runs at once, its memory; from the features alone for an older firmware.
+            self.caps = caps_of(answer)
             # Plugins (docs/PLUGINS.md): the API it offers ("0.1") and what it runs, [{id, version, tiles}].
             self.plugin_api, self.plugins = plugins_of(answer)
             # Its own ceilings and the memory its tiles may take (firmware 0.34.0+): 64 tiles over eight pages when it says

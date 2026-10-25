@@ -18,6 +18,8 @@
 #include <vector>
 #include <ArduinoJson.h>
 #include "lvgl.h"
+#include "audio_owner.h"
+#include "hw.h"
 #include "roomy.h"
 #include "theme.h"
 #include "ui_scale.h"
@@ -80,6 +82,10 @@ namespace tessera {
 // answers; and ui::animate and ui::still, a part of it that pulses, spins or ripples while something goes on.
 // 0.19: camera_turn(), how far a plugin that drives the screen's own camera turns its picture to stand upright: the
 // board's mounting of the sensor and the screen turned half way round.
+// 0.19: hw::caps() (hw.h), what this screen's hardware can do in one record: whether it streams a camera live, has a
+// speaker, a microphone, echo cancellation and a camera of its own, how many live tiles it runs at once, and its
+// memory. A plugin reads it instead of inferring any of that from a board, a chip or an id (docs/PLATFORM_PLAN.md
+// 3.3); ui::live() still degrades to stills on its own, so a plugin that wants to say why reads caps().live_video.
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 19;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
@@ -573,6 +579,31 @@ void capturing(const Plugin *plugin, Capture what, bool on);
 // down. Read it now and then from the plugin's own calls (it follows the screen's rotation, which the app changes
 // without a build) and turn the sensor's picture by it, so every picture of the camera stands the same way.
 int camera_turn();
+// Who may play and who may listen (0.19, audio_owner.h; docs/PLATFORM_PLAN.md 3.4). The screen has one loudspeaker and
+// one microphone; a plugin that plays more than a short sound, or listens, claims a side first, as an app asks iOS for
+// its audio session. The roles, highest first: DOORBELL, VOICE (a wake word, a voice session), CAMERA_SOUND, MEDIA. A
+// higher role takes a side from a lower one and the lower hears `lost` (stop at once); when the higher one releases,
+// the lower hears `regained` if it gave one (play or listen again), else it is forgotten. A lower role is refused and
+// may try again later. Short sounds (tessera::Sound, the tap) and Home Assistant's announcements never claim: they mix.
+// `id` tells two claims of one role apart. Call it from the plugin's own calls (the screen's loop), as every call here.
+namespace audio {
+using Role = audio_owner::Role;
+using Side = audio_owner::Side;
+inline bool claim(Side side, Role role, uint32_t id, std::function<void()> lost, std::function<void()> regained = {}) {
+  audio_owner::Claim c;
+  c.role = role;
+  c.id = id;
+  c.lost = std::move(lost);
+  c.regained = std::move(regained);
+  return audio_owner::the().claim(side, c);
+}
+inline void release(Side side, Role role, uint32_t id = 0) { audio_owner::the().release(side, role, id); }
+// Whether a claim in `role` would get `side` now: what a plugin asks before it speaks or listens, without claiming.
+inline bool open(Side side, Role role) { return audio_owner::the().would_grant(side, role); }
+// Who holds a side now (held() says whether anyone does).
+inline bool held(Side side) { return audio_owner::the().held(side); }
+inline Role holder(Side side) { return audio_owner::the().holder(side); }
+}  // namespace audio
 // A Home Assistant action on an entity, as a tile's tap sends it: action("light.toggle", entity), or with one field
 // (action("climate.set_temperature", entity, "temperature", "21")). The screen must be allowed to perform actions.
 // The plugin's manifest names every action it calls under permissions.home_assistant_actions so that a person can read
