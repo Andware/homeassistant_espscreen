@@ -347,6 +347,14 @@ an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black l
   well (0x01 to 0x4e), so 0x301f might have been the switch of the 0x59xx block: with 0x301f 0x4e and with 0x0c (no
   0x303f) the frames come at 12 fps and the picture is the same as without it. 0x301f is not that switch, and 0x303f
   0x82 alone stopped the frames.
+- Five colour sensors with a binned mode in Rockchip's drivers (sc200ai, sc230ai, sc3336p, sc431hai, sc435hai) and the
+  mono SC2355 use the same recipe (0x3211/0x3213 0x02, 0x3215 0x31, 0x3220 0x01 or 0x17, 0x5000 0x46, 0x5900 0xf1 or
+  0x01, 0x5901 0x04, the output size) with a 0x301f of their own. A last test swept that block on the SC202CS while it
+  streamed (the whole window written out, x 0 to 1607, y 0 to 1207; every 20 s one value, read back): 0x5901 over 04,
+  05, 06, 07, 0c, 14, 24, 44, 84, 01, 02, 03, 08, 00; 0x5900 over 01, f5, f3, f0, 00; 0x5000 over 06, 56, 66, c6, 40,
+  00. Every value read back as written, at 13 fps throughout: the block is there. 0x5000 bit 6 turns it on, 0x5901
+  bit 2 brings the comb edges and a black strip on the left, 0x5900 0xf5 a pink cast (it works on the Bayer pattern).
+  No value halves the columns: the picture stays the left 800 columns at full width.
 
 Where it stands: the whole field on the SC202CS needs the columns halved in the sensor, and that register is not
 known without SmartSens' datasheet. Halving them on the PPA instead (a full-width 1600 x 592) is the pass that cost
