@@ -7,6 +7,7 @@ The document revision used for saving is separate from this content revision.
 import asyncio
 from copy import deepcopy
 import json
+import logging
 import re
 
 from core import (BAR_CARDS_FEATURE, ENTITY_REPEAT_MIN_FIRMWARE, FIRMWARE_MAX_BAR_ITEMS, FIRMWARE_MAX_PAGES, FIRMWARE_MAX_TILES, FREE_PAGES_MIN_FIRMWARE,
@@ -17,6 +18,9 @@ import tile_icons
 
 PROTOCOL = 2
 MAX_MESSAGE = 4096
+
+
+LOG = logging.getLogger(__name__)
 
 
 class DeliveryError(RuntimeError):
@@ -181,6 +185,24 @@ def caps_of(answer):
     return caps
 
 
+def caps_line(caps):
+    """The record in one line for the log, one per screen whenever it changes (a hello after an update): "live, 4 live
+    tiles, speaker, microphone, camera, no echo cancellation, 28272 KB PSRAM, 519 KB internal RAM"."""
+    words = []
+    for flag, name in (("live", "live"), ("speaker", "speaker"), ("microphone", "microphone"), ("camera", "camera"),
+                       ("echo_cancel", "echo cancellation")):
+        if flag == "echo_cancel":
+            words.append(name if caps.get(flag) else "no " + name)
+        elif caps.get(flag):
+            words.append(name)
+            if flag == "live" and caps.get("live_tiles") is not None:
+                words.append(f"{caps['live_tiles']} live tiles")
+    for count, unit in (("psram_kb", "KB PSRAM"), ("internal_kb", "KB internal RAM")):
+        if caps.get(count) is not None:
+            words.append(f"{caps[count]} {unit}")
+    return ", ".join(words)
+
+
 def plugins_of(answer):
     """The plugin API and plugins of a hello (docs/PLUGINS.md): ("0.4", [{"id", "version", "tiles"}]), or (None, [])."""
     api = answer.get("plugin_api") if isinstance(answer, dict) else None
@@ -265,8 +287,9 @@ class Sender:
     configuration being sent is still current after each asynchronous step.
     """
 
-    def __init__(self, send):
+    def __init__(self, send, name=None):
         self.send = send
+        self.name = name  # the screen's, for the log
         self.lock = asyncio.Lock()
         self.session = None
         self.sequence = 0
@@ -354,7 +377,10 @@ class Sender:
             self.features = {name for name in listed if isinstance(name, str)} if isinstance(listed, list) else set()
             # Its hardware's record (firmware hw.h): live video, speaker, microphone, echo cancellation, a camera of its
             # own, the live tiles it runs at once, its memory; from the features alone for an older firmware.
-            self.caps = caps_of(answer)
+            caps = caps_of(answer)
+            if caps != getattr(self, "caps", None) and "caps" in answer:
+                LOG.info("%s: %s", self.name or "A screen", caps_line(caps))
+            self.caps = caps
             # Plugins (docs/PLUGINS.md): the API it offers ("0.1") and what it runs, [{id, version, tiles}].
             self.plugin_api, self.plugins = plugins_of(answer)
             # Its own ceilings and the memory its tiles may take (firmware 0.34.0+): 64 tiles over eight pages when it says

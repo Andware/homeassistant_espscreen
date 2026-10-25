@@ -1312,7 +1312,7 @@ class Manager:
             async def send(message):
                 current = self.screen(inbox) or screen
                 return await self.ha.send(inbox, message, message_action(current.get('node')), respond=True)
-            self.page_senders[inbox] = page_delivery.Sender(send)
+            self.page_senders[inbox] = page_delivery.Sender(send, screen.get('name') or inbox)
             self.page_capabilities.restore(inbox, screen, self.page_senders[inbox])
         sender = self.page_senders[inbox]
         marker = page_identity(screen)

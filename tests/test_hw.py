@@ -80,8 +80,26 @@ class AppSide(unittest.TestCase):
 
     def test_the_senders_record_follows_its_hello(self):
         source = (ROOT / 'screen_manager' / 'app' / 'page_delivery.py').read_text()
-        self.assertIn('self.caps = caps_of(answer)', source)
+        self.assertIn('caps = caps_of(answer)', source)
+        self.assertIn('self.caps = caps', source)
         self.assertRegex(source, r'self\.caps = caps_of\(\{\}\)')
+        # One line in the log when a screen's record changes, so every report has it (a reTerminal D1001 on glass,
+        # 2026-10-25, where nothing showed what the app had read).
+        self.assertIn('LOG.info("%s: %s", self.name or "A screen", caps_line(caps))', source)
+
+    def test_the_record_in_one_line(self):
+        caps = page_delivery.caps_of({'caps': {'live': True, 'speaker': True, 'microphone': True, 'echo_cancel': False,
+                                               'camera': True, 'live_tiles': 4, 'psram_kb': 28272, 'internal_kb': 519}})
+        self.assertEqual(page_delivery.caps_line(caps), 'live, 4 live tiles, speaker, microphone, camera, no echo '
+                         'cancellation, 28272 KB PSRAM, 519 KB internal RAM')
+        self.assertEqual(page_delivery.caps_line(page_delivery.caps_of({'features': ['pictures']})), 'no echo cancellation')
+
+    def test_the_apps_503_is_a_safety_net(self):
+        # A screen that reads its own record streams at most caps.live_tiles at once (runtime_tiles live_tiles_round), so
+        # the app's 503 for a stream beyond them (live_stream.py) is never reached by such a firmware: it is the net for
+        # one that does not cap, and no proof on glass can show it.
+        source = (ROOT / 'screen_manager' / 'app' / 'live_stream.py').read_text()
+        self.assertIn("return web.Response(status=503, text=f'This screen plays {cap} cameras live at once')", source)
 
 
 if __name__ == '__main__':
