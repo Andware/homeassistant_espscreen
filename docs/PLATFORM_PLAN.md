@@ -323,8 +323,8 @@ The sender of TR-YVP7YV, who also runs a Guition 10.1 and asked for its whole fi
 
 **Step 0, the SC202CS, measured (2026-10-25, the home reTerminal D1001, a test build not committed).** We have no
 register map of the SC202CS, only its kinship with SmartSens' SC200AI, whose binned 960 x 540 mode is in Rockchip's
-driver; every SC202CS driver found (esp_cam_sensor 2.4.0, Ingenic, Sophgo, MediaTek) knows only 1600 x 1200 and crops of
-it. The test handed the sensor a format of its own through `VIDIOC_S_SENSOR_FMT` (`sc202cs_set_format` writes any table
+driver; every SC202CS driver found (esp_cam_sensor 2.4.0, Seeed's own copy in its reTerminal-D1001 repository, Ingenic,
+Sophgo, MediaTek) knows only 1600 x 1200 and crops of it, and none writes a skip or bin register. The test handed the sensor a format of its own through `VIDIOC_S_SENSOR_FMT` (`sc202cs_set_format` writes any table
 it gets, and esp_video takes the size from it), so nothing of esp_cam_sensor was patched: the 1600 x 1200 RAW8 table,
 an output size in 0x3208-0x320b, offsets 2 in 0x3211 and 0x3213, and our black level.
 
