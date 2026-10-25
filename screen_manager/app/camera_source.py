@@ -93,6 +93,7 @@ class Source:
         self.listeners, self.sound, self.quiet_since = set(), None, None
         self.wants_sound = self.sound_along = False
         self.resampler = None
+        self.sound_dropped = 0  # parts of sound a listener's full queue lost since the last report (Lag)
 
     def mark(self, what):
         self.marks.setdefault(what, time.monotonic() - self.started)
@@ -204,15 +205,21 @@ class Source:
                     frame = await track.recv()
                     if track.kind == kind:
                         first.set()
-                    if track.kind == 'video' and frame.time is not None:
+                    # The sound measured as the pictures are: both behind together is this app (its loop) slow, the
+                    # pictures alone behind is the host's H.264 decoder. The sound is never skipped.
+                    if frame.time is not None:
                         lag.feed(frame.time)
                         told = lag.report()
                         if told:
                             # aiortc's own queue of decoded frames, read for the log alone (no public way to it).
                             waiting = getattr(track, '_queue', None)
-                            LOG.info('Live %s: %.2f s behind the camera on average, %.2f s at most, over %d pictures; '
-                                     '%s decoded waiting', self.entity, *told,
-                                     waiting.qsize() if waiting is not None else '?')
+                            dropped = ''
+                            if track.kind == 'audio':
+                                dropped = f'; {self.sound_dropped} parts dropped for a screen that fell behind'
+                                self.sound_dropped = 0
+                            LOG.info('Live %s %s: %.2f s behind the camera on average, %.2f s at most, over %d frames; '
+                                     '%s decoded waiting%s', self.entity, 'video' if track.kind == 'video' else 'sound',
+                                     *told, waiting.qsize() if waiting is not None else '?', dropped)
                     await take(track.kind, frame)
             pulls.append(asyncio.create_task(pull()))
 
@@ -296,6 +303,7 @@ class Source:
             for queue in list(self.listeners):
                 if queue.full():
                     queue.get_nowait()
+                    self.sound_dropped += 1
                 queue.put_nowait(data)
 
     def unlisten(self, queue):

@@ -256,6 +256,9 @@ depend on which one wins:
   back channel through go2rtc (Reolink takes G.711 there) or to Home Assistant's integration when it exists; the
   transcoding is ffmpeg's, which the add-on already has. Reolink first, because testers have one.
 - **Unlock** is a Home Assistant action the add-on fires from the view's key, as the doorbell events already are.
+- **Open: one rule for sound that falls behind.** Today the add-on drops the oldest part when a screen's sound queue is
+  full (`live_stream.SOUND_QUEUE`) and the screen drops the newest when its stream buffer is full (`xStreamBufferSend`
+  with no wait). For a camera's sound that is fine; a conversation at the door wants one rule at both ends.
 
 Done when (later): a tester holds the key on a D1001 and is heard at a Reolink doorbell, with the doorbell's sound on
 the glass before, during (ducked) and after.
