@@ -723,6 +723,9 @@ api:
                     // with their weekday, the next 48 hours with their hour, and the wind's bearing, the air pressure,
                     // the visibility and the rain's unit.
                     features.add("weather_week");
+                    // calendar_detail: a calendar card takes short events (calendar_feed.compact) and keeps 48 without PSRAM;
+                    // a tap on one asks for its whole title, place and notes (esphome.screen_calendar, op "calendar_event").
+                    features.add("calendar_detail");
                     // live: a P4 that streams (live_view.h): a camera tile set to Live gets pace 0 and streams on the
                     // glass, and ESP Screens makes Live the default for camera tiles here.
                     if (live_view::available()) features.add("live");

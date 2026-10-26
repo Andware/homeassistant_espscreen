@@ -627,6 +627,14 @@ std::string receive(const std::string &payload) {
       result = model.ready() ? "Synced" : "Loading tiles";
       return true;
     }
+    if (op == "calendar_event") {
+      // The rest of a tapped short event (app calendar_feed.detail), the answer to calendar_view's question.
+      if (!root["view"].is<unsigned>() || root["view"].as<unsigned>() != calendar_view_id) { result = "Synced"; return true; }
+      calendar_view::detail(root["view"].as<unsigned>(), root["c"] | -1, root["s"] | 0, root["e"] | 0, string(root["t"], 128),
+                            string(root["p"], 100), string(root["n"], 500), (root["x"] | 0) == 1);
+      result = model.ready() ? "Synced" : "Loading tiles";
+      return true;
+    }
     if (op == "options") {
       if (!root["view"].is<unsigned>() || root["view"].as<unsigned>() != options_view_id) {
         result = "Synced"; return true;
@@ -1159,9 +1167,34 @@ std::string receive(const std::string &payload) {
         d->colors.push_back(k[0].is<uint32_t>() ? (k[0].as<uint32_t>() & 0xFFFFFF) : 0);
         d->names.push_back(string(k[1], 32));
       }
-      const size_t most = has_psram() ? 80 : 24;
+      // As many as it keeps (80 with PSRAM, 48 without: the app's budget of the message bounds what they hold), the nearest
+      // to now first, as the app orders them; the rest are counted with the ones the app left out, never dropped in
+      // silence. The app (calendar_feed.keeps) sends no more than that, so this only cuts an older app's message.
+      const size_t most = has_psram() ? 80 : 48;
+      std::vector<bool> keep;
+      size_t extra_left = 0;
+      if (c["e"].is<JsonArray>()) {
+        JsonArray sent = c["e"].as<JsonArray>();
+        keep.assign(sent.size(), true);
+        if (sent.size() > most) {
+          // Now as minutes of the day the app calls today (its messages are fresh: the screen's clock is on that day).
+          const auto clock = now_time ? now_time() : esphome::ESPTime{};
+          const long now_ = clock.is_valid() ? clock.hour * 60 + clock.minute : 0;
+          std::vector<std::pair<long, size_t>> order;
+          order.reserve(sent.size());
+          size_t i = 0;
+          for (JsonVariant e : sent) {
+            const int s = e[0] | 0, f = e[1] | 0;
+            order.emplace_back(f > now_ ? std::abs((long) s - now_) : 1000000000L + now_ - f, i++);
+          }
+          std::stable_sort(order.begin(), order.end());
+          for (size_t k = most; k < order.size(); ++k) keep[order[k].second] = false;
+          extra_left = sent.size() - most;
+        }
+      }
+      size_t at = 0;
       if (c["e"].is<JsonArray>()) for (JsonVariant e : c["e"].as<JsonArray>()) {
-        if (d->events.size() == most) break;
+        if (!keep[at++]) continue;
         calendar_card::Event ev;
         ev.start = e[0] | 0; ev.end = e[1] | 0; ev.flags = (uint8_t) (e[2] | 0); ev.cal = (uint8_t) std::clamp(e[3] | 0, 0, 7);
         ev.title = string(e[4], 64); ev.place = string(e[5], 40);
@@ -1169,7 +1202,8 @@ std::string receive(const std::string &payload) {
         d->events.push_back(std::move(ev));
       }
       std::stable_sort(d->events.begin(), d->events.end(), [](const calendar_card::Event &a, const calendar_card::Event &b) { return a.start < b.start; });
-      d->left_out = std::max(0, c["m"] | 0);
+      d->left_out = std::max(0, c["m"] | 0) + (int) extra_left;
+      d->asks = (c["a"] | 0) == 1;
       d->notes = string(c["n"], 200);
       if (c["g"].is<JsonArray>()) {
         d->glance_from = std::clamp(c["g"][0] | 0, -62, 0);

@@ -12,7 +12,7 @@ from pathlib import Path
 import secrets
 import socket
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import math
 from urllib.parse import urlsplit
 import automations
@@ -271,6 +271,9 @@ class HomeAssistant:
         self.camera_requests = asyncio.Queue()
         # The names a light's picker lists (firmware 0.2.70+): {inbox, entity, page}, for Manager.card_options_loop.
         self.options_requests = asyncio.Queue()
+        # A tap on a compact calendar event (calendar_feed.EVENT): {inbox, entity, i, c, s, e, day}, for
+        # Manager.calendar_loop.
+        self.calendar_requests = asyncio.Queue()
         # A player's library (firmware 0.24.0+): a folder a screen opens and an item it plays, for Manager.media_loop.
         self.media_requests = asyncio.Queue()
         # A plugin's question to the app (docs/PLUGINS.md, tessera::send): answered by Plugins.answer.
@@ -320,6 +323,9 @@ class HomeAssistant:
                     self.camera_requests.put_nowait(body)
                 elif event.get('event_type') == light_effects.OPTIONS_EVENT:
                     self.options_requests.put_nowait(body)
+                elif event.get('event_type') == calendar_feed.EVENT:
+                    if self.calendar_requests.qsize() < 32:
+                        self.calendar_requests.put_nowait(body)
                 elif event.get('event_type') == PLUGIN_EVENT:
                     if self.plugin_requests.qsize() < 32:
                         self.plugin_requests.put_nowait(body)
@@ -623,6 +629,7 @@ class HomeAssistant:
                     await self.request('subscribe_events', event_type='esphome.screen_history')
                     await self.request('subscribe_events', event_type='esphome.screen_camera')
                     await self.request('subscribe_events', event_type=light_effects.OPTIONS_EVENT)
+                    await self.request('subscribe_events', event_type=calendar_feed.EVENT)
                     await self.request('subscribe_events', event_type=PLUGIN_EVENT)
                     await self.request('subscribe_events', event_type=media_library.BROWSE_EVENT)
                     await self.request('subscribe_events', event_type=media_library.PLAY_EVENT)
@@ -2004,6 +2011,42 @@ class Manager:
             except Exception:   # one screen's request never ends the app
                 LOG.exception('No options for %s', request.get('entity') if isinstance(request, dict) else '?')
 
+    async def calendar_loop(self):
+        """Answer a tap on a compact calendar event (calendar_feed.detail): its whole title, place and notes."""
+        while True:
+            request = await self.ha.calendar_requests.get()
+            try:
+                await self.answer_calendar(request)
+            except Exception as error:   # one screen's request never ends the app
+                LOG.info('No details of a calendar event (%s)', type(error).__name__)
+
+    async def answer_calendar(self, request):
+        """One screen's tap: a calendar card of its own layout (by its place `i` and its entity), the event by its
+        calendar's place on the card and its minutes from the day the screen calls today."""
+        if not isinstance(request, dict):
+            return
+        inbox = self.aliases.get(request.get('inbox'), request.get('inbox'))
+        layout, screen = self.layouts.get(inbox), self.screen(inbox) if isinstance(inbox, str) else None
+        if not layout or not screen or not screen.get('online'):
+            return
+        try:
+            index, cal, start, end = (int(request.get(key)) for key in ('i', 'c', 's', 'e'))
+            day = date.fromisoformat(str(request.get('day')))
+        except (TypeError, ValueError):
+            return
+        tiles = layout['tiles']
+        if not 0 <= index < len(tiles) or tiles[index]['entity'] != request.get('entity') or not tiles[index]['entity'].startswith('calendar.'):
+            return
+        tile = tiles[index]
+        tz = getattr(self.ha, 'time_zone', None) or timezone.utc
+        fetched = await self.calendar_events(tile)
+        found = calendar_feed.detail(tile, fetched, tz, day, cal, start, end)
+        action = self.transport(inbox, screen)
+        if not action:
+            return
+        message = {'v': 1, 'op': 'calendar_event', 'c': cal, 's': start, 'e': end, **(found or {'x': 1})}
+        await self.send_auxiliary(inbox, message, action, request)
+
     async def plugin_loop(self):
         """Answer the plugins on the screens (docs/PLUGINS.md): a Home Assistant command their manifest names."""
         while True:
@@ -2895,11 +2938,10 @@ class Manager:
         tz = getattr(self.ha, 'time_zone', None) or timezone.utc
         return (tuple(calendars), changed, calendar_feed.ahead_of(tile), datetime.now(tz).date().isoformat())
 
-    async def calendar_extras(self, tile):
-        """The `x.cal` of a calendar tile: Home Assistant's events of its calendars, filtered and packed for the screen."""
+    async def calendar_events(self, tile):
+        """Home Assistant's events of a calendar card's calendars over its window, by calendar, a few minutes old at most."""
         tz = getattr(self.ha, 'time_zone', None) or timezone.utc
-        now = datetime.now(tz)
-        start, end = calendar_feed.window(now.date(), calendar_feed.ahead_of(tile))
+        start, end = calendar_feed.window(datetime.now(tz).date(), calendar_feed.ahead_of(tile))
         calendars = calendar_feed.calendars_of(tile)
         async def fetch():
             if not hasattr(self.ha, 'events'):
@@ -2907,7 +2949,17 @@ class Manager:
             begin = datetime.combine(start, datetime.min.time(), tzinfo=tz)
             return await self.ha.events(calendars, begin, datetime.combine(end, datetime.min.time(), tzinfo=tz))
         fetched = await self.cached(self.forecasts, ('calendar', self.calendar_key(tile)), calendar_feed.SECONDS, fetch)
-        return calendar_feed.card(tile, fetched if isinstance(fetched, dict) else {}, self.ha.states, self.registry_index(), tz, now)
+        return fetched if isinstance(fetched, dict) else {}
+
+    async def calendar_extras(self, tile, features=None, caps=None):
+        """The `x.cal` of a calendar tile: Home Assistant's events of its calendars, filtered and packed for the screen.
+        `features` and `caps`: the screen's hello, for compact events and the count it keeps (calendar_feed.keeps); None
+        for the editor's preview, which gets every event whole."""
+        tz = getattr(self.ha, 'time_zone', None) or timezone.utc
+        fetched = await self.calendar_events(tile)
+        compact = features is not None and calendar_feed.FEATURE in features
+        return calendar_feed.card(tile, fetched, self.ha.states, self.registry_index(), tz, datetime.now(tz),
+                                  compact=compact, most=calendar_feed.keeps(features, caps))
 
     def forecast_due(self, entity):
         entry = self.forecasts.get(entity)
@@ -3009,7 +3061,8 @@ class Manager:
                     if isinstance(card.get('map'),dict):
                         self.snapshots.vacuum_warm(card['map']['e'],card['map']['m'])
         if tile['entity'].startswith('calendar.'):
-            extra = {**(extra or {}), 'cal': await self.calendar_extras(tile)}
+            sender = self.page_senders.get(inbox) if inbox else None
+            extra = {**(extra or {}), 'cal': await self.calendar_extras(tile, features, getattr(sender, 'caps', None))}
         message=state_message(index,tile,states,extra,
                               precision=header_bar.precision_of(entry) if tile['entity'].startswith('sensor.') else None,entry=entry,
                               units=getattr(self.ha,'units',None),week=week)
@@ -5567,7 +5620,7 @@ async def main():
             LOG.error('Camera images are off: port %d is not available (%s)', picture_links.port(), error)
         try:
             await asyncio.gather(ha.run(), manager.run(), manager.history_loop(), manager.updates.run(),
-                                 manager.alert_loop(), manager.doorbell_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(),
+                                 manager.alert_loop(), manager.doorbell_loop(), manager.tile_loop(), manager.card_history_loop(), manager.camera_loop(), manager.card_options_loop(), manager.calendar_loop(),
                                  manager.media_loop(), manager.pairing_loop(), manager.photo_loop(), manager.video_loop(),
                                  *([manager.plugins.loop(), manager.plugin_loop()] if core.plugins_enabled() else []))
         finally:

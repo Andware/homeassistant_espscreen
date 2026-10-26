@@ -211,6 +211,8 @@ inline int wanted_page = 0;
 inline uint64_t previous_page_id = 0;
 inline bool had_previous_page = false;
 inline uint32_t history_view_id = 0, options_view_id = 0, camera_view_id = 0, cover_view_id = 0, vacuum_map_view_id = 0;
+// A tap on a short calendar event (calendar_view.cpp): the question asked last.
+inline uint32_t calendar_view_id = 0;
 // A player's library (firmware 0.24.0+): the folder asked for last, and the covers of its page.
 inline uint32_t library_view_id = 0, library_art_view_id = 0;
 inline void cancel_layout_input(bool invalidate_widgets = true);
