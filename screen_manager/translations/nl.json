@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Zelf de automatisering schrijven"
       }
+    },
+    "drawer": {
+      "resize": "Breedte van de instellingen: sleep, of gebruik de pijltjestoetsen; dubbelklik om terug te zetten"
     }
   }
 }

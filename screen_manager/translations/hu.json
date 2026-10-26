@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Az automatizálás megírása saját kézzel"
       }
+    },
+    "drawer": {
+      "resize": "A beállítások szélessége: húzd, vagy használd a nyilakat; dupla kattintás visszaállítja"
     }
   }
 }

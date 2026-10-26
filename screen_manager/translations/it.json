@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Scrivere l'automazione da te"
       }
+    },
+    "drawer": {
+      "resize": "Larghezza delle impostazioni: trascina o usa le frecce; doppio clic per ripristinare"
     }
   }
 }

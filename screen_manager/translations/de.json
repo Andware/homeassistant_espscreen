@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Die Automation selbst schreiben"
       }
+    },
+    "drawer": {
+      "resize": "Breite der Einstellungen: ziehen oder die Pfeiltasten nutzen; Doppelklick setzt sie zurück"
     }
   }
 }

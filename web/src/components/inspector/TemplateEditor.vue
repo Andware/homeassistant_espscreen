@@ -12,7 +12,7 @@
 // Pointing at an entity id shows what it is and its state.
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { EditorState, RangeSetBuilder, StateEffect } from "@codemirror/state";
-import { Decoration, type DecorationSet, EditorView, hoverTooltip, keymap, placeholder as hint, ViewPlugin, type ViewUpdate,
+import { Decoration, type DecorationSet, EditorView, hoverTooltip, keymap, placeholder as hint, tooltips, ViewPlugin, type ViewUpdate,
   WidgetType } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap, snippet, startCompletion,
@@ -91,7 +91,8 @@ async function complete(ctx: CompletionContext): Promise<CompletionResult | null
       const f = await factsOf(c.entity);
       if (!f) return null;
       return { from: c.from, validFor: /^\w*$/,
-        options: Object.entries(f.attributes).map(([key, value]) => ({ label: key, detail: value, type: "property", apply: key + closer(c.quote, after) })) };
+        options: Object.entries(f.attributes).map(([key, value]) => ({ label: key, detail: shown(value), info: value.length > 28 ? value : undefined,
+          type: "property", apply: key + closer(c.quote, after) })) };
     }
     case "state": {
       const f = await factsOf(c.entity);
@@ -244,6 +245,9 @@ const theme = EditorView.theme({
   ".cm-placeholder": { color: "var(--muted)" },
   ".cm-tooltip": { background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line)", borderRadius: "8px", boxShadow: "var(--pop-shadow)" },
   ".cm-tooltip-autocomplete ul li[aria-selected]": { background: "var(--accent-soft)", color: "var(--ink)" },
+  // A list as wide as the panel allows, a long value cut with an ellipsis (its whole text in the info beside it).
+  ".cm-tooltip.cm-tooltip-autocomplete > ul": { maxWidth: "min(30em, 92vw)" },
+  ".cm-tooltip-autocomplete ul li": { overflow: "hidden", textOverflow: "ellipsis" },
   ".cm-completionDetail": { color: "var(--muted)", fontStyle: "normal", marginLeft: "0.8em" },
   ".cm-completionInfo": { maxWidth: "18em", fontFamily: "var(--mono)", fontSize: "12px", padding: "6px 8px" },
   ".cm-snippetField": { background: "var(--accent-soft)", borderRadius: "3px" },
@@ -276,6 +280,8 @@ onMounted(() => {
       extensions: [
         history(), closeBrackets(), tagBraces, bracketMatching(), tileJinja, syntaxHighlighting(look), theme,
         autocompletion({ override: [complete], activateOnTyping: true, icons: false }), pointed, values, problems,
+        // Tooltips keep inside the inspector they stand in, which cuts off what leaves it.
+        tooltips({ tooltipSpace: () => (host.value?.closest(".drawer") ?? document.documentElement).getBoundingClientRect() }),
         hint(t("editor.tile.text.placeholder")), EditorView.lineWrapping,
         EditorView.contentAttributes.of({ "aria-label": props.label, spellcheck: "false" }),
         keymap.of([...closeBracketsKeymap, ...completionKeymap, ...historyKeymap, indentWithTab, ...defaultKeymap]),

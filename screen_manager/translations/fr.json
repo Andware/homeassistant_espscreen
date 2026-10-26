@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Écrire l'automatisation vous-même"
       }
+    },
+    "drawer": {
+      "resize": "Largeur des réglages : faites glisser ou utilisez les flèches ; double-cliquez pour réinitialiser"
     }
   }
 }

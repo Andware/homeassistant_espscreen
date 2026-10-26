@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Write the automation yourself"
       }
+    },
+    "drawer": {
+      "resize": "Resize the settings: drag, or use the arrow keys; double-click to reset"
     }
   }
 }

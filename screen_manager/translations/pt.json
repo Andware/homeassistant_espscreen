@@ -4425,6 +4425,9 @@
       "by_hand": {
         "title": "Escrever a automação você mesmo"
       }
+    },
+    "drawer": {
+      "resize": "Largura das definições: arraste ou use as setas; duplo clique para repor"
     }
   }
 }
