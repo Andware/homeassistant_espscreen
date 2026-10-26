@@ -699,7 +699,8 @@
         "firmware_first": "Installeer eerst schermfirmware {version} of nieuwer voor deze tegels.",
         "entity_gone": "Een gekozen entiteit bestaat niet meer. Zoek de nieuwe entiteit op.",
         "ids_too_long": "De entiteits-ID's van deze tegels zijn samen te lang voor één bericht aan het scherm; verwijder een paar tegels.",
-        "favorite_play": "Kies wat deze favoriet afspeelt."
+        "favorite_play": "Kies wat deze favoriet afspeelt.",
+        "text_template": "Een template-tile heeft een template van hooguit 4000 tekens nodig."
       },
       "top_bar": {
         "invalid": "Ongeldige bovenbalk; vernieuw de beheerpagina.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Nachtkastjesklok",
         "page": "Ga naar pagina {page}",
         "map": "Kaart",
-        "energy": "Energie"
+        "energy": "Energie",
+        "text": "Tekst"
       },
       "identify": {
         "title": "Dit is {name}",
@@ -2352,6 +2354,58 @@
         "none": "Geen bediening",
         "never": "Niet meer tonen",
         "done": "Klaar"
+      },
+      "text": {
+        "title": "Template",
+        "hint": "Schrijf tekst met Home Assistant-templates erin, zoals bij Ontwikkelhulpmiddelen › Template. Home Assistant vult hem in, en het scherm toont het resultaat en houdt het bij. Is het resultaat leeg, dan verdwijnt de tile.",
+        "manual": "Zo schrijf je een template",
+        "field": "Template",
+        "placeholder": "Typ tekst, of {'{{'} om een status te lezen…",
+        "keys": {
+          "space": "Spatie",
+          "complete": "aanvullen",
+          "next": "volgend veld",
+          "comment": "commentaar"
+        },
+        "result": "Op het scherm",
+        "bytes": "{n} van {of} bytes",
+        "empty": "Het resultaat is leeg: het scherm toont hier niets.",
+        "access": "De template draait in Home Assistant met de rechten van de Tessera-app, en kan dus elke entiteit lezen.",
+        "markup": {
+          "label": "Opmaak",
+          "heading": "Kop",
+          "bullet": "Opsommingsteken",
+          "table": "Tabel",
+          "bold": "Vet",
+          "good": "Groene tekst",
+          "alert": "Rode tekst",
+          "accent": "Blauwe tekst"
+        },
+        "complete": {
+          "now": "nu",
+          "state": "Status: {state}"
+        },
+        "examples": {
+          "title": "Begin met een voorbeeld:",
+          "lights": "Lampen aan",
+          "open": "Open deuren en ramen",
+          "weather": "Weer",
+          "lights_heading": "Lampen aan",
+          "all_off": "Alle lampen zijn uit",
+          "open_heading": "Open",
+          "now": "Nu",
+          "humidity": "Luchtvochtigheid"
+        },
+        "listen": {
+          "label": "Ververst bij",
+          "time": "de tijd",
+          "none": "Leest geen entiteit: verandert alleen als je de template wijzigt.",
+          "all": "Leest alle statussen: Home Assistant ververst dit hooguit eens per minuut. Noem de entiteiten of een domein (states.light) om het meteen te laten volgen."
+        },
+        "lint": {
+          "unknown": "{id} bestaat niet in Home Assistant",
+          "replace": "Vervang door {id}"
+        }
       }
     },
     "precision": {

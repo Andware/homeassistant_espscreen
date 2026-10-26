@@ -3,6 +3,9 @@
 #include "esphome/core/defines.h"
 #include "hw_hello.h"
 #include "live_view.h"
+#ifdef SD_MOD_TEXT_CARD
+#include "module_text_card.h"
+#endif
 #ifdef USE_ESP32
 #include <esp_heap_caps.h>
 #endif
@@ -51,6 +54,11 @@ void hello(JsonObject root) {
   caps["live_tiles"] = c.live_tiles;
   caps["psram_kb"] = c.psram_bytes / 1024;
   caps["internal_kb"] = c.internal_bytes / 1024;
+#ifdef SD_MOD_TEXT_CARD
+  // The template tiles this screen takes (module text_card): how many at once, and the bytes of rows each keeps.
+  caps["text_tiles"] = text_card::MAX_TILES;
+  caps["text_bytes"] = text_card::MAX_BYTES;
+#endif
 }
 
 }  // namespace hw

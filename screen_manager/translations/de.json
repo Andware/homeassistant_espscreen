@@ -699,7 +699,8 @@
         "firmware_first": "Installiere für diese Kacheln zuerst Bildschirm-Firmware {version} oder neuer.",
         "entity_gone": "Eine gewählte Entität gibt es nicht mehr. Such die neue Entität heraus.",
         "ids_too_long": "Die Entitäts-IDs dieser Kacheln sind zusammen zu lang für eine Nachricht an den Bildschirm; entferne ein paar Kacheln.",
-        "favorite_play": "Wähle, was dieser Favorit abspielt."
+        "favorite_play": "Wähle, was dieser Favorit abspielt.",
+        "text_template": "Eine Template-Kachel braucht ein Template mit höchstens 4000 Zeichen."
       },
       "top_bar": {
         "invalid": "Ungültige Kopfleiste; lade die Verwaltungsseite neu.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Nachttischuhr",
         "page": "Zu Seite {page}",
         "map": "Karte",
-        "energy": "Energie"
+        "energy": "Energie",
+        "text": "Text"
       },
       "identify": {
         "title": "Das ist {name}",
@@ -2781,6 +2783,58 @@
         "none": "Keine Steuerung",
         "never": "Nicht mehr anzeigen",
         "done": "Fertig"
+      },
+      "text": {
+        "title": "Template",
+        "hint": "Schreibe Text mit Home-Assistant-Templates darin, wie unter Entwicklerwerkzeuge › Template. Home Assistant füllt ihn aus, und der Bildschirm zeigt das Ergebnis und hält es aktuell. Ist das Ergebnis leer, verschwindet die Kachel.",
+        "manual": "So schreibst du ein Template",
+        "field": "Template",
+        "placeholder": "Text tippen, oder {'{{'} um einen Zustand zu lesen…",
+        "keys": {
+          "space": "Leertaste",
+          "complete": "vervollständigen",
+          "next": "nächstes Feld",
+          "comment": "Kommentar"
+        },
+        "result": "Auf dem Bildschirm",
+        "bytes": "{n} von {of} Bytes",
+        "empty": "Das Ergebnis ist leer: Der Bildschirm zeigt hier nichts.",
+        "access": "Das Template läuft in Home Assistant mit den Rechten der Tessera-App und kann daher jede Entität lesen.",
+        "markup": {
+          "label": "Formatierung",
+          "heading": "Überschrift",
+          "bullet": "Aufzählungspunkt",
+          "table": "Tabelle",
+          "bold": "Fett",
+          "good": "Grüner Text",
+          "alert": "Roter Text",
+          "accent": "Blauer Text"
+        },
+        "complete": {
+          "now": "jetzt",
+          "state": "Zustand: {state}"
+        },
+        "examples": {
+          "title": "Mit einem Beispiel beginnen:",
+          "lights": "Eingeschaltete Lichter",
+          "open": "Offene Türen und Fenster",
+          "weather": "Wetter",
+          "lights_heading": "Lichter an",
+          "all_off": "Alle Lichter sind aus",
+          "open_heading": "Offen",
+          "now": "Jetzt",
+          "humidity": "Luftfeuchtigkeit"
+        },
+        "listen": {
+          "label": "Aktualisiert bei",
+          "time": "der Zeit",
+          "none": "Liest keine Entität: ändert sich nur, wenn du das Template änderst.",
+          "all": "Liest alle Zustände: Home Assistant aktualisiert es höchstens einmal pro Minute. Nenne die Entitäten oder eine Domain (states.light), damit es sofort folgt."
+        },
+        "lint": {
+          "unknown": "{id} gibt es in Home Assistant nicht",
+          "replace": "Ersetzen durch {id}"
+        }
       }
     },
     "precision": {

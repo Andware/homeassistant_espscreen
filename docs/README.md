@@ -10,6 +10,8 @@
 - [VACUUM.md](VACUUM.md): the vacuum card with the robot's map, cleaning per room and its routines, and what it shows
   for robots that offer less.
 - [METER.md](METER.md): the meter display of a sensor, a ring, a tape or a bar, its range and its colours.
+- [TEXT_TILE.md](TEXT_TILE.md): the template tile, a text with Home Assistant templates in it, how to write one, its
+  limits and why it is built so.
 - [SCREENSAVER.md](SCREENSAVER.md): what a screen shows in standby instead of its dimmed tiles: a cover, a camera or the clock.
 - [BATTERY.md](BATTERY.md): a screen's battery in its top bar, and how a board or your own YAML measures it (also a
   recipe for the code).

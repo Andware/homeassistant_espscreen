@@ -1881,6 +1881,10 @@
     "screen.energy": {
      "bytes": 6144,
      "extras": true
+    },
+    "screen.text": {
+     "bytes": 2048,
+     "extras": true
     }
    },
    "key": false,

@@ -699,7 +699,8 @@
         "firmware_first": "Per questi riquadri installa prima sullo schermo il firmware {version} o più recente.",
         "entity_gone": "Un'entità scelta non esiste più. Cerca la nuova entità.",
         "ids_too_long": "Insieme, gli ID entità di questi riquadri sono troppo lunghi per stare in un solo messaggio allo schermo; rimuovi qualche riquadro.",
-        "favorite_play": "Scegli cosa riproduce questo preferito."
+        "favorite_play": "Scegli cosa riproduce questo preferito.",
+        "text_template": "Un riquadro modello ha bisogno di un modello di al massimo 4000 caratteri."
       },
       "top_bar": {
         "invalid": "Barra superiore non valida; ricarica la pagina di gestione.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Orologio da comodino",
         "page": "Vai alla pagina {page}",
         "map": "Mappa",
-        "energy": "Energia"
+        "energy": "Energia",
+        "text": "Testo"
       },
       "identify": {
         "title": "Questo è {name}",
@@ -2781,6 +2783,58 @@
         "none": "Nessun controllo",
         "never": "Non mostrare più",
         "done": "Fatto"
+      },
+      "text": {
+        "title": "Modello",
+        "hint": "Scrivi testo con modelli di Home Assistant, come in Strumenti per sviluppatori › Modello. Home Assistant lo compila, e lo schermo mostra il risultato e lo tiene aggiornato. Se il risultato è vuoto, il riquadro scompare.",
+        "manual": "Come scrivere un modello",
+        "field": "Modello",
+        "placeholder": "Scrivi del testo, oppure {'{{'} per leggere uno stato…",
+        "keys": {
+          "space": "Spazio",
+          "complete": "completa",
+          "next": "campo successivo",
+          "comment": "commento"
+        },
+        "result": "Sullo schermo",
+        "bytes": "{n} di {of} byte",
+        "empty": "Il risultato è vuoto: lo schermo qui non mostra nulla.",
+        "access": "Il modello gira in Home Assistant con i permessi dell’app Tessera, quindi può leggere ogni entità.",
+        "markup": {
+          "label": "Formattazione",
+          "heading": "Titolo",
+          "bullet": "Punto elenco",
+          "table": "Tabella",
+          "bold": "Grassetto",
+          "good": "Testo verde",
+          "alert": "Testo rosso",
+          "accent": "Testo blu"
+        },
+        "complete": {
+          "now": "ora",
+          "state": "Stato: {state}"
+        },
+        "examples": {
+          "title": "Parti da un esempio:",
+          "lights": "Luci accese",
+          "open": "Porte e finestre aperte",
+          "weather": "Meteo",
+          "lights_heading": "Luci accese",
+          "all_off": "Tutte le luci sono spente",
+          "open_heading": "Aperto",
+          "now": "Ora",
+          "humidity": "Umidità"
+        },
+        "listen": {
+          "label": "Si aggiorna con",
+          "time": "l’ora",
+          "none": "Non legge entità: cambia solo quando modifichi il modello.",
+          "all": "Legge tutti gli stati: Home Assistant lo ricalcola al massimo una volta al minuto. Indica le entità o un dominio (states.light) perché segua subito."
+        },
+        "lint": {
+          "unknown": "{id} non esiste in Home Assistant",
+          "replace": "Sostituisci con {id}"
+        }
       }
     },
     "precision": {

@@ -1,6 +1,6 @@
 /** The cards built into a screen, with no Home Assistant entity of their own (core.py BUILTIN, the page tiles aside). */
-export type BuiltinName = "clock" | "nightstand" | "settings" | "map" | "energy";
-export const BUILTIN_CARDS: string[] = ["screen.clock", "screen.nightstand", "screen.settings", "screen.map", "screen.energy"];
+export type BuiltinName = "clock" | "nightstand" | "settings" | "map" | "energy" | "text";
+export const BUILTIN_CARDS: string[] = ["screen.clock", "screen.nightstand", "screen.settings", "screen.map", "screen.energy", "screen.text"];
 // A plugin tile's option as it is kept (plugin API 0.12): a text, number or toggle; a pick of a list found by searching,
 // {value, label} with the words the person saw; or a list of texts or picks (the add-on's core.plugin_options).
 export type PluginPick = { value: string; label: string };
@@ -22,6 +22,8 @@ export type TileOptions = {
   background?: string;
   history_hours?: number;
   action?: { action: string; data?: Record<string, unknown> };
+  // The template tile's template (docs/TEXT_TILE.md, text_tile.py): Home Assistant renders it, the screen gets rows.
+  template?: string;
   // A calendar card's choices (firmware 0.56.0, calendar_feed.validate): what it shows, the calendars beside the tile's
   // own, which events it lets through, how far it looks, when an event starts soon and where its full screen opens.
   style?: "events" | "busy_free" | "room";
@@ -95,6 +97,8 @@ export type PageTile = {
   appearance: { label: string; presentation?: "single" | "wide" | "tall" | "square" | "full" | `${number}x${number}`; display?: string; icon?: string; background?: string; historyHours?: number; refresh?: number; subtitle?: string; fit?: string; overlay?: string;
     mapEntities?: string[]; mapFraming?: string; mapDistance?: string; mapFollow?: string; mapMarkers?: string; mapNames?: string;
     mapZones?: string; mapStreets?: string; mapLook?: string; energyFlow?: string;
+    // The template tile's template (docs/TEXT_TILE.md): TileOptions' template.
+    textTemplate?: string;
     // A calendar card's choices (firmware 0.56.0): TileOptions' style, calendars, places, words, hide_words, all_day,
     // tentative, private, ahead, soon and start_view.
     calendarStyle?: string; calendarEntities?: string[]; calendarPlaces?: string[]; calendarWords?: string[]; calendarHideWords?: string[];
@@ -312,6 +316,8 @@ export type Screen = {
   battery?: boolean;
   // Whether its board has the Dock (boards.json `modules`, docs/MODULES.md): a page then offers Show in Dock.
   dock?: boolean;
+  // Whether its board draws the template tile (boards.json `modules` has text_card, docs/TEXT_TILE.md).
+  text_tiles?: boolean;
   /** Streams a camera live (a P4 whose hello says `live`, or such a board while it is offline): Live is a camera tile's
    * first and default pace there (app dev). */
   live_camera?: boolean;
@@ -320,7 +326,7 @@ export type Screen = {
 };
 // A screen's capability record (page_delivery.caps_of): `live_tiles`, the most live camera tiles it streams at once.
 export type ScreenCaps = { live: boolean; speaker: boolean; microphone: boolean; echo_cancel: boolean; camera: boolean;
-  live_tiles: number | null; psram_kb: number | null; internal_kb: number | null };
+  live_tiles: number | null; psram_kb: number | null; internal_kb: number | null; text_tiles?: number | null; text_bytes?: number | null };
 export type ScreenShape = NonNullable<Screen["shape"]>;
 // Language & region of the screens (app 0.2.90): the language setting ("auto" follows Home Assistant), the language that
 // gives, Home Assistant's own, and every language there is, by its own name; the time and number format, each "auto"

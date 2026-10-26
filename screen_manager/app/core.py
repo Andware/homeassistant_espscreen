@@ -12,6 +12,7 @@ import secrets
 from i18n import english, screen_t, t
 import calendar_feed
 import meter
+import text_tile
 import catalogue
 import tile_icons
 
@@ -20,7 +21,7 @@ import tile_icons
 DOMAINS = catalogue.DOMAINS
 # Built-in cards without a Home Assistant entity; firmware 0.2.14+ renders them. The names in English: a screen gets them in
 # its language and the editor in its own (builtin_name, app 0.2.90).
-BUILTIN = {'screen.clock': 'Clock', 'screen.nightstand': 'Bedside clock', 'screen.settings': 'Settings', 'screen.map': 'Map', 'screen.energy': 'Energy', **{f'screen.page_{n}': f'Go to page {n}' for n in range(1, 33)}}
+BUILTIN = {'screen.clock': 'Clock', 'screen.nightstand': 'Bedside clock', 'screen.settings': 'Settings', 'screen.map': 'Map', 'screen.energy': 'Energy', 'screen.text': 'Text', **{f'screen.page_{n}': f'Go to page {n}' for n in range(1, 33)}}
 # A navigation tile (firmware 0.2.62+): screen.page_<n> goes to page n, up to page 32 on a board that holds that many
 # (firmware 0.34.0+); whether the screen has page n is the screen's Grid's to say. Firmware 0.2.65+ takes the same one on several
 # pages (a "Back to page 1" on every page), firmware 0.16.0+ any entity on several tiles (GitHub #83) but the bedside
@@ -50,6 +51,8 @@ def builtin_name(entity, text=screen_t):
         return text('addon.screen.builtin.map')
     if entity == ENERGY_TILE:
         return text('addon.screen.builtin.energy')
+    if entity == text_tile.TEXT_TILE:
+        return text('addon.screen.builtin.text')
     return text('screen.settings.title' if entity == 'screen.settings' else 'addon.screen.builtin.clock')
 # A camera or an image entity opens full screen on a Guition with firmware 0.2.57+ (docs/PICTURES.md).
 CAMERA_DOMAINS = frozenset(('camera', 'image'))
@@ -1952,7 +1955,7 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
             continue
         if 'options' in tile:
             options = tile['options']
-            if not isinstance(options, dict) or set(options) - {'tap', 'display', 'inline', 'history_hours', 'background', 'size', 'icon', 'controls', 'action', 'refresh', 'sub', 'fit', 'overlay', 'guard', 'tilt_open', 'flow', *MAP_OWN, *FAVORITE_OWN, *calendar_feed.KEYS, *meter.KEYS}:
+            if not isinstance(options, dict) or set(options) - {'tap', 'display', 'inline', 'history_hours', 'background', 'size', 'icon', 'controls', 'action', 'refresh', 'sub', 'fit', 'overlay', 'guard', 'tilt_open', 'flow', text_tile.OPTION, *MAP_OWN, *FAVORITE_OWN, *calendar_feed.KEYS, *meter.KEYS}:
                 raise ValueError(t('addon.errors.layout.unknown_settings'))
             # A calendar card's choices (firmware 0.56.0): its calendars, its filters, its look; other tiles have none.
             if tile['entity'].startswith('calendar.'):
@@ -1998,6 +2001,19 @@ def validate_layout(data, stored=False, grid=DEFAULT_GRID):
                     options = {k: v for k, v in options.items() if k != 'flow'}
             elif 'flow' in options:
                 options = {k: v for k, v in options.items() if k != 'flow'}
+            # The template tile (firmware 0.58.0, text_tile.py) is its template and nothing else: no face, slider or
+            # second line, and a tap does nothing (an action needs an entity to aim at, and the tile has none).
+            if tile['entity'] == text_tile.TEXT_TILE:
+                try:
+                    template = text_tile.validate(options.get(text_tile.OPTION))
+                except ValueError:
+                    raise ValueError(t('addon.errors.layout.text_template')) from None
+                options = {**{k: v for k, v in options.items() if k not in ('display', 'inline', 'controls', 'history_hours', 'sub')},
+                           text_tile.OPTION: template}
+                if options.get('tap') not in (None, 'none'):
+                    raise ValueError(t('addon.errors.layout.invalid_setting', setting='tap'))
+            elif text_tile.OPTION in options:
+                options = {k: v for k, v in options.items() if k != text_tile.OPTION}
             # Every tile's taps and its type's own (run, an automation's alone: firmware 0.7.0+), from the catalogue.
             taps = tuple(catalogue.taps(domain))
             choices = {'tap': taps, 'display': displays, 'inline': ('none', 'slider')}
@@ -2546,7 +2562,7 @@ def screen_options(tile, attrs, state=None, entry=None):
     # A map's own choices stay in the app: who is on it and how it frames them say where people are (app 0.4.33).
     # So do a favourite's own (app 0.4.42): the screen asks to play its tile, never an id.
     # A calendar's filters stay too (calendar_feed.OWN): the screen gets the events they let through.
-    options = {k: v for k, v in tile.get('options', {}).items() if k not in ('icon', 'controls', 'action', *MAP_OWN, *FAVORITE_OWN, *calendar_feed.OWN)}
+    options = {k: v for k, v in tile.get('options', {}).items() if k not in ('icon', 'controls', 'action', text_tile.OPTION, *MAP_OWN, *FAVORITE_OWN, *calendar_feed.OWN)}
     # A meter's colours travel as numbers (firmware 0.56.0): the screen keeps no table of names.
     options = meter.screen_options(options)
     icon = tile_icon(tile, attrs, state, entry)

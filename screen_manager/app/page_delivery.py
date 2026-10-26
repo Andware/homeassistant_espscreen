@@ -163,7 +163,7 @@ def prepare(inbox, record, region, values, bars, bar=()):
 
 
 CAP_FLAGS = ("live", "speaker", "microphone", "echo_cancel", "camera")
-CAP_COUNTS = ("live_tiles", "psram_kb", "internal_kb")
+CAP_COUNTS = ("live_tiles", "psram_kb", "internal_kb", "text_tiles", "text_bytes")
 
 
 def caps_of(answer):

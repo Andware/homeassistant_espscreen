@@ -699,7 +699,8 @@
         "firmware_first": "Pour ces tuiles, installez d'abord le firmware {version} ou plus récent sur l'écran.",
         "entity_gone": "Une entité choisie n'existe plus. Cherchez la nouvelle entité.",
         "ids_too_long": "Ensemble, les ID d'entité de ces tuiles sont trop longs pour tenir dans un seul message à l'écran ; retirez quelques tuiles.",
-        "favorite_play": "Choisissez ce que ce favori lit."
+        "favorite_play": "Choisissez ce que ce favori lit.",
+        "text_template": "Une tuile modèle a besoin d’un modèle de 4000 caractères au plus."
       },
       "top_bar": {
         "invalid": "Barre supérieure non valide ; actualisez la page de gestion.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Horloge de chevet",
         "page": "Aller à la page {page}",
         "map": "Carte",
-        "energy": "Énergie"
+        "energy": "Énergie",
+        "text": "Texte"
       },
       "identify": {
         "title": "Voici {name}",
@@ -2781,6 +2783,58 @@
         "none": "Aucune commande",
         "never": "Ne plus afficher",
         "done": "Terminé"
+      },
+      "text": {
+        "title": "Modèle",
+        "hint": "Écrivez du texte avec des modèles Home Assistant, comme dans Outils de développement › Modèle. Home Assistant le complète, et l’écran affiche le résultat et le tient à jour. Si le résultat est vide, la tuile disparaît.",
+        "manual": "Comment écrire un modèle",
+        "field": "Modèle",
+        "placeholder": "Tapez du texte, ou {'{{'} pour lire un état…",
+        "keys": {
+          "space": "Espace",
+          "complete": "compléter",
+          "next": "champ suivant",
+          "comment": "commentaire"
+        },
+        "result": "Sur l’écran",
+        "bytes": "{n} sur {of} octets",
+        "empty": "Le résultat est vide : l’écran n’affiche rien ici.",
+        "access": "Le modèle s’exécute dans Home Assistant avec les droits de l’app Tessera ; il peut donc lire toutes les entités.",
+        "markup": {
+          "label": "Mise en forme",
+          "heading": "Titre",
+          "bullet": "Puce",
+          "table": "Tableau",
+          "bold": "Gras",
+          "good": "Texte vert",
+          "alert": "Texte rouge",
+          "accent": "Texte bleu"
+        },
+        "complete": {
+          "now": "maintenant",
+          "state": "État : {state}"
+        },
+        "examples": {
+          "title": "Partir d’un exemple :",
+          "lights": "Lumières allumées",
+          "open": "Portes et fenêtres ouvertes",
+          "weather": "Météo",
+          "lights_heading": "Lumières allumées",
+          "all_off": "Toutes les lumières sont éteintes",
+          "open_heading": "Ouvert",
+          "now": "Maintenant",
+          "humidity": "Humidité"
+        },
+        "listen": {
+          "label": "Se met à jour avec",
+          "time": "l’heure",
+          "none": "Ne lit aucune entité : change seulement quand vous modifiez le modèle.",
+          "all": "Lit tous les états : Home Assistant le recalcule au plus une fois par minute. Nommez les entités ou un domaine (states.light) pour qu’il suive aussitôt."
+        },
+        "lint": {
+          "unknown": "{id} n’existe pas dans Home Assistant",
+          "replace": "Remplacer par {id}"
+        }
       }
     },
     "precision": {

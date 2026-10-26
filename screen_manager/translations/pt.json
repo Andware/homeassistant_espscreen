@@ -699,7 +699,8 @@
         "firmware_first": "Para estes mosaicos, instale primeiro o firmware {version} ou mais recente no ecrã.",
         "entity_gone": "Uma das entidades escolhidas já não existe. Procure a nova entidade.",
         "ids_too_long": "Em conjunto, os IDs de entidade destes mosaicos são demasiado longos para caberem numa mensagem para o ecrã; remova alguns mosaicos.",
-        "favorite_play": "Escolha o que este favorito reproduz."
+        "favorite_play": "Escolha o que este favorito reproduz.",
+        "text_template": "Um mosaico de modelo precisa de um modelo com no máximo 4000 caracteres."
       },
       "top_bar": {
         "invalid": "Barra superior inválida; recarregue a página de gestão.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Relógio de cabeceira",
         "page": "Ir para a página {page}",
         "map": "Mapa",
-        "energy": "Energia"
+        "energy": "Energia",
+        "text": "Texto"
       },
       "identify": {
         "title": "Este é {name}",
@@ -2781,6 +2783,58 @@
         "none": "Sem controlos",
         "never": "Não mostrar novamente",
         "done": "Concluído"
+      },
+      "text": {
+        "title": "Modelo",
+        "hint": "Escreva texto com modelos do Home Assistant, como em Ferramentas de programador › Modelo. O Home Assistant preenche-o, e o ecrã mostra o resultado e mantém-no atualizado. Se o resultado estiver vazio, o mosaico desaparece.",
+        "manual": "Como escrever um modelo",
+        "field": "Modelo",
+        "placeholder": "Escreva texto, ou {'{{'} para ler um estado…",
+        "keys": {
+          "space": "Espaço",
+          "complete": "completar",
+          "next": "campo seguinte",
+          "comment": "comentário"
+        },
+        "result": "No ecrã",
+        "bytes": "{n} de {of} bytes",
+        "empty": "O resultado está vazio: o ecrã não mostra nada aqui.",
+        "access": "O modelo corre no Home Assistant com as permissões da app Tessera, por isso pode ler qualquer entidade.",
+        "markup": {
+          "label": "Formatação",
+          "heading": "Título",
+          "bullet": "Marcador",
+          "table": "Tabela",
+          "bold": "Negrito",
+          "good": "Texto verde",
+          "alert": "Texto vermelho",
+          "accent": "Texto azul"
+        },
+        "complete": {
+          "now": "agora",
+          "state": "Estado: {state}"
+        },
+        "examples": {
+          "title": "Começar com um exemplo:",
+          "lights": "Luzes acesas",
+          "open": "Portas e janelas abertas",
+          "weather": "Tempo",
+          "lights_heading": "Luzes acesas",
+          "all_off": "Todas as luzes estão apagadas",
+          "open_heading": "Aberto",
+          "now": "Agora",
+          "humidity": "Humidade"
+        },
+        "listen": {
+          "label": "Atualiza com",
+          "time": "a hora",
+          "none": "Não lê nenhuma entidade: só muda quando altera o modelo.",
+          "all": "Lê todos os estados: o Home Assistant recalcula-o no máximo uma vez por minuto. Indique as entidades ou um domínio (states.light) para seguir de imediato."
+        },
+        "lint": {
+          "unknown": "{id} não existe no Home Assistant",
+          "replace": "Substituir por {id}"
+        }
       }
     },
     "precision": {

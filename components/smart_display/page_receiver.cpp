@@ -1182,6 +1182,50 @@ std::string receive(const std::string &payload) {
       }
       next.calendar = std::move(d);
     }
+#ifdef SD_MOD_TEXT_CARD
+    // A template tile (module text_card, firmware 0.58.0+, app text_tile.py): {"v":1,"r":[rows]} or {"v":1,"e":why}.
+    // A row is [kind, runs], a table row [kind, [runs per cell]]; a run is [tone, text]. Whatever a message says, a tile
+    // keeps text_card's caps: rows, cells, runs and bytes, in PSRAM.
+    if (tile.is_text() && extra["md"].is<JsonObject>() && (extra["md"]["v"] | 0) == 1) {
+      JsonVariant md = extra["md"];
+      auto d = std::make_shared<text_card::Data>();
+      unsigned bytes = 0;
+      auto runs_of = [&](JsonVariant list, text_card::Runs &out) {
+        if (!list.is<JsonArray>()) return;
+        for (JsonVariant r : list.as<JsonArray>()) {
+          if (out.size() == text_card::MAX_RUNS || bytes >= text_card::MAX_BYTES) break;
+          const char *s = r[1].is<const char *>() ? r[1].as<const char *>() : "";
+          const size_t n = std::min<size_t>(strlen(s), text_card::MAX_BYTES - bytes);
+          bytes += n;
+          out.push_back({static_cast<uint8_t>(std::min<unsigned>(r[0] | 0u, text_card::TONES - 1)), roomy::Text(s, n)});
+        }
+      };
+      if (md["e"].is<const char *>()) {
+        d->failed = true;
+        d->error = roomy::text(string(md["e"], 160));
+      } else if (md["r"].is<JsonArray>()) {
+        for (JsonVariant r : md["r"].as<JsonArray>()) {
+          if (d->rows.size() == text_card::MAX_ROWS || bytes >= text_card::MAX_BYTES) break;
+          const std::string kind = string(r[0], 4);
+          text_card::Row row;
+          row.kind = kind == "h" ? text_card::HEAD : kind == "li" ? text_card::BULLET : kind == "t" ? text_card::ROW
+                   : kind == "th" ? text_card::HEAD_ROW : text_card::TEXT;
+          if (row.kind == text_card::ROW || row.kind == text_card::HEAD_ROW) {
+            if (r[1].is<JsonArray>()) for (JsonVariant cell : r[1].as<JsonArray>()) {
+              if (row.cells.size() == text_card::MAX_CELLS) break;
+              row.cells.emplace_back();
+              runs_of(cell, row.cells.back());
+            }
+          } else {
+            row.cells.emplace_back();
+            runs_of(r[1], row.cells.back());
+          }
+          if (!row.cells.empty()) d->rows.push_back(std::move(row));
+        }
+      }
+      next.text = std::move(d);
+    }
+#endif
 #ifdef SD_MOD_VACUUM_CARD
     // A vacuum's card of the module (module_vacuum_card.h, vacuum_model.h, app vacuum_card.py): its map and its mark, the areas
     // linked to its segments with their icons and floors, its routines, and why it stopped or how far it is.

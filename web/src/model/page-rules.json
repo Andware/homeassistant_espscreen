@@ -430,7 +430,8 @@
     "energy",
     "map",
     "nightstand",
-    "settings"
+    "settings",
+    "text"
   ],
   "keyHolders": {
     "screen.nightstand": 3

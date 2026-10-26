@@ -49,6 +49,15 @@ class Wiring(unittest.TestCase):
         header = (COMPONENT / 'hw.cpp').read_text()
         for key in ('"live"', '"speaker"', '"microphone"', '"echo_cancel"', '"camera"', '"live_tiles"', '"psram_kb"', '"internal_kb"'):
             self.assertIn(key, header)
+        # The template tile's numbers (module text_card), only where the module is: how many, and the bytes of rows each
+        # keeps, an S3's and a P4's, both under a state message's 4096 bytes (tests/test_text_tile.py, Limits).
+        guarded = header[header.index('#ifdef SD_MOD_TEXT_CARD\n  //'):]
+        self.assertIn('caps["text_tiles"] = text_card::MAX_TILES;', guarded)
+        self.assertIn('caps["text_bytes"] = text_card::MAX_BYTES;', guarded)
+        card = (COMPONENT / 'module_text_card.h').read_text()
+        self.assertIn('constexpr unsigned MAX_BYTES = 3584;', card)
+        self.assertIn('constexpr unsigned MAX_BYTES = 2048;', card)
+        self.assertLessEqual(3584 + 512, page_delivery.MAX_MESSAGE)
         self.assertIn('#include "hw.h"', (COMPONENT / 'smart_display.h').read_text())
         self.assertIn('#include "hw.h"', (COMPONENT / 'plugin_api.h').read_text())
 
@@ -62,6 +71,8 @@ class AppSide(unittest.TestCase):
                   'caps': {'live': True, 'speaker': True, 'microphone': False, 'echo_cancel': False, 'camera': True,
                            'live_tiles': 4, 'psram_kb': 32768, 'internal_kb': 768}}
         caps = page_delivery.caps_of(answer)
+        self.assertIsNone(caps['text_tiles'])  # a screen without the template tile's module says none
+        self.assertEqual(page_delivery.caps_of({'caps': {'text_tiles': 8, 'text_bytes': 3584}})['text_bytes'], 3584)
         self.assertEqual(caps['live'], True)
         self.assertEqual(caps['live_tiles'], 4)
         self.assertEqual(caps['speaker'], True)

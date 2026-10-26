@@ -699,7 +699,8 @@
         "firmware_first": "Ezekhez a csempékhez előbb telepíts {version} vagy újabb kijelző-firmware-t.",
         "entity_gone": "Egy kiválasztott entitás már nem létezik. Keresd meg az újat.",
         "ids_too_long": "Ezeknek a csempéknek az entitásazonosítói együtt túl hosszúak ahhoz, hogy egy üzenetben elférjenek; távolíts el néhány csempét.",
-        "favorite_play": "Válaszd ki, mit játsszon ez a kedvenc."
+        "favorite_play": "Válaszd ki, mit játsszon ez a kedvenc.",
+        "text_template": "A sablon csempének legfeljebb 4000 karakteres sablon kell."
       },
       "top_bar": {
         "invalid": "Érvénytelen felső sáv; frissítsd a kezelőoldalt.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Éjjeliszekrény-óra",
         "page": "Ugrás: {page}. oldal",
         "map": "Térkép",
-        "energy": "Energia"
+        "energy": "Energia",
+        "text": "Szöveg"
       },
       "identify": {
         "title": "Ez itt: {name}",
@@ -2781,6 +2783,58 @@
         "none": "Nincs vezérlő",
         "never": "Ne mutasd újra",
         "done": "Kész"
+      },
+      "text": {
+        "title": "Sablon",
+        "hint": "Írj szöveget Home Assistant sablonokkal, mint a Fejlesztői eszközök › Sablon alatt. A Home Assistant kitölti, a képernyő pedig megmutatja és naprakészen tartja az eredményt. Ha az eredmény üres, a csempe eltűnik.",
+        "manual": "Hogyan írj sablont",
+        "field": "Sablon",
+        "placeholder": "Írj szöveget, vagy {'{{'} egy állapot olvasásához…",
+        "keys": {
+          "space": "Szóköz",
+          "complete": "kiegészítés",
+          "next": "következő mező",
+          "comment": "megjegyzés"
+        },
+        "result": "A képernyőn",
+        "bytes": "{n} / {of} bájt",
+        "empty": "Az eredmény üres: a képernyő itt nem mutat semmit.",
+        "access": "A sablon a Home Assistantben fut a Tessera alkalmazás jogaival, így bármely entitást olvashat.",
+        "markup": {
+          "label": "Formázás",
+          "heading": "Címsor",
+          "bullet": "Felsorolásjel",
+          "table": "Táblázat",
+          "bold": "Félkövér",
+          "good": "Zöld szöveg",
+          "alert": "Piros szöveg",
+          "accent": "Kék szöveg"
+        },
+        "complete": {
+          "now": "most",
+          "state": "Állapot: {state}"
+        },
+        "examples": {
+          "title": "Kezdés egy példával:",
+          "lights": "Égő lámpák",
+          "open": "Nyitott ajtók és ablakok",
+          "weather": "Időjárás",
+          "lights_heading": "Égő lámpák",
+          "all_off": "Minden lámpa le van kapcsolva",
+          "open_heading": "Nyitva",
+          "now": "Most",
+          "humidity": "Páratartalom"
+        },
+        "listen": {
+          "label": "Frissül, ha változik",
+          "time": "az idő",
+          "none": "Nem olvas entitást: csak a sablon módosításakor változik.",
+          "all": "Minden állapotot olvas: a Home Assistant legfeljebb percenként egyszer számolja újra. Nevezd meg az entitásokat vagy egy tartományt (states.light), hogy azonnal kövesse."
+        },
+        "lint": {
+          "unknown": "{id} nem létezik a Home Assistantben",
+          "replace": "Csere erre: {id}"
+        }
       }
     },
     "precision": {

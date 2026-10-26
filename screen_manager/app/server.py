@@ -55,6 +55,8 @@ import plugin_pictures
 import map_tiles
 import valetudo_map
 import tile_icons
+import text_tile
+import template_service
 from updates import Updater
 import core
 import entity_settings
@@ -206,6 +208,10 @@ class HomeAssistant:
         self.ws = None
         self.next_id = 0
         self.pending = {}
+        # The template tiles' render_template subscriptions (template_service.py): their id, and who takes their events.
+        # `connection` grows with every websocket: a subscription lives as long as the websocket it was made on.
+        self.template_subs = {}
+        self.connection = 0
         self.states = {}
         self.registry, self.devices, self.areas, self.floors = [], [], [], []
         self.online = False
@@ -302,7 +308,10 @@ class HomeAssistant:
             elif data.get('type') == 'event':
                 event = data.get('event', {})
                 body = event.get('data', {})
-                if event.get('event_type') == 'esphome.screen_setting':
+                callback = self.template_subs.get(data.get('id'))
+                if callback is not None:
+                    callback(event)
+                elif event.get('event_type') == 'esphome.screen_setting':
                     self.setting_events.append(body)
                     self.changed.set()
                 elif event.get('event_type') == 'esphome.screen_history':
@@ -349,6 +358,28 @@ class HomeAssistant:
                 elif event.get('event_type') in (*doorbell.EVENTS, doorbell.EVENT):
                     self.doorbell_events.put_nowait((event['event_type'], body))
         raise ConnectionError('Home Assistant connection lost.')
+
+    async def subscribe_template(self, template, callback):
+        """A render_template subscription (a template tile, template_service.py): `callback(event)` takes each result
+        Home Assistant sends ({"result": ...} or {"error": ..., "level": ...}); returns its id for unsubscribe_template."""
+        if self.ws is None or self.ws.closed:
+            raise ConnectionError("Home Assistant isn't connected.")
+        # Registered before the request: the first result may come right behind the answer.
+        key = self.next_id + 1
+        self.template_subs[key] = callback
+        try:
+            await self.request('render_template', template=template, report_errors=True, strict=False, timeout=3)
+        except Refused as error:
+            self.template_subs.pop(key, None)
+            raise template_service.Refused(error.detail) from None
+        except BaseException:
+            self.template_subs.pop(key, None)
+            raise
+        return key
+
+    async def unsubscribe_template(self, key):
+        if self.template_subs.pop(key, None) is not None:
+            await self.request('unsubscribe_events', subscription=key)
 
     def describe_close(self, connected):
         """Why and after how long the websocket ended; helps explain unexpected reconnects in the log."""
@@ -580,6 +611,8 @@ class HomeAssistant:
             try:
                 async with self.session.ws_connect(url, heartbeat=30, max_msg_size=16*1024*1024) as ws:
                     self.ws = ws
+                    self.connection += 1
+                    self.template_subs = {}
                     await ws.receive_json(timeout=15)
                     await ws.send_json({'type': 'auth', 'access_token': self.token})
                     if (await ws.receive_json(timeout=15)).get('type') != 'auth_ok':
@@ -992,6 +1025,8 @@ class Manager:
         self.page_values = {}
         self.history_wake = asyncio.Event()
         self.forecasts = {}
+        # The template tiles' results from Home Assistant (docs/TEXT_TILE.md).
+        self.templates = template_service.TemplateService(ha)
         self.listeners = set()  # asyncio.Event per open /api/events stream
         self.firmware = Firmware(os.environ.get("ESPHOME_CONFIG", "/homeassistant/esphome"), self.path.parent)
         # The app's one build line (docs/BUILDS.md): updates, plugin builds, New screen and Firmware & USB wait in it.
@@ -2586,6 +2621,10 @@ class Manager:
         needed=min_firmware(layout)
         if needed and not ((self.firmware_version(inbox, screen) or (0,0,0)) >= needed):
             return '.'.join(str(part) for part in needed)
+        # A template tile: a screen whose hello names text_card (module text_card, a full-tier build) draws it.
+        sender = self.page_senders.get(inbox)
+        if sender is not None and getattr(sender, 'features', None) is not None and text_tile.unsupported(layout.get('tiles', []), sender.features):
+            return text_tile.FIRMWARE
         return None
 
     def save(self, inbox, data):
@@ -2875,6 +2914,34 @@ class Manager:
         hourly = self.forecasts.get((entity, 'hourly'))
         return not entry or not hourly or time.monotonic() - min(entry[0], hourly[0]) > FORECAST_SECONDS
 
+    def text_caps(self, inbox):
+        """(bytes, tiles) of a screen's template tiles (text_tile.budget_of): what its hello's caps say, else the defaults."""
+        sender = self.page_senders.get(inbox) if inbox else None
+        return text_tile.budget_of(None, getattr(sender, 'caps', None))
+
+    async def sync_templates(self):
+        """Home Assistant renders the template of every template tile on a screen, and of the editor's last preview."""
+        if not hasattr(self.ha, 'subscribe_template'):
+            return
+        wanted = set()
+        for inbox, layout in self.layouts.items():
+            wanted |= template_service.wanted_templates([layout.get('tiles', [])], self.text_caps(inbox)[1])
+        wanted |= template_service.wanted_templates([self.preview_tiles])
+        try:
+            await self.templates.sync(wanted)
+        except Exception as error:
+            LOG.warning('Template tiles were not brought up to date (%s)', type(error).__name__)
+
+    def text_message(self, index, tile, inbox=None):
+        """A template tile's state message: its rows as Home Assistant last rendered them (`x.md`, text_tile.py), none
+        while Home Assistant has not answered yet."""
+        template = (tile.get('options') or {}).get(text_tile.OPTION)
+        result = self.templates.result(template) if isinstance(template, str) else None
+        block = result.block(self.text_caps(inbox)[0]) if result else None
+        if not isinstance(template, str):
+            block = text_tile.block('')
+        return state_message(index, tile, self.ha.states, {'md': block} if block else None)
+
     async def tile_message(self, index, tile, lamps=False, features=None, inbox=None):
         """The state message of one tile: state, options, extras, and the history the background task holds. `lamps`:
         the screen takes a light group's lamps (its hello said `group_lamps`, firmware 0.3.9+). `features`: the other
@@ -2883,6 +2950,8 @@ class Manager:
         # that id this screen runs.
         if plugin_tile(tile['entity']):
             return await self.plugins.tile_message(index, tile, inbox=inbox)
+        if tile['entity'] == text_tile.TEXT_TILE:
+            return self.text_message(index, tile, inbox)
         forecast=hourly=None
         if tile['entity'].startswith('weather.') and hasattr(self.ha,'forecast'):
             entity = tile['entity']
@@ -3258,6 +3327,7 @@ class Manager:
             self.refresh_page_records()
             changed = self._screens_key != screens_key
             self.ha.relevant = self.watched_entities()
+            await self.sync_templates()
             # A setting changed on a screen that owns them: the editor shows it.
             settings_key = self.settings_states_key()
             if settings_key != self._settings_key:
@@ -4218,6 +4288,8 @@ def create_app(manager, development=False):
             # vacuum card's module; the editor offers them there only, and a screen whose hello lacks vacuum_tile gets
             # the keys (catalogue screen else).
             screen['vacuum_tile'] = has_module(screen, 'vacuum_card')
+            # The template tile (docs/TEXT_TILE.md): only a board with the module text_card draws it.
+            screen['text_tiles'] = has_module(screen, text_tile.FEATURE)
             # Whether the board draws pictures (camera tiles, an alert's snapshot, an album cover): the boards with
             # memory for them say so with their camera sizes (boards.json); the firmware that draws them is a
             # separate question the editor asks by version, so an older screen still learns what an update brings.
@@ -4729,6 +4801,9 @@ def create_app(manager, development=False):
         tiles = compile_tiles(record['layout'], grid_of_record(record))
         # The map tiles of the page on the mockup are drawn from these (preview_images), as a screen's from its saved ones.
         manager.preview_tiles = tiles
+        # A template tile of the preview is rendered now, not at the sync loop's next pass.
+        if any(tile.get('entity') == text_tile.TEXT_TILE for tile in tiles):
+            await manager.sync_templates()
         values = [await manager.tile_message(index, tile, lamps=True) for index, tile in enumerate(tiles)]
         bars = [manager.header_message({'header': {'items': bar_items(page)}})['items']
                 for page in record['layout']['pages']]
@@ -5312,6 +5387,37 @@ def create_app(manager, development=False):
                     state['attributes']['supported_features'] & calendar_feed.CREATE_EVENT]
         return web.json_response({'cal': card, 'places': [place for place, _ in places.most_common(24)], 'bookable': sorted(bookable)})
     app.router.add_post('/api/calendar/preview', calendar_preview)
+
+    async def text_preview(request):
+        """A template tile as a screen would get it, for the editor's inspector (docs/TEXT_TILE.md): Home Assistant's
+        rendering of the template once, its rows by the same text_tile.block the screens get, and the bytes they take
+        of the screen's budget. The template runs with this app's token, as the tile's own subscription does."""
+        data = await request.json()
+        template = data.get('template') if isinstance(data, dict) else None
+        try:
+            template = text_tile.validate(template)
+        except ValueError:
+            raise ValueError(t('addon.errors.layout.text_template')) from None
+        inbox = data.get('inbox') if isinstance(data.get('inbox'), str) else None
+        budget = manager.text_caps(inbox)[0]
+        if not manager.ha.online:
+            raise ConnectionError(t('addon.errors.ha_unreachable'))
+        result = await manager.templates.preview(template)
+        block = result.block(budget)
+        return web.json_response({'md': block, 'text': result.text, 'error': result.error, 'listeners': result.listeners,
+                                  'bytes': text_tile.size(block), 'budget': budget})
+    app.router.add_post('/api/text/preview', text_preview)
+
+    async def text_entity(request):
+        """One entity as the template editor completes it: its state, its attributes and the states it may take
+        (text_tile.entity_facts). The template itself reads any of them with the app's token, so the editor may too."""
+        entity = request.query.get('entity', '')
+        if not entity_id(entity):
+            raise ValueError(t('addon.errors.invalid_input'))
+        if entity not in manager.ha.states:
+            raise web.HTTPNotFound()
+        return web.json_response(text_tile.entity_facts(manager.ha.states[entity]))
+    app.router.add_get('/api/text/entity', text_entity)
 
     def vacuum_of(request):
         entity = request.query.get('entity', '')

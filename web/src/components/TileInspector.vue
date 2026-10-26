@@ -22,6 +22,7 @@ import CalendarSection from "./inspector/CalendarSection.vue";
 import FavoriteSection from "./inspector/FavoriteSection.vue";
 import MapSection from "./inspector/MapSection.vue";
 import MeterSection from "./inspector/MeterSection.vue";
+import TextSection from "./inspector/TextSection.vue";
 import NameField from "./inspector/NameField.vue";
 import PrecisionRow from "./inspector/PrecisionRow.vue";
 import TitleButton from "./inspector/TitleButton.vue";
@@ -101,6 +102,8 @@ const mapCard = computed(() => display.value === "map");
 const mapTile = computed(() => props.tile.entity === "screen.map");
 // The energy card (app 0.4.77) is its diagram: no face and no second line to choose, its sensors are Home Assistant's.
 const energyTile = computed(() => props.tile.entity === "screen.energy");
+// The template tile (docs/TEXT_TILE.md) is its template: no face, second line or tap to choose, its field in a section of its own.
+const textTile = computed(() => props.tile.entity === "screen.text");
 // A calendar card (firmware 0.56.0) draws its own head and what its room allows: no face or second line to choose, its
 // choices in a section of their own. As a bedside clock's key it is a key like any other.
 const calendarCard = computed(() => domain.value === "calendar" && !key.value);
@@ -264,7 +267,7 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
 
     <!-- What the card shows first, then where it stands, what a finger does to it, and last its icon and colour. -->
     <template v-if="!ui.phone || more">
-    <Section v-if="(lookShown || (!bedside && !key)) && !calendarCard" :title="t('editor.tile.sections.look')">
+    <Section v-if="(lookShown || (!bedside && !key)) && !calendarCard && !textTile" :title="t('editor.tile.sections.look')">
       <p v-if="energyTile" class="hint">{{ t(scr.supports(0, 47, 0) ? "editor.tile.energy.hint" : "editor.tile.energy.needs_firmware") }}</p>
       <PropRow v-if="energyTile" :label="t('editor.tile.energy.flow.label')" icon="flash" :hint="t('editor.tile.energy.flow.hint')">
         <ChoiceField :choices="flowChoices" :value="current('flow', rules.energyFlow[0])" :tile="tile" preview-key="flow" :aria-label="t('editor.tile.energy.flow.label')" @pick="(v) => setTileOption(tile, 'flow', v)" />
@@ -305,6 +308,9 @@ const backgroundName = computed(() => inv.inventory.backgrounds?.[props.tile.opt
 
     <!-- A sensor's meter (firmware 0.56.0): a ring, a tape or a bar; Home Assistant's range or its own; its colours. -->
     <MeterSection v-if="lookShown && meterCard" :tile="tile" />
+
+    <!-- The template tile: its template, completed as it is typed, and the result as the screen gets it. -->
+    <TextSection v-if="textTile" :tile="tile" />
 
     <!-- A calendar card (firmware 0.56.0): what it shows, its calendars, which events, how far ahead. -->
     <CalendarSection v-if="calendarCard" :tile="tile" />

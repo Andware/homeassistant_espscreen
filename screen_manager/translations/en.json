@@ -699,7 +699,8 @@
         "firmware_first": "Install screen firmware {version} or newer first for these tiles.",
         "entity_gone": "A chosen entity no longer exists. Look up the new entity.",
         "ids_too_long": "These tiles' entity IDs are too long together to fit in one message to the screen; remove a few tiles.",
-        "favorite_play": "Choose what this favourite plays."
+        "favorite_play": "Choose what this favourite plays.",
+        "text_template": "A template tile needs a template of at most 4000 characters."
       },
       "top_bar": {
         "invalid": "Invalid top bar; refresh the management page.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Bedside clock",
         "page": "Go to page {page}",
         "map": "Map",
-        "energy": "Energy"
+        "energy": "Energy",
+        "text": "Text"
       },
       "identify": {
         "title": "This is {name}",
@@ -2352,6 +2354,58 @@
         "none": "No controls",
         "never": "Don't show again",
         "done": "Done"
+      },
+      "text": {
+        "title": "Template",
+        "hint": "Write text with Home Assistant templates in it, as in Developer tools › Template. Home Assistant fills it in, and the screen shows the result and keeps it up to date. When the result is empty, the tile disappears.",
+        "manual": "How to write a template",
+        "field": "Template",
+        "placeholder": "Type text, or {'{{'} to read a state…",
+        "keys": {
+          "space": "Space",
+          "complete": "complete",
+          "next": "next field",
+          "comment": "comment"
+        },
+        "result": "On the screen",
+        "bytes": "{n} of {of} bytes",
+        "empty": "The result is empty: the screen shows nothing here.",
+        "access": "The template runs in Home Assistant with the Tessera app's access, so it can read every entity.",
+        "markup": {
+          "label": "Markup",
+          "heading": "Heading",
+          "bullet": "Bullet",
+          "table": "Table",
+          "bold": "Bold",
+          "good": "Green text",
+          "alert": "Red text",
+          "accent": "Blue text"
+        },
+        "complete": {
+          "now": "now",
+          "state": "State: {state}"
+        },
+        "examples": {
+          "title": "Start from an example:",
+          "lights": "Lights on",
+          "open": "Open doors and windows",
+          "weather": "Weather",
+          "lights_heading": "Lights on",
+          "all_off": "All lights are off",
+          "open_heading": "Open",
+          "now": "Now",
+          "humidity": "Humidity"
+        },
+        "listen": {
+          "label": "Updates when",
+          "time": "the time changes",
+          "none": "Reads no entity: it only changes when you change the template.",
+          "all": "Reads every state: Home Assistant renders it again at most once a minute. Name the entities or a domain (states.light) to make it follow at once."
+        },
+        "lint": {
+          "unknown": "{id} is not in Home Assistant",
+          "replace": "Replace with {id}"
+        }
       }
     },
     "precision": {

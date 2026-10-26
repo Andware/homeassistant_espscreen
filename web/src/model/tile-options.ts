@@ -20,7 +20,7 @@ import { canonicalMeter } from "./meter";
 const APPEARANCE = { display: "display", icon: "icon", background: "background", historyHours: "history_hours", refresh: "refresh", subtitle: "sub", fit: "fit", overlay: "overlay",
   mapEntities: "map", mapFraming: "framing", mapDistance: "distance",
   mapFollow: "follow", mapMarkers: "markers", mapNames: "names", mapZones: "zones", mapStreets: "streets", mapLook: "look",
-  energyFlow: "flow",
+  energyFlow: "flow", textTemplate: "template",
   calendarStyle: "style", calendarEntities: "calendars", calendarPlaces: "places", calendarWords: "words", calendarHideWords: "hide_words",
   calendarAllDay: "all_day", calendarTentative: "tentative", calendarPrivate: "private", calendarAhead: "ahead", calendarSoon: "soon",
   calendarStartView: "start_view", calendarWeekStart: "week_start", calendarHours: "hours", calendarWeekNumbers: "week_numbers",
@@ -60,6 +60,9 @@ export function canonicalOptions(entity: string, options: TileOptions = {}, key 
   if (entity === MAP_TILE) { out.display = "map"; for (const field of ["inline", "controls", "history_hours", "sub"]) delete out[field]; }
   // The energy card draws its diagram on every size, with no face, slider, controls or second line of its own.
   if (entity === "screen.energy") for (const field of ["display", "inline", "controls", "history_hours", "sub"]) delete out[field];
+  // The template tile is its template (docs/TEXT_TILE.md): no face, slider, controls or second line, and a tap does nothing.
+  if (entity === "screen.text") for (const field of ["display", "inline", "controls", "history_hours", "sub", "tap", "action"]) delete out[field];
+  else delete out.template;
   if (typeof out.sub === "string" && out.sub.startsWith("text:")) {
     const words = out.sub.slice(5).trim();
     out.sub = words ? `text:${words}` : "none";

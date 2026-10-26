@@ -16,6 +16,9 @@
 #include "calendar_card.h"
 #include "vacuum_model.h"
 #include "roomy.h"
+#ifdef SD_MOD_TEXT_CARD
+#include "module_text_card.h"
+#endif
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -200,6 +203,10 @@ inline bool valid_entity(const std::string &entity) {
     // (firmware 0.47.0+): the house's power, Home Assistant's energy distribution live (energy_card.h).
     if (entity == "screen.clock" || entity == "screen.settings" || entity == "screen.nightstand" || entity == "screen.map" ||
         entity == "screen.energy") return true;
+#ifdef SD_MOD_TEXT_CARD
+    // screen.text (module text_card, firmware 0.58.0+): a template Home Assistant renders, as rows the app sends.
+    if (entity == "screen.text") return true;
+#endif
     return page_entity(entity) && page_number(entity) <= grid.pages();
   }
   // The types the tile catalogue has (catalogue/*.yaml, tile_catalogue.h): the same list the add-on and the editor take.
@@ -333,6 +340,10 @@ struct Extra {
   std::shared_ptr<const energy_card::Data> energy;
   // A calendar card's events (firmware 0.56.0+, calendar_card.h): its own block too, shared with the card that paints it.
   std::shared_ptr<const calendar_card::Data> calendar;
+#ifdef SD_MOD_TEXT_CARD
+  // A template tile's rows (module text_card, firmware 0.58.0+): its own block, kept in PSRAM.
+  std::shared_ptr<const text_card::Data> text;
+#endif
   // A vacuum card's map, rooms and routines (module vacuum, vacuum_model.h): its own block too.
   std::shared_ptr<const vacuum_model::Data> vacuum;
   uint32_t media_duration = 0, media_position = 0, media_position_at = 0;
@@ -412,7 +423,11 @@ struct Extra {
            media_source.empty() && media_repeat.empty() && media_sources.empty() && media_shuffle < 0 && !media_features &&
            speaker_flags.empty() && speaker_volumes.empty() && media_inputs.empty() && media_input.empty() && media_target.empty() &&
            !has_ground && !ground_known && !media_library && fav_kind.empty() && fav_source.empty() && fav_mark.empty() &&
-           fav_glyph.empty() && !fav_playing && !energy && !calendar && plugin_options.empty() && plugin_state.empty() && plugin_entity.empty();
+           fav_glyph.empty() && !fav_playing && !energy && !calendar && plugin_options.empty() && plugin_state.empty() && plugin_entity.empty()
+#ifdef SD_MOD_TEXT_CARD
+           && !text  // a template tile's rows, even an empty list: "nothing to say" hides the card
+#endif
+           ;
   }
 };
 // The numbers of a clock text ("0:05:00", "07:45"), at most `max` of them, each after optional white space, up to the
@@ -539,6 +554,8 @@ struct Tile {
   bool is_map() const { return display == "map" && (domain() == "person" || entity == "screen.map"); }
   // The energy card (firmware 0.47.0+): the house's power, drawn from the numbers the app sends (energy_card.h).
   bool is_energy() const { return entity == "screen.energy"; }
+  // The template tile (module text_card, firmware 0.58.0+): rows of text the app sends, drawn by its module.
+  bool is_text() const { return entity == "screen.text"; }
   // A favourite (firmware 0.24.0+): a player's tile that plays one thing of its library on a tap, with that thing's
   // picture over the card where the board draws pictures. Never a whole page: the player's card is that.
   bool favorite() const { return display == "favorite" && domain() == "media_player" && !full; }

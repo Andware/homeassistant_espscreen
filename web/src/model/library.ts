@@ -38,6 +38,8 @@ export type LibraryFilter = {
   pages: number;
   /** The board draws pictures: camera and image tiles, and the map tile. */
   pictures: boolean;
+  /** The board draws the template tile (module text_card); left out, it does not. */
+  textTiles?: boolean;
   /** Leave out what is on the screen already. */
   hidePlaced: boolean;
   /** How many tiles each entity has on the screen. */
@@ -47,6 +49,7 @@ export type LibraryFilter = {
 export function libraryBase(entries: readonly Entry[], filter: LibraryFilter) {
   return entries.filter((e) => e.tile !== false && pageTarget(e.id) <= filter.pages &&
     (filter.pictures || (!["camera", "image"].includes(e.id.split(".")[0]) && e.id !== "screen.map")) &&
+    (filter.textTiles || e.id !== "screen.text") &&
     (!filter.hidePlaced || !filter.counts.has(e.id)) && matchesQuery(filter.query, e.name, e.id, e.device, e.area));
 }
 /** What a kind leaves of the room's entries: ranked by the search as Spotlight ranks (a name that starts with it first,

@@ -762,6 +762,11 @@ api:
                     #ifdef SD_MOD_COVER_GROUPS
                     features.add("group_covers");
                     #endif
+                    // text_card (firmware 0.58.0, module text_card, docs/TEXT_TILE.md): the template tile draws the rows Home
+                    // Assistant rendered, so ESP Screens offers it and sends its rows (`md`); its caps say how many and how much.
+                    #ifdef SD_MOD_TEXT_CARD
+                    features.add("text_card");
+                    #endif
                     auto sizes = root["tile_sizes"].to<JsonArray>();
                     for (const auto &size : page_protocol::TILE_SIZES)
                       if (size.fits(runtime_tiles::grid.columns, runtime_tiles::grid.rows)) sizes.add(size.name);

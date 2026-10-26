@@ -699,7 +699,8 @@
         "firmware_first": "Dla tych kafelków najpierw zainstaluj na ekranie firmware {version} lub nowszy.",
         "entity_gone": "Wybrana encja już nie istnieje. Wyszukaj nową encję.",
         "ids_too_long": "Identyfikatory encji tych kafelków są razem za długie, by zmieścić się w jednej wiadomości do ekranu; usuń kilka kafelków.",
-        "favorite_play": "Wybierz, co odtwarza ten ulubiony."
+        "favorite_play": "Wybierz, co odtwarza ten ulubiony.",
+        "text_template": "Kafelek szablonu potrzebuje szablonu o długości najwyżej 4000 znaków."
       },
       "top_bar": {
         "invalid": "Nieprawidłowy górny pasek; odśwież stronę zarządzania.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Zegar przy łóżku",
         "page": "Przejdź do strony {page}",
         "map": "Mapa",
-        "energy": "Energia"
+        "energy": "Energia",
+        "text": "Tekst"
       },
       "identify": {
         "title": "To jest {name}",
@@ -2781,6 +2783,58 @@
         "none": "Bez sterowania",
         "never": "Nie pokazuj ponownie",
         "done": "Gotowe"
+      },
+      "text": {
+        "title": "Szablon",
+        "hint": "Napisz tekst z szablonami Home Assistant, jak w Narzędzia deweloperskie › Szablon. Home Assistant go wypełnia, a ekran pokazuje wynik i na bieżąco go aktualizuje. Gdy wynik jest pusty, kafelek znika.",
+        "manual": "Jak napisać szablon",
+        "field": "Szablon",
+        "placeholder": "Wpisz tekst albo {'{{'}, aby odczytać stan…",
+        "keys": {
+          "space": "Spacja",
+          "complete": "uzupełnij",
+          "next": "następne pole",
+          "comment": "komentarz"
+        },
+        "result": "Na ekranie",
+        "bytes": "{n} z {of} bajtów",
+        "empty": "Wynik jest pusty: ekran nic tu nie pokazuje.",
+        "access": "Szablon działa w Home Assistant z uprawnieniami aplikacji Tessera, więc może odczytać każdą encję.",
+        "markup": {
+          "label": "Formatowanie",
+          "heading": "Nagłówek",
+          "bullet": "Punktor",
+          "table": "Tabela",
+          "bold": "Pogrubienie",
+          "good": "Zielony tekst",
+          "alert": "Czerwony tekst",
+          "accent": "Niebieski tekst"
+        },
+        "complete": {
+          "now": "teraz",
+          "state": "Stan: {state}"
+        },
+        "examples": {
+          "title": "Zacznij od przykładu:",
+          "lights": "Włączone światła",
+          "open": "Otwarte drzwi i okna",
+          "weather": "Pogoda",
+          "lights_heading": "Włączone światła",
+          "all_off": "Wszystkie światła są wyłączone",
+          "open_heading": "Otwarte",
+          "now": "Teraz",
+          "humidity": "Wilgotność"
+        },
+        "listen": {
+          "label": "Odświeża się przy",
+          "time": "czasie",
+          "none": "Nie czyta żadnej encji: zmienia się tylko po zmianie szablonu.",
+          "all": "Czyta wszystkie stany: Home Assistant przelicza go najwyżej raz na minutę. Wskaż encje lub domenę (states.light), aby śledził od razu."
+        },
+        "lint": {
+          "unknown": "{id} nie istnieje w Home Assistant",
+          "replace": "Zastąp przez {id}"
+        }
       }
     },
     "precision": {

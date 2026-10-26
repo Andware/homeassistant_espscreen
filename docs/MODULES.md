@@ -58,6 +58,9 @@ the add-on and the editor offer a module's options only on boards that have it.
   (docs/SCREENSAVER.md, "Clock faces", `module_clock_faces.h`, included by `runtime_tiles.h` before `saver_clock_draw`).
   Its screens say `clock_faces` in their hello and ESP Screens sends them the face (`cf`); the editor offers faces only
   where `boards.json` lists the module, and lite keeps the digital clock.
+- **text_card** (full): the template tile, `screen.text` (docs/TEXT_TILE.md, `module_text_card.cpp` with its headers).
+  Its screens say `text_card` in their hello, with `text_tiles` and `text_bytes` in their caps, and ESP Screens offers
+  the tile and sends its rows (`md`) to those only; the editor offers it where `boards.json` lists the module.
 - **doorbell** (full): a doorbell's ring (the event `esp_screens_doorbell`) opens its camera full screen, live with its
   sound and a chime (docs/DOORBELL.md, `module_doorbell.cpp` with its header). Its screens say `doorbell` in their hello
   when they stream (a P4), and ESP Screens sends them the op `doorbell`; every other screen gets the camera's alert.

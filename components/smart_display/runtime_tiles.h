@@ -63,6 +63,9 @@
 #include "picture_motion.h"
 #include "energy_view.h"
 #include "calendar_view.h"
+#ifdef SD_MOD_TEXT_CARD
+#include "module_text_card_view.h"
+#endif
 #include "meter_view.h"
 #include "module_vacuum_tile.h"
 #ifdef SD_MOD_DOORBELL
@@ -619,6 +622,10 @@ struct Widgets {
   energy_view::View *energy{};
   // A calendar card's plan (firmware 0.56.0+, calendar_view.cpp); it goes with the card's extra layer.
   calendar_view::View *calendar{};
+#ifdef SD_MOD_TEXT_CARD
+  // A template tile's plan (module text_card, firmware 0.58.0+, module_text_card.cpp); it goes with the card's extra layer.
+  text_card_view::View *text{};
+#endif
   // A sensor's meter (firmware 0.56.0+, meter_view.cpp); it goes with the card's extra layer.
   meter_view::View *meter{};
 #ifdef SD_MOD_VACUUM_CARD
@@ -5747,7 +5754,7 @@ inline const char *icon_for(const Tile &tile) {
   if (d == "timer") return "\U000F051B";
   if (d == "person") return "\U000F0004";
   // The map tile's marker (firmware 0.21.0) only shows while its picture is on its way.
-  if (d == "screen") return tile.is_settings() ? "\U000F0493" : tile.is_page() ? "\U000F0054" : tile.entity == "screen.map" ? "\U000F034E" : tile.is_energy() ? "\U000F140B" : "\U000F0150";
+  if (d == "screen") return tile.is_settings() ? "\U000F0493" : tile.is_page() ? "\U000F0054" : tile.entity == "screen.map" ? "\U000F034E" : tile.is_energy() ? "\U000F140B" : tile.is_text() ? "\U000F0279" : "\U000F0150";
   if (d == "camera" || d == "image") return "\U000F07AE";
   if (d == "alarm_control_panel") return alarm_panel::icon(tile.state);
   if (d == "lock") return lock_icon(tile);
@@ -6443,6 +6450,9 @@ inline void end_extra(Widgets &w) {
     if(w.energy)energy_view::release(w);
     if(w.calendar)calendar_view::release(w);
     if(w.meter)meter_view::release(w);
+#ifdef SD_MOD_TEXT_CARD
+    if(w.text)text_card_view::release(w);
+#endif
 #ifdef SD_MOD_VACUUM_CARD
     if(w.vacuum_face)vacuum_face::release(w);
 #endif
@@ -8842,7 +8852,13 @@ inline void render_slot(size_t slot) {
 #else
   constexpr bool vacuum=false;
 #endif
-  bool custom=clock||forecast||sunpath||bedside||energy||plugin||calendar||meter||vacuum;
+  // The template tile (module text_card, firmware 0.58.0+) draws the rows Home Assistant rendered, on any size.
+#ifdef SD_MOD_TEXT_CARD
+  bool text=t.is_text();
+#else
+  constexpr bool text=false;
+#endif
+  bool custom=clock||forecast||sunpath||bedside||energy||plugin||calendar||meter||vacuum||text;
   if(!large_tile)pad_vertical(w.tile,watch||custom||graph?2:4);
   // A big value that stepped up to the setpoint's digits (the watch block below) keeps them until that block
   // decides again, so a card is not restyled twice a render.
@@ -8888,6 +8904,14 @@ inline void render_slot(size_t slot) {
     lap(swipe_profile::GEOMETRY);
     calendar_view::render(w,t,content_w,content_h);
     lap(swipe_profile::CUSTOM);
+#ifdef SD_MOD_TEXT_CARD
+  }else if(text){
+    lv_obj_add_flag(w.slider,LV_OBJ_FLAG_HIDDEN);hide_panel(w);lv_obj_add_flag(w.progress,LV_OBJ_FLAG_HIDDEN);
+    if(w.picture)lv_obj_add_flag(w.picture,LV_OBJ_FLAG_HIDDEN);
+    lap(swipe_profile::GEOMETRY);
+    text_card_view::render(w,t,content_w,content_h);
+    lap(swipe_profile::CUSTOM);
+#endif
   }else if(meter){
     lv_obj_add_flag(w.slider,LV_OBJ_FLAG_HIDDEN);hide_panel(w);lv_obj_add_flag(w.progress,LV_OBJ_FLAG_HIDDEN);
     if(w.picture)lv_obj_add_flag(w.picture,LV_OBJ_FLAG_HIDDEN);
@@ -9120,7 +9144,13 @@ inline void render_slot(size_t slot) {
                     (lock_tile&&lock_asking(t,false)?16:0)|(lock_tile?(int)(lock_panel::color(t.state)&0xFF)<<8:0);
   // An alarm panel's circle beats while it counts down or goes off, and springs once when it arms or disarms.
   if (d == "alarm_control_panel" || d == "lock" || w.alarm_look || w.alarm_mark) alarm_tile_look(slot, &t);
-  const uint32_t paint=t.background|(t.transparent?1u<<24:0);
+  // A template tile Home Assistant rendered empty hides its card as "Background: none" does (module text_card).
+#ifdef SD_MOD_TEXT_CARD
+  const bool bare=t.transparent||(t.is_text()&&text_card_view::empty(t));
+#else
+  const bool bare=t.transparent;
+#endif
+  const uint32_t paint=t.background|(bare?1u<<24:0);
   if (w.cached_active == palette_state && w.cached_paint == paint && !w.panel_dirty) { style_tall(w,t);ring_favorite(w,t);lap(swipe_profile::GEOMETRY); return; }
   w.cached_active = palette_state;w.cached_paint=paint;w.panel_dirty=false;
   // Home Assistant's colour for the state (tile_controls::accent), and a lamp's own colour while it is on.
@@ -9147,9 +9177,9 @@ inline void render_slot(size_t slot) {
   set_number(w.tile,LV_STYLE_BORDER_WIDTH,1);
   // "Background: none" hides only the card; geometry and padding stay identical, and the press still shows because
   // it lives on the PRESSED state: a shade of what the finger sees, the page there, the card everywhere else.
-  set_color(w.tile,LV_STYLE_BG_COLOR,lv_color_hex(theme::pressed(t.transparent ? theme::hex(theme::PAGE) : theme::surface(t.background))),LV_STATE_PRESSED);
-  set_number(w.tile,LV_STYLE_BG_OPA,t.transparent&&!letterboxed(w) ? LV_OPA_TRANSP : LV_OPA_COVER);
-  set_number(w.tile,LV_STYLE_BORDER_OPA,t.transparent ? LV_OPA_TRANSP : LV_OPA_COVER);
+  set_color(w.tile,LV_STYLE_BG_COLOR,lv_color_hex(theme::pressed(bare ? theme::hex(theme::PAGE) : theme::surface(t.background))),LV_STATE_PRESSED);
+  set_number(w.tile,LV_STYLE_BG_OPA,bare&&!letterboxed(w) ? LV_OPA_TRANSP : LV_OPA_COVER);
+  set_number(w.tile,LV_STYLE_BORDER_OPA,bare ? LV_OPA_TRANSP : LV_OPA_COVER);
   set_color(w.tile,LV_STYLE_BORDER_COLOR,lv_color_hex(theme::outline(t.background)));
   set_color(w.circle,LV_STYLE_BG_COLOR,circle_color);
   set_color(w.icon,LV_STYLE_TEXT_COLOR,icon_color);
@@ -10363,6 +10393,9 @@ inline void drop_card(Widgets &w) {
   if (w.energy) energy_view::release(w);
   if (w.calendar) calendar_view::release(w);
   if (w.meter) meter_view::release(w);
+#ifdef SD_MOD_TEXT_CARD
+  if (w.text) text_card_view::release(w);
+#endif
 #ifdef SD_MOD_VACUUM_CARD
   if (w.vacuum_face) vacuum_face::release(w);
 #endif

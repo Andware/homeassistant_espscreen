@@ -699,7 +699,8 @@
         "firmware_first": "Para estos mosaicos, instala antes el firmware {version} o posterior en la pantalla.",
         "entity_gone": "Una de las entidades elegidas ya no existe. Busca la entidad nueva.",
         "ids_too_long": "Juntos, los ID de entidad de estos mosaicos son demasiado largos para caber en un mensaje a la pantalla; elimina algunos mosaicos.",
-        "favorite_play": "Elige qué reproduce este favorito."
+        "favorite_play": "Elige qué reproduce este favorito.",
+        "text_template": "Un mosaico de plantilla necesita una plantilla de 4000 caracteres como máximo."
       },
       "top_bar": {
         "invalid": "Barra superior no válida; recarga la página de gestión.",
@@ -1433,7 +1434,8 @@
         "nightstand": "Reloj de mesita",
         "page": "Ir a la página {page}",
         "map": "Mapa",
-        "energy": "Energía"
+        "energy": "Energía",
+        "text": "Texto"
       },
       "identify": {
         "title": "Esta es {name}",
@@ -2781,6 +2783,58 @@
         "none": "Sin controles",
         "never": "No volver a mostrar",
         "done": "Listo"
+      },
+      "text": {
+        "title": "Plantilla",
+        "hint": "Escribe texto con plantillas de Home Assistant, como en Herramientas para desarrolladores › Plantilla. Home Assistant lo rellena, y la pantalla muestra el resultado y lo mantiene al día. Si el resultado está vacío, el mosaico desaparece.",
+        "manual": "Cómo escribir una plantilla",
+        "field": "Plantilla",
+        "placeholder": "Escribe texto, o {'{{'} para leer un estado…",
+        "keys": {
+          "space": "Espacio",
+          "complete": "completar",
+          "next": "campo siguiente",
+          "comment": "comentario"
+        },
+        "result": "En la pantalla",
+        "bytes": "{n} de {of} bytes",
+        "empty": "El resultado está vacío: la pantalla no muestra nada aquí.",
+        "access": "La plantilla se ejecuta en Home Assistant con los permisos de la app Tessera, así que puede leer cualquier entidad.",
+        "markup": {
+          "label": "Formato",
+          "heading": "Encabezado",
+          "bullet": "Viñeta",
+          "table": "Tabla",
+          "bold": "Negrita",
+          "good": "Texto verde",
+          "alert": "Texto rojo",
+          "accent": "Texto azul"
+        },
+        "complete": {
+          "now": "ahora",
+          "state": "Estado: {state}"
+        },
+        "examples": {
+          "title": "Empezar con un ejemplo:",
+          "lights": "Luces encendidas",
+          "open": "Puertas y ventanas abiertas",
+          "weather": "Tiempo",
+          "lights_heading": "Luces encendidas",
+          "all_off": "Todas las luces están apagadas",
+          "open_heading": "Abierto",
+          "now": "Ahora",
+          "humidity": "Humedad"
+        },
+        "listen": {
+          "label": "Se actualiza con",
+          "time": "la hora",
+          "none": "No lee ninguna entidad: solo cambia cuando cambias la plantilla.",
+          "all": "Lee todos los estados: Home Assistant la recalcula como mucho una vez por minuto. Nombra las entidades o un dominio (states.light) para que siga al instante."
+        },
+        "lint": {
+          "unknown": "{id} no existe en Home Assistant",
+          "replace": "Reemplazar por {id}"
+        }
       }
     },
     "precision": {
