@@ -20,6 +20,9 @@ describe("the face of a card", () => {
     expect(face("plugin:bus.departures", [2, 1], {}, { plugin: true }).kind).toBe("plugin");
     expect(face("plugin:bus.departures", [2, 1], {}, { plugin: true, pluginRow: true }).kind).toBe("plugin-live");
     expect(face("screen.energy", [2, 2]).kind).toBe("energy");
+    // The template tile draws the rows Home Assistant rendered, at every size (TileText.vue).
+    expect(face("screen.text", [2, 2]).kind).toBe("text");
+    expect(face("screen.text").kind).toBe("text");
   });
 
   it("gives a robot its larger tile on a board with the vacuum card's module, else its keys", () => {

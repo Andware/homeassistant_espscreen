@@ -482,6 +482,9 @@ a:hover { text-decoration: underline; }
 .tile.wide .clockface { margin: 0; flex: none; }
 /* The energy card's diagram fills its card, as the screen draws it (app 0.4.77). */
 .tile .energy-diagram { width: 100%; height: 100%; min-height: 0; }
+/* A template tile Home Assistant rendered empty is bare on the screen (module text_card); the editor keeps a dashed
+   outline so it can still be found and chosen. */
+.tile:has(.text-face.empty) { background: transparent; border-color: transparent; outline: 1px dashed var(--line-strong); outline-offset: -1px; }
 .cell { min-height: 0; border: 1px dashed #cfd4da; border-radius: 12px; background: transparent; color: #a3abb5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-weight: 500; cursor: pointer; padding: 6px; }
 .cell span { font-size: 18px; line-height: 1; }
 .cell small { font-size: 10.5px; color: inherit; }

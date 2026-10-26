@@ -10,7 +10,7 @@ import { availableControl, controlKeys, coverPrimary, hasCoverTilt, type Control
 import type { Live } from "./tile-text";
 import type { TileOptions } from "../types";
 
-export type FaceKind = "bedside" | "plugin-live" | "plugin" | "energy" | "analog" | "dial" | "flip-wide" | "flip" | "digital" | "graph" | "meter"
+export type FaceKind = "bedside" | "plugin-live" | "plugin" | "energy" | "text" | "analog" | "dial" | "flip-wide" | "flip" | "digital" | "graph" | "meter"
   | "favorite" | "camera" | "watch" | "full" | "big-key" | "vacuum" | "tall" | "wide" | "standard";
 
 export type FaceInput = {
@@ -138,6 +138,8 @@ function faceKind(input: FaceInput, face: Omit<Face, "kind">): FaceKind {
   if (entity === "screen.nightstand") return "bedside";
   if (input.plugin) return input.pluginRow ? "plugin-live" : "plugin";
   if (entity === "screen.energy") return "energy";
+  // The template tile (docs/TEXT_TILE.md): the rows Home Assistant rendered, over the whole card at every size.
+  if (entity === "screen.text") return "text";
   if (display === "analog") return "analog";
   if (domain === "screen" && CLOCK_FACES.includes(display)) {
     // The flip clock on a card two columns wide and two rows tall, or a whole page (firmware 0.17.0): the blocks share
