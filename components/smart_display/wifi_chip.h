@@ -1,19 +1,20 @@
 // The Wi-Fi co-processor of an ESP32-P4 screen: an ESP32-C6 on SDIO through esp_hosted (hardware/esp32p4-c6.yaml,
 // hardware/m5stack-tab5.yaml).
 //
-// Its reset. esp_hosted resets the C6 at every start of the P4: the reset line at the level the C6 runs at, 10 ms at
-// the other, back, and 1.5 s for the C6 to boot (transport_gpio_reset in its sdio_drv.c). On a Guition JC8012P4A1 V3
-// whose C6 runs ESP-Hosted 2.3.2 those 10 ms did not reset it: after a software restart (an update over the air, a
-// crash, the watchdog) the C6 kept its old SDIO session, every read of the new one failed ("sdmmc_host_wait_for_event
-// returned 0x107", "sdio_read_task: Failed to read data - -1 838860 838860", the C6's byte count from before the
-// restart), esp_hosted restarted the P4 after 13 s, and so on until the power went off. The bootloader's rollback to
-// the previous firmware looped the same way, safe mode included. A cold start was fine: the C6 then starts by itself
-// (the bench board, 2026-10-26; another V3 of the same chip revision came back from five watchdog restarts, so it is
-// the C6's firmware or the board, not every V3). So the P4 holds the C6 in reset from the first moment of its start,
-// before ESPHome and its safe mode, until esp_hosted sets the line itself: a reset as long as the P4's own boot,
-// whatever restarted it. The pin and its levels are esp_hosted's (its sdkconfig, from the board's esp32_hosted block),
-// never a number here. Measured on the bench board: 2 of 2 software restarts hung without the hold, 3 of 3 (two updates
-// and an abort) came back with it, Wi-Fi 19 s after each.
+// A restart is a whole-system reset. On the P4, ESP-IDF's esp_restart() resets only the two CPUs, the DMAs, the flash
+// bus and the crypto blocks (esp_restart_noos in esp_system/port/soc/esp32p4/system_internal.c), not the SDIO host the
+// C6 hangs on. Now and then that link came out of a restart stuck: "ESP-Hosted link not yet up",
+// "sdmmc_host_wait_for_event returned 0x107", "sdio_read_task: Failed to read data - -1 838860 838860" (a packet
+// length read as 0xCCCCC, espressif/esp-hosted-mcu #240), esp_hosted restarted the P4 after 13 s with the same CPU
+// reset, and so on until the power went off; the bootloader's rollback to the previous firmware looped the same way,
+// safe mode included. On the bench Guition V3 about one restart in five did that (2026-10-26); holding the C6 itself in
+// reset for ten seconds at every start did not help once it was stuck, and a hardware reset of the P4 always did. An
+// M5Stack Tab5 elsewhere showed the same, and every restart through esp_rom_software_reset_system() cured it
+// (SimmoDev/homedeck #8, some 2000 restarts).
+// So a shutdown handler, registered before anything else and so run after every other one, ends every esp_restart()
+// (an update, ESPHome's restart, esp_hosted's own after a failed link) in that reset of the whole digital system. A
+// crash still restarts the CPUs only (ESP-IDF's panic path calls no handler); a link it leaves stuck costs one more
+// start, which esp_hosted's restart then ends in the whole reset.
 //
 // Its firmware. The C6 keeps its own, which flashing the P4 never changes. firmware() asks it once, with Wi-Fi up, logs
 // it and gives it to the "Wi-Fi co-processor" sensor (hardware/esp32p4-core.yaml), which the troubleshooting report

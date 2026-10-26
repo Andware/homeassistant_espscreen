@@ -51,7 +51,8 @@ psram:
 
 # The Wi-Fi co-processor's own firmware, which flashing the P4 never changes ("ESP-Hosted 2.3.2 (host 2.12.12)",
 # components/smart_display/wifi_chip.h). The troubleshooting report reads it, so the reports tell which C6 firmwares
-# the screens run: on a Guition V3 with 2.3.2 a software restart hung the C6 until the core held it in reset at start.
+# the screens run. The same file makes every restart of a P4 a reset of the whole chip: ESP-IDF's resets only the CPUs,
+# and the SDIO link to the C6 now and then came out of that stuck, the screen restarting until its power went off.
 text_sensor:
   - platform: template
     name: "Wi-Fi co-processor"

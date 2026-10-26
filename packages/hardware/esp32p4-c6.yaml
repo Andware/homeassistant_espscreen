@@ -30,11 +30,6 @@ esp_ldo:
     voltage: 2.5V
 
 # The P4 has no radio: an ESP32-C6 beside it does the Wi-Fi over a four-bit SDIO bus.
-# `reset_pin` and `active_high` are also how the core holds the C6 in reset from the first moment of every start
-# until esp_hosted starts it (components/smart_display/wifi_chip.h): a C6 with older ESP-Hosted firmware (seen with
-# 2.3.2 on a Guition V3) missed esp_hosted's own 10 ms reset, so after an update over the air, a crash or the watchdog
-# the screen kept restarting until its power went off ("ESP-Hosted link not yet up", "sdmmc_host_wait_for_event
-# returned 0x107"). The levels are the running one (`active_high: true`: the C6 runs with the pin high) and the other.
 esp32_hosted:
   variant: esp32c6
   reset_pin: ${HOSTED_RESET_PIN}
