@@ -1551,7 +1551,7 @@ inline void set(lv_obj_t *slider, bool on, int from, int to) {
   if (!timer) timer = lv_timer_create(tick, FRAME, nullptr);
 }
 }  // namespace travel_stripe
-// `closed`: the slider holds the closed share (a standing blind, a tile's strip), else the open share or the tilt.
+// `closed`: the slider holds the closed share (every position slider, standing or lying, and a tile's strip), else the tilt.
 inline void travel_look(lv_obj_t *slider, const Tile &t, bool tilt, bool closed) {
   if (!slider) return;
   const bool on = t.travelling() && t.travel.tilt == tilt;
@@ -1663,7 +1663,6 @@ inline lv_obj_t *captured_slider=nullptr;
 inline bool slider_changed=false;
 inline int slider_held=0;
 inline void slider_event(lv_event_t *e);
-inline int cover_bar_raw(lv_obj_t *slider,bool tilt);
 inline void commit_slider(unsigned i,int raw,bool tilt=false){
   if(i>=model.count || !fresh())return;auto &t=model.tiles[i];if(!t.available() || t.waiting(esphome::millis()))return;
   float value=std::clamp(raw,0,1000)/1000.0f;auto d=t.domain();
@@ -1776,7 +1775,7 @@ inline void slider_event(lv_event_t *e){
     if(index<model.count&&model.tiles[index].row_span()>1&&!model.tiles[index].full)
       for(const auto &w:widgets)if(w.control_slider==slider&&!tile_controls::panel_available(model.tiles[index]))return;
     if(changed && screen_input::touch_guard.accept_slider(esphome::millis(),200+index))
-      commit_slider(index,cover_strip?cover_bar_raw(slider,tilt):lv_slider_get_value(slider),tilt);
+      commit_slider(index,lv_slider_get_value(slider),tilt);
   }
 }
 inline void show_detail(unsigned index);
@@ -2704,9 +2703,9 @@ inline lv_obj_t *cover_slider(lv_obj_t *parent,int x,int y,int w,int h,float val
 }
 inline void slider_handle(lv_obj_t *slider,int width,int height);
 // The same two lying across a card one bar high (firmware 0.57.0), as Home Assistant's cover-position and
-// cover-tilt-position tile features: the position fills from the left by how far the cover is open, with the white
-// handle of every tile bar (slider_handle); the tilt keeps its slats and its accent handle. A lying position slider holds
-// the open share, so its value is turned around before it goes out (cover_bar_raw).
+// cover-tilt-position tile features: the position fills from the left by how far the cover is closed (Home Assistant's
+// slider is `inverted`), so a closed cover is a full bar, as the standing slider and the tile's strip are; the white
+// handle of every tile bar (slider_handle); the tilt keeps its slats and its accent handle.
 inline lv_obj_t *cover_bar(lv_obj_t *parent,int x,int y,int w,int h,float value,bool tilt,lv_event_cb_t callback,void *user,bool middle=false){
   lv_obj_t *slider=nullptr;
   if(tilt)slider=cover_paint::tilt_bar(parent,x,y,w,h,value,middle);
@@ -2719,18 +2718,12 @@ inline lv_obj_t *cover_bar(lv_obj_t *parent,int x,int y,int w,int h,float value,
     lv_obj_set_style_radius(slider,2,LV_PART_KNOB);lv_obj_add_style(slider,theme::style(theme::Paint::knob),LV_PART_KNOB);
     lv_obj_set_style_bg_opa(slider,LV_OPA_COVER,LV_PART_KNOB);
     slider_handle(slider,w,h);
-    lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround(std::clamp(value,0.0f,100.0f)*10):0,LV_ANIM_OFF);
+    lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround((100.0f-std::clamp(value,0.0f,100.0f))*10):0,LV_ANIM_OFF);
   }
   overlay_card::touchable(slider,h);
   lv_obj_remove_flag(slider,LV_OBJ_FLAG_GESTURE_BUBBLE);lv_obj_set_ext_click_area(slider,0);
   lv_obj_add_event_cb(slider,callback,LV_EVENT_ALL,user);
   return slider;
-}
-// What a cover slider's value means for cover_position_action: a lying position bar holds the open share, every
-// other the closed share (or the tilt).
-inline int cover_bar_raw(lv_obj_t *slider,bool tilt){
-  const int raw=lv_slider_get_value(slider);
-  return !tilt&&lv_obj_get_width(slider)>lv_obj_get_height(slider)?1000-std::clamp(raw,0,1000):raw;
 }
 // A row of pill keys with an icon each, as the climate card's modes. A key that cannot move the cover further
 // is drawn disabled and left out of the keys the card enables again once Home Assistant answers.
@@ -8151,9 +8144,9 @@ inline void render_cover_tile(Widgets &w,const Tile &t,const cover_tile::Layout 
       auto *&slider=w.parts[2+i];
       if(!slider)slider=g.lying?cover_bar(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr,t.tilt_middle)
                                :cover_slider(w.extra,g.control.x,g.control.y,g.control.w,g.control.h,value,i,slider_event,nullptr,t.tilt_middle);
-      if(captured_slider!=slider)lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround((i||g.lying?value:100-value)*10):(i?500:0),LV_ANIM_OFF);
+      if(captured_slider!=slider)lv_slider_set_value(slider,std::isfinite(value)?(int)std::lround((i?value:100-value)*10):(i?500:0),LV_ANIM_OFF);
       if(ready)lv_obj_remove_state(slider,LV_STATE_DISABLED);else lv_obj_add_state(slider,LV_STATE_DISABLED);
-      travel_look(slider,t,i==1,i!=1&&!g.lying);
+      travel_look(slider,t,i==1,i!=1);
     }else{
       std::array<tile_controls::Key,3> keys;
       const unsigned count=i==1?tile_controls::cover_tilt_keys(t,keys):i==2?tile_controls::cover_keys(t,keys):tile_controls::keys_for(t,keys);

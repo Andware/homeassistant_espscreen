@@ -427,7 +427,8 @@ cover group's page share the one drawing (`cover_paint.h`). The editor lays the 
 port that `tests/test_editor_parity.py` compares with the C++ on a sweep of rooms.
 
 The tile and the card share `cover_slider`, `cover_bar`, `cover_tilt_keys` and `cover_position_action`. A standing
-position slider fills the closed part of the blind; a lying one fills the open part, as Home Assistant's
-cover-position feature does (`cover_bar_raw` turns its value around before it goes out). The tile uses the existing
+position slider fills the closed part of the blind, and so does a lying one, from the left, as Home Assistant's
+cover-position feature does (its slider is `inverted`); a lying tilt bar has its open end at the left for the same
+reason. A cover group's page draws its covers' bars the same way, and its covers take the group tile's `tilt_open`. The tile uses the existing
 captured slider lifecycle, so a lost press cannot send an action. Capability and pending checks run again when an
 interaction commits.
