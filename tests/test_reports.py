@@ -204,6 +204,24 @@ class PluginLines(unittest.TestCase):
                          ['- Plugins installed: none', "- Plugins running (the screen's hello): none"])
 
 
+class DeviceSensors(unittest.TestCase):
+    """The firmware's diagnostic sensors ride in the report; on an ESP32-P4 that includes what its Wi-Fi co-processor
+    runs (wifi_chip.h), so the reports tell which C6 firmwares are out there."""
+
+    def test_the_wifi_co_processor_rides_along_and_other_devices_do_not(self):
+        registry = [{'entity_id': 'sensor.a_heap_free', 'original_name': 'Heap Free', 'device_id': 'a'},
+                    {'entity_id': 'text_sensor.a_wifi_co_processor', 'original_name': 'Wi-Fi co-processor', 'device_id': 'a'},
+                    {'entity_id': 'text_sensor.b_wifi_co_processor', 'original_name': 'Wi-Fi co-processor', 'device_id': 'b'},
+                    {'entity_id': 'sensor.a_other', 'original_name': 'Something else', 'device_id': 'a'}]
+        states = {'sensor.a_heap_free': {'state': '236132.0'},
+                  'text_sensor.a_wifi_co_processor': {'state': 'ESP-Hosted 2.3.2 (host 2.12.12)'},
+                  'text_sensor.b_wifi_co_processor': {'state': 'ESP-Hosted 2.12.12 (host 2.12.12)'}}
+        service = reports.Reports.__new__(reports.Reports)
+        service.manager = types.SimpleNamespace(ha=types.SimpleNamespace(registry=registry, states=states))
+        self.assertEqual(service._device_sensors({'device_id': 'a'}),
+                         {'heap free': '236132.0', 'wi-fi co-processor': 'ESP-Hosted 2.3.2 (host 2.12.12)'})
+
+
 class TheRoute(unittest.IsolatedAsyncioTestCase):
     async def test_a_report_is_collected_read_downloaded_and_sent(self):
         with tempfile.TemporaryDirectory() as tmp:

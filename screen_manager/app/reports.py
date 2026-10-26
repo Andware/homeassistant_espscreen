@@ -808,10 +808,11 @@ class Reports:
 
     def _device_sensors(self, screen):
         """The firmware's own diagnostic sensors of this screen as Home Assistant has them now: heap, PSRAM, Wi-Fi
-        signal, last boot, uptime."""
+        signal, last boot, uptime, and on an ESP32-P4 the firmware of its Wi-Fi co-processor (wifi_chip.h)."""
         device = screen.get('device_id')
         wanted = ('heap free', 'heap fragmentation', 'heap largest block', 'heap minimum free', 'psram free', 'psram largest block',
-                  'wifi signal', 'last boot', 'uptime', 'node status', 'screen firmware', 'screen board', 'screen flash', 'screen layout')
+                  'wifi signal', 'last boot', 'uptime', 'node status', 'screen firmware', 'screen board', 'screen flash', 'screen layout',
+                  'wi-fi co-processor')
         out = {}
         for item in getattr(self.manager.ha, 'registry', []) or []:
             if not isinstance(item, dict) or item.get('device_id') != device:
