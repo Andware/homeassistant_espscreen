@@ -373,9 +373,9 @@ describe("Library", () => {
     appendTiles({ entity: "light.a", name: "", slot: 0 });
     const library = mount(Library);
     const names = () => library.findAll(".ent .tx b").map((b) => b.text());
-    // Browsing, each room under its name and the screen's own cards last (app 0.4.32).
-    expect(library.findAll(".lib-group-title").map((h) => h.text())).toEqual(["Kitchen 1", "Living room 3", "Screen 2"]);
-    expect(names()).toEqual(["Lamp B", "Lamp A", "Temperature", "Curtains", "Clock", "Go to page 1"]);
+    // Browsing, the screen's own cards first, then each room under its name (app 0.4.32).
+    expect(library.findAll(".lib-group-title").map((h) => h.text())).toEqual(["Screen 2", "Kitchen 1", "Living room 3"]);
+    expect(names()).toEqual(["Clock", "Go to page 1", "Lamp B", "Lamp A", "Temperature", "Curtains"]);
     expect(library.find('.ent[title="light.a"]').attributes("disabled")).toBeDefined();
     expect(library.find('.ent[title="light.a"] .av').classes()).toContain("on");
     expect(library.find('.ent[title="light.b"] .av').classes()).toContain("gone");
@@ -387,7 +387,7 @@ describe("Library", () => {
     await room(library, "Kitchen").trigger("click");
     expect(useUiStore().room).toBe("");
     await library.find("#hide-placed").trigger("click");
-    expect(names()).toEqual(["Lamp B", "Temperature", "Curtains", "Clock", "Go to page 1"]);
+    expect(names()).toEqual(["Clock", "Go to page 1", "Lamp B", "Temperature", "Curtains"]);
     useUiStore().filter = "light";
     await library.vm.$nextTick();
     expect(names()).toEqual(["Lamp B"]);

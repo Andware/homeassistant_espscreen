@@ -1435,7 +1435,7 @@
         "page": "Zu Seite {page}",
         "map": "Karte",
         "energy": "Energie",
-        "text": "Text"
+        "text": "Template"
       },
       "identify": {
         "title": "Das ist {name}",

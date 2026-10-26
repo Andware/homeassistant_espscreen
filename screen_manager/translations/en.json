@@ -1435,7 +1435,7 @@
         "page": "Go to page {page}",
         "map": "Map",
         "energy": "Energy",
-        "text": "Text"
+        "text": "Template"
       },
       "identify": {
         "title": "This is {name}",

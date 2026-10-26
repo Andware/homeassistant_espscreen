@@ -1435,7 +1435,7 @@
         "page": "Ir a la página {page}",
         "map": "Mapa",
         "energy": "Energía",
-        "text": "Texto"
+        "text": "Plantilla"
       },
       "identify": {
         "title": "Esta es {name}",

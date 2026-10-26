@@ -13,7 +13,7 @@ ILI9342 and the Hosyond 4-inch (4 MB) do not, and their firmware does not change
 
 ## Writing a template
 
-Add **Text** from the screen's own cards in the library, pick the tile, and write in its **Template** field. Two things
+Add **Template** from the screen's own cards in the library, pick the tile, and write in its **Template** field. Two things
 mix in it: Home Assistant's template language for what changes, and a little markup for how it looks.
 
 ### What changes: Home Assistant's templates

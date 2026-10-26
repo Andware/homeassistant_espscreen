@@ -1435,7 +1435,7 @@
         "page": "Ga naar pagina {page}",
         "map": "Kaart",
         "energy": "Energie",
-        "text": "Tekst"
+        "text": "Template"
       },
       "identify": {
         "title": "Dit is {name}",

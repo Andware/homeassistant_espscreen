@@ -1435,7 +1435,7 @@
         "page": "Przejdź do strony {page}",
         "map": "Mapa",
         "energy": "Energia",
-        "text": "Tekst"
+        "text": "Szablon"
       },
       "identify": {
         "title": "To jest {name}",
