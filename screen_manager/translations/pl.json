@@ -191,6 +191,7 @@
       "hours_minutes": "{h} godz. {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
+      "debug_mode": "Debug mode",
       "plugins": "Wtyczki",
       "microphone_gain": "Wzmocnienie mikrofonu",
       "automatic_gain": "Automatyczne wzmocnienie",

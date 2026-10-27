@@ -191,6 +191,7 @@
       "hours_minutes": "{h} ч {m}",
       "wifi": "Wi-Fi",
       "tessera": "Tessera",
+      "debug_mode": "Debug mode",
       "plugins": "Плагины",
       "microphone_gain": "Усиление микрофона",
       "automatic_gain": "Автоусиление",

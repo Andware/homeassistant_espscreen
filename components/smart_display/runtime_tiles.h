@@ -22,6 +22,9 @@
 #ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #endif
+#ifdef USE_LOGGER
+#include "esphome/components/logger/logger.h"
+#endif
 #endif
 #include "header_bar.h"
 #include "page_header.h"
@@ -106,6 +109,15 @@ inline esphome::ESPPreferenceObject buttons_preference;
 inline esphome::ESPPreferenceObject swipe_preference;
 inline esphome::ESPPreferenceObject home_preference;
 inline esphome::ESPPreferenceObject dark_preference;
+inline esphome::ESPPreferenceObject debug_preference;
+// Debug mode (settings_screen.h): the logger at the level the firmware is built with while it is on, warnings and
+// errors alone while it is off. At boot and after every change of a setting.
+inline void apply_debug_mode() {
+#if defined(USE_LOGGER) && !defined(ESP_SCREEN_HOST)
+  if (esphome::logger::global_logger != nullptr)
+    esphome::logger::global_logger->set_log_level(settings_screen::debug_mode ? ESPHOME_LOG_LEVEL : ESPHOME_LOG_LEVEL_WARN);
+#endif
+}
 // The grid chosen for each way the glass hangs (firmware 0.53.0+, regrid), lying down first.
 struct GridChoice { uint8_t columns[2], rows[2]; };
 inline esphome::ESPPreferenceObject grid_preference;
@@ -520,6 +532,7 @@ inline void load_settings() {
   home_preference = esphome::global_preferences->make_preference<HomeTimeout>(0x484F4D31);
   dark_preference = esphome::global_preferences->make_preference<uint32_t>(0x44524B31);
   buttons_preference = esphome::global_preferences->make_preference<uint32_t>(0x50474231);
+  debug_preference = esphome::global_preferences->make_preference<uint32_t>(0x44424731);
   numbers_preference = esphome::global_preferences->make_preference<uint32_t>(0x4E554D31);
   uint32_t numbers_saved=0;
   if(numbers_preference.load(&numbers_saved))screen_text_numbers(numbers_saved);
@@ -529,6 +542,9 @@ inline void load_settings() {
   if(dark_preference.load(&dark_saved))settings_screen::dark_mode=dark_saved==1;
   uint32_t buttons_saved=1;
   if(buttons_preference.load(&buttons_saved))page_buttons=buttons_saved!=0;
+  uint32_t debug_saved=0;
+  if(debug_preference.load(&debug_saved))settings_screen::debug_mode=debug_saved==1;
+  apply_debug_mode();
   HomeTimeout home;
   if(home_preference.load(&home) && home.seconds>=30 && home.seconds<=3600){
     auto_home=home.enabled?1:0;auto_home_seconds=(int32_t)home.seconds;
@@ -561,6 +577,8 @@ inline void persist_settings() {
   dark_preference.save(&dark);
   uint32_t buttons = page_buttons ? 1 : 0;
   buttons_preference.save(&buttons);
+  uint32_t debug = settings_screen::debug_mode ? 1 : 0;
+  debug_preference.save(&debug);
   uint32_t turned = (uint32_t) rotation;
   rotation_preference.save(&turned);
 }

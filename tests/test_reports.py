@@ -44,6 +44,85 @@ class Redaction(unittest.TestCase):
         self.assertEqual(out['list'], [{'password': '**REDACTED**'}, 'fine'])
 
 
+class FakeScreenApi:
+    """The parts of aioesphomeapi's APIClient a report's read of a screen's log takes, with a Debug mode switch."""
+
+    def __init__(self, *args, with_switch=True, debug=False, **kwargs):
+        self.with_switch, self.debug, self.commands, self.subscribed_with_debug = with_switch, debug, [], None
+
+    async def connect(self, login=True):
+        pass
+
+    async def device_info(self):
+        return None
+
+    async def list_entities_services(self):
+        SwitchInfo = type('SwitchInfo', (), {})
+        switch = SwitchInfo()
+        switch.object_id, switch.key = 'debug_mode', 7
+        other = types.SimpleNamespace(object_id='dark_mode', key=3)
+        return ([other, switch] if self.with_switch else [other]), []
+
+    def subscribe_states(self, on_state):
+        on_state(types.SimpleNamespace(key=3, state=True))
+        on_state(types.SimpleNamespace(key=7, state=self.debug))
+
+    def switch_command(self, key, state):
+        self.commands.append((key, state))
+        if key == 7:
+            self.debug = state
+
+    def subscribe_logs(self, on_log, log_level=None, dump_config=True):
+        self.subscribed_with_debug = self.debug
+        on_log(types.SimpleNamespace(message=b'[I][live:581]: stream 0: 15.5 pictures/s'))
+
+    async def disconnect(self):
+        pass
+
+
+class DebugModeForTheLog(unittest.IsolatedAsyncioTestCase):
+    """A screen logs its warnings and errors alone while its Debug mode is off (settings_screen.h); the report's read
+    turns it on, reads, and turns it off again, and leaves alone a screen that was in Debug mode or has no switch."""
+
+    async def read(self, **screen):
+        made = []
+
+        def client(*args, **kwargs):
+            made.append(FakeScreenApi(**screen))
+            return made[-1]
+
+        fake = types.ModuleType('aioesphomeapi')
+        fake.APIClient = client
+        fake.LogLevel = types.SimpleNamespace(LOG_LEVEL_DEBUG=5)
+        saved = sys.modules.get('aioesphomeapi')
+        sys.modules['aioesphomeapi'] = fake
+        try:
+            lines, _ = await reports.screen_log('screen.local', None, 0.05, debug=True)
+        finally:
+            if saved is None:
+                del sys.modules['aioesphomeapi']
+            else:
+                sys.modules['aioesphomeapi'] = saved
+        return lines, made[0]
+
+    async def test_debug_mode_is_on_for_the_read_and_off_after_it(self):
+        lines, api = await self.read()
+        self.assertEqual(api.commands, [(7, True), (7, False)])
+        self.assertTrue(api.subscribed_with_debug)
+        self.assertFalse(api.debug)
+        self.assertEqual(lines, ['[I][live:581]: stream 0: 15.5 pictures/s'])
+
+    async def test_a_screen_already_in_debug_mode_stays_in_it(self):
+        _, api = await self.read(debug=True)
+        self.assertEqual(api.commands, [])
+        self.assertTrue(api.debug)
+
+    async def test_a_screen_without_the_switch_is_read_as_it_is(self):
+        lines, api = await self.read(with_switch=False)
+        self.assertEqual(api.commands, [])
+        self.assertEqual(len(lines), 1)
+
+
 class HomeAssistantLog(unittest.TestCase):
     LOG = ('2026-10-23 10:40:20.001 INFO (MainThread) [homeassistant.setup] Setting up esphome\n'
            '2026-10-23 10:40:21.002 WARNING (MainThread) [aioesphomeapi.reconnect_logic] Can\'t connect to ESPHome API for office-1 @ 10.0.0.5: timeout\n'
