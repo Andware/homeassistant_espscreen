@@ -417,6 +417,15 @@ the tiles and LVGL (up to 0.74 s measured).
   serial watch stays on it. To do after Screen camera 0.6.5: light heap poisoning (`CONFIG_HEAP_POISONING_LIGHT`) in a
   test build, which names the block whose end was overwritten when it is freed, then an hour's soak on the D1001 and the
   Guition 10.1. The same family once before: 2026-10-25, a stream buffer's control block in PSRAM (live_view.cpp).
+- **The screen's own video, measured with Screen camera 0.6.5 on the Guition 10.1 (2026-10-27, two live tiles, ten
+  minutes a row).** While nobody watches, the camera makes 5 frames a second, for sensing or for nothing; that costs
+  what nothing costs (laying out a live picture 26 to 28 ms, the cores at 23 and 39 %), where sensing at full speed
+  cost 11 to 12 ms more a picture and 4 to 6 % of each core. A new viewer's first frame came after 2.4 to 2.5 s from a
+  camera at 5 a second and 2.4 s from one at full speed: the switch costs 0.15 s at most, the server already asks the
+  encoder for a key frame at PLAY (`rtsp_server.cpp`), and the rest is the RTSP handshake and the viewer's own probing
+  (ffmpeg). Known load: with one viewer core 0 runs at 75 %; the video's server task, pinned there (Opus and RTSP),
+  took 36 % of a core and the live tiles' tasks 37 %. Whether it, or the encoder on the camera's task, does better on
+  core 1 is open, not tried.
 
 ## 5. The doorbell's talk-back, prepared
 

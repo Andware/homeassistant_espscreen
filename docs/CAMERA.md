@@ -558,7 +558,9 @@ working: they read the same frames the video gets. The dot in the top right corn
 ring while the camera only senses (light level, motion; plugin API 0.20). While nobody watches, for sensing alone or
 for nothing at all, the sensor makes 5 frames a second, and full speed again the moment someone opens the video or
 Home Assistant asks for a picture (Screen camera 0.6.5, its `frame_rate.h`; what a sensor can, its driver tells the
-camera through `camera_sensor.h`, on any board). The microphone listens only while someone watches, and the voice
+camera through `camera_sensor.h`, on any board). Measured on 2026-10-27 on a Guition 10.1 (OV02C10) and a reTerminal
+D1001 (SC202CS): 4.9 frames a second counted at 5, the light level kept coming every ten seconds; motion at 5 a
+second was not tried yet, since nobody walked past. The microphone listens only while someone watches, and the voice
 assistant can listen at the same time.
 
 **What it takes, measured on a reTerminal D1001.** Each of these cost a build to find, and each is kept in the code:
