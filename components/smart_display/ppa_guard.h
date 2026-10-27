@@ -30,6 +30,14 @@
 // some blocks safe that the engine stalls on (33x17 turned 270: the driver's rule sets the bypass for 16 rows, not 32).
 // tests/test_ppa_guard.cpp proves the pieces cover the block once, land where the whole would, and are each safe, for
 // both sizes.
+//
+// What the rules cannot do (measured 2026-10-27, docs/PLATFORM_PLAN.md 4.7): the stall is the memory bus's while the
+// panel scans PSRAM, not the frame buffer's alone. On a Guition 10.1 the issue's 368x66 turned 270 stalled on its first
+// copy into a PSRAM buffer no panel reads as well as into the frame buffer; on a reTerminal D1001 it came back at least
+// 31 times before one stalled. And a copy both rules call safe stalls now and then too: a Tab5's live tile, 618x307
+// turned 270 into its frame buffer (TR-2M2KX9), where 115,000 such copies on a Guition 10.1 and a D1001 never did. The
+// guard keeps the blocks the hardware stalls on every time out of the engine; for the rest the PPA watch restarts the
+// screen within four seconds (ppa_trace.h).
 #pragma once
 #include <cstdint>
 

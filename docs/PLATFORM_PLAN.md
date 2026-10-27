@@ -438,6 +438,47 @@ the tiles and LVGL (up to 0.74 s measured).
   or its device id) and hands that tile its frames from the frame hub, with no RTSP, Home Assistant or WebRTC in
   between; the editor says so on such a tile. Not "only while the tile is visible": the tile is visible.
 
+- **A live tile's turned copy that the guard calls safe stopped a Tab5, and the bench does not repeat it (2026-10-27).**
+  A Tab5 of a dev tester (TR-2M2KX9; firmware 0.57.0 of dev, with the guard's equality rule and the PPA watch) stood
+  still 88 s after boot and restarted on the task watchdog: the trace's last call, a live tile's card of 618x307 turned
+  270 into the frame buffer at 16,646 by `live_view`, never came back, while its twin, 618x308 to 335,646, came back
+  some 1,500 times; the night before, on an older build, nine restarts in 70 minutes with the same main loop record.
+  That copy is safe by both rules (its output's last unit 51 x 10, 8160 bits): it is the chance class of
+  espressif/esp-idf #19096, which no geometry rule catches. The PPA watch did not fire there: the esp_timer task it ran
+  in did not get to it in 16 s. It runs in a task of its own now (`ppa_trace.h`), and the task watchdog's record keeps
+  that task's state and stack (`loop_record.h`), so the next such report says where it stood.
+  - **The rig, measured.** The Tab5's copies, 618x307 and 618x308 turned 270 to 16,646 and 335,646 in turn, from a
+    canvas in PSRAM, each with the glass held, beside two live tiles and the panel's scan, counting copies until one
+    never comes back (counters a restart keeps); the cost is the copy alone, inside the glass's lock:
+
+    | Board | Variant | Copies | Time | Hangs | A copy | Panel dry |
+    |---|---|---|---|---|---|---|
+    | Guition 10.1 (rev 3.2) | (a) whole into the frame buffer, as `live_view` copies | 89,603 + 12,578 | 28 + 4 min | 0 | 8.5 ms | 0 |
+    | Guition 10.1 | (c) whole into a PSRAM scratch no panel reads, then the CPU's copy, written back 16 rows at a time | 15,231 | 10 min | 0 | 23.0 ms | 0 |
+    | Guition 10.1 | (b) 16 columns at a time into 307 x 16 in internal RAM, then the CPU's copy and write-back | 28,739 | 20 min | 0 | 26.8 ms | 0 |
+    | reTerminal D1001 (rev 1.3) | (a) | 13,640 | 30 min | 0 | 24.0 ms | 0 |
+    | reTerminal D1001 | (b) | 12,009 | 31 min | 0 | 44.0 ms | 0 |
+
+    The Tab5 stopped after about 1,550 of its turned copies, and the night before every 8 minutes on average; the rig
+    made 9 (D1001) to 66 (Guition) times as many of (a) without one, on a rev 1.3 and a rev 3.2 chip, and 55,000 of
+    (b) and (c). Not repeatable on the bench, so (b) and (c) prove nothing, and they cost 1.8 to 3.2 times (a): (a)
+    stays. With a Tab5 on the bench the rig goes there first. The rig is a bench hook (scratchpad), not in dev.
+  - **Forced stalls** (#19023's 368x66 turned 270, past the guard), from the main loop and from a task like a stream's:
+    on the Guition 10.1 the first copy stalled, into the frame buffer and just as well into a PSRAM buffer of the
+    panel's size that no panel reads (#19023's reporter saw no stall into PSRAM, without a panel running): it is the
+    memory bus's, with the panel scanning PSRAM, not the frame buffer's alone, so a scratch in PSRAM is no way out for a
+    bad block. On the D1001 the same block came back at least 31 times, 2 ms each, before one stalled: a bad block
+    stalls by chance too, only sooner. The watch caught every one: 3.1 and 3.8 s in the esp_timer task, 3.4 s (D1001)
+    and 3.75 s (Guition) in its own, its words ending "esp_timer blocked".
+  - **Found on the way:** a build for the P4's revision 3 (the Guition 10.1 of rev 3.2, its v3 profile) runs macro
+    blocks of 32 rows, the engine's register says so ("the engine's macro block: 32 rows"), and the guard took 16 on
+    every build; it asks the engine now, as the driver does (`ppa_guard.h`).
+  - **What the next Tab5 stall must give:** the abort's words (the copy's size, angle and place, the task, and how the
+    esp_timer task stood), or at a task watchdog the esp_timer task's record (its state, `TIMER0:` and on), and the
+    trace with the copy that never came back. The suspect for the silent esp_timer task is a callback of a part the
+    bench boards do not run (Bluetooth through esp_hosted, for its bt_proxy and toothbrush plugins); the record will
+    name it.
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community
