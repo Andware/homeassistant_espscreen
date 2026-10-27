@@ -103,6 +103,17 @@ class Crashes(unittest.TestCase):
         self.assertEqual(sorted(set(a for l in crash['lines'] for a in reports.ADDRESS.findall(l))),
                          ['0x400d1234', '0x4812ABCD', '0x4FF23BEA'])
 
+    def test_the_last_ppa_calls_ride_with_the_crash(self):
+        # ppa_trace.h: the calls to the P4's PPA of the boot before, the one that never came back the stop.
+        trace = ['[W][ppa_guard:120]: The last PPA calls of the previous boot, the newest last:',
+                 '[W][ppa_guard:126]:   #1376 at 62271 ms, live_view: 492x269 turned 0 to 0,0, 1 piece(s), came back',
+                 '[W][ppa_guard:126]:   #1377 at 62289 ms, loopTask: 872x6 turned 90 to 794,0, 0 piece(s), NEVER CAME BACK',
+                 '[W][ppa_guard:094]: a turned copy of 46x4 would hang the 2D-DMA (DIG-734): copied in 2 pieces']
+        crash = reports.crash_summary(self.CRASH[:3] + trace, clock=lambda: 1_800_000_000)
+        self.assertTrue(any('NEVER CAME BACK' in l for l in crash['lines']))
+        self.assertTrue(any('The last PPA calls' in l for l in crash['lines']))
+        self.assertFalse(any('copied in 2 pieces' in l for l in crash['lines']))
+
     def test_the_internal_ram_of_the_boot_before_rides_with_the_crash_and_alone_is_none(self):
         heap = ['[E][heap_watch:105]: *** INTERNAL RAM ON PREVIOUS BOOT ***',
                 '[E][heap_watch:106]:   Lowest: 20372 bytes free, 5321 s after boot',

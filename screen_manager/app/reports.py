@@ -74,7 +74,9 @@ ADDRESS = re.compile(r'0x4[0-9a-fA-F]{7}')
 # in older logs and tests: the keyword follows either.
 CRASH_LINE = re.compile(r'CRASH DETECTED ON PREVIOUS BOOT|THE MAIN LOOP AT THE LAST TASK WATCHDOG|INTERNAL RAM ON PREVIOUS BOOT|ABORT ON PREVIOUS BOOT'
                         r'|^\s*(?:\[[^\]]*\]\s*)*:?\s*(?:Reason|PC|EXCVADDR|MTVAL|BT\d+|LOOP\d+|Backtrace|MEPC|RA|Use|Lowest|Failed|Details|AT\d+)\s*:'
-                        r'|assert failed: 0x4|Guru Meditation|abort\(\) was called|Panic|rst:0x|Reset Reason|ELF file SHA256|Crashed core')
+                        r'|assert failed: 0x4|Guru Meditation|abort\(\) was called|Panic|rst:0x|Reset Reason|ELF file SHA256|Crashed core'
+                        # The last PPA calls of the previous boot (ppa_trace.h): the one that never came back is the stop.
+                        r'|The last PPA calls of the previous boot|\[ppa_guard[^\]]*\]:?\s*#\d+ at \d+ ms')
 RESET_LINE = re.compile(r'Reset Reason:\s*(.+?)\s*$')
 REASON_LINE = re.compile(r'Reason:\s*(.+?)\s*$')
 ELF_LINE = re.compile(r'ELF file SHA256:\s*([0-9a-f]+)')
