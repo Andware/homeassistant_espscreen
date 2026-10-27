@@ -427,6 +427,17 @@ the tiles and LVGL (up to 0.74 s measured).
   took 36 % of a core and the live tiles' tasks 37 %. Whether it, or the encoder on the camera's task, does better on
   core 1 is open, not tried.
 
+- **A screen's own camera as a live tile goes out and comes back (2026-10-27).** Max's reTerminal D1001 shows
+  `camera.tablet_video`, its own camera, as a live tile on page 1. That picture leaves the screen as H.264 and Opus
+  over RTSP, goes through go2rtc and WebRTC into the add-on, and comes back to the same screen as a live tile with
+  sound: as long as that page is on the glass, somebody watches, the camera never rests at 5 frames a second, and the
+  screen encodes its own picture only to decode it again (core 0 at 85 to 88 %, four live tiles at 4.6 pictures a
+  second where the Guition 10.1 keeps 14.8 with two). The add-on's log shows it ("Live camera.tablet_video ... 0.05 s
+  behind the camera ... over 757 frames" a minute); no other screen and no dashboard watches it, and Home Assistant
+  does not preload it. To do, as its own item: the firmware recognises its own camera (the screen's `camera.<node>_video`
+  or its device id) and hands that tile its frames from the frame hub, with no RTSP, Home Assistant or WebRTC in
+  between; the editor says so on such a tile. Not "only while the tile is visible": the tile is visible.
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community
