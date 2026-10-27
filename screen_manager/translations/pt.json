@@ -2555,7 +2555,17 @@
         "levels": "Mostrar o brilho nas predefinições",
         "levels_hint": "Escreve o brilho em pequeno em cada círculo. Uma predefinição só de brilho mostra-o sempre.",
         "hint": "Um toque numa predefinição põe a luz assim de uma vez; o anel marca a que a luz mostra. Clique numa para a alterar, arraste para mudar a ordem.",
-        "hint_empty": "Até quatro teclas redondas, como as cores favoritas do Home Assistant, cada uma com o seu brilho. Uma nova parte do que a luz mostra agora."
+        "hint_empty": "Até quatro teclas redondas, como as cores favoritas do Home Assistant, cada uma com o seu brilho. Uma nova parte do que a luz mostra agora.",
+        "own": "Definição própria",
+        "device": "Predefinição da lâmpada",
+        "effect": "Efeito",
+        "search": "Pesquisar",
+        "none_found": "Nada encontrado",
+        "device_kind": "Tipo",
+        "device_preset": "Predefinição",
+        "device_playlist": "Lista",
+        "device_hint": "Uma predefinição da própria lâmpada define a sua cor, efeito e brilho.",
+        "swatch_aria_named": "Predefinição {n}, {name}"
       },
       "tap": {
         "label": "Ao tocar",

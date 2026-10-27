@@ -6,6 +6,7 @@ import { defineStore } from "pinia";
 import { computed, ref, toRaw } from "vue";
 import { getJson, send } from "../api";
 import type { HistoryPreview } from "../model/history-preview";
+import type { LightChoices } from "../model/light-presets";
 import { homeView, type HomeView } from "../model/overview";
 import { text as pluginText } from "../model/plugins";
 import { itemKey } from "../model/topbar";
@@ -92,6 +93,22 @@ export const useEntitiesStore = defineStore("entities", () => {
       entityActions.value[entity] = (await getJson(`entity-actions?entity=${encodeURIComponent(entity)}`)).actions;
     } catch {
       askedActions.delete(entity);
+    }
+  }
+
+  // ---- What a light's presets may set beside its colour: its effects and its device's rows (docs/LIGHT_PRESETS.md) ----
+  // Asked once per light while the page is open, as its actions are.
+  const lightChoices = ref<Record<string, LightChoices | undefined>>({});
+  const askedChoices = new Set<string>();
+  async function loadLightChoices(entity: string) {
+    if (askedChoices.has(entity) || !entity.startsWith("light.")) return;
+    askedChoices.add(entity);
+    try {
+      const data = await getJson<Partial<LightChoices>>(`light-choices?entity=${encodeURIComponent(entity)}`);
+      lightChoices.value[entity] = { effects: Array.isArray(data.effects) ? data.effects.filter((e) => typeof e === "string") : [],
+        rows: Array.isArray(data.rows) ? data.rows.filter((r) => r && typeof r.e === "string" && (r.kind === "select" || r.kind === "number")) : [] };
+    } catch {
+      askedChoices.delete(entity);
     }
   }
 
@@ -195,7 +212,7 @@ export const useEntitiesStore = defineStore("entities", () => {
 
   return {
     ...lookups({ entityName, iconNamed, automaticIcon, tileIconCp, liveOf }),
-    capabilities, entityActions, subtitleValues, loadCapabilities, loadSubtitleValues, loadEntityActions,
+    capabilities, entityActions, subtitleValues, loadCapabilities, loadSubtitleValues, loadEntityActions, lightChoices, loadLightChoices,
     liveStates, loadStates, loadLibraryStates, reloadState, topbarPreviews, loadOverview, loadHistory,
   };
 });

@@ -28,7 +28,7 @@ static void preset_keys(Widgets &w,const light_presets::Presets *ps,const light_
   if(!ps)return;
   for(int n=0;n<r.count;++n){
     w.dots[n]=light_presets::key(w.panel,ps->items[n],r.size,small_font?small_font:w.value_font,preset_key_event,
-                                 (void*)(uintptr_t)((&w-widgets.data())*8+n),ps->level_shown(ps->items[n]));
+                                 (void*)(uintptr_t)((&w-widgets.data())*8+n),ps->label(ps->items[n]));
     light_presets::reach(w.dots[n],r.size,r.gap);
   }
 }
@@ -117,7 +117,7 @@ void colour_presets_draw(lv_obj_t *card, bool beside, int top, int bottom, int y
     x0 = (w - r.size) / 2; y0 = head + (along - r.length()) / 2;
     for (int n = 0; n < r.count; ++n) {
       colour_dots[n] = light_presets::key(box, ps->items[n], r.size, font, colour_preset_event, (void *) (uintptr_t) n,
-                                          ps->level_shown(ps->items[n]));
+                                          ps->label(ps->items[n]));
       lv_obj_set_pos(colour_dots[n], x0, y0 + n * (r.size + r.gap));
       light_presets::reach(colour_dots[n], r.size, r.gap);
     }
@@ -142,7 +142,7 @@ void colour_presets_draw(lv_obj_t *card, bool beside, int top, int bottom, int y
     y0 = head + (room - r.size) / 2;
     for (int n = 0; n < r.count; ++n) {
       colour_dots[n] = light_presets::key(box, ps->items[n], r.size, font, colour_preset_event, (void *) (uintptr_t) n,
-                                          ps->level_shown(ps->items[n]));
+                                          ps->label(ps->items[n]));
       lv_obj_set_pos(colour_dots[n], inset + n * (r.size + r.gap), y0);
       light_presets::reach(colour_dots[n], r.size, r.gap);
     }
@@ -174,7 +174,7 @@ void light_card_presets(const Tile &t, int x, int y, int width, int height, bool
   const int x0=left?area.x:area.x+(area.w-r.length())/2;
   for(int n=0;n<r.count;++n){
     auto *key=light_presets::key(detail_root,t.presets->items[n],r.size,small_font,detail_preset_event,(void*)(uintptr_t)n,
-                                 t.presets->level_shown(t.presets->items[n]));
+                                 t.presets->label(t.presets->items[n]));
     lv_obj_set_pos(key,x0+n*(r.size+r.gap),area.y+(area.h-r.size)/2);
     light_presets::reach(key,r.size,r.gap);
     card_bind(key,t,detail_preset_paint,"",n);

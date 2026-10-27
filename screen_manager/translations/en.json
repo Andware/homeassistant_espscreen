@@ -2126,7 +2126,17 @@
         "levels": "Show brightness on presets",
         "levels_hint": "Writes each preset's brightness small in its circle. A preset of brightness only always shows it.",
         "hint": "A tap on a preset sets the light to it in one go; the ring marks the one the light shows. Click one to change it, drag to reorder.",
-        "hint_empty": "Up to four round keys, like the favorite colors in Home Assistant, each with its own brightness. A new one starts from what the light shows now."
+        "hint_empty": "Up to four round keys, like the favorite colors in Home Assistant, each with its own brightness. A new one starts from what the light shows now.",
+        "own": "Own setting",
+        "device": "Lamp's own preset",
+        "effect": "Effect",
+        "search": "Search",
+        "none_found": "Nothing found",
+        "device_kind": "Kind",
+        "device_preset": "Preset",
+        "device_playlist": "Playlist",
+        "device_hint": "A preset of the lamp itself sets its own color, effect and brightness.",
+        "swatch_aria_named": "Preset {n}, {name}"
       },
       "tap": {
         "label": "On tap",

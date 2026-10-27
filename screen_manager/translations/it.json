@@ -2555,7 +2555,17 @@
         "levels": "Mostra la luminosità sulle preimpostazioni",
         "levels_hint": "Scrive la luminosità in piccolo in ogni cerchio. Una preimpostazione di sola luminosità la mostra sempre.",
         "hint": "Un tocco su una preimpostazione regola la luce in un colpo; l'anello indica quella che la luce mostra. Fai clic su una per cambiarla, trascinala per cambiare l'ordine.",
-        "hint_empty": "Fino a quattro tasti rotondi, come i colori preferiti di Home Assistant, ognuno con la sua luminosità. Una nuova parte da ciò che la luce mostra ora."
+        "hint_empty": "Fino a quattro tasti rotondi, come i colori preferiti di Home Assistant, ognuno con la sua luminosità. Una nuova parte da ciò che la luce mostra ora.",
+        "own": "Impostazione propria",
+        "device": "Preset della lampada",
+        "effect": "Effetto",
+        "search": "Cerca",
+        "none_found": "Nessun risultato",
+        "device_kind": "Tipo",
+        "device_preset": "Preset",
+        "device_playlist": "Playlist",
+        "device_hint": "Un preset della lampada stessa imposta da sé colore, effetto e luminosità.",
+        "swatch_aria_named": "Preset {n}, {name}"
       },
       "tap": {
         "label": "Al tocco",

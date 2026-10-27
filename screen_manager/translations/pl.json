@@ -2555,7 +2555,17 @@
         "levels": "Pokazuj jasność na ustawieniach",
         "levels_hint": "Wpisuje jasność małą czcionką w każde koło. Ustawienie samej jasności zawsze ją pokazuje.",
         "hint": "Dotknięcie ustawienia ustawia światło za jednym razem; pierścień oznacza to, które światło teraz pokazuje. Kliknij, aby zmienić, przeciągnij, aby zmienić kolejność.",
-        "hint_empty": "Do czterech okrągłych klawiszy, jak ulubione kolory w Home Assistant, każdy z własną jasnością. Nowe zaczyna od tego, co światło teraz pokazuje."
+        "hint_empty": "Do czterech okrągłych klawiszy, jak ulubione kolory w Home Assistant, każdy z własną jasnością. Nowe zaczyna od tego, co światło teraz pokazuje.",
+        "own": "Własne ustawienie",
+        "device": "Preset lampy",
+        "effect": "Efekt",
+        "search": "Szukaj",
+        "none_found": "Nic nie znaleziono",
+        "device_kind": "Rodzaj",
+        "device_preset": "Preset",
+        "device_playlist": "Playlista",
+        "device_hint": "Preset samej lampy ustawia jej własny kolor, efekt i jasność.",
+        "swatch_aria_named": "Preset {n}, {name}"
       },
       "tap": {
         "label": "Po dotknięciu",

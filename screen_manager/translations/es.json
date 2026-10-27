@@ -2555,7 +2555,17 @@
         "levels": "Mostrar el brillo en los ajustes",
         "levels_hint": "Escribe el brillo en pequeño en cada círculo. Un ajuste solo de brillo siempre lo muestra.",
         "hint": "Un toque en un ajuste pone la luz así de una vez; el anillo marca el que muestra la luz. Haz clic en uno para cambiarlo, arrástralo para cambiar el orden.",
-        "hint_empty": "Hasta cuatro teclas redondas, como los colores favoritos de Home Assistant, cada una con su brillo. Uno nuevo parte de lo que muestra la luz ahora."
+        "hint_empty": "Hasta cuatro teclas redondas, como los colores favoritos de Home Assistant, cada una con su brillo. Uno nuevo parte de lo que muestra la luz ahora.",
+        "own": "Ajuste propio",
+        "device": "Preset de la lámpara",
+        "effect": "Efecto",
+        "search": "Buscar",
+        "none_found": "No se encontró nada",
+        "device_kind": "Tipo",
+        "device_preset": "Preset",
+        "device_playlist": "Lista",
+        "device_hint": "Un preset de la propia lámpara fija su propio color, efecto y brillo.",
+        "swatch_aria_named": "Preset {n}, {name}"
       },
       "tap": {
         "label": "Al tocar",

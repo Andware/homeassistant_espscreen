@@ -4608,6 +4608,14 @@ def create_app(manager, development=False):
         names = await ha.service_names_in(REQUEST_LANGUAGE.get()) if hasattr(ha, 'service_names_in') else getattr(ha, 'service_names', {})
         return web.json_response({'actions': ha_catalogue.action_choices(entity, actions, ha.states.get(entity), ha.services,
                                                                          names, ha.platform_of(entity))})
+    async def light_choices(request):
+        """A light's presets (docs/LIGHT_PRESETS.md): the effects and the settings of its device (light_effects.choices)
+        a preset may set, with every choice of each."""
+        entity = request.query.get('entity', '')
+        if not entity.startswith('light.') or entity not in manager.ha.states:
+            return web.json_response({'effects': [], 'rows': []})
+        return web.json_response(light_effects.choices(entity, manager.device_entries(entity), manager.ha.states, manager.registry_index(),
+                                                       getattr(manager.ha, 'state_words', None), manager.device_name_of(entity)))
     async def entity_subtitle(request):
         """The second line of a tile (app 0.2.105): the values of one entity it may say. The list is Home Assistant's
         own - the attributes its frontend translations name - in the editor's language, so nothing here is a list we
@@ -5549,6 +5557,7 @@ def create_app(manager, development=False):
     app.router.add_post('/api/automations', save_automation)
     app.router.add_delete('/api/automations/{id}', delete_automation)
     app.router.add_get('/api/entity-actions', entity_actions)
+    app.router.add_get('/api/light-choices', light_choices)
     app.router.add_get('/api/entity-subtitle', entity_subtitle)
     app.router.add_get('/api/display-precision', display_precision)
     app.router.add_put('/api/display-precision', display_precision)

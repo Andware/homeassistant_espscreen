@@ -2126,7 +2126,17 @@
         "levels": "Helderheid op presets tonen",
         "levels_hint": "Zet de helderheid klein in elke cirkel. Een preset met alleen helderheid toont die altijd.",
         "hint": "Een tik op een preset zet de lamp er in één keer op; de ring toont welke de lamp nu heeft. Klik er een aan om hem te wijzigen, sleep om de volgorde te veranderen.",
-        "hint_empty": "Tot vier ronde knoppen, zoals de favoriete kleuren in Home Assistant, elk met een eigen helderheid. Een nieuwe begint bij wat de lamp nu toont."
+        "hint_empty": "Tot vier ronde knoppen, zoals de favoriete kleuren in Home Assistant, elk met een eigen helderheid. Een nieuwe begint bij wat de lamp nu toont.",
+        "own": "Eigen instelling",
+        "device": "Preset van de lamp",
+        "effect": "Effect",
+        "search": "Zoeken",
+        "none_found": "Niets gevonden",
+        "device_kind": "Soort",
+        "device_preset": "Preset",
+        "device_playlist": "Playlist",
+        "device_hint": "Een preset van de lamp zelf zet zijn eigen kleur, effect en helderheid.",
+        "swatch_aria_named": "Preset {n}, {name}"
       },
       "tap": {
         "label": "Bij aantikken",

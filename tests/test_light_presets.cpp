@@ -36,14 +36,14 @@ int main() {
   assert(make(50, 0, 0, 0, false, false).kind == Preset::LEVEL);
 
   // Which one the light shows: its brightness to a percent, its white shade to 50 K, its colour to 3 degrees and 3 %.
-  Light warm{true, true, 80, 2702, 30, 60};
+  Light warm{true, true, 80, 2702, 30, 60, {}, {}};
   const Preset white = make(80, 2700, 0, 0, true, false), red = make(60, 0, 359, 90, false, true), half = make(80, 0, 0, 0, false, false);
   assert(shows(white, warm));
-  assert(!shows(white, Light{true, true, 75, 2700, 0, 0}));
-  assert(!shows(white, Light{true, false, 80, 2700, 30, 60}));   // a colour mode: Home Assistant names no white shade
-  assert(!shows(white, Light{false, true, 80, 2700, 0, 0}));
-  assert(shows(red, Light{true, false, 60, 2700, 1, 88}));       // 359 and 1 are two degrees apart
-  assert(!shows(red, Light{true, false, 60, 2700, 10, 90}));
+  assert(!shows(white, Light{true, true, 75, 2700, 0, 0, {}, {}}));
+  assert(!shows(white, Light{true, false, 80, 2700, 30, 60, {}, {}}));   // a colour mode: Home Assistant names no white shade
+  assert(!shows(white, Light{false, true, 80, 2700, 0, 0, {}, {}}));
+  assert(shows(red, Light{true, false, 60, 2700, 1, 88, {}, {}}));       // 359 and 1 are two degrees apart
+  assert(!shows(red, Light{true, false, 60, 2700, 10, 90, {}, {}}));
   assert(shows(half, warm));
   Presets ps; ps.items = {red, white, half}; ps.count = 3;
   assert(shown(ps, warm) == 1);
@@ -56,8 +56,8 @@ int main() {
   assert(read(warm, true, Preset::WHITE) == "80|k2702");
   assert(read(warm, true, Preset::LEVEL) == "80|");
   assert(read(warm, false, Preset::WHITE) == "80|");
-  assert(read(Light{false, true, 0, 2700, 0, 0}, true, Preset::WHITE) == "0|");
-  assert(read(Light{true, false, 60, 2700, 359, 90}, true, Preset::COLOUR) == "60|h359,90");
+  assert(read(Light{false, true, 0, 2700, 0, 0, {}, {}}, true, Preset::WHITE) == "0|");
+  assert(read(Light{true, false, 60, 2700, 359, 90, {}, {}}, true, Preset::COLOUR) == "60|h359,90");
   for (const auto &p : {white, red, half}) assert(value(parse(value(p))) == value(p));
   assert(colour_data(white).key2 == "color_temp_kelvin" && colour_data(white).value2 == "2700");
   assert(colour_data(red).key2 == "hs_color" && colour_data(red).value2 == "[359, 90]");
@@ -97,9 +97,34 @@ int main() {
                        {true, false, true, false, true, 80, 28, 65, 2700}};
   assert(group_shows(warm2, white2700, 3));
   Presets two; two.items = {purple, warm2}; two.count = 2;
-  assert(group_shown(two, white2700, 3) == 1);
+  assert(group_shown(two, white2700, 3, Light{}) == 1);
   Lamp none[1] = {{false, true, true, true, true, 0, 0, 0, 0}};
   assert(!group_shows(purple, none, 1));              // nothing available: nothing shows
+
+  // An effect and the device's settings (a WLED's palette and speed), and the lamp's own preset (a WLED preset).
+  Preset loop = make(70, 0, 280, 41, false, true);
+  loop.effect = "Colorloop";
+  loop.settings = {{"select.desk_color_palette", "Party", NAN}, {"number.desk_speed", "180", 180.0f}};
+  Preset film; film.settings = {{"select.desk_preset", "Film", NAN}};
+  assert(loop.valid() && !loop.device() && !loop.neutral());
+  assert(film.valid() && film.device() && film.neutral());
+  assert(!Preset{}.valid());
+  Light desk{true, false, 70, 0, 280, 41, "Colorloop", {{"select.desk_color_palette", "Party", NAN}, {"number.desk_speed", "180", 180.2f},
+                                                         {"select.desk_preset", "Film", NAN}}};
+  assert(shows(loop, desk) && shows(film, desk));
+  desk.effect = "Rainbow";
+  assert(!shows(loop, desk) && shows(film, desk));
+  desk.effect = "Colorloop"; desk.now[1].number = 120;
+  assert(!shows(loop, desk));
+  desk.now[2].text = "Lezen";
+  assert(!shows(film, desk));
+  // A plain key is told by its name's first characters; a coloured one by its colour (its brightness where asked for).
+  Presets named; named.items = {film, loop, make(30, 0, 0, 0, false, false)}; named.count = 3;
+  Preset rainbow = make(90, 0, 0, 0, false, false); rainbow.effect = "Rainbow";
+  assert(named.label(film) == "Fi" && named.label(rainbow) == "Ra" && named.label(loop).empty() && named.label(named.items[2]) == "30");
+  named.levels = true;
+  assert(named.label(loop) == "70" && named.label(film) == "Fi");
+  assert(initials("Éclair") == "Éc" && initials("A") == "A");
 
   std::puts("light presets ok");
   return 0;

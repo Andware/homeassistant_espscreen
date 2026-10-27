@@ -2555,7 +2555,17 @@
         "levels": "Fényerő mutatása az előbeállításokon",
         "levels_hint": "Kicsiben beírja a fényerőt minden körbe. A csak fényerős előbeállítás mindig mutatja.",
         "hint": "Egy érintés az előbeállításon egy lépésben beállítja a lámpát; a gyűrű jelöli, amelyiket a lámpa most mutatja. Kattints rá a módosításhoz, húzd a sorrend változtatásához.",
-        "hint_empty": "Legfeljebb négy kerek gomb, mint a Home Assistant kedvenc színei, mindegyik saját fényerővel. Az új abból indul, amit a lámpa most mutat."
+        "hint_empty": "Legfeljebb négy kerek gomb, mint a Home Assistant kedvenc színei, mindegyik saját fényerővel. Az új abból indul, amit a lámpa most mutat.",
+        "own": "Saját beállítás",
+        "device": "A lámpa saját előbeállítása",
+        "effect": "Effekt",
+        "search": "Keresés",
+        "none_found": "Nincs találat",
+        "device_kind": "Fajta",
+        "device_preset": "Előbeállítás",
+        "device_playlist": "Lejátszási lista",
+        "device_hint": "A lámpa saját előbeállítása maga állítja be a színét, effektjét és fényerejét.",
+        "swatch_aria_named": "{n}. előbeállítás, {name}"
       },
       "tap": {
         "label": "Koppintásra",

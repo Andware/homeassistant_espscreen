@@ -794,8 +794,25 @@ std::string receive(const std::string &payload) {
       auto ps = std::make_shared<light_presets::Presets>();
       for (JsonVariant p : options["presets"].as<JsonArray>()) {
         if (ps->count == light_presets::MAX) break;
-        const auto preset = light_presets::make(p["b"] | 0, p["k"] | 0, p["h"] | -1, p["s"] | -1, !p["k"].isNull(), !p["h"].isNull());
-        if (preset.level) ps->items[ps->count++] = preset;
+        auto preset = light_presets::make(p["b"] | 0, p["k"] | 0, p["h"] | -1, p["s"] | -1, !p["k"].isNull(), !p["h"].isNull());
+        // Its effect and its device's settings (a select's option, a number's value), each as the app sends them.
+        preset.effect = string(p["fx"], 64);
+        if (p["rw"].is<JsonArray>()) for (JsonVariant pair : p["rw"].as<JsonArray>()) {
+          if (preset.settings.size() == 4) break;
+          light_presets::Setting s;
+          s.entity = string(pair[0], 120);
+          if (!valid_entity(s.entity) || (s.entity.rfind("select.", 0) != 0 && s.entity.rfind("number.", 0) != 0)) continue;
+          if (s.entity[0] == 'n') {
+            if (!pair[1].is<float>()) continue;
+            s.number = pair[1].as<float>();
+            s.text = effects_page::number_text(s.number);
+          } else {
+            s.text = string(pair[1], 64);
+            if (s.text.empty()) continue;
+          }
+          preset.settings.push_back(std::move(s));
+        }
+        if (preset.valid()) ps->items[ps->count++] = preset;
       }
       ps->levels = options["preset_levels"].is<bool>() && options["preset_levels"].as<bool>();
       if (ps->count) tile.presets = ps;

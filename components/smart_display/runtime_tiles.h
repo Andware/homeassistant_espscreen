@@ -1271,6 +1271,11 @@ inline light_presets::Light preset_light(const Tile &t) {
   l.on = t.state == "on";
   l.level = std::isfinite(t.brightness) ? std::clamp((int) std::lround(t.brightness * 100.0f / 255.0f), 1, 100) : 100;
   l.white = t.white; l.kelvin = t.kelvin; l.hue = t.hue; l.saturation = t.saturation;
+  // Its effect and its device's settings as they stand (the effects page's rows), for a preset that names them.
+  const auto &x = t.extra();
+  l.effect = x.effect;
+  for (const auto &r : x.option_rows) l.now.push_back({r.entity, r.current, NAN});
+  for (const auto &r : x.number_rows) l.now.push_back({r.entity, effects_page::number_text(r.value), r.value});
   return l;
 }
 // The preset the light shows now, or -1: a group's lamp by lamp where the screen has its lamps (light_presets::Lamp),
@@ -1287,7 +1292,7 @@ inline int preset_lit(const Tile &t) {
     e.on = l.on; e.unavailable = l.unavailable; e.dims = l.dimmable; e.color = l.color; e.temperature = l.temperature;
     e.level = l.level; e.hue = l.hue; e.saturation = l.saturation; e.kelvin = l.temperature ? l.kelvin : 0;
   }
-  return light_presets::group_shown(*t.presets, each.data(), n);
+  return light_presets::group_shown(*t.presets, each.data(), n, preset_light(t));
 }
 #endif
 inline std::string wish_read(const Tile &t, optimistic::Field field, const std::string &item = "") {
@@ -1487,11 +1492,23 @@ inline bool toggle_tap(const Tile &t, const std::string &service) {
 #ifdef SD_MOD_LIGHT_PRESETS
 // A preset's key: the light to its brightness and its white shade or colour at once, shown on every tile and the open card
 // of the light before Home Assistant answers (Field::PRESET), as one light.turn_on whose values Home Assistant renders.
+// Its effect and its device's settings each go as the light's effects page sends them (effects_page.h): the effect as
+// light.turn_on, a select's option and a number's value as the row's own action, each a wish shown at once. A preset of the
+// lamp itself is its settings alone.
 inline void preset_wish(Tile &t, const light_presets::Preset &p) {
-  if (t.domain() != "light" || !t.available() || p.level == 0) return;
-  const auto colour = light_presets::colour_data(p);
-  wish(t, optimistic::Field::PRESET, light_presets::value(p), "light.turn_on", "brightness_pct", std::to_string(p.level), "", "", true,
-       colour.key2, colour.value2);
+  if (t.domain() != "light" || !t.available() || !p.valid()) return;
+  if (p.level) {
+    const auto colour = light_presets::colour_data(p);
+    wish(t, optimistic::Field::PRESET, light_presets::value(p), "light.turn_on", "brightness_pct", std::to_string(p.level), "", "", true,
+         colour.key2, colour.value2);
+  }
+  if (!p.effect.empty()) wish(t, optimistic::Field::EFFECT, p.effect, "light.turn_on", "effect", p.effect);
+  for (const auto &s : p.settings) {
+    if (s.is_number())
+      wish(t, optimistic::Field::ROW_NUMBER, s.text, "number.set_value", "value", s.text, "", s.entity);
+    else
+      wish(t, optimistic::Field::ROW_OPTION, s.text, "select.select_option", "option", s.text, "", s.entity);
+  }
 }
 #endif
 inline void toggle_wish(Tile &t) {

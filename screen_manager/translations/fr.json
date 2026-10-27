@@ -2555,7 +2555,17 @@
         "levels": "Afficher la luminosité sur les préréglages",
         "levels_hint": "Écrit la luminosité en petit dans chaque cercle. Un préréglage de luminosité seule l'affiche toujours.",
         "hint": "Un appui sur un préréglage règle la lampe d'un coup ; l'anneau marque celui qu'elle affiche. Cliquez-en un pour le modifier, faites-le glisser pour changer l'ordre.",
-        "hint_empty": "Jusqu'à quatre touches rondes, comme les couleurs favorites de Home Assistant, chacune avec sa luminosité. Un nouveau part de ce que la lampe affiche."
+        "hint_empty": "Jusqu'à quatre touches rondes, comme les couleurs favorites de Home Assistant, chacune avec sa luminosité. Un nouveau part de ce que la lampe affiche.",
+        "own": "Réglage propre",
+        "device": "Préréglage de la lampe",
+        "effect": "Effet",
+        "search": "Rechercher",
+        "none_found": "Aucun résultat",
+        "device_kind": "Type",
+        "device_preset": "Préréglage",
+        "device_playlist": "Playlist",
+        "device_hint": "Un préréglage de la lampe elle-même définit sa propre couleur, son effet et sa luminosité.",
+        "swatch_aria_named": "Préréglage {n}, {name}"
       },
       "tap": {
         "label": "Au toucher",

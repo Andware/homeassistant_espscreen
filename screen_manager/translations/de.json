@@ -2555,7 +2555,17 @@
         "levels": "Helligkeit auf Voreinstellungen zeigen",
         "levels_hint": "Schreibt die Helligkeit klein in jeden Kreis. Eine Voreinstellung nur mit Helligkeit zeigt sie immer.",
         "hint": "Ein Tippen auf eine Voreinstellung stellt die Leuchte in einem Schritt darauf ein; der Ring zeigt, welche gerade leuchtet. Klicke eine an, um sie zu ändern, ziehe sie, um die Reihenfolge zu ändern.",
-        "hint_empty": "Bis zu vier runde Tasten, wie die Lieblingsfarben in Home Assistant, jede mit eigener Helligkeit. Eine neue beginnt mit dem, was die Leuchte gerade zeigt."
+        "hint_empty": "Bis zu vier runde Tasten, wie die Lieblingsfarben in Home Assistant, jede mit eigener Helligkeit. Eine neue beginnt mit dem, was die Leuchte gerade zeigt.",
+        "own": "Eigene Einstellung",
+        "device": "Preset der Lampe",
+        "effect": "Effekt",
+        "search": "Suchen",
+        "none_found": "Nichts gefunden",
+        "device_kind": "Art",
+        "device_preset": "Preset",
+        "device_playlist": "Playlist",
+        "device_hint": "Ein Preset der Lampe selbst setzt seine eigene Farbe, seinen Effekt und seine Helligkeit.",
+        "swatch_aria_named": "Preset {n}, {name}"
       },
       "tap": {
         "label": "Beim Tippen",
