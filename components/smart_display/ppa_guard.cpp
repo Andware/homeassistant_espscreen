@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstring>
 #include <driver/ppa.h>
+#include <hal/ppa_ll.h>
 #include <esp_attr.h>
 #include <esp_system.h>
 #include <esp_timer.h>
@@ -177,9 +178,9 @@ static esp_err_t copy_guarded(ppa_client_handle_t client, const ppa_srm_oper_con
   block.sx = as_scale(config->scale_x);
   block.sy = as_scale(config->scale_y);
   block.depth = depth_of(config->out.srm_cm, block.unit_w);
-  // ESPHome builds the P4 for revision 1 (CONFIG_ESP32P4_SELECTS_REV_LESS_V3), where the driver counts macro blocks of
-  // 16 rows whatever the chip says (ppa_ll_srm_get_mb_size).
-  block.mb = 16;
+  // The macro block as the driver counts it (ppa_srm.c): 16 rows on a build for revision 1, the register's on
+  // revision 3.
+  block.mb = ppa_ll_srm_get_mb_size(PPA_LL_GET_HW) == PPA_LL_SRM_MB_SIZE_16_16 ? 16 : 32;
   if (block.depth == 0) return __real_ppa_do_scale_rotate_mirror(client, config);
   ppa_guard::Piece plan[ppa_guard::MAX_PIECES];
   const int n = ppa_guard::plan(block, plan);

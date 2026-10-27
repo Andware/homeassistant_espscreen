@@ -22,9 +22,14 @@
 // sets the bypass for it. Two pieces do in almost every case (the issue's 368x66 at 270 degrees goes as 368x65 and
 // 368x1, the way its reporter worked around it); the rest are cut again, a few times at most. A block the driver takes
 // as it is costs nothing. Every number here is the driver's: the FIFO's 1536 bits, the unit's 64 or 32 pixels, the macro
-// block's 16 rows (ESPHome builds the P4 for revision 1, where the engine runs 16 x 16 blocks), a scale's fraction in
-// sixteenths and the truncation of a scaled size (ppa_srm.c, ppa_ll.h). tests/test_ppa_guard.cpp proves the pieces
-// cover the block once, land where the whole would, and are each safe.
+// block's rows, a scale's fraction in sixteenths and the truncation of a scaled size (ppa_srm.c, ppa_ll.h). The macro
+// block is the engine's own: 16 rows on a firmware built for the P4's first revisions (the Tab5, the reTerminal D1001,
+// most Guition panels: CONFIG_ESP32P4_SELECTS_REV_LESS_V3), and on one built for revision 3 (a Guition 10.1 of rev 3.2,
+// its v3 profile) what the engine's register says, 32 unless set otherwise; the guard asks it as the driver does
+// (ppa_srm.c, ppa_ll_srm_get_mb_size). Until 2026-10-27 it took 16 on every build, and on a rev 3 build it then judged
+// some blocks safe that the engine stalls on (33x17 turned 270: the driver's rule sets the bypass for 16 rows, not 32).
+// tests/test_ppa_guard.cpp proves the pieces cover the block once, land where the whole would, and are each safe, for
+// both sizes.
 #pragma once
 #include <cstdint>
 
@@ -49,7 +54,7 @@ struct Block {
   Angle angle = A0;
   Scale sx, sy;
   uint32_t unit_w = 64;  // a transaction unit's width in pixels: 64, or 32 for 24- and 32-bit output
-  uint32_t mb = 16;      // a macro block's height in rows: 16 on the P4 ESPHome builds for
+  uint32_t mb = 16;      // a macro block's height in rows: 16, or 32 on a rev 3 build (the engine's register)
   uint32_t depth = 16;   // bits per output pixel
 };
 
