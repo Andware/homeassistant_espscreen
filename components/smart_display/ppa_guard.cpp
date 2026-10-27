@@ -99,27 +99,40 @@ void came_back(uint32_t seq, int pieces, esp_err_t err) {
   __atomic_store_n(&call.state, err == ESP_OK ? BACK : FAILED, __ATOMIC_RELEASE);
 }
 
-// The watch (ppa_trace.h): each second, in the timer's own task, outside every task that may wait for the engine, a
-// call still out after NEVER_MS aborts the boot with its name. No log and no heap on that way: the words go into a
-// buffer of their own, and abort_record keeps them.
-esp_timer_handle_t watch = nullptr;
-char never_details[112];
-void look(void *) {
+// The watch (ppa_trace.h): each second, in a task of its own, outside every task that may wait for the engine, a call
+// still out after NEVER_MS aborts the boot with its name, and with the state of ESP-IDF's esp_timer task, where the
+// watch ran before and stood still on a Tab5 (ppa_trace.h). No log and no heap on that way: the words go into a buffer
+// of their own, and abort_record keeps them.
+constexpr uint32_t WATCH_STACK = 3072;  // snprintf's own frames are most of it
+// Above the main loop and the streams' tasks (glass::WRITER_PRIORITY, 5), below Wi-Fi's and esp_hosted's: it runs once
+// a second for a moment, and never waits for the engine.
+constexpr UBaseType_t WATCH_PRIORITY = 10;
+TaskHandle_t watch = nullptr;
+TaskHandle_t timer_task = nullptr;
+char never_details[128];
+void look() {
   if (ring.magic != TRACE_MAGIC) return;
   const uint32_t now = static_cast<uint32_t>(esp_timer_get_time() / 1000);
   const Call *call = ppa_trace::never_back(ring.calls, TRACE_CALLS, now);
   if (!call) return;
-  snprintf(never_details, sizeof never_details, "PPA copy never finished: %ux%u turned %u to %u,%u by %s, %u ms",
-           (unsigned) call->w, (unsigned) call->h, (unsigned) call->angle * 90, (unsigned) call->out_x,
-           (unsigned) call->out_y, call->task, (unsigned) (now - call->at_ms));
+  static const char *const STATE[] = {"running", "ready", "blocked", "suspended", "deleted"};
+  const int state = timer_task ? static_cast<int>(eTaskGetState(timer_task)) : -1;
+  snprintf(never_details, sizeof never_details,
+           "PPA copy never finished: %ux%u turned %u to %u,%u by %s, %u ms; esp_timer %s", (unsigned) call->w,
+           (unsigned) call->h, (unsigned) call->angle * 90, (unsigned) call->out_x, (unsigned) call->out_y, call->task,
+           (unsigned) (now - call->at_ms), state >= 0 && state < 5 ? STATE[state] : "?");
   esp_system_abort(never_details);
+}
+void watch_main(void *) {
+  for (;;) {
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    look();
+  }
 }
 void start_watch() {
   if (watch) return;
-  esp_timer_create_args_t args{};
-  args.callback = look;
-  args.name = "ppa_watch";
-  if (esp_timer_create(&args, &watch) == ESP_OK) esp_timer_start_periodic(watch, 1000 * 1000);
+  timer_task = xTaskGetHandle("esp_timer");
+  xTaskCreatePinnedToCore(watch_main, "ppa_watch", WATCH_STACK, nullptr, WATCH_PRIORITY, &watch, 0);
 }
 
 }  // namespace

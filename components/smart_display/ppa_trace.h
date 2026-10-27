@@ -11,12 +11,19 @@
 // subscriber and the troubleshooting report see it next to the main loop's record: a call that never came back is the
 // one the screen stopped on.
 //
-// And a call that never comes back ends the boot by name: a timer that runs outside every task that waits for the
-// engine looks at the ring each second, and a call still out after NEVER_MS aborts the screen with "PPA copy never
+// And a call that never comes back ends the boot by name: a task of its own, outside every task that waits for the
+// engine, looks at the ring each second, and a call still out after NEVER_MS aborts the screen with "PPA copy never
 // finished" and the call (abort_record.h keeps those words), rather than freezing until the task watchdog restarts it
 // with a record that names nobody. Nothing brings the engine back without a restart (espressif/esp-idf #19096), so a
 // restart it stays; the copies this firmware makes take milliseconds, and the slowest wait for the engine measured, a
 // camera's frame halved behind two live tiles on a Guition 10.1, took 0.74 s.
+//
+// The watch ran in ESP-IDF's esp_timer task at first, which every esp_timer callback of the firmware and its drivers
+// shares. On a Guition 10.1 it caught a forced hang (368x66 turned 270, espressif/esp-idf #19023's block) after 3.1 s
+// from the main loop and 3.8 s from a task like a stream's (2026-10-27); on a Tab5 of a dev tester (TR-2M2KX9, the
+// same day) a live tile's copy of 618x307 never came back and the screen stood still until the task watchdog, 20 s,
+// the watch silent: that task never got to it there. So the watch has a task of its own now, and its words say how the
+// esp_timer task stood (loop_record.h keeps that task's stack at a task watchdog too).
 #pragma once
 #include <cstdint>
 

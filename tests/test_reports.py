@@ -103,6 +103,18 @@ class Crashes(unittest.TestCase):
         self.assertEqual(sorted(set(a for l in crash['lines'] for a in reports.ADDRESS.findall(l))),
                          ['0x400d1234', '0x4812ABCD', '0x4FF23BEA'])
 
+    def test_the_esp_timer_task_at_a_task_watchdog_rides_with_the_crash(self):
+        # loop_record.h: the esp_timer task, which runs the PPA watch, its state and stack beside the main loop's.
+        lines = self.CRASH[:3] + ['[E][loop_record:070]: *** THE ESP_TIMER TASK AT THE LAST TASK WATCHDOG *** (it was blocked; newest first)',
+                                  '[E][loop_record:073]:   TIMER0: 0x4FF0A564', '[E][loop_record:073]:   TIMER1: 0x4812D5D0',
+                                  '[E][loop_record:078]:   Use: addr2line -pfiaC -e firmware.elf 0x4FF0A564 0x4812D5D0',
+                                  '[I][picture:368]: live: loaded, 21064 bytes in 73 ms']
+        crash = reports.crash_summary(lines, clock=lambda: 1_800_000_000)
+        self.assertEqual(len(crash['lines']), 7)
+        self.assertTrue(any('ESP_TIMER TASK' in l for l in crash['lines']))
+        self.assertTrue(any('TIMER1: 0x4812D5D0' in l for l in crash['lines']))
+        self.assertFalse(any('picture' in l for l in crash['lines']))
+
     def test_the_last_ppa_calls_ride_with_the_crash(self):
         # ppa_trace.h: the calls to the P4's PPA of the boot before, the one that never came back the stop.
         trace = ['[W][ppa_guard:120]: The last PPA calls of the previous boot, the newest last:',
