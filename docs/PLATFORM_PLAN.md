@@ -479,6 +479,38 @@ the tiles and LVGL (up to 0.74 s measured).
     bench boards do not run (Bluetooth through esp_hosted, for its bt_proxy and toothbrush plugins); the record will
     name it.
 
+- **A flash on the live tiles that comes with the log, not with the picture (2026-10-27, the bench Guition 10.1).** With
+  two live tiles and the clock on a black page, Max saw both tiles flash at once for about a frame, bluish or white, the
+  rest of the glass not, several times a minute. Measured with bench builds (sensors in the scratchpad, not in dev): per
+  picture 32 pixels read back out of the cache after the decoder, on the glass just before the next copy (what the panel
+  showed meanwhile) and right after the copy, with the JPEG's length, into a ring dumped on request; the panel's
+  underrun counter (`glass::misses`) on a line the second it moves; later the main loop's longest absence per second and
+  every time `keep_out` had to cut the whole glass or LVGL drew a frame over the live pictures. Flashes were timed by
+  Max saying "now", 2 to 3 s late.
+  - **Two things, not one.** Both tiles show the same camera, an EZVIZ C6T (`camera.max`, and `camera.woonkamer_live`
+    from its address), with a television on in that room: twice the decoded picture of both tiles jumped at once, blue
+    up by 50 in one picture and back over 4 s, or down by 17, 150 ms apart between the tiles (the camera's white balance
+    at a change of light). That is the picture itself, not the screen. Every other flash came with the decoder flat (no
+    step of 5 in brightness or blue) and the glass unchanged between copies (0 of 32 pixels, every picture), and the
+    underrun counter at 0 throughout.
+  - **The series**, the stream report of `live_view` (two lines of about 170 characters every 10 s) the variable: the
+    logger on as on dev, the report every 10 s: flashes on the report's moments, five times out of five; (A) the report
+    every 7 s: flashes more often, on its moments; (B) the report's lines left out: in 13 minutes only the two camera
+    jumps and one flash right after a dump of the bench's own (230 lines that held the main loop 1.2 s); (C) the report
+    through `printf` to the UART alone, past the logger and the API: flashes on its moments; (D) the logger off the UART
+    (`baud_rate: 0`), the report to the API alone: flashes on its moments; (E, F) a false report of the same two lines
+    from an interval 5 s off the silent real one: not separable by a person's 2 to 3 s; (G) the logger at level NONE
+    from boot (`initial_level`), nothing to UART or API: Max watched a quarter of an hour and saw not one flash. In G
+    `keep_out` never cut the whole glass, LVGL never drew over the live pictures, and the main loop was away 40 ms or
+    more only four times (102 to 190 ms).
+  - **So** the flashes that leave the framebuffer as it was come with the firmware writing log lines, by the UART or by
+    the API, and not with any picture the screen copies. How a log line turns into a frame on the panel is open: the
+    next step films a build with the dev's logging and the same sensors at 240 frames a second, with marks the board
+    times (a white square for half a second), and then looks between "a line written" and "a frame different": the UART
+    driver's interrupt, the API's send through esp_hosted, and what the main loop does in that millisecond. Whether a
+    screen without a cable on its UART flashes the same is not measured: the bench's UART went to the Mac in every
+    build, silent in D and G.
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community
