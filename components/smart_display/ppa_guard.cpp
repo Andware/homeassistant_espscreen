@@ -9,9 +9,11 @@
 #include "esphome/core/defines.h"  // USE_LIVE_VIEW: the header above has no ESPHome in it
 #ifdef USE_LIVE_VIEW
 #include <atomic>
+#include <cstdio>
 #include <cstring>
 #include <driver/ppa.h>
 #include <esp_attr.h>
+#include <esp_system.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -54,17 +56,12 @@ uint32_t depth_of(ppa_srm_color_mode_t cm, uint32_t &unit_w) {
 }
 
 // ---- The trace (ppa_trace.h) ----
-constexpr uint32_t TRACE_CALLS = 32;
+using ppa_trace::ASKED;
+using ppa_trace::BACK;
+using ppa_trace::Call;
+using ppa_trace::FAILED;
+constexpr uint32_t TRACE_CALLS = ppa_trace::CALLS;
 constexpr uint32_t TRACE_MAGIC = 0x50504154;  // "PPAT"
-enum : uint8_t { ASKED = 1, BACK = 2, FAILED = 3 };
-struct Call {
-  uint32_t seq, at_ms;
-  uint16_t w, h, out_x, out_y;  // the input block, and where it lands in the output picture
-  uint8_t angle;                // counter-clockwise, in quarters
-  int8_t pieces;                // the guard's plan: 1 whole, more in pieces, 0 the block as it was
-  uint8_t state;
-  char task[13];
-};
 struct Ring {
   uint32_t magic;
   Call calls[TRACE_CALLS];
@@ -89,7 +86,7 @@ uint32_t note(const ppa_srm_oper_config_t *config) {
   call.out_y = static_cast<uint16_t>(config->out.block_offset_y);
   call.angle = static_cast<uint8_t>(config->rotation_angle);
   call.pieces = 0;
-  call.state = ASKED;
+  __atomic_store_n(&call.state, ASKED, __ATOMIC_RELEASE);  // the watch reads the call whole once it says asked
   strncpy(call.task, pcTaskGetName(nullptr), sizeof call.task - 1);
   call.task[sizeof call.task - 1] = 0;
   return seq;
@@ -99,13 +96,37 @@ void came_back(uint32_t seq, int pieces, esp_err_t err) {
   Call &call = ring.calls[seq % TRACE_CALLS];
   if (call.seq != seq) return;  // the ring went round meanwhile
   call.pieces = static_cast<int8_t>(pieces);
-  call.state = err == ESP_OK ? BACK : FAILED;
+  __atomic_store_n(&call.state, err == ESP_OK ? BACK : FAILED, __ATOMIC_RELEASE);
+}
+
+// The watch (ppa_trace.h): each second, in the timer's own task, outside every task that may wait for the engine, a
+// call still out after NEVER_MS aborts the boot with its name. No log and no heap on that way: the words go into a
+// buffer of their own, and abort_record keeps them.
+esp_timer_handle_t watch = nullptr;
+char never_details[112];
+void look(void *) {
+  if (ring.magic != TRACE_MAGIC) return;
+  const uint32_t now = static_cast<uint32_t>(esp_timer_get_time() / 1000);
+  const Call *call = ppa_trace::never_back(ring.calls, TRACE_CALLS, now);
+  if (!call) return;
+  snprintf(never_details, sizeof never_details, "PPA copy never finished: %ux%u turned %u to %u,%u by %s, %u ms",
+           (unsigned) call->w, (unsigned) call->h, (unsigned) call->angle * 90, (unsigned) call->out_x,
+           (unsigned) call->out_y, call->task, (unsigned) (now - call->at_ms));
+  esp_system_abort(never_details);
+}
+void start_watch() {
+  if (watch) return;
+  esp_timer_create_args_t args{};
+  args.callback = look;
+  args.name = "ppa_watch";
+  if (esp_timer_create(&args, &watch) == ESP_OK) esp_timer_start_periodic(watch, 1000 * 1000);
 }
 
 }  // namespace
 
 namespace ppa_trace {
 void take() {
+  start_watch();
   if (ring.magic != TRACE_MAGIC) return;
   kept = ring;
   had = true;
