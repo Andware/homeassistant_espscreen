@@ -8,7 +8,7 @@ import { computed, ref, watch } from "vue";
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "reka-ui";
 import theme from "virtual:esp-screens-theme";
 import { t } from "../../i18n";
-import { fromLight, hex, hsRgb, kelvinRange, kelvinRgb, kindOf, levelShown, lightModes, lightNow, MAX, presetsOf, shown, startPreset,
+import { fromLight, hex, hsRgb, kelvinRange, kelvinRgb, kindOf, levelShown, lightModes, lightNow, MAX, presetLit, presetsOf, startPreset,
   type Preset, type PresetKind } from "../../model/light-presets";
 import type { Tile } from "../../types";
 import { setTileOption } from "../../editor/tiles";
@@ -32,7 +32,7 @@ const modes = computed(() => lightModes(attributes.value));
 const range = computed(() => kelvinRange(attributes.value));
 const presets = computed(() => presetsOf(props.tile.options));
 const levels = computed(() => props.tile.options?.preset_levels === true);
-const lit = computed(() => shown(presets.value, lightNow(live.value)));
+const lit = computed(() => presetLit(presets.value, live.value, entities.liveOf));
 
 // Which preset is open in its popover (-1: none).
 const open = ref(-1);
@@ -111,7 +111,9 @@ const knob = (p: Preset) => { const c = p.k !== undefined ? kelvinRgb(p.k) : p.h
           </button>
         </PopoverTrigger>
         <PopoverPortal>
-          <PopoverContent class="ui-popover lp-pop" align="start" :side-offset="8" :collision-padding="10" :aria-label="T('preset', { n: i + 1 })">
+          <!-- Focus stays on the key that opened it: Reka's first field (White) took it with a focus ring, as if chosen. -->
+          <PopoverContent class="ui-popover lp-pop" align="start" :side-offset="8" :collision-padding="10" :aria-label="T('preset', { n: i + 1 })"
+            @open-auto-focus.prevent>
             <div class="lp-pop-head">
               <PresetDisc class="lp-pop-disc" :preset="preset" :level="true" />
               <b>{{ T("preset", { n: i + 1 }) }}</b>

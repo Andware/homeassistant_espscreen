@@ -33,7 +33,11 @@ colour to tell it by.
 | The light's card (a hold on the tile) | A row **Presets** under the colour, the white shade and the brightness, or on glass much wider than high a column at their right, the keys one under the other. A light that only dims shows them under its percentage. |
 
 The key of the preset the light shows now has a ring round it, as Home Assistant marks a favourite colour: its
-brightness within a percent, its white shade within 50 K, or its colour within a few degrees. A tap shows the new
+brightness within a percent, its white shade within 50 K, or its colour within a few degrees. A light group is read lamp
+by lamp, the way Home Assistant carries a preset out on it: every lamp on at the brightness, and every lamp that can
+show the white shade or the colour showing it (a lamp that only takes white shades gets the nearest one of a colour, one
+that only dims the brightness alone, and neither is held against the preset). The group's own state is an average of its
+lamps, which a colour preset on a group with a white-only lamp never matched. A tap shows the new
 colour and brightness at once on every tile and card of the light, and goes to Home Assistant as one
 `light.turn_on` with `brightness_pct` and `color_temp_kelvin` or `hs_color` (docs/OPTIMISTIC.md, the field `PRESET`).
 

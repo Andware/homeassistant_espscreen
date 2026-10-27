@@ -97,6 +97,41 @@ inline int shown(const Presets &ps, const Light &l) {
   return -1;
 }
 
+// ---- A light group: lamp by lamp ----
+// Home Assistant's group light reports the average of its lamps (group/light.py: the mean hue of every lamp that is on,
+// a lamp in a white shade with the hue of that shade), so a colour preset on a group with a lamp that only takes white
+// shades never matched its own average. A group's preset is read the way Home Assistant carries it out, lamp by lamp
+// (light/helper.py: each lamp takes what it can of the call): every lamp on at its brightness, and every lamp that can show
+// the preset's white shade or colour showing it. A lamp that cannot (a colour lamp under a white shade, a white one under
+// a colour, one that only dims) is not held against it.
+struct Lamp {
+  bool on = false, unavailable = false, dims = true, color = false, temperature = false;
+  int level = 0, hue = 0, saturation = 0, kelvin = 0;  // kelvin only while it shows a white shade
+};
+inline bool lamp_shows(const Preset &p, const Lamp &l) {
+  if (l.unavailable) return true;
+  if (!l.on || p.level == 0) return false;
+  if (l.dims && std::abs(l.level - p.level) > 1) return false;
+  if (p.kind == Preset::WHITE && l.temperature) return l.kelvin && std::abs(l.kelvin - p.kelvin) <= 50;
+  if (p.kind == Preset::COLOUR && l.color) {
+    const int d = std::abs(l.hue - p.hue) % 360;
+    return !l.kelvin && std::min(d, 360 - d) <= 3 && std::abs(l.saturation - p.saturation) <= 3;
+  }
+  return true;
+}
+inline bool group_shows(const Preset &p, const Lamp *lamps, size_t count) {
+  bool any = false;
+  for (size_t i = 0; i < count; ++i) {
+    if (!lamp_shows(p, lamps[i])) return false;
+    any = any || !lamps[i].unavailable;
+  }
+  return any;
+}
+inline int group_shown(const Presets &ps, const Lamp *lamps, size_t count) {
+  for (unsigned i = 0; i < ps.count; ++i) if (group_shows(ps.items[i], lamps, count)) return (int) i;
+  return -1;
+}
+
 // ---- The action and its wish (docs/OPTIMISTIC.md, Field::PRESET) ----
 // What a wish shows and compares: "80|k2700", "60|h280,41", "30|" (a brightness alone), "0|" for off. `colours`: the light
 // has a colour or a white shade at all; a light that only dims keeps the brightness alone.

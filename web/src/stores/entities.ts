@@ -109,6 +109,16 @@ export const useEntitiesStore = defineStore("entities", () => {
         if (!still()) return;
         Object.assign(liveStates.value, values.states || {});
       }
+      // The lamps of a light group on the layout: its presets are read lamp by lamp (model/light-presets.ts presetLit).
+      const lamps = [...new Set(entities.flatMap((id) => {
+        const members = id.startsWith("light.") ? liveStates.value[id]?.a?.entity_id : null;
+        return Array.isArray(members) ? members : [];
+      }))].filter((e): e is string => typeof e === "string" && e.startsWith("light.") && !entities.includes(e)).slice(0, 60);
+      if (lamps.length) {
+        const values = await getJson(`states?${query(lamps)}`);
+        if (!still()) return;
+        Object.assign(liveStates.value, values.states || {});
+      }
     } catch {
       // The next tick tries again; the mockup keeps the last values.
     } finally {

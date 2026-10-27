@@ -51,8 +51,7 @@ int preset_panel(Widgets &w, const Tile &t, const PanelMetrics &m, bool taller, 
   panel_w=std::max(row_w,slider_w);
   const int row_y=(pair_light?m.slider_h+(r.count?m.gap:0):0)+ring;
   panel_h=row_y+r.size+ring;
-  const auto light=preset_light(t);
-  const int lit=ps?light_presets::shown(*ps,light):-1;
+  const int lit=preset_lit(t);
   for(int n=0;n<r.count;++n){
     lv_obj_set_pos(w.dots[n],(panel_w-row_w)/2+ring+n*(r.size+r.gap),row_y);
     light_presets::mark(w.dots[n],n==lit);
@@ -79,7 +78,7 @@ static void colour_preset_event(lv_event_t *e) {
 }
 // The ring round the key of the preset the light shows.
 void colour_presets_paint(const Tile &t) {
-  const int lit = colour_presets ? light_presets::shown(*colour_presets, preset_light(t)) : -1;
+  const int lit = colour_presets ? preset_lit(t) : -1;
   for (unsigned n = 0; n < colour_dots.size(); ++n) light_presets::mark(colour_dots[n], (int) n == lit);
 }
 // Whether the presets stand beside the rows, and the column's width.
@@ -163,7 +162,7 @@ static void detail_preset_event(lv_event_t *e){
   preset_wish(t,t.presets->items[n]);
 }
 static void detail_preset_paint(lv_obj_t *key,const Tile &t,const CardPart &part){
-  light_presets::mark(key,t.presets&&light_presets::shown(*t.presets,preset_light(t))==(int)part.arg);
+  light_presets::mark(key,t.presets&&preset_lit(t)==(int)part.arg);
 }
 // Its presets in `x`, `y`, `width` x `height`: centred, or from the left edge where the card stands in two columns.
 void light_card_presets(const Tile &t, int x, int y, int width, int height, bool left) {

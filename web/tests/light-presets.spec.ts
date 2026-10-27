@@ -214,3 +214,30 @@ describe("the inspector's presets", () => {
     expect(current(tile).options?.preset_levels).toBe(true);
   });
 });
+
+// A light group, lamp by lamp (light_presets::group_shows): what Home Assistant 2026.9.2 made of a purple preset on a group
+// of a lamp with colour and white shades, a colour lamp, one that only takes white shades and one that only dims.
+import { groupShows, presetLit, type Lamp } from "../src/model/light-presets";
+describe("a light group's preset, lamp by lamp", () => {
+  const lamp = (over: Partial<Lamp>): Lamp => ({ on: true, unavailable: false, dims: true, color: false, temperature: false, level: 60, hue: 0, saturation: 0, kelvin: 0, ...over });
+  const mixed = [lamp({ color: true, temperature: true, hue: 280, saturation: 41 }), lamp({ color: true, hue: 280, saturation: 41 }),
+    lamp({ temperature: true, hue: 221, saturation: 20, kelvin: 9861 }), lamp({})];
+  it("shows a colour preset the group's average does not", () => {
+    expect(groupShows({ b: 60, h: 280, s: 41 }, mixed)).toBe(true);
+    expect(groupShows({ b: 80, k: 2700 }, mixed)).toBe(false);
+  });
+  it("holds a lamp off or in another colour against it, an unavailable one not", () => {
+    expect(groupShows({ b: 60, h: 280, s: 41 }, [...mixed.slice(0, 3), lamp({ on: false })])).toBe(false);
+    expect(groupShows({ b: 60, h: 280, s: 41 }, [lamp({ color: true, hue: 220, saturation: 41 })])).toBe(false);
+    expect(groupShows({ b: 60, h: 280, s: 41 }, [...mixed, lamp({ unavailable: true, on: false })])).toBe(true);
+  });
+  it("reads a group by its lamps and any other light by itself", () => {
+    const states: Record<string, any> = {
+      "light.a": { state: "on", a: { supported_color_modes: ["hs", "color_temp"], color_mode: "hs", brightness: 153, hs_color: [280, 41] } },
+      "light.b": { state: "on", a: { supported_color_modes: ["color_temp"], color_mode: "color_temp", brightness: 153, color_temp_kelvin: 9861, hs_color: [221.7, 20.5] } },
+    };
+    const group = { state: "on", a: { entity_id: ["light.a", "light.b"], brightness: 153, hs_color: [261, 34] } };
+    expect(presetLit([{ b: 80, k: 2700 }, { b: 60, h: 280, s: 41 }], group, (e) => states[e])).toBe(1);
+    expect(presetLit([{ b: 60, h: 280, s: 41 }], states["light.a"], (e) => states[e])).toBe(0);
+  });
+});

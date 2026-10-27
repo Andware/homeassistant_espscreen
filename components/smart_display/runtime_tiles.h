@@ -1273,6 +1273,22 @@ inline light_presets::Light preset_light(const Tile &t) {
   l.white = t.white; l.kelvin = t.kelvin; l.hue = t.hue; l.saturation = t.saturation;
   return l;
 }
+// The preset the light shows now, or -1: a group's lamp by lamp where the screen has its lamps (light_presets::Lamp),
+// any other light by its own state.
+inline int preset_lit(const Tile &t) {
+  if (!t.presets) return -1;
+  const auto &lamps = t.extra().lamps;
+  if (lamps.empty()) return light_presets::shown(*t.presets, preset_light(t));
+  std::array<light_presets::Lamp, MAX_LAMPS> each{};
+  size_t n = 0;
+  for (const auto &l : lamps) {
+    if (n == each.size()) break;
+    auto &e = each[n++];
+    e.on = l.on; e.unavailable = l.unavailable; e.dims = l.dimmable; e.color = l.color; e.temperature = l.temperature;
+    e.level = l.level; e.hue = l.hue; e.saturation = l.saturation; e.kelvin = l.temperature ? l.kelvin : 0;
+  }
+  return light_presets::group_shown(*t.presets, each.data(), n);
+}
 #endif
 inline std::string wish_read(const Tile &t, optimistic::Field field, const std::string &item = "") {
   using F = optimistic::Field;
@@ -1366,6 +1382,15 @@ inline void wish_write(Tile &t, optimistic::Field field, const std::string &valu
       t.state = "on"; t.brightness = p.level * 255.0f / 100.0f;
       if (p.kind == light_presets::Preset::WHITE) { t.kelvin = p.kelvin; t.saturation = 0; t.white = true; }
       if (p.kind == light_presets::Preset::COLOUR) { t.hue = p.hue; t.saturation = p.saturation; t.has_hs_color = true; t.white = false; }
+      // A group's lamps as Home Assistant carries the call out, lamp by lamp: each on, at the brightness if it dims, in the
+      // white shade or the colour where it can show it (light/helper.py); what a lamp makes of the rest Home Assistant says.
+      if (auto *x = t.extra_ptr()) for (auto &l : x->lamps) {
+        if (l.unavailable) continue;
+        l.on = true;
+        if (l.dimmable) l.level = p.level;
+        if (p.kind == light_presets::Preset::WHITE && l.temperature) { l.kelvin = p.kelvin; l.saturation = 0; }
+        if (p.kind == light_presets::Preset::COLOUR && l.color) { l.hue = p.hue; l.saturation = p.saturation; l.kelvin = 0; }
+      }
 #endif
       break;
     }

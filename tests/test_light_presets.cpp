@@ -76,6 +76,31 @@ int main() {
   assert(r.count == 4 && r.size == 30);
   assert(row(192, 44, 0, 41, 34, 10).count == 0);
 
+  // A light group, lamp by lamp: what Home Assistant 2026.9.2 made of a purple preset (60 %, 280/41) on a group of a lamp
+  // with colour and white shades, a colour lamp, one that only takes white shades and one that only dims. The group's
+  // average hue was 261: lamp by lamp it shows the preset.
+  const Preset purple = make(60, 0, 280, 41, false, true), warm2 = make(80, 2700, 0, 0, true, false);
+  Lamp mixed[4] = {{true, false, true, true, true, 60, 280, 41, 0},
+                   {true, false, true, true, false, 60, 280, 41, 0},
+                   {true, false, true, false, true, 60, 221, 20, 9861},
+                   {true, false, true, false, false, 60, 0, 0, 0}};
+  assert(group_shows(purple, mixed, 4));
+  assert(!group_shows(warm2, mixed, 4));              // the lamp with white shades is not at 2700 K, and not at 80 %
+  mixed[1].hue = 220;                                 // a colour lamp in another colour
+  assert(!group_shows(purple, mixed, 4));
+  mixed[1].hue = 280; mixed[3].on = false;            // a lamp off: the preset turns every lamp on
+  assert(!group_shows(purple, mixed, 4));
+  mixed[3].unavailable = true;                        // an unavailable one is not held against it
+  assert(group_shows(purple, mixed, 4));
+  // The white preset on the same group: the colour lamp in the warm colour Home Assistant made of 2700 K, the others white.
+  Lamp white2700[3] = {{true, false, true, true, true, 80, 28, 65, 2700}, {true, false, true, true, false, 80, 28, 65, 0},
+                       {true, false, true, false, true, 80, 28, 65, 2700}};
+  assert(group_shows(warm2, white2700, 3));
+  Presets two; two.items = {purple, warm2}; two.count = 2;
+  assert(group_shown(two, white2700, 3) == 1);
+  Lamp none[1] = {{false, true, true, true, true, 0, 0, 0, 0}};
+  assert(!group_shows(purple, none, 1));              // nothing available: nothing shows
+
   std::puts("light presets ok");
   return 0;
 }

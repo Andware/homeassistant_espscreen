@@ -104,6 +104,43 @@ export function shows(p: Preset, l: LightNow) {
 /** The first preset the light shows, or -1. */
 export const shown = (list: readonly Preset[], l: LightNow) => list.findIndex((p) => shows(p, l));
 
+// ---- A light group, lamp by lamp (light_presets::group_shows) ----
+// Home Assistant's group reports the average of its lamps, a lamp in a white shade with the hue of that shade, so a
+// colour preset on a group with a lamp that only takes white shades never matched the average. Read as Home Assistant
+// carries the call out: every lamp on at the brightness, every lamp that can show the white shade or colour showing it.
+type Live = { state?: string; a?: Record<string, any> } | null | undefined;
+const COLOUR_MODES = ["hs", "rgb", "rgbw", "rgbww", "xy"];
+export type Lamp = { on: boolean; unavailable: boolean; dims: boolean; color: boolean; temperature: boolean;
+  level: number; hue: number; saturation: number; kelvin: number };
+export function lampNow(live: Live): Lamp {
+  const a = live?.a || {}, modes: string[] = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
+  const now = lightNow(live), temperature = modes.includes("color_temp");
+  return { on: now.on, unavailable: !live || live.state === "unavailable" || live.state === "unknown",
+    dims: !modes.length || modes.some((m) => m !== "onoff"), color: modes.some((m) => COLOUR_MODES.includes(m)), temperature,
+    level: now.level, hue: now.hue, saturation: now.saturation, kelvin: temperature && now.white ? now.kelvin : 0 };
+}
+export function lampShows(p: Preset, l: Lamp) {
+  if (l.unavailable) return true;
+  if (!l.on) return false;
+  if (l.dims && Math.abs(l.level - p.b) > 1) return false;
+  if (p.k !== undefined && l.temperature) return l.kelvin > 0 && Math.abs(l.kelvin - p.k) <= 50;
+  if (p.h !== undefined && l.color) {
+    const d = Math.abs(l.hue - p.h) % 360;
+    return !l.kelvin && Math.min(d, 360 - d) <= 3 && Math.abs(l.saturation - (p.s ?? 0)) <= 3;
+  }
+  return true;
+}
+export const groupShows = (p: Preset, lamps: readonly Lamp[]) => lamps.every((l) => lampShows(p, l)) && lamps.some((l) => !l.unavailable);
+/** The preset a light shows (runtime_tiles::preset_lit): a light group's lamp by lamp, any other light by its own state. */
+export function presetLit(list: readonly Preset[], live: Live, liveOf: (entity: string) => Live) {
+  const members = Array.isArray(live?.a?.entity_id) ? (live!.a!.entity_id as unknown[]).filter((e): e is string => typeof e === "string" && e.startsWith("light.")) : [];
+  const lives = members.map((e) => liveOf(e));
+  // Without each lamp's own state (its modes) the group is read by itself, as a single light.
+  if (!members.length || lives.some((l) => !Array.isArray(l?.a?.supported_color_modes) && l?.state !== "unavailable")) return shown(list, lightNow(live));
+  const lamps = lives.map((l) => lampNow(l));
+  return list.findIndex((p) => groupShows(p, lamps));
+}
+
 // ---- Where the keys go ----
 export type Row = { count: number; size: number; gap: number; length: number };
 /** A row of `count` round keys in `length` x `across` (light_presets::row): each `wanted` where that fits, smaller down to

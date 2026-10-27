@@ -4815,6 +4815,11 @@ def create_app(manager, development=False):
                                     precision=header_bar.precision_of(entry) if eid.startswith('sensor.') else None,
                                     units=getattr(manager.ha, 'units', None))
             attributes = dict(message['a'])
+            # A light group's lamps (light_groups.lamp_ids): the editor reads its presets lamp by lamp, as the screen does.
+            if eid.startswith('light.'):
+                members = light_groups.lamp_ids(eid, manager.ha.states)
+                if members:
+                    attributes['entity_id'] = list(members)
             if eid.startswith('media_player.'):
                 # What the player reported at its widest (GitHub #88): the editor draws a player at rest with its keys.
                 attributes['supported_features'] = manager.players.widest(eid, state.get('attributes'))
