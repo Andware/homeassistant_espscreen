@@ -84,6 +84,22 @@ Done when: `grep -rn "PPA\|sixteenth\|MIPI\|JPEG" components/smart_display/*.h` 
 `ppa_guard.h`, `picture_jpeg.h` and `glass_dsi.cpp` finds comments only, and a test keeps it so (the way
 `test_live_view.py` keeps `DIAGNOSTIC_WRAPS` to what `abort_record.cpp` defines).
 
+Built in part (2026-10-28), with the S3 as the second engine that proves the seam:
+
+- `USE_LIVE_VIEW` meant three things at once. Each is its own define now, from one table by chip (`engine_build.py`):
+  the engine (`PICTURE_ENGINE_P4`, `PICTURE_ENGINE_S3`), the glass (`GLASS_DSI`) and the streams (`USE_LIVE_VIEW`).
+  A P4 builds the same code as before.
+- How many live tiles a screen streams at once is the engine's (`limits().live_tiles`), where `hw.h` had a constant.
+- The S3 with PSRAM decodes JPEG stills in software (`picture_engine_s3.cpp`, esp_new_jpeg 1.0.2): its questions name
+  JPEG first, and the app sends photographs as JPEG, about a tenth of a BMP's bytes. On a Guition 4848S040 a camera
+  tile's still (448 x 118) decoded in 20 to 25 ms and a full view's (480 x 270) in 28 to 45 ms, with 63 KB of internal
+  RAM free at rest. Its decoder writes a row of MCUs at a time with a pause between, as the RGB panel reads its picture
+  from the same PSRAM; whether the panel shifts a frame meanwhile only an eye can tell, since an RGB panel's driver
+  counts no underrun (`glass::misses` is the DSI's alone).
+- Still to do: the grep and its test above; the engine API that does not speak the PPA (a target and one call that
+  decodes, scales, cuts and turns, which the S3's decoder does in one pass) waits for its first caller, live pictures
+  on an RGB panel, so that it is shaped by a use rather than ahead of one.
+
 ### 3.3 One capability record
 
 Today the hello sends "live" and "doorbell" when `live_view::available()` is true, `boards.json` says `camera` per
