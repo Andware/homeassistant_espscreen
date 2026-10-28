@@ -296,6 +296,8 @@ class TheManager(unittest.TestCase):
         manager.doorbell_unanswered = lambda key, timeout: asyncio.sleep(0)
         # The ring's own streams (Manager.doorbell_link): this app's address on each screen's network, its camera links.
         manager.live = live_stream.LiveFeed(None, None, lambda e: True)
+        manager.warmed = []
+        manager.live.warm = manager.warmed.append
 
         async def link_base(screen):
             return 'http://10.0.0.2:8099'
@@ -320,6 +322,7 @@ class TheManager(unittest.TestCase):
             made = manager.live.links[link.rsplit('/', 1)[1][:-len('.mjpeg')]]
             self.assertEqual((made.entity, made.box, made.screen, made.tile, made.sound),
                              ('camera.front_door', None, inbox, False, inbox == 'a'))
+        self.assertEqual(manager.warmed, ['camera.front_door'], 'its camera starts before the first screen opens')
         self.assertEqual(manager.broadcasts, [('esp_screens_show_alert', {'title': 'Front door', 'icon': 'doorbell', 'camera': 'camera.front_door',
                                                                           'timeout': 30, 'screen': ['cyd', 'off']})])
         self.assertEqual((result['sent'], result['alerts']), (2, 2))

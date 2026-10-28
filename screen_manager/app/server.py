@@ -4138,6 +4138,8 @@ class Manager:
                                    door, [screen.get('node') for screen in views if screen.get('node')], sound, chime, keep)
         links = dict(zip((screen['id'] for screen in views),
                          await asyncio.gather(*(self.doorbell_link(screen, camera) for screen in views))))
+        if any(links.values()):
+            self.live.warm(camera)  # its first picture on its way before the first screen opens its link
         state = self.doorbell_lock_state(door)
         sent = await self.doorbell_send(views, lambda screen: self.doorbells.message(key, door_state=state,
                                                                                   link=links.get(screen['id']))) if views else 0

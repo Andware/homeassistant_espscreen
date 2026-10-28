@@ -156,6 +156,14 @@ class LiveFeed:
             held.append(source)
         return held
 
+    def warm(self, entity):
+        """A camera about to be watched (a ring's, whose screens open their links within a moment): its source starts
+        now and lingers camera_source.LINGER_SECONDS for the first of them, so its first picture is on its way already."""
+        source = self.source(entity)
+        if not source.viewers:
+            source.idle_since = time.monotonic()
+        source.start()
+
     @staticmethod
     def let_go(held):
         for source in held:

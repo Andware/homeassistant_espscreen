@@ -276,6 +276,31 @@ class Stream(unittest.TestCase):
         self.assertEqual(len(got), 1)
         self.assertEqual(next(iter(self.feed.links.values())).box, (946, 710))
 
+    def test_a_warmed_camera_starts_and_lingers_for_its_first_viewer(self):
+        """A ring's camera (LiveFeed.warm) starts as the event comes: watched for camera_source.LINGER_SECONDS without a
+        viewer, its first picture on its way, and it stops by itself when nobody came."""
+        async def main():
+            fetched = []
+
+            async def fetch(entity):
+                fetched.append(entity)
+                return jpeg(64, 36)
+            feed = live_stream.LiveFeed(fetch, None, lambda e: False)
+            saved = camera_source.LINGER_SECONDS
+            camera_source.LINGER_SECONDS = 0.3
+            try:
+                feed.warm('camera.door')
+                source = feed.sources['camera.door']
+                self.assertTrue(source.watched())
+                await asyncio.sleep(0.15)
+                self.assertTrue(fetched)
+                self.assertIsNotNone(source.frame)
+                await asyncio.sleep(0.4)
+                self.assertTrue(source.task.done(), 'nobody came: it stopped')
+            finally:
+                camera_source.LINGER_SECONDS = saved
+        asyncio.run(main())
+
     def test_an_unknown_link_and_too_many_streams_are_refused(self):
         (head, got), _, asked = self.run_stream(token='x' * 24, parts=1)
         self.assertEqual(got, [])
