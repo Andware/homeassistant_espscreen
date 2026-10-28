@@ -43,6 +43,9 @@ void close_ring(const std::string &key);
 void door_state(const std::string &key, const std::string &state);
 // The top bar's item of a missed ring (`b`): the ring this screen showed last, opened again without a chime.
 void reopen();
+// The stream the app made for the ring that opens now (the op's `l`), empty when the view is to ask for one: a missed
+// ring opened again asks, as its link may be gone by then.
+const std::string &link();
 
 // The camera view as a doorbell (runtime_tiles.h calls these from the camera's own functions).
 bool shown();

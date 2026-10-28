@@ -12416,6 +12416,8 @@ inline void camera_open(const std::string &entity, const std::string &name, int 
     doorbell::build(camera_root, name);
     camera_name = name;
     ESP_LOGI("camera", "open %s for a ring", entity.c_str());
+    // The stream the app made for this ring as the event came: open before the round, which then asks for nothing.
+    if (!doorbell::link().empty()) camera_link_now(doorbell::link());
     pictures_round();
     return;
   }
