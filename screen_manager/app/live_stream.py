@@ -28,6 +28,10 @@ FRAME_SECONDS = 15        # nothing new from the camera for this long: the strea
 DEFAULT_PACE = 15         # picture_sources.TILE_PACE: the pace of a camera tile on a screen that does not stream
 SOUND_QUEUE = 50          # parts of sound that may wait for a screen (about a second); older ones go
 SEND_BUFFER = 65536       # what may wait in this host's socket for a screen: a picture, not a queue of them
+# A live tile's pictures are a few KB, so the full view's buffer held a dozen of them for a screen that read slower than
+# its camera, and the screen's own TCP window as many again: a tile showed pictures a second or two old (a reTerminal
+# D1001, 2026-10-28, X-Made). Its link keeps two or three of them here; the screen shows the newest of what reached it.
+TILE_SEND_BUFFER = 16384
 # What a screen that streams says in its hello (live_view.h): a camera tile set to Live, pace 0, streams there, and Live
 # is the default pace of its camera tiles.
 SCREEN_FEATURE = 'live'
@@ -223,7 +227,7 @@ class LiveFeed:
             await response.prepare(request)
             sock = request.transport.get_extra_info('socket') if request.transport else None
             if sock is not None:
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, SEND_BUFFER)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, TILE_SEND_BUFFER if link.tile else SEND_BUFFER)
             if sound is not None:
                 source.listen(sound)
                 listening = asyncio.create_task(sounds())

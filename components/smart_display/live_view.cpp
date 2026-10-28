@@ -19,6 +19,7 @@
 #include <atomic>
 #include <cerrno>
 #include <cstdlib>
+#include <utility>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -44,6 +45,9 @@ namespace live_view {
 
 static const char *const TAG = "live";
 constexpr size_t CHUNK = 16 * 1024;
+// How long a live tile's newest picture waits for a newer one while bytes keep coming (Stream, pending), so a long
+// queue never holds the tile still.
+constexpr int64_t NEWEST_WAIT_US = 250000;
 constexpr uint32_t STACK_BYTES = 6144;  // a stream task's stack (psram_task.h), its high water logged as it ends
 constexpr uint32_t WAIT_MS = 500;  // a read waits this long, so a stop is seen within it
 // ---- The glass (glass.h): the panel, its frame buffer, the one-writer lock and the rooms LVGL keeps out of ----
@@ -76,6 +80,17 @@ struct Stream {
   std::atomic<uint32_t> wait_us{0}, into_us{0}, compose_us{0}, onto_us{0};
   // The time recv waited for the app.
   std::atomic<uint32_t> net_us{0};
+  // A live tile shows the newest picture there is. Between the app and the screen a dozen of a tile's pictures fit
+  // (the app's send buffer, the screen's TCP window of 64 KB), and a tile that read them one by one showed pictures a
+  // second or two old (a reTerminal D1001, 2026-10-28, X-Made). So a picture waits in `pending` (the buffer `input`
+  // filled, swapped with `spare`) while more bytes wait in the socket, and goes once none do, or after NEWEST_WAIT_US;
+  // the older ones it passes, counted.
+  uint8_t *spare = nullptr, *pending = nullptr;
+  size_t pending_length = 0;
+  bool pending_has_made = false;
+  uint32_t pending_made = 0;
+  int64_t pending_since = 0;
+  std::atomic<uint32_t> passed{0};
   // How long its pictures waited on their way (X-Made, the app's clock set beside this one): over the least seen, on
   // average and at most.
   bool aged = false;
@@ -126,7 +141,7 @@ struct Stream {
   bool told_first = false, told_live = false, told_sound = false, speaking = false;
   uint32_t reported_at = 0, reported_shown = 0, reported_bytes = 0, reported_decode = 0, reported_copy = 0,
            reported_wait = 0, reported_net = 0, reported_into = 0, reported_compose = 0, reported_onto = 0,
-           reported_ages = 0, reported_age = 0;
+           reported_ages = 0, reported_age = 0, reported_passed = 0;
   psram_task::Task task;  // its task, its stack in PSRAM: the main loop deletes it once done (psram_task.h)
   std::atomic<uint32_t> stack_left{0};  // what of its stack the task never used, in bytes (written before `done`)
 };
@@ -140,6 +155,7 @@ static void free_stream(Stream *s) {
   if (s->sound_part) roomy::release(s->sound_part);
   if (s->sound_piece) roomy::release(s->sound_piece);
   if (s->input) free(s->input);
+  if (s->spare) free(s->spare);
   if (s->picture) free(s->picture);
   if (s->canvas) free(s->canvas);
   if (s->name) free(s->name);
@@ -199,8 +215,8 @@ static void turn_loader(Stream &s) {
 // The glass held for a copy of the lay-out, and how long that waited for it (another stream's copy, LVGL's flush).
 static void hold_timed(Stream &s) { s.wait_us += glass::hold_counted(); }
 
-// One picture of `length` bytes at `data` (the stream's input): decoded, laid out, and copied onto the glass.
-// `still`: the camera's still from before its stream came, with the loader over it on a tile.
+// One picture of `length` bytes at `data` (the stream's input, or its pending newest): decoded, laid out, and copied
+// onto the glass. `still`: the camera's still from before its stream came, with the loader over it on a tile.
 static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   picture_engine::Still info;
   if (!picture_engine::info(data, length, info)) {
@@ -421,6 +437,19 @@ static void stream(Stream &s) {
         },
         [&s, &reader](size_t length, bool audio) {
           if (!audio) {
+            // A live tile's picture waits for a newer one (Stream, pending); a full view and the stills go at once.
+            if (s.look.tile && !reader.still() && s.spare) {
+              if (s.pending)
+                s.passed++;
+              else
+                s.pending_since = esp_timer_get_time();
+              s.pending = s.input;
+              s.pending_length = length;
+              s.pending_has_made = reader.has_made();
+              s.pending_made = reader.made();
+              std::swap(s.input, s.spare);
+              return;
+            }
             if (reader.has_made()) age(s, reader.made());
             show(s, s.input, length, reader.still());
             return;
@@ -443,6 +472,15 @@ static void stream(Stream &s) {
       ESP_LOGW(TAG, "not a stream of pictures (answer %d)", reader.status());
       s.failed = true;
       break;
+    }
+    // The newest picture goes once no more bytes wait (Stream, pending).
+    if (s.pending) {
+      uint8_t next = 0;
+      if (recv(fd, &next, 1, MSG_PEEK | MSG_DONTWAIT) <= 0 || esp_timer_get_time() - s.pending_since > NEWEST_WAIT_US) {
+        if (s.pending_has_made) age(s, s.pending_made);
+        show(s, s.pending, s.pending_length, false);
+        s.pending = nullptr;
+      }
     }
     if (!s.answered_ms && reader.status()) s.answered_ms = esphome::millis() - s.started_at;
   }
@@ -478,6 +516,14 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   s->started_at = s->reported_at = esphome::millis();
   s->input = picture_engine::input(look.tile ? picture_engine::limits().tile_picture_bytes : picture_engine::limits().picture_bytes,
                                    &s->input_size);
+  if (look.tile) {
+    size_t spare_size = 0;
+    s->spare = picture_engine::input(s->input_size, &spare_size);
+    if (spare_size != s->input_size) {
+      if (s->spare) free(s->spare);
+      s->spare = nullptr;  // without it the tile shows each picture as it comes, as before
+    }
+  }
   s->ppa = picture_engine::client();
   bool ok = s->input && s->ppa;
   if (ok && sound && has_speaker()) {
@@ -622,7 +668,7 @@ size_t held_bytes() {
   size_t held = 0;
   for (auto *s : streams)
     if (s && !s->stopping)
-      held += s->input_size +
+      held += s->input_size * (s->spare ? 2 : 1) +
               static_cast<size_t>(std::max(0, s->area.w)) * std::max(0, s->area.h) * 2;
   return held;
 }
@@ -639,7 +685,7 @@ static void report(int slot, Stream &s, uint32_t now, bool last) {
   const uint32_t span = now - s.reported_at;
   if (span == 0) return;
   const uint32_t shown = s.shown, bytes = s.bytes, decode = s.decode_us, copied = s.copy_us, waited = s.wait_us;
-  const uint32_t net = s.net_us;
+  const uint32_t net = s.net_us, passed = s.passed;
   const uint32_t frames = shown - s.reported_shown;
   // Laying out is the picture's copies and composing; the wait for the glass inside it is said apart.
   const uint32_t wait = waited - s.reported_wait, lay = copied - s.reported_copy;
@@ -660,10 +706,11 @@ static void report(int slot, Stream &s, uint32_t now, bool last) {
   s.reported_onto = onto;
   const uint32_t ages = s.ages, aged = s.age_ms;
   if (ages != s.reported_ages)
-    ESP_LOGI(TAG, "%s %d: its pictures waited %.0f ms on their way (at most %u) over the quickest",
-             last ? "ended" : "stream", slot,
+    ESP_LOGI(TAG, "%s %d: its pictures waited %.0f ms on their way (at most %u) over the quickest; %u older ones passed "
+             "for a newer", last ? "ended" : "stream", slot,
              static_cast<float>(aged - s.reported_age) / static_cast<float>(ages - s.reported_ages),
-             (unsigned) s.age_most_ms.exchange(0));
+             (unsigned) s.age_most_ms.exchange(0), (unsigned) (passed - s.reported_passed));
+  s.reported_passed = passed;
   s.reported_ages = ages;
   s.reported_age = aged;
   s.reported_wait = waited;
