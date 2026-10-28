@@ -78,6 +78,9 @@ class AppSide(unittest.TestCase):
         self.assertEqual(caps['speaker'], True)
         self.assertEqual(caps['microphone'], False)
         self.assertEqual(caps['psram_kb'], 32768)
+        # A tile of the screen's own camera drawn on the screen (plugin API 0.22): only when the hello says so.
+        self.assertEqual(caps['own_camera'], False)
+        self.assertEqual(page_delivery.caps_of({'caps': {'own_camera': True}})['own_camera'], True)
         # An older firmware sends no record: live follows the feature, the counts are unknown (None), the rest False.
         old = page_delivery.caps_of({'features': ['live', 'pictures']})
         self.assertEqual(old['live'], True)

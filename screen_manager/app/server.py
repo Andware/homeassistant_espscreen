@@ -1292,6 +1292,17 @@ class Manager:
             return None
         return (getattr(sender, 'caps', None) or {}).get('live_tiles')
 
+    def own_camera_of(self, inbox, screen, entity):
+        """Whether `entity` is the screen of `inbox`'s own camera as Home Assistant shows it (Video in Home Assistant: the
+        tessera_video camera on the screen's own device) and the screen draws a tile of it from the camera itself (its
+        hello's own_camera, plugin API 0.22)."""
+        sender = self.page_senders.get(self.aliases.get(inbox, inbox))
+        if sender is None or not (getattr(sender, 'caps', None) or {}).get('own_camera'):
+            return False
+        item = self.registry_index().get(entity) or {}
+        device = (screen or {}).get('device_id')
+        return bool(device) and item.get('platform') == screen_video.DOMAIN and item.get('device_id') == device
+
     def live_camera(self, screen):
         """Whether this screen streams a camera live (live_stream.py): its hello while it is connected (`live`), else its
         board (a P4 that draws pictures). The editor offers Live for its camera tiles, as their default."""

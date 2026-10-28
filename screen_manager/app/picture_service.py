@@ -132,6 +132,11 @@ class Service:
         # A live tile's card or a plugin's place: the link says how its picture fills the room, and so does the address
         # (?fit=contain, the screen's own reading of it). A camera tile's screen with a speaker warms the camera's sound.
         contain = fit == 'contain'
+        # The screen's own camera on a tile of its own: the screen draws it from the camera itself (its hello's
+        # own_camera, plugin API 0.22), so no link and no stream, and the screen's video encoder may rest.
+        own = getattr(self.manager, 'own_camera_of', None)
+        if question.owner.kind == 'tile' and own is not None and own(inbox, screen, entity):
+            return 'own:' + ('?fit=contain' if contain else '')
         warm = {'warm': question.sound} if question.owner.kind == 'tile' else {}
         token = self.stream.link(entity, question.live, cover=not contain, **warm, screen=inbox, tile=True)
         return url_of(token, 'mjpeg') + ('?fit=contain' if contain else '')

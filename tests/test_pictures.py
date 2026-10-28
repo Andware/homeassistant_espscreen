@@ -724,6 +724,19 @@ class Service(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(found.url.endswith('.mjpeg?fit=contain'))
         self.assertEqual(self.stream.calls[-1], ('camera.drive', (300, 200), {'cover': False, 'warm': True, 'screen': 'text.hall', 'tile': True}))
 
+    async def test_a_tile_of_the_screens_own_camera_is_drawn_by_the_screen(self):
+        # The screen's own camera on a tile of its own (plugin API 0.22): the screen draws it from the camera, so the
+        # answer is "own:" (with the tile's fit), no link and no stream; any other camera tile streams as before.
+        self.manager.own_camera_of = lambda inbox, screen, entity: entity == 'camera.drive'
+        request = {'tiles': 'camera.drive', 'idx': '9', 'size': '54', 'bg': 'FFFFFF', 'atlas': '[[0,0,300,200,12,0]]',
+                   'live': '300x200'}
+        found = await self.service.answer('text.hall', self.manager.player, self.read(request))
+        self.assertEqual((found.url, found.stream), ('own:?fit=contain', True))
+        self.assertEqual(self.stream.calls, [])
+        self.manager.own_camera_of = lambda inbox, screen, entity: False  # a camera of another screen, or none
+        found = await self.service.answer('text.hall', self.manager.player, self.read(request))
+        self.assertTrue(found.url.endswith('.mjpeg?fit=contain'))
+
     async def test_what_does_not_stream_gets_a_still(self):
         # An image entity, a page of two, a screen that does not stream (no `live`), an app without a stream source.
         for request in ({'entity': 'image.door', 'live': '1280x744'},

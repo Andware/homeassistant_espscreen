@@ -162,7 +162,9 @@ def prepare(inbox, record, region, values, bars, bar=()):
     return begin, initial_tiles, initial_bars, live_values
 
 
-CAP_FLAGS = ("live", "speaker", "microphone", "echo_cancel", "camera")
+# own_camera: a tile of the screen's own camera is drawn on the screen from the camera itself (plugin API 0.22,
+# firmware live_view.h is_own), so the app answers such a tile "own:" (picture_service, Manager.own_camera_of).
+CAP_FLAGS = ("live", "speaker", "microphone", "echo_cancel", "camera", "own_camera")
 CAP_COUNTS = ("live_tiles", "psram_kb", "internal_kb", "text_tiles", "text_bytes")
 
 
