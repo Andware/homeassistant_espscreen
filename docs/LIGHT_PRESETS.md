@@ -56,6 +56,10 @@ An effect goes as `light.turn_on` with `effect` (the field `EFFECT`), each setti
 effect or a setting has its ring only while the light runs that effect and every setting stands as the preset has it
 (a number within 0.5); the lamp's own preset only while its select shows it.
 
+While a tapped preset is on its way, its key has a spinner where its ring will be, in the ring's size and ink, until
+Home Assistant has reported every part of it (none of the preset's wishes is live any more, `preset_pending`); then the
+ring shows which preset the light has. A group's lamps often take half a second.
+
 A preset with an effect, or the lamp's own preset, has no colour to show: its key is grey and carries the first two
 letters of the effect's or the preset's name.
 
