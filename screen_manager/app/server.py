@@ -1301,7 +1301,18 @@ class Manager:
             return False
         item = self.registry_index().get(entity) or {}
         device = (screen or {}).get('device_id')
-        return bool(device) and item.get('platform') == screen_video.DOMAIN and item.get('device_id') == device
+        if not device or item.get('platform') != screen_video.DOMAIN:
+            return False
+        if item.get('device_id') == device:
+            return True
+        # The camera on a device of its own beside the screen's, with the screen's MAC: Home Assistant kept the two
+        # apart (seen on a reTerminal D1001, 2026-10-28), and it is the same screen.
+        devices = {d.get('id'): d for d in getattr(self.ha, 'devices', None) or [] if isinstance(d, dict)}
+
+        def macs(found):
+            return {str(c[1]).lower() for c in (found or {}).get('connections') or []
+                    if isinstance(c, (list, tuple)) and len(c) == 2 and c[0] == 'mac'}
+        return bool(macs(devices.get(device)) & macs(devices.get(item.get('device_id'))))
 
     def live_camera(self, screen):
         """Whether this screen streams a camera live (live_stream.py): its hello while it is connected (`live`), else its

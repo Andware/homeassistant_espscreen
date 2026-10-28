@@ -81,6 +81,24 @@ class AppSide(unittest.TestCase):
         # A tile of the screen's own camera drawn on the screen (plugin API 0.22): only when the hello says so.
         self.assertEqual(caps['own_camera'], False)
         self.assertEqual(page_delivery.caps_of({'caps': {'own_camera': True}})['own_camera'], True)
+        # Which camera is a screen's own (server.Manager.own_camera_of): the tessera_video camera on its device, or on a
+        # device of its own with the screen's MAC; and only for a screen whose hello says own_camera.
+        import types
+        import server
+        sender = types.SimpleNamespace(caps={'own_camera': True})
+        registry = {'camera.tablet_video': {'platform': 'tessera_video', 'device_id': 'cam'},
+                    'camera.door': {'platform': 'generic', 'device_id': 'cam'},
+                    'camera.other': {'platform': 'tessera_video', 'device_id': 'elsewhere'}}
+        devices = [{'id': 'screen', 'connections': [['mac', 'AA:BB:CC:00:11:22']]},
+                   {'id': 'cam', 'connections': [['mac', 'aa:bb:cc:00:11:22']]},
+                   {'id': 'elsewhere', 'connections': [['mac', 'aa:bb:cc:99:99:99']]}]
+        manager = types.SimpleNamespace(page_senders={'text.tablet': sender}, aliases={}, registry_index=lambda: registry,
+                                        ha=types.SimpleNamespace(devices=devices))
+        own = lambda entity, screen={'device_id': 'screen'}: server.Manager.own_camera_of(manager, 'text.tablet', screen, entity)
+        self.assertTrue(own('camera.tablet_video'))
+        self.assertFalse(own('camera.door') or own('camera.other') or own('camera.tablet_video', {}))
+        sender.caps = {'own_camera': False}
+        self.assertFalse(own('camera.tablet_video'))
         # An older firmware sends no record: live follows the feature, the counts are unknown (None), the rest False.
         old = page_delivery.caps_of({'features': ['live', 'pictures']})
         self.assertEqual(old['live'], True)
