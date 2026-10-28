@@ -1534,6 +1534,10 @@
           "label": "Timeout",
           "help": "Seconden dat de bel blijft als niemand hem aanraakt, {min} tot {max}. Leeg is {default}. Een aanraking houdt hem open."
         },
+        "keep_minutes": {
+          "label": "Gemist bewaren",
+          "help": "Minuten dat een bel die niemand beantwoordde in de bovenbalk blijft van de schermen met zijn beeld, geteld vanaf het aanbellen, 1 tot {most}. Leeg of 0: tot iemand hem opent."
+        },
         "sound": {
           "label": "Geluid",
           "help": "Of het geluid van de deurbel meteen speelt als hij rinkelt, op een scherm met een luidspreker. Leeg of true: het belscherm opent met Geluid aan. false: het opent stil (een studio, een slaapkamer), en een tik op Geluid zet het aan."
@@ -4432,7 +4436,8 @@
       "no_camera": "Geen camera",
       "fields": {
         "title": "Titel",
-        "timeout": "Timeout (seconden)"
+        "timeout": "Timeout (seconden)",
+        "keep": "Gemiste bel in de bovenbalk houden"
       },
       "screens": {
         "view": "Live met geluid",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Chime bij het bellen",
           "hint": "Het scherm speelt een deurbel-chime als er iemand belt. Zet dit uit als je dat ding-dong niet elke keer wilt horen."
+        },
+        "keep": {
+          "minutes": "{n} min",
+          "hours": "{n} uur",
+          "open": "Tot iemand hem opent",
+          "hint": "Een bel die niemand beantwoordde blijft zo lang na het aanbellen in de bovenbalk van de schermen staan, met hoe lang geleden. Een tik erop opent de deurbel weer."
         }
       },
       "hero": {

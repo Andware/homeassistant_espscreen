@@ -1534,6 +1534,10 @@
           "label": "Timeout",
           "help": "Seconds the ring stays when nobody touches it, {min} to {max}. Empty is {default}. A touch keeps it open."
         },
+        "keep_minutes": {
+          "label": "Keep missed",
+          "help": "Minutes a ring nobody answered stays in the top bar of the screens with its view, counted from the ring, 1 to {most}. Empty or 0: until someone opens it."
+        },
         "sound": {
           "label": "Sound",
           "help": "Whether the doorbell's own sound plays at once when it rings, where the screen has a speaker. Empty or true: the view opens with Sound on. false: it opens quiet (a studio, a bedroom), and a tap on Sound turns it on."
@@ -4432,7 +4436,8 @@
       "no_camera": "No camera",
       "fields": {
         "title": "Title",
-        "timeout": "Timeout (seconds)"
+        "timeout": "Timeout (seconds)",
+        "keep": "Keep a missed ring in the top bar"
       },
       "screens": {
         "view": "Live with sound",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Chime when it rings",
           "hint": "The screen plays a door chime when someone rings. Turn this off if you would rather not hear the ding-dong every time."
+        },
+        "keep": {
+          "minutes": "{n} min",
+          "hours": "{n} h",
+          "open": "Until someone opens it",
+          "hint": "A ring nobody answered stays in the top bar of the screens for this long after it rang, with how long ago it was. A tap on it opens the doorbell again."
         }
       },
       "hero": {

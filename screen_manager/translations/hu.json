@@ -1534,6 +1534,10 @@
           "label": "Időkorlát",
           "help": "Ennyi másodpercig marad a csengetés, ha senki nem érinti meg, {min}–{max}. Üresen {default}. Egy érintés nyitva tartja."
         },
+        "keep_minutes": {
+          "label": "Nem fogadott megtartása",
+          "help": "Ennyi percig marad a senki által nem fogadott csengetés a képét mutató képernyők felső sávjában, a csengetéstől számítva, 1 és {most} között. Üres vagy 0: amíg valaki meg nem nyitja."
+        },
         "sound": {
           "label": "Hang",
           "help": "Megszólal-e a csengő hangja rögtön, amikor csenget, ahol a képernyőnek van hangszórója. Üres vagy true: a nézet bekapcsolt hanggal nyílik. false: csendben nyílik (stúdió, hálószoba), és egy koppintás a Hangra bekapcsolja."
@@ -4432,7 +4436,8 @@
       "no_camera": "Nincs kamera",
       "fields": {
         "title": "Cím",
-        "timeout": "Időkorlát (másodperc)"
+        "timeout": "Időkorlát (másodperc)",
+        "keep": "Nem fogadott csengetés a felső sávban"
       },
       "screens": {
         "view": "Élőben, hanggal",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Csengőhang csengetéskor",
           "hint": "A képernyő ajtócsengő-hangot játszik, amikor valaki csenget. Kapcsold ki, ha nem akarod minden alkalommal hallani a bim-bamot."
+        },
+        "keep": {
+          "minutes": "{n} perc",
+          "hours": "{n} óra",
+          "open": "Amíg valaki meg nem nyitja",
+          "hint": "A senki által nem fogadott csengetés ennyi ideig marad a képernyők felső sávjában, azzal, hogy mennyi ideje volt. Egy koppintás újra megnyitja."
         }
       },
       "hero": {

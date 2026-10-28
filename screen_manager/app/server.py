@@ -4101,7 +4101,8 @@ class Manager:
         door, door_unusable = doorbell.door_of(data)
         sound, sound_unusable = doorbell.sound_of(data)
         chime, chime_unusable = doorbell.sound_of(data, 'chime')
-        unusable = unusable + door_unusable + sound_unusable + chime_unusable
+        keep, keep_unusable = doorbell.keep_of(data)
+        unusable = unusable + door_unusable + sound_unusable + chime_unusable + keep_unusable
         if door and door.get('lock'):
             blocked = doorbell.door_blocked(door['lock'], self.ha.states, self.registry_index().get(door['lock']))
             if blocked:
@@ -4121,7 +4122,7 @@ class Manager:
         # The screens may open this camera now (camera_allowed), as after an alert with its picture.
         self.alert_cameras[camera] = time.monotonic()
         key = self.doorbells.start(camera, name, timeout, [screen['id'] for screen in views], [screen['node'] for screen in others],
-                                   door, [screen.get('node') for screen in views if screen.get('node')], sound, chime)
+                                   door, [screen.get('node') for screen in views if screen.get('node')], sound, chime, keep)
         sent = await self.doorbell_send(views, self.doorbells.message(key, door_state=self.doorbell_lock_state(door))) if views else 0
         if door and door.get('lock') and views:
             asyncio.ensure_future(self.doorbell_follow_lock(key))

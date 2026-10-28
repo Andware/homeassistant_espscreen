@@ -28,6 +28,8 @@ static bool parse_bar_item(JsonVariant value, header_bar::Item &item) {
     if (value["d"].is<unsigned>() && value["d"].as<unsigned>() < header_bar::DOORBELL_CARD) item.card = static_cast<uint16_t>(value["d"].as<unsigned>());
     // A missed ring (module doorbell): its item opens that ring again.
     if (item.kind == header_bar::Kind::ago && value["b"].is<unsigned>() && value["b"].as<unsigned>() == 1) item.card = header_bar::DOORBELL_CARD;
+    // Until when it stands (`x`, unix time): a missed ring that its automation keeps for a while.
+    item.until = value["x"].is<unsigned>() ? value["x"].as<uint32_t>() : 0;
     if (item.kind == header_bar::Kind::ago && item.epoch == 0) return false;
     // A plugin's item names itself: plugin:<plugin>.<item> (docs/PLUGINS.md).
     if (item.kind == header_bar::Kind::plugin && !plugin_key(item.text)) return false;

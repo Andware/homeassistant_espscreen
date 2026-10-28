@@ -1534,6 +1534,10 @@
           "label": "Timeout",
           "help": "Sekunden, die das Klingeln bleibt, wenn niemand es berührt, {min} bis {max}. Leer ist {default}. Eine Berührung hält es offen."
         },
+        "keep_minutes": {
+          "label": "Verpasst behalten",
+          "help": "Minuten, die ein Klingeln, das niemand beantwortet hat, in der oberen Leiste der Bildschirme mit seiner Ansicht bleibt, ab dem Klingeln gezählt, 1 bis {most}. Leer oder 0: bis jemand es öffnet."
+        },
         "sound": {
           "label": "Ton",
           "help": "Ob der Ton der Türklingel beim Klingeln sofort spielt, wo der Bildschirm einen Lautsprecher hat. Leer oder true: Die Ansicht öffnet mit Ton an. false: Sie öffnet leise (ein Studio, ein Schlafzimmer), und ein Tippen auf Ton schaltet ihn ein."
@@ -4432,7 +4436,8 @@
       "no_camera": "Keine Kamera",
       "fields": {
         "title": "Titel",
-        "timeout": "Timeout (Sekunden)"
+        "timeout": "Timeout (Sekunden)",
+        "keep": "Verpasstes Klingeln in der oberen Leiste behalten"
       },
       "screens": {
         "view": "Live mit Ton",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Gong beim Klingeln",
           "hint": "Der Bildschirm spielt einen Türgong, wenn jemand klingelt. Schalte das aus, wenn du das Ding-Dong nicht jedes Mal hören willst."
+        },
+        "keep": {
+          "minutes": "{n} Min.",
+          "hours": "{n} Std.",
+          "open": "Bis jemand es öffnet",
+          "hint": "Ein Klingeln, das niemand beantwortet hat, bleibt so lange nach dem Klingeln in der oberen Leiste der Bildschirme, mit der Zeit seitdem. Ein Tippen darauf öffnet die Türklingel wieder."
         }
       },
       "hero": {

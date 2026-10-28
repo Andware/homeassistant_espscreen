@@ -1534,6 +1534,10 @@
           "label": "Tiempo límite",
           "help": "Segundos que la llamada se queda si nadie la toca, de {min} a {max}. Vacío es {default}. Un toque la mantiene abierta."
         },
+        "keep_minutes": {
+          "label": "Mantener perdido",
+          "help": "Minutos que un timbre sin respuesta se queda en la barra superior de las pantallas con su vista, contados desde que sonó, de 1 a {most}. Vacío o 0: hasta que alguien lo abra."
+        },
         "sound": {
           "label": "Sonido",
           "help": "Si el sonido del timbre suena en cuanto llama, donde la pantalla tiene altavoz. Vacío o true: la vista se abre con el sonido activado. false: se abre en silencio (un estudio, un dormitorio), y un toque en Sonido lo activa."
@@ -4432,7 +4436,8 @@
       "no_camera": "Sin cámara",
       "fields": {
         "title": "Título",
-        "timeout": "Tiempo límite (segundos)"
+        "timeout": "Tiempo límite (segundos)",
+        "keep": "Mantener un timbre perdido en la barra superior"
       },
       "screens": {
         "view": "En directo con sonido",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Campanilla al llamar",
           "hint": "La pantalla toca una campanilla de puerta cuando alguien llama. Desactívalo si no quieres oír el ding-dong cada vez."
+        },
+        "keep": {
+          "minutes": "{n} min",
+          "hours": "{n} h",
+          "open": "Hasta que alguien lo abra",
+          "hint": "Un timbre sin respuesta se queda este tiempo después de sonar en la barra superior de las pantallas, con cuánto hace. Un toque lo vuelve a abrir."
         }
       },
       "hero": {

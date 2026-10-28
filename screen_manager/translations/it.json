@@ -1534,6 +1534,10 @@
           "label": "Timeout",
           "help": "Secondi in cui lo squillo resta se nessuno lo tocca, da {min} a {max}. Vuoto è {default}. Un tocco lo tiene aperto."
         },
+        "keep_minutes": {
+          "label": "Conserva perso",
+          "help": "Minuti per cui una chiamata senza risposta resta nella barra in alto degli schermi con la sua vista, contati dalla chiamata, da 1 a {most}. Vuoto o 0: finché qualcuno non la apre."
+        },
         "sound": {
           "label": "Audio",
           "help": "Se l'audio del campanello suona subito quando squilla, dove lo schermo ha un altoparlante. Vuoto o true: la vista si apre con l'audio attivo. false: si apre in silenzio (uno studio, una camera), e un tocco su Audio lo attiva."
@@ -4432,7 +4436,8 @@
       "no_camera": "Nessuna telecamera",
       "fields": {
         "title": "Titolo",
-        "timeout": "Timeout (secondi)"
+        "timeout": "Timeout (secondi)",
+        "keep": "Tieni una chiamata persa nella barra in alto"
       },
       "screens": {
         "view": "Dal vivo con audio",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Suono del campanello",
           "hint": "Lo schermo suona un campanello quando qualcuno suona. Disattivalo se non vuoi sentire il din-don ogni volta."
+        },
+        "keep": {
+          "minutes": "{n} min",
+          "hours": "{n} h",
+          "open": "Finché qualcuno non la apre",
+          "hint": "Una chiamata senza risposta resta così a lungo dopo lo squillo nella barra in alto degli schermi, con quanto tempo fa. Un tocco riapre il campanello."
         }
       },
       "hero": {

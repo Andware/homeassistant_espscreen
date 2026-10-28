@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **Choose how long a missed ring stays in the top bar.** The doorbell wizard asks how long a ring nobody answered stays in the top bar of your screens: 10 or 30 minutes, an hour, four hours, or until someone opens it. A new doorbell automation keeps it for 30 minutes; your existing automations keep their missed rings until they are opened, as before. In your own automation the field is `keep_minutes`. The screen takes the ring away by itself when the time is up, also while it was in standby.
+
 - **The editor says how many live streams are in use.** The app plays at most eight cameras live at once, of all your screens together. A live camera card in the editor now says how many of the eight are in use, so a ninth camera that shows a picture every 15 seconds instead is no mystery, and the app's log names each camera it had to refuse, with its screen. A screen that plays one camera live at a time (the ESP32-S3 screens) says so in plain words.
 - **A camera that was on its snapshots goes live again by itself.** A camera whose live video did not start (in privacy mode, or while Home Assistant's go2rtc was away) sent its snapshots until the screen closed it. It now tries the live video again every minute while it is watched, and plays live as soon as that works.
 

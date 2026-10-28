@@ -1534,6 +1534,10 @@
           "label": "Limit czasu",
           "help": "Sekundy, przez które dzwonek zostaje, gdy nikt go nie dotknie, od {min} do {max}. Puste to {default}. Dotknięcie utrzymuje go otwartym."
         },
+        "keep_minutes": {
+          "label": "Zachowaj nieodebrany",
+          "help": "Minuty, przez które nieodebrany dzwonek zostaje na górnym pasku ekranów z jego widokiem, liczone od dzwonka, od 1 do {most}. Puste lub 0: aż ktoś go otworzy."
+        },
         "sound": {
           "label": "Dźwięk",
           "help": "Czy dźwięk dzwonka gra od razu, gdy dzwoni, tam gdzie ekran ma głośnik. Puste lub true: widok otwiera się z włączonym dźwiękiem. false: otwiera się cicho (studio, sypialnia), a dotknięcie Dźwięku go włącza."
@@ -4432,7 +4436,8 @@
       "no_camera": "Brak kamery",
       "fields": {
         "title": "Tytuł",
-        "timeout": "Limit czasu (sekundy)"
+        "timeout": "Limit czasu (sekundy)",
+        "keep": "Zachowaj nieodebrany dzwonek na górnym pasku"
       },
       "screens": {
         "view": "Na żywo z dźwiękiem",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Gong przy dzwonieniu",
           "hint": "Ekran gra gong drzwiowy, gdy ktoś dzwoni. Wyłącz to, jeśli nie chcesz słyszeć ding-dong za każdym razem."
+        },
+        "keep": {
+          "minutes": "{n} min",
+          "hours": "{n} godz.",
+          "open": "Aż ktoś go otworzy",
+          "hint": "Nieodebrany dzwonek zostaje tak długo po dzwonku na górnym pasku ekranów, z informacją, jak dawno to było. Dotknięcie otwiera dzwonek ponownie."
         }
       },
       "hero": {

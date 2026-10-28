@@ -1534,6 +1534,10 @@
           "label": "Tempo limite",
           "help": "Segundos que o toque fica se ninguém tocar, de {min} a {max}. Vazio é {default}. Um toque mantém-no aberto."
         },
+        "keep_minutes": {
+          "label": "Manter perdida",
+          "help": "Minutos que uma campainha sem resposta fica na barra superior dos ecrãs com a sua vista, contados a partir do toque, de 1 a {most}. Vazio ou 0: até alguém a abrir."
+        },
         "sound": {
           "label": "Som",
           "help": "Se o som da campainha toca logo quando ela toca, onde o ecrã tem altifalante. Vazio ou true: a vista abre com o som ligado. false: abre em silêncio (um estúdio, um quarto), e um toque em Som liga-o."
@@ -4432,7 +4436,8 @@
       "no_camera": "Sem câmara",
       "fields": {
         "title": "Título",
-        "timeout": "Tempo limite (segundos)"
+        "timeout": "Tempo limite (segundos)",
+        "keep": "Manter uma campainha perdida na barra superior"
       },
       "screens": {
         "view": "Em direto com som",
@@ -4505,6 +4510,12 @@
         "chime": {
           "label": "Toque ao tocar",
           "hint": "O ecrã toca um toque de campainha quando alguém toca. Desligue isto se não quiser ouvir o ding-dong de cada vez."
+        },
+        "keep": {
+          "minutes": "{n} min",
+          "hours": "{n} h",
+          "open": "Até alguém a abrir",
+          "hint": "Uma campainha sem resposta fica este tempo depois de tocar na barra superior dos ecrãs, com há quanto tempo foi. Um toque abre-a de novo."
         }
       },
       "hero": {

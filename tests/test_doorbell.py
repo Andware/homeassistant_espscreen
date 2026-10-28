@@ -92,6 +92,32 @@ class TheRings(unittest.TestCase):
         self.assertTrue(rings.seen())
         self.assertFalse(rings.seen())
 
+    def test_a_missed_ring_kept_for_a_while_says_until_when_and_then_goes(self):
+        """keep_minutes (docs/DOORBELL.md): the item says until when it stands (`x`, the ring's moment and the minutes),
+        the screens take it away then by their own clock, and past it the app sends it no more either. None or 0 keeps
+        it until someone opens it, as before."""
+        self.assertEqual(doorbell.keep_of({}), (0, []))
+        self.assertEqual(doorbell.keep_of({'keep_minutes': ''}), (0, []))
+        self.assertEqual(doorbell.keep_of({'keep_minutes': '30'}), (30, []))
+        self.assertEqual(doorbell.keep_of({'keep_minutes': 0}), (0, []))
+        self.assertEqual(doorbell.keep_of({'keep_minutes': 99999}), (doorbell.KEEP_MAX, []))
+        self.assertEqual(doorbell.keep_of({'keep_minutes': 'soon'}), (0, ['keep_minutes']))
+        self.assertEqual(doorbell.keep_of({'keep_minutes': -5}), (0, ['keep_minutes']))
+        rings = doorbell.Doorbells()
+        key = rings.start('camera.front_door', 'Front door', 60, ['a'], keep=30)
+        rings.unanswered(key)
+        at = rings.ring(key)['at']
+        self.assertEqual(rings.bar_item(now=at + 60), {'k': 'ago', 'i': 'F12E6', 'e': at, 'b': 1, 'x': at + 1800})
+        self.assertIsNotNone(rings.bar_item(now=at + 1799))
+        self.assertIsNone(rings.bar_item(now=at + 1800))
+        self.assertIsNone(rings.missed, 'past its keep it is gone from the app too')
+        # Until someone opens it: no `x`, at any time.
+        rings.unanswered(rings.start('camera.front_door', 'Front door', 60, ['a']))
+        self.assertNotIn('x', rings.bar_item(now=at + 10 ** 6))
+        # The wizard's choices, and what a new automation gets.
+        self.assertEqual(doorbell.KEEP_CHOICES, (10, 30, 60, 240, 0))
+        self.assertEqual(doorbell.reference()['keep'], {'choices': [10, 30, 60, 240, 0], 'new': 30, 'max': doorbell.KEEP_MAX})
+
     def test_the_item_goes_first_within_the_bar_limit(self):
         item = {'k': 'ago', 'i': 'F12E6', 'e': 1, 'b': 1}
         self.assertEqual(doorbell.with_missed([{'k': 'clock'}], item, 6), [item, {'k': 'clock'}])
