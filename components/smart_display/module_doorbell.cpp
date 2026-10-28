@@ -450,7 +450,7 @@ void take_door(const Ring &r) {
 }
 
 void ring(const std::string &camera_entity, const std::string &name, const std::string &key, uint32_t rang, uint32_t untouched_s,
-          unsigned door_kind, const std::string &door_state_now, bool quiet, bool chimes) {
+          unsigned door_kind, const std::string &door_state_now, bool quiet, bool chimes, const std::string &link) {
   if (!camera_supported() || camera_entity.rfind("camera.", 0) != 0 || !valid_entity(camera_entity)) return;
   const uint32_t now = esphome::millis();
   ring_ms = now;
@@ -481,6 +481,8 @@ void ring(const std::string &camera_entity, const std::string &name, const std::
   touch_ms = 0;
   camera_open(camera_entity, name);
   if (!camera_root) { active = false; return; }
+  // Its stream at once, when the app made one for this screen as the event came; else the view asks, as any view does.
+  if (!link.empty()) camera_link_now(link);
   // The ring's view claims the speaker as DOORBELL when its stream opens (runtime_tiles live_begin, audio_owner.h): music
   // pauses, a camera's sound and the voice assistant step back, and nothing takes it from a ring. The chime itself goes
   // through the announcement input and mixes; an automation with `chime: false` rings without it.

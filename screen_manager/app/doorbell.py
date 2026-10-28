@@ -236,9 +236,10 @@ class Doorbells:
             del self.rings[old]
         return key
 
-    def message(self, key, close=False, door_state=None):
+    def message(self, key, close=False, door_state=None, link=None):
         """The op of ring `key`, or its close. A ring with a door says what its key is (`d`), and a lock its state (`ds`);
-        one that opens quiet says so (`m`), one without its chime too (`nc`)."""
+        one that opens quiet says so (`m`), one without its chime too (`nc`); `link`, the stream the app made for that
+        screen as the event came (`l`), which its view opens at once instead of asking for one."""
         ring = self.rings.get(key)
         if close or ring is None:
             return {'v': 1, 'op': 'doorbell', 'k': key, 'c': 1}
@@ -247,6 +248,8 @@ class Doorbells:
             message['m'] = 1
         if ring.get('chime') is False:
             message['nc'] = 1
+        if link:
+            message['l'] = link
         door = ring.get('door')
         if door and door.get('lock'):
             message.update(d=DOOR_LOCK, ds=str(door_state or '')[:16])

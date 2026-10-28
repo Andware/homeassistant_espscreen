@@ -426,6 +426,7 @@ inline void history_received();
 // Camera images full screen and on an alert (firmware 0.2.57+, the Guition binds them; see the end of this file).
 inline void camera_open(const std::string &entity, const std::string &name, int map_index = -1, const std::string &focus = "");
 inline void camera_answer(const std::string &view, const std::string &entity, const std::string &url, uint32_t number);
+inline void camera_link_now(const std::string &url);
 inline bool camera_supported();
 // Every picture goes one way (picture_loader.h; see the end of this file): an owner says what it wants, and draws what
 // picture_of() has for its key.
@@ -12607,6 +12608,15 @@ inline void alert_clear() {
 inline std::string camera_tag();
 // The app's answer: a link, or "" when it has no picture. It goes to the picture that asked (picture_loader::answer), and
 // the round right after starts the download, rather than the next tick (firmware 0.2.73+): the answer is most of the wait.
+// A stream the app made before the view asked (a ring's, the op doorbell's `l`): opened at once in the view's room,
+// which the link learns from the open (?room=WxH), where asking for one took 1.3 s of a ring's 1.54 s to its first
+// picture (docs/PLATFORM_PLAN.md 4.9). A link that fails leaves the view to ask, as every view does.
+inline void camera_link_now(const std::string &url) {
+  if (!camera_root || camera.stream.live || !live_view::is_stream(url) || live_view::is_own(url) || !live_wanted()) return;
+  const auto room = live_area();
+  live_begin(url + (url.find('?') == std::string::npos ? "?" : "&") + "room=" + std::to_string(room.w) + "x" +
+             std::to_string(room.h));
+}
 inline void camera_answer(const std::string &view, const std::string &entity, const std::string &url, uint32_t number) {
   if (!camera_supported()) return;
   const uint32_t now = esphome::millis();

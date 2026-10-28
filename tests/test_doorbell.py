@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'screen_manager/app'))
 import automations  # noqa: E402
 import doorbell  # noqa: E402
+import live_stream  # noqa: E402
 
 HAS_AIOHTTP = importlib.util.find_spec('aiohttp') is not None
 if HAS_AIOHTTP:
@@ -293,6 +294,14 @@ class TheManager(unittest.TestCase):
             return {'sent': len(data.get('screen') or []), 'skipped': 0, 'failed': 0}
         manager.send_auxiliary, manager.broadcast = send_auxiliary, broadcast
         manager.doorbell_unanswered = lambda key, timeout: asyncio.sleep(0)
+        # The ring's own streams (Manager.doorbell_link): this app's address on each screen's network, its camera links.
+        manager.live = live_stream.LiveFeed(None, None, lambda e: True)
+
+        async def link_base(screen):
+            return 'http://10.0.0.2:8099'
+        manager.link_base = link_base
+        manager.caps_of_screen = lambda screen: {'speaker': screen['id'] == 'a'}
+        manager.picture_turn_of = lambda inbox: 0
         return manager
 
     def test_a_ring_opens_the_view_on_p4s_and_the_alert_elsewhere(self):
@@ -302,6 +311,15 @@ class TheManager(unittest.TestCase):
         self.assertEqual([inbox for inbox, _ in manager.sent_messages], ['a', 'b'])
         message = manager.sent_messages[0][1]
         self.assertEqual((message['e'], message['n'], message['t']), ('camera.front_door', 'Front door', 30))
+        # Each view gets a stream of its own, made as the event came (docs/PLATFORM_PLAN.md 4.9): its room comes with the
+        # screen's first open, its sound where the screen has a speaker.
+        links = [m['l'] for _, m in manager.sent_messages]
+        self.assertEqual(len(set(links)), 2)
+        for (inbox, _), link in zip(manager.sent_messages, links):
+            self.assertRegex(link, r'^http://10\.0\.0\.2:8099/camera/[\w-]+\.mjpeg$')
+            made = manager.live.links[link.rsplit('/', 1)[1][:-len('.mjpeg')]]
+            self.assertEqual((made.entity, made.box, made.screen, made.tile, made.sound),
+                             ('camera.front_door', None, inbox, False, inbox == 'a'))
         self.assertEqual(manager.broadcasts, [('esp_screens_show_alert', {'title': 'Front door', 'icon': 'doorbell', 'camera': 'camera.front_door',
                                                                           'timeout': 30, 'screen': ['cyd', 'off']})])
         self.assertEqual((result['sent'], result['alerts']), (2, 2))

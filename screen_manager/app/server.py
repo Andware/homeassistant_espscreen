@@ -4086,9 +4086,22 @@ class Manager:
         return out
 
     async def doorbell_send(self, screens, message):
-        results = await asyncio.gather(*(self.send_auxiliary(screen['id'], message, self.transport(screen['id'], screen), self.page_scope(screen['id']))
+        """`message` to each of `screens`, or `message(screen)` for a message of each one's own: how many took it."""
+        results = await asyncio.gather(*(self.send_auxiliary(screen['id'], message(screen) if callable(message) else message,
+                                                             self.transport(screen['id'], screen), self.page_scope(screen['id']))
                                          for screen in screens), return_exceptions=True)
         return sum(1 for result in results if result is True)
+
+    async def doorbell_link(self, screen, camera):
+        """The stream of `camera` for the ring's view on `screen`, made as the event comes: the screen opens it at once,
+        where asking for one took 1.3 s of a ring's 1.54 s to its first picture (docs/PLATFORM_PLAN.md 4.9). Its room
+        comes with the screen's first open (?room=WxH). None without an address for this app on its network."""
+        base = await self.link_base(screen)
+        if not base:
+            return None
+        sound = bool((self.caps_of_screen(screen) or {}).get('speaker'))
+        token = self.live.link(camera, None, sound=sound, screen=screen['id'], turn=self.picture_turn_of(screen['id']))
+        return f'{base}/camera/{token}.mjpeg'
 
     async def doorbell_show(self, data):
         """esp_screens_doorbell (docs/DOORBELL.md): the doorbell's camera on the screens the event names, every screen
@@ -4123,7 +4136,11 @@ class Manager:
         self.alert_cameras[camera] = time.monotonic()
         key = self.doorbells.start(camera, name, timeout, [screen['id'] for screen in views], [screen['node'] for screen in others],
                                    door, [screen.get('node') for screen in views if screen.get('node')], sound, chime, keep)
-        sent = await self.doorbell_send(views, self.doorbells.message(key, door_state=self.doorbell_lock_state(door))) if views else 0
+        links = dict(zip((screen['id'] for screen in views),
+                         await asyncio.gather(*(self.doorbell_link(screen, camera) for screen in views))))
+        state = self.doorbell_lock_state(door)
+        sent = await self.doorbell_send(views, lambda screen: self.doorbells.message(key, door_state=state,
+                                                                                  link=links.get(screen['id']))) if views else 0
         if door and door.get('lock') and views:
             asyncio.ensure_future(self.doorbell_follow_lock(key))
         alerts = {'sent': 0, 'skipped': 0, 'failed': 0}

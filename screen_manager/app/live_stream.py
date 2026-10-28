@@ -13,6 +13,7 @@ set to Live is sent.
 """
 import asyncio
 import logging
+import re
 import secrets
 import socket
 import time
@@ -29,6 +30,16 @@ DEFAULT_PACE = 15         # picture_sources.TILE_PACE: the pace of a camera tile
 SOUND_QUEUE = 50          # parts of sound that may wait for a screen (about a second); older ones go
 SEND_BUFFER = 65536       # what may wait in this host's socket for a screen: a picture, not a queue of them
 REFUSAL_LOG_SECONDS = 60  # a refused tile asks again within seconds: the log says each screen's camera once a minute
+ROOM = re.compile(r'(\d{2,4})x(\d{2,4})')  # a link made before its screen asked: the room its stream says, ?room=WxH
+
+
+def room_of(text):
+    """(w, h) of a stream's `?room=WxH`, each 64 to 4096; None for anything else."""
+    found = ROOM.fullmatch(text or '')
+    if not found:
+        return None
+    w, h = int(found[1]), int(found[2])
+    return (w, h) if 64 <= w <= 4096 and 64 <= h <= 4096 else None
 # A live tile's pictures are a few KB, so the full view's buffer held a dozen of them for a screen that read slower than
 # its camera, and the screen's own TCP window as many again: a tile showed pictures a second or two old (a reTerminal
 # D1001, 2026-10-28, X-Made). Its link keeps two or three of them here; the screen shows the newest of what reached it.
@@ -113,7 +124,8 @@ class LiveFeed:
             del self.links[token]
 
     def link(self, entity, box, cover=False, sound=False, warm=False, screen=None, tile=False, turn=0):
-        """A new link's token: the full view's (`box` its room, `sound` with the camera's sound for a screen with a
+        """A new link's token: the full view's (`box` its room, or None for a ring's link made as the event came,
+        before the screen asked: its stream says the room, ?room=WxH; `sound` with the camera's sound for a screen with a
         speaker), or a live `tile`'s (`box` its card, `cover` when its picture fills the card rather than showing whole,
         `warm` when its screen has a speaker: the camera's sound comes along in the source, for the full view). `turn`:
         the glass's, for a screen that takes its live pictures turned so. `screen` is the inbox of the screen that
@@ -297,6 +309,10 @@ class LiveFeed:
         why = self.refused(link)
         if why:
             return web.Response(status=503, text=why)
+        if link.box is None:
+            link.box = room_of(request.query.get('room'))
+            if link.box is None:
+                return web.Response(status=400, text='No room for its pictures (?room=WxH)')
         source = self.begin(link, sound=link.sound)
         jpegs = self.pictures_of(link.entity)
         response = web.StreamResponse(headers={'Content-Type': 'multipart/x-mixed-replace;boundary=frame',

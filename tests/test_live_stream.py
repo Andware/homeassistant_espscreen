@@ -84,8 +84,9 @@ class Held(unittest.TestCase):
 class Stream(unittest.TestCase):
     """A snapshot camera through LiveFeed on a real socket, read like the screen reads it: HTTP/1.0, then parts."""
 
-    def run_stream(self, entity='camera.door', parts=3, token=None, streams_open=0, rtc=None):
-        """`rtc`: the camera has a stream, and this stands in for its WebRTC session (Source.rtc)."""
+    def run_stream(self, entity='camera.door', parts=3, token=None, streams_open=0, rtc=None, ring=False):
+        """`rtc`: the camera has a stream, and this stands in for its WebRTC session (Source.rtc). `ring`: a link made
+        without its room, as a ring's is, opened with ?room=."""
         from aiohttp import web
         picture = jpeg(512, 288)
         asked = []
@@ -100,7 +101,7 @@ class Stream(unittest.TestCase):
             live = live_stream.LiveFeed(fetch, None, lambda name: rtc is not None)
             if rtc is not None:
                 source = live.source(entity)
-                source.rtc = lambda kinds, take, keep: rtc(source, take)
+                source.rtc = lambda kinds, take, keep, quiet=False: rtc(source, take)
 
             async def stream(request):
                 return await live.serve(request, request.match_info['token'])
@@ -112,11 +113,13 @@ class Stream(unittest.TestCase):
             site = web.TCPSite(runner, '127.0.0.1', 0)
             await site.start()
             port = site._server.sockets[0].getsockname()[1]
-            link = token or live.link(entity, (1280, 728))
+            link = token or live.link(entity, None if ring else (1280, 728))
+            self.feed = live
             for _ in range(streams_open):
                 live.links[live.link(entity, (1280, 728))].streaming = 1
             reader, writer = await asyncio.open_connection('127.0.0.1', port)
-            writer.write(f'GET /camera/{link}.mjpeg HTTP/1.0\r\nHost: test\r\n\r\n'.encode())
+            room = '?room=946x710' if ring else ''
+            writer.write(f'GET /camera/{link}.mjpeg{room} HTTP/1.0\r\nHost: test\r\n\r\n'.encode())
             await writer.drain()
             data, got = b'', []
             while len(got) < parts:
@@ -252,6 +255,26 @@ class Stream(unittest.TestCase):
             self.assertEqual(feed.refused(feed.links[feed.link('camera.door', (946, 710), screen='kitchen')]),
                              'Too many live cameras')
         self.assertIn('for kitchen (full screen): Too many live cameras; 9 of 8 streams in use', said.output[0])
+
+    def test_a_rings_link_takes_its_room_from_the_screens_open(self):
+        """A ring's link is made as the event comes, before the screen says its room (Manager.doorbell_link): its first
+        open says it (?room=WxH, 64 to 4096 a side), and an open without one is refused."""
+        self.assertEqual(live_stream.room_of('946x710'), (946, 710))
+        for bad in (None, '', '946', '946x', 'x710', '10x710', '946x5000', '946x710x2', 'axb'):
+            self.assertIsNone(live_stream.room_of(bad), bad)
+        feed = live_stream.LiveFeed(None, None, lambda e: True)
+        token = feed.link('camera.door', None, screen='hall')
+
+        class Request:
+            query = {}
+        answer = asyncio.run(feed.serve(Request(), token))
+        self.assertEqual(answer.status, 400)
+        self.assertIsNone(feed.links[token].box)
+        self.assertEqual(feed.streaming(), 0, 'a refused open holds no stream')
+        # With its room it streams, its pictures made for that room.
+        (_, got), _, _ = self.run_stream(parts=1, ring=True)
+        self.assertEqual(len(got), 1)
+        self.assertEqual(next(iter(self.feed.links.values())).box, (946, 710))
 
     def test_an_unknown_link_and_too_many_streams_are_refused(self):
         (head, got), _, asked = self.run_stream(token='x' * 24, parts=1)
