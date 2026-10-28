@@ -3738,6 +3738,11 @@
     "plugins": {
       "title": "Plugins",
       "intro": "Extra's voor je schermen: tegels voor op een pagina, iets wat het hele scherm extra kan, of hardware op het bordje. Een plugin wordt in de firmware van een scherm gebouwd, dus je kiest per scherm welke het krijgt.",
+      "risk": {
+        "title": "Plugins zijn op eigen risico",
+        "text": "Elke plugin kost een deel van het geheugen en de rekentijd van een scherm. Een paar gaan goed samen, maar veel tegelijk (bijvoorbeeld een spraakassistent, een Bluetooth-proxy en een camera) kunnen het geheugen vullen en een scherm traag maken, laten vastlopen of herstarten. Je kunt het proberen, maar voeg er een of twee tegelijk toe en kijk of het scherm stabiel blijft. Doet het vreemd, haal dan eerst de nieuwste eraf.",
+        "many": "{screen} draait na deze build {n} plugins. Zoveel kan een scherm instabiel maken: doet het vreemd, haal er dan een paar af."
+      },
       "search": "Zoek op naam, maker of wat hij doet",
       "filter": "Toon",
       "from_tessera": "Van Tessera",
@@ -3947,7 +3952,8 @@
         "keep": "Toch houden",
         "keep_named": "{name} toch houden",
         "minutes": "Elke build duurt een paar minuten.",
-        "off_set": "Klaargezet om eraf te gaan"
+        "off_set": "Klaargezet om eraf te gaan",
+        "risk": "Op eigen risico: elke plugin kost geheugen, en te veel kunnen een scherm instabiel maken."
       },
       "maker": {
         "title": "Zelf een plugin maken",

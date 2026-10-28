@@ -1946,6 +1946,9 @@ section.advanced code { font-size: 11.5px; }
 .pt-room { padding: 0 6px; font-size: 11.5px; color: var(--muted); }
 .pt-room.over { color: var(--warn); }
 .pt-trust { margin: 12px 6px 0; font-size: 12px; }
+/* Plugins are at one's own risk: said once more beside Install, the reason in a line. */
+.pt-risk { display: flex; align-items: flex-start; gap: 6px; margin: 12px 6px 0; font-size: 11.5px; line-height: 1.4; color: var(--ink-2); }
+.pt-risk .ui-icon { font-size: 14px; color: var(--warn); flex: none; margin-top: 1px; }
 .pt-foot { display: grid; gap: 7px; margin-top: 14px; }
 .pt-install { width: 100%; height: 38px; border-radius: 10px; font-size: 13.5px; font-weight: 600; }
 .pt-install:disabled { opacity: 0.45; }
@@ -1991,6 +1994,9 @@ section.advanced code { font-size: 11.5px; }
    time. What fits none of the screens folds away under the list. A heart is a count first and a control only where
    the plugin runs. What comes along sits in the action box as rows like the tray's, never as a second dialog. */
 .plugin-counting { margin: 0 0 12px; }
+/* Plugins are at one's own risk: on the Plugins page and a screen's Plugins tab, before anything is picked. */
+.plugin-risk { margin: 14px 0 12px; max-width: 720px; align-items: flex-start; }
+#screen-plugin-risk { margin: 12px 0 0; }
 .plugin-counting > .ui-icon { font-size: 18px; color: var(--accent); flex: none; }
 .plugin-counting strong { display: block; color: var(--ink); }
 .plugin-misfits { display: grid; gap: 10px; margin-top: 6px; }

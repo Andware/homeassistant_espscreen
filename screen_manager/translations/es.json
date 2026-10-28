@@ -1904,6 +1904,11 @@
     "plugins": {
       "title": "Plugins",
       "intro": "Extras para tus pantallas: mosaicos para una página, algo más que puede hacer toda la pantalla o hardware en la placa. Un plugin se integra en el firmware de una pantalla, así que eliges por pantalla cuáles recibe.",
+      "risk": {
+        "title": "Los plugins son bajo tu propio riesgo",
+        "text": "Cada plugin usa parte de la memoria y del tiempo de procesador de una pantalla. Unos pocos funcionan bien juntos, pero muchos a la vez (por ejemplo un asistente de voz, un proxy Bluetooth y una cámara) pueden llenar la memoria y hacer que una pantalla vaya lenta, se congele o se reinicie. Puedes probarlo, pero añade uno o dos a la vez y comprueba que la pantalla sigue estable. Si empieza a fallar, quita primero los más nuevos.",
+        "many": "{screen} tendrá {n} plugins tras esta compilación. Tantos pueden hacer inestable una pantalla: si falla, quita algunos."
+      },
       "search": "Busca por nombre, autor o lo que hace",
       "filter": "Mostrar",
       "from_tessera": "De Tessera",
@@ -2113,7 +2118,8 @@
         "keep": "Conservarlo",
         "keep_named": "Conservar {name}",
         "minutes": "Cada compilación tarda unos minutos.",
-        "off_set": "Preparado para quitarse"
+        "off_set": "Preparado para quitarse",
+        "risk": "Bajo tu propio riesgo: cada plugin usa memoria, y demasiados pueden hacer inestable una pantalla."
       },
       "maker": {
         "title": "Crea tu propio plugin",

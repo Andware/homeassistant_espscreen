@@ -1904,6 +1904,11 @@
     "plugins": {
       "title": "Plugin",
       "intro": "Extra per i tuoi schermi: riquadri per una pagina, qualcosa in più che può fare tutto lo schermo, o hardware sulla scheda. Un plugin viene integrato nel firmware di uno schermo, quindi scegli per ogni schermo quali riceve.",
+      "risk": {
+        "title": "I plugin sono a tuo rischio",
+        "text": "Ogni plugin usa una parte della memoria e del tempo di calcolo di uno schermo. Alcuni vanno bene insieme, ma molti alla volta (per esempio un assistente vocale, un proxy Bluetooth e una fotocamera) possono riempire la memoria e rendere uno schermo lento, bloccarlo o farlo riavviare. Puoi provarci, ma aggiungine uno o due alla volta e controlla che lo schermo resti stabile. Se inizia a dare problemi, togli prima i più recenti.",
+        "many": "{screen} avrà {n} plugin dopo questa compilazione. Così tanti possono rendere instabile uno schermo: se dà problemi, togline qualcuno."
+      },
       "search": "Cerca per nome, autore o funzione",
       "filter": "Mostra",
       "from_tessera": "Da Tessera",
@@ -2113,7 +2118,8 @@
         "keep": "Tienilo",
         "keep_named": "Tieni {name}",
         "minutes": "Ogni compilazione richiede qualche minuto.",
-        "off_set": "Pronto per essere tolto"
+        "off_set": "Pronto per essere tolto",
+        "risk": "A tuo rischio: ogni plugin usa memoria, e troppi possono rendere instabile uno schermo."
       },
       "maker": {
         "title": "Crea un plugin tuo",

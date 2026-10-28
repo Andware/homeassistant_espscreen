@@ -1904,6 +1904,11 @@
     "plugins": {
       "title": "Plugins",
       "intro": "Extras para os seus ecrãs: mosaicos para uma página, algo mais que o ecrã inteiro pode fazer, ou hardware na placa. Um plugin é integrado no firmware de um ecrã, por isso escolhe por ecrã quais recebe.",
+      "risk": {
+        "title": "Os plugins são por sua conta e risco",
+        "text": "Cada plugin usa parte da memória e do tempo de processador de um ecrã. Alguns funcionam bem juntos, mas muitos de uma vez (por exemplo um assistente de voz, um proxy Bluetooth e uma câmara) podem encher a memória e tornar um ecrã lento, bloqueá-lo ou fazê-lo reiniciar. Pode experimentar, mas adicione um ou dois de cada vez e verifique se o ecrã continua estável. Se começar a falhar, retire primeiro os mais recentes.",
+        "many": "{screen} terá {n} plugins depois desta compilação. Tantos podem tornar um ecrã instável: se falhar, retire alguns."
+      },
       "search": "Procurar por nome, autor ou o que faz",
       "filter": "Mostrar",
       "from_tessera": "Do Tessera",
@@ -2113,7 +2118,8 @@
         "keep": "Manter",
         "keep_named": "Manter {name}",
         "minutes": "Cada compilação demora alguns minutos.",
-        "off_set": "Preparado para sair"
+        "off_set": "Preparado para sair",
+        "risk": "Por sua conta e risco: cada plugin usa memória, e demasiados podem tornar um ecrã instável."
       },
       "maker": {
         "title": "Crie o seu próprio plugin",

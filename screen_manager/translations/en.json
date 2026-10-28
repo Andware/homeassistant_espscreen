@@ -3738,6 +3738,11 @@
     "plugins": {
       "title": "Plugins",
       "intro": "Extras for your screens: tiles to put on a page, something more the whole screen can do, or hardware on the board. A plugin is built into a screen's firmware, so you choose per screen which ones it gets.",
+      "risk": {
+        "title": "Plugins are at your own risk",
+        "text": "Every plugin takes some of a screen's memory and processor time. A few go well together, but many at once (a voice assistant, a Bluetooth proxy and a camera, say) can fill the memory and make a screen slow, freeze or restart. You can try it, but add one or two at a time and check that the screen stays stable. When it starts acting up, take the newest ones off first.",
+        "many": "{screen} runs {n} plugins after this build. That many can make a screen unstable: if it acts up, take some off."
+      },
       "search": "Search by name, maker or what it does",
       "filter": "Show",
       "from_tessera": "From Tessera",
@@ -3947,7 +3952,8 @@
         "keep": "Keep it",
         "keep_named": "Keep {name}",
         "minutes": "Each build takes a few minutes.",
-        "off_set": "Set aside to come off"
+        "off_set": "Set aside to come off",
+        "risk": "At your own risk: every plugin takes memory, and too many can make a screen unstable."
       },
       "maker": {
         "title": "Make a plugin of your own",

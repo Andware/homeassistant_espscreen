@@ -1904,6 +1904,11 @@
     "plugins": {
       "title": "Plugins",
       "intro": "Extras für deine Bildschirme: Kacheln für eine Seite, etwas, das der ganze Bildschirm zusätzlich kann, oder Hardware auf der Platine. Ein Plugin wird in die Firmware eines Bildschirms gebaut, also wählst du pro Bildschirm, welche er bekommt.",
+      "risk": {
+        "title": "Plugins auf eigenes Risiko",
+        "text": "Jedes Plugin braucht einen Teil des Speichers und der Rechenzeit eines Bildschirms. Ein paar vertragen sich gut, aber viele auf einmal (etwa ein Sprachassistent, ein Bluetooth-Proxy und eine Kamera) können den Speicher füllen und einen Bildschirm langsam machen, einfrieren oder neu starten lassen. Du kannst es versuchen, aber füge eins oder zwei auf einmal hinzu und prüfe, ob der Bildschirm stabil bleibt. Wenn er Probleme macht, entferne zuerst die neuesten.",
+        "many": "{screen} hat nach diesem Build {n} Plugins. So viele können einen Bildschirm instabil machen: Wenn er Probleme macht, entferne einige."
+      },
       "search": "Nach Name, Autor oder Funktion suchen",
       "filter": "Zeigen",
       "from_tessera": "Von Tessera",
@@ -2113,7 +2118,8 @@
         "keep": "Behalten",
         "keep_named": "{name} behalten",
         "minutes": "Jedes Erstellen dauert ein paar Minuten.",
-        "off_set": "Zum Entfernen vorgemerkt"
+        "off_set": "Zum Entfernen vorgemerkt",
+        "risk": "Auf eigenes Risiko: Jedes Plugin braucht Speicher, und zu viele können einen Bildschirm instabil machen."
       },
       "maker": {
         "title": "Eigenes Plugin erstellen",

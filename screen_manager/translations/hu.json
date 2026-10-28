@@ -1904,6 +1904,11 @@
     "plugins": {
       "title": "Bővítmények",
       "intro": "Extrák a kijelzőidhez: csempék egy oldalra, valami plusz, amit az egész kijelző tud, vagy hardver a lapkán. A bővítmény a kijelző firmware-ébe épül, ezért kijelzőnként választod ki, melyiket kapja.",
+      "risk": {
+        "title": "A bővítmények saját felelősségre",
+        "text": "Minden bővítmény elvesz a kijelző memóriájából és processzoridejéből. Néhány jól megfér egymással, de sok egyszerre (például egy hangasszisztens, egy Bluetooth-proxy és egy kamera) megtöltheti a memóriát, és lelassíthatja, lefagyaszthatja vagy újraindíthatja a kijelzőt. Kipróbálhatod, de egyszerre egyet vagy kettőt adj hozzá, és nézd meg, stabil marad-e a kijelző. Ha furcsán kezd viselkedni, először a legújabbakat vedd le.",
+        "many": "A(z) {screen} ezután a fordítás után {n} bővítményt futtat. Ennyi instabillá teheti a kijelzőt: ha furcsán viselkedik, vegyél le néhányat."
+      },
       "search": "Keresés név, készítő vagy funkció szerint",
       "filter": "Mutat",
       "from_tessera": "A Tesserától",
@@ -2113,7 +2118,8 @@
         "keep": "Maradjon",
         "keep_named": "{name} maradjon",
         "minutes": "Minden fordítás néhány percig tart.",
-        "off_set": "Eltávolításra előkészítve"
+        "off_set": "Eltávolításra előkészítve",
+        "risk": "Saját felelősségre: minden bővítmény memóriát foglal, és túl sok instabillá teheti a kijelzőt."
       },
       "maker": {
         "title": "Saját bővítmény készítése",

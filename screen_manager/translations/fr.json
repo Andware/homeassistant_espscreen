@@ -1904,6 +1904,11 @@
     "plugins": {
       "title": "Plugins",
       "intro": "Des extras pour vos écrans : des tuiles pour une page, quelque chose de plus pour tout l'écran, ou du matériel sur la carte. Un plugin est intégré au firmware d'un écran, vous choisissez donc écran par écran ceux qu'il reçoit.",
+      "risk": {
+        "title": "Les plugins sont à vos risques",
+        "text": "Chaque plugin prend une part de la mémoire et du temps de calcul d'un écran. Quelques-uns s'entendent bien, mais beaucoup à la fois (un assistant vocal, un proxy Bluetooth et une caméra, par exemple) peuvent remplir la mémoire et rendre un écran lent, le figer ou le faire redémarrer. Vous pouvez essayer, mais ajoutez-en un ou deux à la fois et vérifiez que l'écran reste stable. S'il se met à mal fonctionner, retirez d'abord les plus récents.",
+        "many": "{screen} aura {n} plugins après cette compilation. Autant peut rendre un écran instable : s'il fonctionne mal, retirez-en quelques-uns."
+      },
       "search": "Rechercher par nom, auteur ou fonction",
       "filter": "Afficher",
       "from_tessera": "De Tessera",
@@ -2113,7 +2118,8 @@
         "keep": "Le garder",
         "keep_named": "Garder {name}",
         "minutes": "Chaque compilation prend quelques minutes.",
-        "off_set": "Prévu pour être retiré"
+        "off_set": "Prévu pour être retiré",
+        "risk": "À vos risques : chaque plugin prend de la mémoire, et trop de plugins peuvent rendre un écran instable."
       },
       "maker": {
         "title": "Créer votre propre plugin",
