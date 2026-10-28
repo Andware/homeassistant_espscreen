@@ -271,6 +271,24 @@ often a Raspberry Pi, so each kind of camera takes the cheapest road:
   side) goes out untouched, which costs the app nothing; anything else is made into one.
 - A camera whose WebRTC does not start within 20 seconds sends its snapshots instead.
 
+**Every frame looked at** (`camera_source.FrameWatch`). Each decoded WebRTC frame is checked before a screen gets it:
+
+- a frame the decoder marks corrupt (`is_corrupt`, after packets that never came) is left out, and the screen keeps the
+  one before;
+- a gap in the frames' timestamps (frames that never came), a flash (a frame at least 1.4 times and 12 steps of 255
+  brighter than the one before, after which the next falls back at least halfway), the packets lost on the way, the
+  NACKs and PLIs the app sent back (aiortc asks the camera for a new key frame after a loss it cannot mend), the JPEGs
+  a screen would refuse and the stills are counted;
+- the app's log says them every 10 seconds when anything but frames was counted, a flash at once with its timestamp and
+  the brightness of it and its neighbours, and the totals every 5 minutes whatever they are:
+  `Live camera.porch: 150 frames (2 key), 0 corrupt, 0 missing, 0 flashes; 0 packets lost, 0 NACKs and 0 PLIs sent; 0
+  JPEGs the screen would refuse, 0 stills in 10 s`.
+
+The brightness comes from a grid of 40 x 24 pixels that FFmpeg's scaler picks in grey: 0.05 ms for a 1080p frame. For
+evidence, an empty file `tessera_frame_dump` in Home Assistant's config folder makes the app keep each flagged frame,
+the two before it and the two after it as JPEGs in `tessera_diagnostics/frames/<camera>/` there, at most 50 in all, the
+oldest going first; delete the file to stop it.
+
 **What it costs Home Assistant's host.** Decoding costs what the camera's resolution costs, so give a camera's tile the
 camera's low-resolution stream where the integration offers one (most do, as a second camera entity). Measured on a PC
 (2026-10-10, an EZVIZ camera): its 512 x 288 stream at 8 frames a second took 2% of one core for everything (receiving,

@@ -145,7 +145,7 @@ class LiveFeed:
         return source
 
     def pictures_of(self, entity):
-        return self.pictures.setdefault(entity, live_pictures.Pictures())
+        return self.pictures.setdefault(entity, live_pictures.Pictures(entity))
 
     async def serve(self, request, token):
         from aiohttp import web
