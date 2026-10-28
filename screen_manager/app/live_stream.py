@@ -43,6 +43,12 @@ SCREEN_FEATURE = 'live'
 LIVE_PACE = 0
 
 
+def made():
+    """X-Made of a picture or a piece of sound: this host's clock in ms as it leaves for the screen (wrapping at 2^32),
+    which the screen sets beside its own to see how long its pictures and sound wait on the way (live_view.cpp)."""
+    return int(time.monotonic() * 1000) & 0xFFFFFFFF
+
+
 def live_pace(message, tile, features):
     """A camera tile set to Live (pace 0, firmware dev) in a tile's message: a screen whose hello says it streams (or
     the editor's preview, `features` None) gets pace 0, also for a tile without a pace of its own, where Live is the
@@ -210,8 +216,7 @@ class LiveFeed:
         link.pulled = frame.number
         link.sent += 1
         link.size += len(jpeg)
-        # X-Made as on the stream (serve): this host's clock in ms as the picture leaves.
-        headers = {'Cache-Control': 'no-cache', 'X-Made': str(int(time.monotonic() * 1000) & 0xFFFFFFFF)}
+        headers = {'Cache-Control': 'no-cache', 'X-Made': str(made())}
         if frame.still:
             headers['X-Picture'] = 'still'
         return web.Response(body=jpeg, content_type='image/jpeg', headers=headers)
@@ -274,11 +279,8 @@ class LiveFeed:
                 jpeg = await jpegs.picture(frame, link.box, link.cover)
                 if not jpeg:
                     continue
-                # X-Made: this host's clock in ms as the picture leaves for the screen, which sets it beside its own
-                # to see how long a picture waits on the way (live_view.cpp, its pictures' wait).
                 await write(b'--frame\r\nContent-Type: image/jpeg\r\n%sContent-Length: %d\r\nX-Made: %d\r\n\r\n'
-                            % (b'X-Picture: still\r\n' if frame.still else b'', len(jpeg),
-                               int(time.monotonic() * 1000) & 0xFFFFFFFF), jpeg)
+                            % (b'X-Picture: still\r\n' if frame.still else b'', len(jpeg), made()), jpeg)
                 if not sent:
                     LOG.info('Live %s: first picture %.1f s after the link went out (the screen came %.1f s after it); '
                              'its source: %s', link.entity, self.clock() - link.made, began - link.made,
@@ -296,8 +298,8 @@ class LiveFeed:
                 data = await sound.get()
                 while not sound.empty() and len(data) < 3200:
                     data += sound.get_nowait()
-                await write(b'--frame\r\nContent-Type: audio/x-s16le;rate=%d\r\nContent-Length: %d\r\n\r\n'
-                            % (camera_source.SOUND_RATE, len(data)), data)
+                await write(b'--frame\r\nContent-Type: audio/x-s16le;rate=%d\r\nContent-Length: %d\r\nX-Made: %d\r\n\r\n'
+                            % (camera_source.SOUND_RATE, len(data), made()), data)
 
         listening = None
         try:
