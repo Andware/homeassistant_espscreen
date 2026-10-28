@@ -673,8 +673,14 @@ over the quickest picture seen is its wait on the way ("its pictures waited ... 
   and during drags, at most 160; a tile passed 1 to 85 older pictures in 10 s. It reads at its camera's pace now (40 to
   140 KB/s a tile against 26 to 50), which the screen takes; the full view, with its sound between the pictures, reads
   as before.
-- **Next**: a tile's link asks for each picture (one at a time over a kept connection, the app answering with the
-  newest), so nothing queues, the bytes are what is shown and the governor's pause is not asking.
+- **Then a tile asks for each picture** (live_stream.py pull, live_view.cpp pull): GET on its link's .jpg over a kept
+  connection, the app answering with the newest frame's JPEG once it is newer than the last it sent there, or 204
+  after 2 s; the tile asks when its pace says (six a second, or a busy screen's share), so nothing queues and the bytes
+  are what it shows. A tile whose app answers 404 (an app before it) reads the stream as above, with the newest
+  picture; the full view keeps the stream for its sound. Measured on the D1001 (the same three minutes of drags):
+  at rest 5.0 to 5.7 pictures a second, 4 to 6 ms on the way (at most 67), 24 to 31 KB/s a tile (the heaviest camera
+  57 against 132 to 142); during drags 2.7 to 2.9 a second at 12 to 13 KB/s (against 4.4 at 57 to 60), the cores at
+  54.6 and 40.7 %, the panel dry 0 times.
 
 ## 5. The doorbell's talk-back, prepared
 

@@ -251,9 +251,13 @@ older app answers with a still, and the screen shows stills. The link serves `mu
 JPEG a part, each with its Content-Length and X-Made (the app's clock in ms as it leaves), over plain HTTP/1.0. The
 app makes the next picture once the last one has left its host, always of the newest frame the camera gave. Between
 the app and the screen a dozen of a tile's small pictures still fit (the app's socket buffer, the screen's TCP window
-of 64 KB), and a tile that read them one by one showed pictures a second old, so a live tile shows the newest picture
-that reached it and passes the older ones, and the app keeps a tile's socket buffer at 16 KB (docs/PLATFORM_PLAN.md
-4.10). A tile shows at most six pictures a second (hw::LIVE_TILE_PPS). Its line in the screen's log every 10 s says
+of 64 KB), and a tile that read them one by one showed pictures a second old. So a live tile asks for each picture
+instead: GET on the same link with `.jpg` for `.mjpeg`, over a kept connection (HTTP/1.1), and the app answers with the
+JPEG of the camera's newest frame once it is newer than the last it sent on that link, or 204 after 2 s, and the tile
+asks again; the link counts as a stream from its first ask until 3 s after its last answer. A tile asks at most six
+times a second (hw::LIVE_TILE_PPS), a busy screen's tile less (docs/PLATFORM_PLAN.md 4.10). An app without it answers
+404, and the tile reads the stream, showing the newest picture that reached it and passing the older ones; the app
+keeps a tile's socket buffer at 16 KB. Its line in the screen's log every 10 s says how long it waited for the app,
 how long its pictures waited on the way and how many older ones it passed.
 The app serves at most eight streams at once, of every screen together (a page of live tiles and a camera full
 screen); a stream it refuses leaves that screen with its stills. A screen runs at most seven of its own.
