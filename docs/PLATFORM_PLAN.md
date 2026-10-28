@@ -91,11 +91,21 @@ Built in part (2026-10-28), with the S3 as the second engine that proves the sea
   A P4 builds the same code as before.
 - How many live tiles a screen streams at once is the engine's (`limits().live_tiles`), where `hw.h` had a constant.
 - The S3 with PSRAM decodes JPEG stills in software (`picture_engine_s3.cpp`, esp_new_jpeg 1.0.2): its questions name
-  JPEG first, and the app sends photographs as JPEG, about a tenth of a BMP's bytes. On a Guition 4848S040 a camera
-  tile's still (448 x 118) decoded in 20 to 25 ms and a full view's (480 x 270) in 28 to 45 ms, with 63 KB of internal
-  RAM free at rest. Its decoder writes a row of MCUs at a time with a pause between, as the RGB panel reads its picture
-  from the same PSRAM; whether the panel shifts a frame meanwhile only an eye can tell, since an RGB panel's driver
-  counts no underrun (`glass::misses` is the DSI's alone).
+  JPEG first, and the app sends photographs as JPEG. Its decoder writes a row of MCUs at a time with a pause between, as
+  the RGB panel reads its picture from the same PSRAM; whether the panel shifts a frame meanwhile only an eye can tell,
+  since an RGB panel's driver counts no underrun (`glass::misses` is the DSI's alone). The decoder's own memory comes
+  from PSRAM (a wrap of its allocator): asked inside the chip, as the library does, it took the internal RAM down to
+  33 KB at a camera's full-screen stills. Measured on a Guition 4848S040, the same dev with BMP and with JPEG
+  (2026-10-28, a camera tile's stills on its page, then the camera full screen):
+
+  | A still | BMP | JPEG |
+  |---|---|---|
+  | camera tile, 448 x 118: bytes | 54 KB | 10 KB |
+  | from the ask to the picture ready | 107 to 325 ms | 109 to 361 ms, 20 to 29 of it decoding |
+  | full view, 480 x 270: bytes | 389 KB | 25 KB |
+  | from the ask to the picture ready | 426 to 559 ms | 120 to 439 ms, 45 to 59 of it decoding |
+  | internal RAM at its lowest | 42 KB | 43 KB (33 KB with the decoder's memory inside the chip) |
+
 - Still to do: the grep and its test above; the engine API that does not speak the PPA (a target and one call that
   decodes, scales, cuts and turns, which the S3's decoder does in one pass) waits for its first caller, live pictures
   on an RGB panel, so that it is shaped by a use rather than ahead of one.

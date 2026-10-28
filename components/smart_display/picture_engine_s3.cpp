@@ -6,8 +6,10 @@
 // The panel of an S3 board reads its picture out of PSRAM while it draws, through bounce buffers on the bus the decoder
 // writes (packages/hardware/esp32s3-rgb.yaml: one frame shifted sideways when a refill came too late). A BMP's rows came
 // as fast as the Wi-Fi brought them; a decode writes a whole picture in tens of milliseconds. So the decoder works in
-// blocks of rows (its block mode: one MCU row a call) and lets the bus go between them (BREATH_US), and the panel's
-// refills find room. Its own state, about 10 KB, lives inside the chip only while it decodes.
+// blocks of rows (its block mode: one MCU row a call) and lets the bus go between them (BREATH), and the panel's
+// refills find room. Its own state and work buffers come from PSRAM (the wraps at the end of this file): asked inside
+// the chip, as the library does, they took the internal RAM a Guition 4848S040 has least of down to 33 KB at a camera's
+// full-screen stills, against 42 KB with BMP (2026-10-28).
 #include "picture_engine.h"
 #if defined(PICTURE_ENGINE_S3) && defined(SCREEN_PICTURES)
 #include "esphome/core/log.h"
@@ -117,4 +119,17 @@ uint8_t *decode(const uint8_t *data, size_t length, Still &out) {
 }
 
 }  // namespace picture_engine
+
+// esp_new_jpeg asks for its tables and work buffers inside the chip first (its jpeg_calloc*, internal RAM preferred,
+// PSRAM when there is none). On an S3 with an RGB panel the internal RAM is the Wi-Fi's and lwIP's, which must stay there
+// (packages/hardware/esp32s3-rgb.yaml), so here the decoder's memory comes from PSRAM first (-Wl,--wrap, engine_build.py).
+extern "C" void *__wrap_jpeg_calloc(size_t count, size_t size) {
+  return heap_caps_calloc_prefer(count, size, 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+}
+extern "C" void *__wrap_jpeg_calloc_inner(size_t size) { return __wrap_jpeg_calloc(1, size); }
+extern "C" void *__wrap_jpeg_calloc_align(size_t size, int aligned) {
+  void *p = heap_caps_aligned_calloc(aligned, 1, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  return p ? p : heap_caps_aligned_calloc(aligned, 1, size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+}
+extern "C" void *__wrap_jpeg_calloc_align_inner(size_t size, int aligned) { return __wrap_jpeg_calloc_align(size, aligned); }
 #endif

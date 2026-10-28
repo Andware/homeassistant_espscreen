@@ -27,7 +27,8 @@ ENGINES = {
     },
     "s3": {
         "defines": ("PICTURE_ENGINE_S3",),
-        "wraps": (),
+        # The decoder's memory from PSRAM first (picture_engine_s3.cpp).
+        "wraps": ("jpeg_calloc", "jpeg_calloc_inner", "jpeg_calloc_align", "jpeg_calloc_align_inner"),
         # Espressif's registry component, MIT licence; its README has the S3's figures (docs/research/s3-jpeg-2026-10-28.md).
         "components": (("espressif/esp_new_jpeg", "1.0.2"),),
     },
