@@ -49,6 +49,13 @@ def made():
     return int(time.monotonic() * 1000) & 0xFFFFFFFF
 
 
+def part_head(content_type, length, still=False):
+    """The head of one part of a stream: its type, whether it is a camera's still from before its stream came, its
+    length and its X-Made."""
+    return b'--frame\r\nContent-Type: %s\r\n%sContent-Length: %d\r\nX-Made: %d\r\n\r\n' % (
+        content_type, b'X-Picture: still\r\n' if still else b'', length, made())
+
+
 def live_pace(message, tile, features):
     """A camera tile set to Live (pace 0, firmware dev) in a tile's message: a screen whose hello says it streams (or
     the editor's preview, `features` None) gets pace 0, also for a tile without a pace of its own, where Live is the
@@ -181,6 +188,34 @@ class LiveFeed:
             return f'This screen plays {cap} cameras live at once'
         return None
 
+    def begin(self, link, sound=False):
+        """A link starts to stream, by a screen's stream or its first ask for a picture: it counts as streaming, its
+        camera runs and is held, and a full view holds the cameras of its screen's tiles. Its camera's source."""
+        link.streaming += 1
+        source = self.source(link.entity)
+        source.wants_sound = source.wants_sound or sound or link.warm
+        source.viewers += 1
+        source.idle_since = None
+        source.start()
+        link.held, link.began, link.sent, link.size = self.hold(link), self.clock(), 0, 0
+        return source
+
+    def end(self, link, source, how):
+        """A link's stream is over: what it held goes, and the log says what it sent (`how`: as a stream, or a picture
+        an ask)."""
+        link.streaming -= 1
+        link.used = self.clock()
+        self.let_go(link.held)
+        link.held = []
+        source.viewers -= 1
+        if not source.viewers:
+            source.idle_since = time.monotonic()
+        seconds = max(0.001, self.clock() - link.began)
+        jpegs = self.pictures_of(link.entity)
+        LOG.info('Live %s (%s, %s): %d pictures in %.0f s, %.1f a second, %d KB a picture, %.1f ms CPU to make one',
+                 link.entity, source.route, how, link.sent, seconds, link.sent / seconds,
+                 link.size // max(1, link.sent) // 1024, jpegs.made_ms / max(1, jpegs.made))
+
     async def pull(self, request, token):
         """A live tile's next picture, one an ask over a kept connection (GET /camera/<token>.jpg on the same link as
         the stream; firmware that asks so, live_view.cpp): the JPEG of the camera's newest frame for its card once that
@@ -197,14 +232,7 @@ class LiveFeed:
             why = self.refused(link)
             if why:
                 return web.Response(status=503, text=why)
-            link.streaming += 1
-            source = self.source(link.entity)
-            source.wants_sound = source.wants_sound or link.warm
-            source.viewers += 1
-            source.idle_since = None
-            source.start()
-            link.held, link.began, link.sent, link.size = self.hold(link), self.clock(), 0, 0
-            link.lease = asyncio.create_task(self.lease(link, source))
+            link.lease = asyncio.create_task(self.lease(link, self.begin(link)))
         source = self.sources[link.entity]
         source.start()  # again if its camera ended meanwhile, as a screen's new stream would
         link.until = self.clock() + PULL_SECONDS + PULL_LEASE
@@ -229,17 +257,7 @@ class LiveFeed:
                 await asyncio.sleep(min(0.5, max(0.05, link.until - self.clock())))
         finally:
             link.lease = None
-            link.streaming -= 1
-            link.used = self.clock()
-            self.let_go(link.held)
-            link.held = []
-            source.viewers -= 1
-            if not source.viewers:
-                source.idle_since = time.monotonic()
-            seconds = max(0.001, self.clock() - link.began)
-            LOG.info('Live %s (%s, asked a picture at a time): %d pictures in %.0f s, %.1f a second, %d KB a picture',
-                     link.entity, source.route, link.sent, seconds, link.sent / seconds,
-                     link.size // max(1, link.sent) // 1024)
+            self.end(link, source, 'a picture an ask')
 
     async def serve(self, request, token):
         from aiohttp import web
@@ -249,18 +267,10 @@ class LiveFeed:
         why = self.refused(link)
         if why:
             return web.Response(status=503, text=why)
-        link.streaming += 1
-        source = self.source(link.entity)
+        source = self.begin(link, sound=link.sound)
         jpegs = self.pictures_of(link.entity)
-        source.wants_sound = source.wants_sound or link.sound or link.warm
-        source.viewers += 1
-        source.idle_since = None
-        source.start()
-        held = self.hold(link)
         response = web.StreamResponse(headers={'Content-Type': 'multipart/x-mixed-replace;boundary=frame',
                                                'Cache-Control': 'no-cache'})
-        sent = size = 0
-        began = self.clock()
         writing = asyncio.Lock()
         sound = asyncio.Queue(maxsize=SOUND_QUEUE) if link.sound else None
 
@@ -269,7 +279,6 @@ class LiveFeed:
                 await response.write(head + body + b'\r\n')
 
         async def pictures():
-            nonlocal sent, size
             last = 0
             while True:
                 frame = await source.next(last, FRAME_SECONDS)
@@ -279,15 +288,14 @@ class LiveFeed:
                 jpeg = await jpegs.picture(frame, link.box, link.cover)
                 if not jpeg:
                     continue
-                await write(b'--frame\r\nContent-Type: image/jpeg\r\n%sContent-Length: %d\r\nX-Made: %d\r\n\r\n'
-                            % (b'X-Picture: still\r\n' if frame.still else b'', len(jpeg), made()), jpeg)
-                if not sent:
+                await write(part_head(b'image/jpeg', len(jpeg), frame.still), jpeg)
+                if not link.sent:
                     LOG.info('Live %s: first picture %.1f s after the link went out (the screen came %.1f s after it); '
-                             'its source: %s', link.entity, self.clock() - link.made, began - link.made,
+                             'its source: %s', link.entity, self.clock() - link.made, link.began - link.made,
                              ', '.join(f'{what} {at:.1f} s' for what, at in sorted(source.marks.items(), key=lambda m: m[1]))
                              or 'running already')
-                sent += 1
-                size += len(jpeg)
+                link.sent += 1
+                link.size += len(jpeg)
                 # The next picture is made once this one has left this host: the newest, never a queue of old ones.
                 while request.transport is not None and request.transport.get_write_buffer_size():
                     await asyncio.sleep(0.005)
@@ -298,8 +306,7 @@ class LiveFeed:
                 data = await sound.get()
                 while not sound.empty() and len(data) < 3200:
                     data += sound.get_nowait()
-                await write(b'--frame\r\nContent-Type: audio/x-s16le;rate=%d\r\nContent-Length: %d\r\nX-Made: %d\r\n\r\n'
-                            % (camera_source.SOUND_RATE, len(data), made()), data)
+                await write(part_head(b'audio/x-s16le;rate=%d' % camera_source.SOUND_RATE, len(data)), data)
 
         listening = None
         try:
@@ -317,14 +324,5 @@ class LiveFeed:
             if listening is not None:
                 listening.cancel()
                 source.unlisten(sound)
-            link.streaming -= 1
-            link.used = self.clock()
-            self.let_go(held)
-            source.viewers -= 1
-            if not source.viewers:
-                source.idle_since = time.monotonic()
-            seconds = max(0.001, self.clock() - began)
-            LOG.info('Live %s (%s): %d pictures in %.0f s, %.1f a second, %d KB a picture, %.1f ms CPU to make one',
-                     link.entity, source.route, sent, seconds, sent / seconds, size // max(1, sent) // 1024,
-                     jpegs.made_ms / max(1, jpegs.made))
+            self.end(link, source, 'a stream')
         return response
