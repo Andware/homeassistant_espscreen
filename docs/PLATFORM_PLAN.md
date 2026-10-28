@@ -667,20 +667,69 @@ over the quickest picture seen is its wait on the way ("its pictures waited ... 
 
 - **At rest** three of four tiles showed pictures 0.86 to 1.18 s old on average (up to 2.3 s), one 74 ms.
 - **Paused for a busy screen** without more, 11 to 14 s old: the tile read nothing, and the buffers filled.
-- **The fix**: a live tile shows the newest picture there is. A whole picture waits while more bytes wait in its
-  socket (a second input buffer, recv with MSG_PEEK and MSG_DONTWAIT) and goes once none do, or after 250 ms; the older
-  ones are passed and counted. The app keeps a tile's socket buffer at 16 KB. Measured: 19 to 41 ms on the way at rest
-  and during drags, at most 160; a tile passed 1 to 85 older pictures in 10 s. It reads at its camera's pace now (40 to
-  140 KB/s a tile against 26 to 50), which the screen takes; the full view, with its sound between the pictures, reads
-  as before.
-- **Then a tile asks for each picture** (live_stream.py pull, live_view.cpp pull): GET on its link's .jpg over a kept
+- **First fix, now replaced**: the tile read on to the newest picture there was (a second input buffer, a picture
+  waiting while more bytes waited in its socket): 19 to 41 ms on the way, but at the camera's pace in bytes (40 to 140
+  KB/s a tile). The app keeps a tile's socket buffer at 16 KB.
+- **Then a tile asks for each picture** (live_stream.py pull, live_view.cpp ask_each): GET on its link's .jpg over a kept
   connection, the app answering with the newest frame's JPEG once it is newer than the last it sent there, or 204
   after 2 s; the tile asks when its pace says (six a second, or a busy screen's share), so nothing queues and the bytes
-  are what it shows. A tile whose app answers 404 (an app before it) reads the stream as above, with the newest
-  picture; the full view keeps the stream for its sound. Measured on the D1001 (the same three minutes of drags):
+  are what it shows. A tile whose app answers 404 (an app before it) reads the stream, passing a picture a frame behind
+  when a newer one is on its way (read_stream), as the full view does, which keeps the stream for its sound. Measured on the D1001 (the same three minutes of drags):
   at rest 5.0 to 5.7 pictures a second, 4 to 6 ms on the way (at most 67), 24 to 31 KB/s a tile (the heaviest camera
   57 against 132 to 142); during drags 2.7 to 2.9 a second at 12 to 13 KB/s (against 4.4 at 57 to 60), the cores at
   54.6 and 40.7 %, the panel dry 0 times.
+
+#### Who runs above the voice (measured 2026-10-28)
+
+The wake word's inference (ESPHome's micro_wake_word, priority 3, fixed there) fell behind 644 times an hour on the
+reTerminal D1001 at rest with four live tiles, its own camera's video on one of them: the tiles' tasks ran at 5 on the
+same core. The tasks of a P4 screen, as a bench action listed them (name, priority, core):
+
+| Task | Priority | Core | Whose |
+|---|---|---|---|
+| ipc0, esp_timer, sys_evt | 24, 22, 20 | 0 | ESP-IDF |
+| mic_task, rpc_tx, rpc_rx, sdio_* | 23 | any | the microphone, ESP-Hosted's Wi-Fi |
+| speaker_task, tiT | 19, 18 | any | the speaker, lwIP |
+| isp_task, ppa_watch | 11, 10 | 0 | the camera's ISP, the PPA's watch (ppa_guard.cpp) |
+| live_view while it asks for or holds the glass | 5 | 1 | live_view.cpp take_glass (glass::WRITER_PRIORITY) |
+| screen_video | 4 | 0 | Screen camera's video (its encoder, RTSP) |
+| mww | 3 | 1 | the wake word's inference |
+| esp_video_cap | 3 | 0 | the camera's frames |
+| live_view | 2 | 1 | a live tile or view: reading, composing |
+| loopTask, mdns, Tmr Svc | 1 | 1, 0, any | ESPHome's main loop with LVGL |
+
+The rule: nothing of ours runs above the voice (3) but the glass (a stream only while it asks for or holds it), the
+sound and the Wi-Fi. A task that someone adds above it, or a stream that holds the glass for long, takes the voice's
+turn. With the streams at 2 (ba8256cb) the D1001 had 0 resets in ten minutes at rest and in three minutes of drags,
+against 108; the video's encoder stays at 4, on core 0, where the wake word does not run.
+
+### 4.11 The screen's own camera on a tile of its own (2026-10-28)
+
+A live tile that shows the screen's own camera (the reTerminal D1001's tile of its own Video) went the long way: the
+camera's frames into the H.264 encoder (a third of a core), over RTSP to Home Assistant, to the app, into JPEGs, and back
+over the network to the same screen, to be decoded there. Now the screen draws it from the camera itself:
+
+- **The tie.** A plugin with the screen's camera offers its frames (plugin API 0.22, `tessera::offer_own_frames`;
+  Screen camera 0.6.8), the screen's hello says `own_camera`, and the app answers the live ask of a tile of the screen's
+  own camera (the tessera_video camera on the screen's device, or on a device of its own with the screen's MAC, as Home
+  Assistant may keep them apart) with `own:` instead of a link (picture_service, `Manager.own_camera_of`). An app
+  before it gives the link, a firmware before it never says `own_camera`: the hello's flag and the answer are all that
+  ties the two.
+- **The draw.** `own:` opens a stream with no socket and no decoder (live_view.cpp, `own_stream`). While it is open
+  the plugin hands each camera frame to `tessera::own_frame` on the camera's task; the tile takes one when its pace
+  says (hw::LIVE_TILE_PPS, a busy screen's share) and the glass is free at once (`glass::try_hold`: the camera's task
+  never waits), and the PPA copies the part it shows into the card's canvas, scaled, from the camera's YUV420 or RGB565.
+  The tile's own task composes the card over it (corners, shade, name) and lays it onto the glass in one more copy, turned.
+  A frame it cannot take goes by. Covered, on a page out of sight or in standby, the tile closes as any live tile does,
+  and the plugin's hub takes no frames for it.
+- **The encoder** runs only while someone watches the video in Home Assistant (or a ring), not for the tile.
+- **The shape, for what comes next.** The stream is a stream of frames from a source, the drawing shared with every
+  live tile; the screen's own camera is its first source. A call between two screens, foreseen and not built: Screen
+  camera's RTSP session as it is (H.264 and Opus, in step) straight from one screen to the other, without the app; on
+  the screen that receives, a new source for the shared drawing (an RTSP client, the H.264 through the P4's hardware
+  decoder) and the Opus played through the mixer with echo cancelled (the D1001's hardware reference channel, the
+  Guition's in software); ringing, answering and hanging up through the app. The picture of oneself is today's tile of
+  the own camera.
 
 ## 5. The doorbell's talk-back, prepared
 
