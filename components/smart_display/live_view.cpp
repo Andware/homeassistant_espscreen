@@ -261,9 +261,30 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   const size_t glass_size = static_cast<size_t>(panel.w) * panel.h * 2;
   esp_err_t err = ESP_OK;
   bool loading = false;
-  if (s.look.tile) {
+  const int cw = s.area.w, ch = s.area.h;
+  // A live tile's picture the app sent at the card's own size (it makes them for the card, a few pixels over): the card
+  // is composed in the decoded picture where it lies, and the PPA copies it once, onto the glass. Through the card's
+  // canvas the PPA worked twice under the glass, and four tiles waited their turn for it: on a reTerminal D1001 18 ms
+  // into the canvas and 18.5 onto the glass a picture, with 20 ms composing between, so each tile waited 60 to 80 ms
+  // for the others (2026-10-28). A still keeps the canvas, which its loader turns over.
+  if (s.look.tile && !still && into.ok && into.scale == picture_engine::AS_IS && into.covers(cw, ch) &&
+      into.in_w == cw && into.in_h == ch) {
+    int64_t from = esp_timer_get_time();
+    uint16_t *card = reinterpret_cast<uint16_t *>(s.picture) + static_cast<size_t>(into.in_y) * stride_w + into.in_x;
+    compose(card, stride_w, cw, ch, s.look);
+    const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
+    s.compose_us += static_cast<uint32_t>(esp_timer_get_time() - from);
+    hold_timed(s);
+    from = esp_timer_get_time();
+    if (!s.stopping) {
+      glass::place(s.room, s.area);  // from now on LVGL draws nothing here
+      err = copy(s, s.picture, stride_w, rows, into.in_x, into.in_y, cw, ch, glass::frame_buffer(), glass_size, panel.w,
+                 panel.h, target.x, target.y, picture_engine::AS_IS, s.turn);
+    }
+    glass::release();
+    s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - from);
+  } else if (s.look.tile) {
     // The card: the picture cut or fitted into it, on black where it leaves room, then the shade, corners and name.
-    const int cw = s.area.w, ch = s.area.h;
     const size_t canvas_need = (static_cast<size_t>(cw) * ch * 2 + 127) & ~static_cast<size_t>(127);
     if (canvas_need > s.canvas_size) {
       if (s.canvas) free(s.canvas);
