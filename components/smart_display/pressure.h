@@ -6,8 +6,9 @@
 // The work of a screen in a fixed order, from what must never wait to what waits first: the glass, the voice
 // assistant, a doorbell's ring, the live tiles, the screen's own camera (its video), its sensing (light level and
 // motion) and the background (pictures fetched ahead for pages out of sight). Each work has a level: 0 runs as it is,
-// 1 does half of it, 2 a quarter: of the frames for the camera's video, of the samples for sensing (the live tiles'
-// level takes effect with live_view's pace). The glass, the voice and the doorbell are never squeezed.
+// 1 does half of it, 2 a quarter: half or a quarter of the pictures a second for a live tile, which pauses between them
+// (live_view.cpp, pace), of the frames for the camera's video, of the samples for sensing. The glass, the voice and the
+// doorbell are never squeezed.
 //
 // What squeezes, from the bottom of the order up (STEPS), one step for each sign of trouble: the panel ran dry (a
 // glass miss), the main loop held up (ESPHome's "took a long time" for a component), the wake word's ring buffer
