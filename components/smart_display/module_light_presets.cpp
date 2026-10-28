@@ -38,6 +38,14 @@ static void preset_mark(lv_obj_t *k, bool lit, bool busy) {
   light_presets::mark(k, busy ? !spin : lit);
 }
 
+// A tap on a preset's key: the light to that preset, as a wish, unless a preset is still on its way (its spinner turns).
+// A preset is several wishes at once (its colour and brightness, an effect, the device's settings), and taps that fold
+// field by field would leave the light with parts of two presets: the next one waits until Home Assistant has this one.
+static void preset_tap(Tile &t, unsigned n) {
+  if (preset_pending(t) >= 0) return;
+  preset_wish(t, t.presets->items[n]);
+}
+
 // ---- A tile's panel ----
 // A tap on a preset's key (user data: the slot times 8 plus the key): the light to that preset, as a wish.
 static void preset_key_event(lv_event_t *e){
@@ -45,7 +53,7 @@ static void preset_key_event(lv_event_t *e){
   if(slot>=widgets.size()||n>=light_presets::MAX||widgets[slot].index>=model.count)return;
   auto &t=model.tiles[widgets[slot].index];
   if(!t.presets||n>=t.presets->count||!allowed_wish(esphome::millis(),(int)widgets[slot].index,"preset"))return;
-  preset_wish(t,t.presets->items[n]);
+  preset_tap(t,n);
 }
 // The panel's keys of the presets that fit (`r`), made again only when the presets, their number or their size change.
 static void preset_keys(Widgets &w,const light_presets::Presets *ps,const light_presets::Row &r){
@@ -102,7 +110,7 @@ static void colour_preset_event(lv_event_t *e) {
   if (i < 0 || light_controls::demo) return;
   auto &t = model.tiles[i];
   if (!t.presets || n >= t.presets->count || !allowed_wish(esphome::millis(), i, "preset")) return;
-  preset_wish(t, t.presets->items[n]);
+  preset_tap(t, n);
 }
 // The ring round the key of the preset the light shows, the spinner round one on its way.
 void colour_presets_paint(const Tile &t) {
@@ -187,7 +195,7 @@ static void detail_preset_event(lv_event_t *e){
   if(detail_index>=model.count)return;
   auto &t=model.tiles[detail_index];
   if(!t.presets||n>=t.presets->count||!allowed_wish(esphome::millis(),(int)detail_index,"preset"))return;
-  preset_wish(t,t.presets->items[n]);
+  preset_tap(t,n);
 }
 static void detail_preset_paint(lv_obj_t *key,const Tile &t,const CardPart &part){
   const int busy=t.presets?preset_pending(t):-1;

@@ -58,7 +58,8 @@ effect or a setting has its ring only while the light runs that effect and every
 
 While a tapped preset is on its way, its key has a spinner where its ring will be, in the ring's size and ink, until
 Home Assistant has reported every part of it (none of the preset's wishes is live any more, `preset_pending`); then the
-ring shows which preset the light has. A group's lamps often take half a second.
+ring shows which preset the light has. A group's lamps often take half a second. Meanwhile the other keys take no tap: a preset is
+several wishes at once, and taps folded field by field would leave the light with parts of two presets.
 
 A preset with an effect, or the lamp's own preset, has no colour to show: its key is grey and carries the first two
 letters of the effect's or the preset's name.
