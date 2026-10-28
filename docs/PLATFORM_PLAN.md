@@ -519,20 +519,28 @@ depend on which one wins:
 
 - **The owner.** Section 3.4: a ring claims BOTH, the wake word steps back, the camera's sound keeps playing. That is
   the "always hear the other side" rule.
-- **Push to talk.** The doorbell view gets a hold-to-talk key. While held, the microphone's 16 kHz PCM goes up the
-  camera port as one more stream (a POST of `audio/x-s16le;rate=16000` on `/camera/<token>/talk`), the speaker ducks
-  the camera's sound (the mixer's `apply_ducking`), and echo cancellation is not needed. Released, the uplink closes.
-- **The add-on bridges.** The screen never speaks to a doorbell. The add-on takes the PCM and hands it to the camera's
-  back channel through go2rtc (Reolink takes G.711 there) or to Home Assistant's integration when it exists; the
-  transcoding is ffmpeg's, which the add-on already has. Reolink first, because testers have one.
-- **Unlock** is a Home Assistant action the add-on fires from the view's key, as the doorbell events already are.
+- **Push to talk, half duplex** (the plan as of 2026-10-28). The view has its Talk key already (module_doorbell.cpp),
+  grey with "Coming soon" and no action. Built, it shows only when Home Assistant reports `two_way_audio` true for the
+  ring's camera. While it is held, the ring claims the microphone through the audio owner (3.4), the doorbell's own
+  sound goes silent on the screen (half duplex: no echo cancellation needed, no feedback through the doorbell), and the
+  microphone's 16 kHz PCM goes up the link the view already has to the add-on (a POST of `audio/x-s16le;rate=16000` on
+  `/camera/<token>/talk`). Released, the uplink closes and the doorbell's sound comes back.
+- **The add-on bridges.** The screen never speaks to a doorbell. Home Assistant 2026.11 brings two-way audio for
+  cameras as a Labs preview: `camera/capabilities` says whether a camera has it, and `camera/webrtc/re_offer` adds an
+  audio track to the camera's WebRTC session, for Reolink over RTSP only at first. The add-on encodes the PCM as G.711
+  (PCMA or PCMU, whichever the offer takes) into that track; ffmpeg, which the add-on already has, does the
+  transcoding. Reolink first, because testers have one, built once it runs on a Home Assistant with a Reolink doorbell.
+- **Known risks.** go2rtc #1860: a backchannel that stays open after the talk ends, so the next talk finds it taken; and
+  a Reolink takes one talk connection at a time, so a second screen that holds Talk gets nothing until the first lets go.
+- **Open the door** is built (2026-10-28, docs/DOORBELL.md): the event's `lock` or `door_action`, a Door key that opens
+  after a second tap, and the app performs `lock.unlock` or the action, as it performs an alert's button.
 - **One rule for sound that falls behind, at both ends** (2026-10-25). The add-on drops the oldest part when a screen's
   sound queue is full (`live_stream.SOUND_QUEUE`), and the screen leaves the oldest out when more than 400 ms waits for
   its speaker, down to 150 ms (live_view `SOUND_HIGH`, `SOUND_LOW`). A part that finds the screen's buffer full is left
   out whole, the safety net under it. A conversation at the door keeps the same rule.
 
 Done when (later): a tester holds the key on a D1001 and is heard at a Reolink doorbell, with the doorbell's sound on
-the glass before, during (ducked) and after.
+the glass before and after, silent while the key is held.
 
 ## 6. What stays out
 

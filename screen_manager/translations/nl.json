@@ -199,7 +199,12 @@
     },
     "doorbell": {
       "sound_on": "Geluid aan",
-      "sound_off": "Geluid uit"
+      "sound_off": "Geluid uit",
+      "door": "Deur",
+      "door_confirm": "Tik nog eens om te openen",
+      "door_sent": "Verstuurd",
+      "talk": "Spreken",
+      "coming_soon": "Binnenkort"
     },
     "tile": {
       "tap_to_open": "Tik om te openen",
@@ -1528,6 +1533,26 @@
         "timeout": {
           "label": "Timeout",
           "help": "Seconden dat de bel blijft als niemand hem aanraakt, {min} tot {max}. Leeg is {default}. Een aanraking houdt hem open."
+        },
+        "sound": {
+          "label": "Geluid",
+          "help": "Of het geluid van de deurbel meteen speelt als hij rinkelt, op een scherm met een luidspreker. Leeg of true: het belscherm opent met Geluid aan. false: het opent stil (een studio, een slaapkamer), en een tik op Geluid zet het aan."
+        },
+        "chime": {
+          "label": "Chime",
+          "help": "Of het scherm zijn chime speelt als er gebeld wordt, op een scherm met een luidspreker. Leeg of true: het speelt de chime. false: het belt zonder, en het belscherm opent net zo goed."
+        },
+        "lock": {
+          "label": "Slot",
+          "help": "Een slot-entity die de deurknop van het belscherm na een tweede tik ontgrendelt; de knop toont de stand. Een slot dat om een code vraagt, heeft een standaardcode in Home Assistant nodig (de instellingen van het slot). Laat het weg voor geen deurknop."
+        },
+        "door_action": {
+          "label": "Deuractie",
+          "help": "In plaats van een slot: een Home Assistant-actie die de deurknop na een tweede tik uitvoert, zoals script.open_gate of button.press. `door_data` geeft de velden (entity_id, ...)."
+        },
+        "door_data": {
+          "label": "Deurgegevens",
+          "help": "De velden van `door_action`, zoals entity_id."
         }
       },
       "endings": {
@@ -4426,11 +4451,12 @@
         "title": "Nieuwe deurbelautomatisering",
         "camera_hint": "Een P4-scherm streamt hem live met geluid als de camera geluid heeft; andere schermen tonen de foto.",
         "screens_hint": "Niets gekozen: elk scherm.",
-        "limits": "Niet elke deurbel kan alles: geluid komt alleen als de stream van de camera het heeft. Terugpraten en de deur openen komen later.",
+        "limits": "Niet elke deurbel kan alles: geluid komt alleen als de stream van de camera het heeft. Terugpraten komt later.",
         "more_cameras": "Een andere camera…",
         "timeout_hint": "Hoe lang een bel openblijft als niemand het scherm aanraakt. Leeg: de standaard.",
         "summary": {
-          "camera": "Camera"
+          "camera": "Camera",
+          "door": "Deur"
         },
         "steps": {
           "rings": {
@@ -4440,6 +4466,10 @@
           "camera": {
             "title": "Welke camera?",
             "help": "De camera die de schermen laten zien als er gebeld wordt. Meestal de eigen camera van de deurbel."
+          },
+          "door": {
+            "title": "Een deur om te openen?",
+            "help": "Het belscherm kan een knop hebben die na een tweede tik de deur opent: een slot, of een andere actie zoals een script of de knop van een poort. Je kunt het weglaten."
           },
           "screens": {
             "title": "Welke schermen?",
@@ -4457,6 +4487,22 @@
             "title": "Afronden",
             "help": "Maak er een eigen automatisering van, of kopieer de actie naar een automatisering die je al hebt."
           }
+        },
+        "door": {
+          "none": "Geen deurknop",
+          "lock": "Een slot",
+          "action": "Een andere actie",
+          "pick_lock": "Kies een slot…",
+          "pick_action": "Kies wat het opent…",
+          "code": "Dit slot vraagt om een code: de knop verschijnt alleen als het slot een standaardcode heeft in Home Assistant (de instellingen van het slot)."
+        },
+        "sound": {
+          "label": "De deurbel meteen horen",
+          "hint": "Het belscherm opent met het geluid van de deurbel aan. Zet dit uit voor een stille plek, zoals een studio: het geluid wacht dan op een tik op Geluid."
+        },
+        "chime": {
+          "label": "Chime bij het bellen",
+          "hint": "Het scherm speelt een deurbel-chime als er iemand belt. Zet dit uit als je dat ding-dong niet elke keer wilt horen."
         }
       },
       "hero": {
