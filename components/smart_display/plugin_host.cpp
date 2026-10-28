@@ -15,6 +15,7 @@
 #include "capture_dot.h"
 #include "camera_turn.h"
 #include "glass.h"
+#include "pressure.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -430,6 +431,8 @@ void capturing(const Plugin *plugin, Capture what, bool on) {
   if (!plugin || (what != Capture::CAMERA && what != Capture::SENSING)) return;
   capture_dot::capturing(plugin, what == Capture::SENSING, on);
 }
+
+uint8_t squeeze(Work work) { return pressure::level_now(static_cast<pressure::Work>(static_cast<uint8_t>(work))); }
 
 int camera_turn() {
 #ifndef SCREEN_CAMERA_ORIENTATION
