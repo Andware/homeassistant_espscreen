@@ -28,6 +28,7 @@ FRAME_SECONDS = 15        # nothing new from the camera for this long: the strea
 DEFAULT_PACE = 15         # picture_sources.TILE_PACE: the pace of a camera tile on a screen that does not stream
 SOUND_QUEUE = 50          # parts of sound that may wait for a screen (about a second); older ones go
 SEND_BUFFER = 65536       # what may wait in this host's socket for a screen: a picture, not a queue of them
+REFUSAL_LOG_SECONDS = 60  # a refused tile asks again within seconds: the log says each screen's camera once a minute
 # A live tile's pictures are a few KB, so the full view's buffer held a dozen of them for a screen that read slower than
 # its camera, and the screen's own TCP window as many again: a tile showed pictures a second or two old (a reTerminal
 # D1001, 2026-10-28, X-Made). Its link keeps two or three of them here; the screen shows the newest of what reached it.
@@ -93,12 +94,16 @@ class LiveFeed:
     `websocket()` an authenticated websocket of Home Assistant (an async context manager), `streams(entity)` whether
     the camera has a stream."""
 
-    def __init__(self, fetch, websocket, streams, clock=time.monotonic, live_tiles=None):
+    def __init__(self, fetch, websocket, streams, clock=time.monotonic, live_tiles=None, screen_name=None):
         self.fetch, self.websocket, self.streams, self.clock = fetch, websocket, streams, clock
-        # `live_tiles(screen)`: how many live tiles that screen streams at once, from its hello (firmware hw.h, the app's
-        # page_delivery.caps_of), or None for a screen that did not say (an older firmware, which keeps its own count).
+        # `live_tiles(screen)`: how many live tiles that screen streams at once, from its hello (the firmware's
+        # picture_engine::limits, the app's page_delivery.caps_of), or None for a screen that did not say (an older
+        # firmware, which keeps its own count). `screen_name(screen)`: the name the log gives a screen.
         self.live_tiles = live_tiles or (lambda screen: None)
+        self.screen_name = screen_name or (lambda screen: screen)
         self.links, self.sources = {}, {}
+        # When the log last said a refusal, by screen, camera and why (REFUSAL_LOG_SECONDS).
+        self.refusals_said = {}
         # Each source's pictures (live_pictures.Pictures), made once per frame and room for every screen that watches it.
         self.pictures = {}
 
@@ -149,6 +154,10 @@ class LiveFeed:
     def streaming(self):
         return sum(link.streaming for link in self.links.values())
 
+    def usage(self):
+        """The streams of every screen together against the most the app serves, for the editor's camera card."""
+        return {'used': self.streaming(), 'most': MAX_STREAMS}
+
     def tiles_streaming(self, screen):
         """How many live tiles of `screen` stream now (the full view is not a tile)."""
         return sum(link.streaming for link in self.links.values() if link.tile and link.screen == screen)
@@ -178,18 +187,32 @@ class LiveFeed:
         return self.pictures.setdefault(entity, live_pictures.Pictures(entity))
 
     def refused(self, link):
-        """Why a stream of `link` may not start now (a text for 503), or None."""
+        """Why a stream of `link` may not start now (a text for 503), or None. The log says which screen's camera was
+        refused and why, once a minute for each."""
+        why = self.why_refused(link)
+        if why:
+            key, now = (link.screen, link.entity, why), self.clock()
+            if now - self.refusals_said.get(key, -REFUSAL_LOG_SECONDS) >= REFUSAL_LOG_SECONDS:
+                self.refusals_said[key] = now
+                where = self.screen_name(link.screen) if link.screen is not None else 'a screen'
+                LOG.info('Live %s refused for %s (%s): %s; %d of %d streams in use, of every screen', link.entity,
+                         where, 'a tile' if link.tile else 'full screen', why, self.streaming(), MAX_STREAMS)
+        return why
+
+    def why_refused(self, link):
+        """Why a stream of `link` may not start now, or None (refused says it)."""
         # A full view (a camera opened, a doorbell's ring) of a screen whose own live tiles still stream goes through:
         # the view covers those tiles, and they end the moment it opens. A ring on the bench Guition with four live tiles
         # and the D1001's own was refused here at its first ask, and its picture came 1.9 s after the view opened
         # instead of under one (2026-10-28, docs/PLATFORM_PLAN.md 4.9).
         if self.streaming() >= MAX_STREAMS and (link.tile or link.screen is None or not self.tiles_streaming(link.screen)):
             return 'Too many live cameras'
-        # A screen's own count (hw.h LIVE_TILES, docs/PLATFORM_PLAN.md 4.1): its fifth live tile is refused here as the
-        # firmware refuses it there, so a screen whose firmware and app disagree never streams more than the lower says.
+        # A screen's own count (picture_engine::limits, docs/PLATFORM_PLAN.md 4.1): its tile past the count is refused
+        # here as the firmware refuses it there, so a screen whose firmware and app disagree never streams more than the
+        # lower says.
         cap = self.live_tiles(link.screen) if link.tile and link.screen is not None else None
         if cap is not None and self.tiles_streaming(link.screen) >= cap:
-            return f'This screen plays {cap} cameras live at once'
+            return f'This screen plays {cap} cameras live at once' if cap != 1 else 'This screen plays one camera live'
         return None
 
     def begin(self, link, sound=False):

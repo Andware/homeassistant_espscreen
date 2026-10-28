@@ -2483,7 +2483,9 @@
         "seconds": "Co {n} s",
         "live": "Na żywo",
         "paused": "Na żywo wstrzymane",
-        "cap": "Ten ekran pokazuje na żywo {n} kamery naraz; pozostałe pokazują obraz co 15 sekund. Przy dwóch kamerach każda działa płynniej niż przy czterech."
+        "cap": "Ten ekran pokazuje na żywo {n} kamery naraz; pozostałe pokazują obraz co 15 sekund. Przy dwóch kamerach każda działa płynniej niż przy czterech.",
+        "cap_one": "Ten ekran pokazuje na żywo jedną kamerę naraz; pozostałe pokazują obraz co 15 sekund.",
+        "streams": "W użyciu {used} z {most} transmisji na żywo, na wszystkich ekranach. Kamera ponad ten limit pokazuje obraz co 15 sekund."
       },
       "picture": {
         "fit": {

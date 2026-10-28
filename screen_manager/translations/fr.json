@@ -2483,7 +2483,9 @@
         "seconds": "Toutes les {n} s",
         "live": "En direct",
         "paused": "Direct en pause",
-        "cap": "Cet écran diffuse {n} caméras en direct à la fois ; les autres affichent une image toutes les 15 secondes. Avec deux caméras, chacune est plus fluide qu'avec quatre."
+        "cap": "Cet écran diffuse {n} caméras en direct à la fois ; les autres affichent une image toutes les 15 secondes. Avec deux caméras, chacune est plus fluide qu'avec quatre.",
+        "cap_one": "Cet écran diffuse une seule caméra en direct à la fois ; les autres affichent une image toutes les 15 secondes.",
+        "streams": "{used} flux en direct sur {most} utilisés, tous écrans confondus. Une caméra au-delà affiche une image toutes les 15 secondes."
       },
       "picture": {
         "fit": {

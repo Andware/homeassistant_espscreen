@@ -2483,7 +2483,9 @@
         "seconds": "A cada {n} s",
         "live": "Ao vivo",
         "paused": "Ao vivo em pausa",
-        "cap": "Este ecrã mostra {n} câmaras ao vivo de cada vez; as outras mostram uma imagem a cada 15 segundos. Com duas câmaras, cada uma fica mais fluida do que com quatro."
+        "cap": "Este ecrã mostra {n} câmaras ao vivo de cada vez; as outras mostram uma imagem a cada 15 segundos. Com duas câmaras, cada uma fica mais fluida do que com quatro.",
+        "cap_one": "Este ecrã mostra uma câmara em direto de cada vez; as outras mostram uma imagem a cada 15 segundos.",
+        "streams": "{used} de {most} transmissões em direto em uso, em todos os ecrãs. Uma câmara além destas mostra uma imagem a cada 15 segundos."
       },
       "picture": {
         "fit": {

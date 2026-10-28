@@ -226,6 +226,33 @@ class Stream(unittest.TestCase):
         self.assertTrue(feed.streaming() >= live_stream.MAX_STREAMS and feed.tiles_streaming('guition'))
         self.assertFalse(view.tile or view.screen is None or not feed.tiles_streaming(view.screen), 'the ring of the Guition goes through')
 
+    def test_the_streams_in_use_and_each_refusal_are_told(self):
+        """The editor's camera card says how many of the eight streams are in use (usage, the light inventory), and the
+        log says which screen's camera was refused and why, once a minute for each, as a refused tile asks again within
+        seconds."""
+        now = [100.0]
+        feed = live_stream.LiveFeed(None, None, lambda e: True, clock=lambda: now[0], live_tiles=lambda screen: 1,
+                                    screen_name=lambda screen: {'wallbox': 'Guition Wallbox'}.get(screen, screen))
+        self.assertEqual(feed.usage(), {'used': 0, 'most': live_stream.MAX_STREAMS})
+        feed.links[feed.link('camera.max', (448, 118), cover=True, screen='wallbox', tile=True)].streaming = 1
+        self.assertEqual(feed.usage()['used'], 1)
+        second = feed.links[feed.link('camera.door', (448, 118), cover=True, screen='wallbox', tile=True)]
+        with self.assertLogs('live_stream', 'INFO') as said:
+            self.assertEqual(feed.refused(second), 'This screen plays one camera live')
+            now[0] += 5
+            feed.refused(second)
+            now[0] += live_stream.REFUSAL_LOG_SECONDS
+            feed.refused(second)
+        self.assertEqual(len(said.output), 2, said.output)
+        self.assertIn('Live camera.door refused for Guition Wallbox (a tile): This screen plays one camera live; 1 of 8 '
+                      'streams in use, of every screen', said.output[0])
+        for i in range(live_stream.MAX_STREAMS):
+            feed.links[feed.link(f'camera.c{i}', (946, 710), screen='other')].streaming = 1
+        with self.assertLogs('live_stream', 'INFO') as said:
+            self.assertEqual(feed.refused(feed.links[feed.link('camera.door', (946, 710), screen='kitchen')]),
+                             'Too many live cameras')
+        self.assertIn('for kitchen (full screen): Too many live cameras; 9 of 8 streams in use', said.output[0])
+
     def test_an_unknown_link_and_too_many_streams_are_refused(self):
         (head, got), _, asked = self.run_stream(token='x' * 24, parts=1)
         self.assertEqual(got, [])

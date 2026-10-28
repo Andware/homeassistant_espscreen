@@ -205,7 +205,7 @@ class WaitForWebRTC(unittest.TestCase):
             source = camera_source.Source(live_stream.LiveFeed(fetch, None, lambda e: True), 'camera.door', True)
             source.viewers = 1
 
-            async def rtc(kinds, take, keep):
+            async def rtc(kinds, take, keep, quiet=False):
                 await asyncio.sleep(0.35)  # a camera's key frame that takes its time
                 await take('video', object())
                 return True
@@ -224,6 +224,46 @@ class WaitForWebRTC(unittest.TestCase):
             self.assertIsNotNone(source.frame.video)
 
         asyncio.run(main())
+
+    def test_a_camera_on_its_snapshots_tries_webrtc_again_and_says_once_that_it_works(self):
+        """A camera whose WebRTC gave no frame (its privacy mode, a go2rtc that was away) sends its snapshots and tries
+        WebRTC again every WEBRTC_RETRY_SECONDS while it is watched, its snapshots going on meanwhile; only the first
+        failure is in the log, and one line says when it works again."""
+        async def main():
+            fetched, quiet_asked = [], []
+
+            async def fetch(entity):
+                fetched.append(asyncio.get_running_loop().time())
+                return jpeg(64, 36)
+
+            source = camera_source.Source(live_stream.LiveFeed(fetch, None, lambda e: True), 'camera.door', True)
+            source.viewers = 1
+
+            async def rtc(kinds, take, keep, quiet=False):
+                quiet_asked.append(quiet)
+                await asyncio.sleep(0.1)
+                if len(quiet_asked) < 3:
+                    return False
+                await take('video', object())
+                return True
+            source.rtc = rtc
+            saved = camera_source.WEBRTC_RETRY_SECONDS, camera_source.webrtc_here
+            camera_source.WEBRTC_RETRY_SECONDS, camera_source.webrtc_here = 0.3, lambda: True
+            try:
+                with self.assertLogs('camera_source', 'INFO') as logged:
+                    await source.run()
+            finally:
+                camera_source.WEBRTC_RETRY_SECONDS, camera_source.webrtc_here = saved
+            return fetched, quiet_asked, logged.output, source
+
+        fetched, quiet_asked, output, source = asyncio.run(main())
+        self.assertEqual(quiet_asked, [False, True, True])
+        works = [line for line in output if 'WebRTC works again' in line]
+        self.assertEqual(len(works), 1, output)
+        self.assertIn('Live camera.door: WebRTC works again at try 3, after', works[0])
+        # Snapshots between the tries and during the last one, at the snapshots' pace, not a still every 2 s.
+        self.assertGreater(len(fetched), 10)
+        self.assertIsNotNone(source.frame.video)
 
     @unittest.skipUnless(importlib.util.find_spec('aiortc'), 'needs aiortc (the app has it)')
     def test_a_refused_offer_gives_way_at_once(self):

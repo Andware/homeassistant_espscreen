@@ -263,7 +263,10 @@ half or a quarter of that (docs/PLATFORM_PLAN.md 4.10). An app without it answer
 keeps a tile's socket buffer at 16 KB. Its line in the screen's log every 10 s says how long it waited for the app,
 how long its pictures waited on the way and how many older ones it passed.
 The app serves at most eight streams at once, of every screen together (a page of live tiles and a camera full
-screen); a stream it refuses leaves that screen with its stills. A screen runs at most seven of its own.
+screen); a stream it refuses leaves that screen with its stills. A screen runs at most seven of its own. The editor's
+camera card says how many of the eight are in use now ("3 of 8 live streams in use, across all screens", the inventory's
+`live_streams`), and the app's log names each refused camera with its screen and why, once a minute for each:
+`Live camera.door refused for Kitchen (a tile): Too many live cameras; 8 of 8 streams in use, of every screen`.
 
 **Where the pictures come from** (`screen_manager/app/camera_source.py`; the JPEG per room is `live_pictures.py`, the
 stream on the camera port `live_stream.py`). Most of the work lands on Home Assistant's host,
@@ -281,7 +284,10 @@ often a Raspberry Pi, so each kind of camera takes the cheapest road:
 - Any other camera (a snapshot camera, an ESPHome camera, a picture an integration draws) gives its snapshot, asked again
   as soon as the last one came, at most 15 a second. A JPEG the P4 decodes as it is (baseline, at most 1920 pixels a
   side) goes out untouched, which costs the app nothing; anything else is made into one.
-- A camera whose WebRTC does not start within 20 seconds sends its snapshots instead.
+- A camera whose WebRTC does not start within 20 seconds sends its snapshots instead, and tries WebRTC again every
+  minute while anyone watches it, its snapshots going on meanwhile: a camera back from its privacy mode, or a go2rtc
+  that was away, plays live again without the screen closing it. The log says the first failure and, once, when it
+  works again (`Live camera.door: WebRTC works again at try 3, after 121 s of snapshots`).
 
 **Every frame looked at** (`camera_source.FrameWatch`). Each decoded WebRTC frame is checked before a screen gets it:
 

@@ -2483,7 +2483,9 @@
         "seconds": "{n} mp-enként",
         "live": "Élő",
         "paused": "Élő szünetel",
-        "cap": "Ez a képernyő egyszerre {n} kamerát mutat élőben; a többi 15 másodpercenként mutat egy képet. Két kamerával mindegyik gördülékenyebben fut, mint néggyel."
+        "cap": "Ez a képernyő egyszerre {n} kamerát mutat élőben; a többi 15 másodpercenként mutat egy képet. Két kamerával mindegyik gördülékenyebben fut, mint néggyel.",
+        "cap_one": "Ez a képernyő egyszerre egy kamerát mutat élőben; a többi 15 másodpercenként mutat egy képet.",
+        "streams": "{most} élő közvetítésből {used} használatban, az összes képernyőn. Az ezen felüli kamera 15 másodpercenként mutat egy képet."
       },
       "picture": {
         "fit": {

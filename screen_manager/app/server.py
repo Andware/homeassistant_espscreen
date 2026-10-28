@@ -1105,7 +1105,8 @@ class Manager:
         self.alert_cameras = {}
         # A camera live on a P4 (live_stream.py): its links and the sources behind them, on the camera port.
         self.live = live_stream.LiveFeed(lambda entity: self.ha.camera_image(entity), lambda: self.ha.websocket(),
-                                       lambda entity: self.ha.camera_streams(entity), live_tiles=self.live_tiles_of)
+                                       lambda entity: self.ha.camera_streams(entity), live_tiles=self.live_tiles_of,
+                                       screen_name=self.name_of)
         self.links = picture_links.Links()
         self.sources = picture_sources.Sources(picture_sources.Providers.of(self), self.snapshots)
         self.pictures = picture_service.Service(self, self.sources, self.links, self.live)
@@ -1283,6 +1284,11 @@ class Manager:
         else:
             view = has_module(screen, 'doorbell') and self.live_camera(screen)
         return 'view' if view else 'picture' if board_of(screen) in picture_question.BOXES else 'plain'
+
+    def name_of(self, inbox):
+        """The name this app gives the screen of `inbox` (its own label, else Home Assistant's), or the inbox."""
+        screen = self.screen(inbox)
+        return (self.labels.get(screen.get('device_id')) or screen['name']) if screen else inbox
 
     def live_tiles_of(self, inbox):
         """How many live camera tiles the screen of `inbox` streams at once, from its hello (page_delivery.caps_of,
@@ -4487,6 +4493,9 @@ def create_app(manager, development=False):
                 'build_server': manager.build_server.view(),
                 # What this app shares about plugins (plugin_likes.py): the likes' yes, counting, whether cards ask.
                 'plugin_sharing': manager.plugins.liker.view() if editor_features['plugins'] else None,
+                # The live streams of every screen together against the most the app serves (live_stream.py): the
+                # camera card says them, so whoever adds a ninth knows why it shows its stills.
+                'live_streams': manager.live.usage(),
                 'language': manager.region.view()}
     async def seen_pending(payload):
         """Marks each screen that waits for pairing that Home Assistant has found on the network (`seen`); the rest is

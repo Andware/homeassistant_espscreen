@@ -39,9 +39,19 @@ import live_pictures
 
 LOG = logging.getLogger(__name__)
 
+
+def webrtc_here():
+    """Whether this install can take WebRTC at all (aiortc): without it a camera's snapshots never try it again."""
+    try:
+        import aiortc  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
 LINGER_SECONDS = 5        # a camera nobody watches any more stops after this (a screen that asks again at once finds it)
 SNAPSHOT_FPS = 15         # a camera without a stream is asked no more often than this
 WEBRTC_FIRST_SECONDS = 20  # a WebRTC session without a frame by then gives way to the snapshots
+WEBRTC_RETRY_SECONDS = 60  # a camera on its snapshots while watched tries WebRTC again this often
 LAG_REPORT_SECONDS = 60   # how often a camera's WebRTC pictures say how far behind the camera they are (Lag)
 STILL_SECONDS = 2          # the camera's still, again this often, until WebRTC's first frame (the screen's
                            # live_view::QUIET_MS closes a stream silent for 6 s)
@@ -277,6 +287,8 @@ class Source:
         self.resampler = None
         self.sound_dropped = 0  # parts of sound a listener's full queue lost since the last report (Lag)
         self.watch, self.stills = None, 0  # the frame watch of its WebRTC pictures; the stills among them
+        self.webrtc_tries = 0  # WebRTC sessions that gave no frame since it last did, while watched (run)
+        self.snapshots_since = None  # when its snapshots took over from WebRTC
 
     def mark(self, what):
         self.marks.setdefault(what, time.monotonic() - self.started)
@@ -305,11 +317,20 @@ class Source:
 
     async def run(self):
         """Pictures while anyone watches: WebRTC for a camera with a stream, its still until the first frame and if
-        WebRTC fails; snapshots for any other camera."""
+        WebRTC fails; snapshots for any other camera. A camera whose WebRTC gave no frame sends its snapshots and tries
+        WebRTC again every WEBRTC_RETRY_SECONDS while it is watched: a camera back from its privacy mode, or a go2rtc that
+        came back, plays live again without anyone closing it."""
         try:
-            if self.streams and await self.webrtc():
+            if not self.streams or not webrtc_here():
+                await self.snapshots()
                 return
-            await self.snapshots()
+            self.webrtc_tries = 0
+            while not await self.webrtc():
+                self.webrtc_tries += 1
+                if self.webrtc_tries == 1:
+                    self.snapshots_since = time.monotonic()
+                if not await self.snapshots(until=time.monotonic() + WEBRTC_RETRY_SECONDS):
+                    return
         except asyncio.CancelledError:
             raise
         except Exception as error:  # noqa: BLE001 - a camera that fails ends its streams; screens ask again
@@ -318,15 +339,20 @@ class Source:
     def watched(self):
         return self.viewers > 0 or (self.idle_since and time.monotonic() - self.idle_since < LINGER_SECONDS)
 
-    async def snapshots(self):
-        self.route = 'snapshot'
+    async def snapshots(self, until=None, stop=None):
+        """The camera's snapshots while it is watched, or `until` that time: True when it stopped for `until`. With
+        `stop`, until that event: the snapshots of a camera that tries WebRTC again go on until its first frame."""
+        if stop is None:
+            self.route = 'snapshot'
         failures = 0
-        while self.watched():
+        while self.watched() and not (stop and stop.is_set()):
+            if until is not None and time.monotonic() >= until:
+                return True
             started = time.monotonic()
             try:
                 raw = await self.feed.fetch(self.entity)
                 failures = 0
-                if raw:
+                if raw and not (stop and stop.is_set()):
                     await self.publish(jpeg=raw)
             except asyncio.CancelledError:
                 raise
@@ -336,19 +362,24 @@ class Source:
                     LOG.info('Live %s: no snapshot (%s)', self.entity, type(error).__name__)
                 await asyncio.sleep(min(10, failures))
             await asyncio.sleep(max(0.0, 1 / SNAPSHOT_FPS - (time.monotonic() - started)))
+        return False
 
     async def webrtc(self):
         """Home Assistant's WebRTC of the camera's pictures until nobody watches; False when it gave no frame (no WebRTC
         here, no aiortc in this install, a camera go2rtc cannot relay): the snapshots take over. The camera's stills go
         first: WebRTC waits for the camera's next key frame."""
         first = asyncio.Event()
-        still = asyncio.create_task(self.stills_until(first))
+        # Until its first frame: the camera's still every STILL_SECONDS, or on a try again its snapshots as they went.
+        still = asyncio.create_task(self.snapshots(stop=first) if self.webrtc_tries else self.stills_until(first))
 
         async def take(kind, frame):
             if kind == 'audio':
                 self.heard(frame)
                 return
             self.mark('first WebRTC frame')
+            if not first.is_set() and self.webrtc_tries:
+                LOG.info('Live %s: WebRTC works again at try %d, after %.0f s of snapshots', self.entity,
+                         self.webrtc_tries + 1, time.monotonic() - self.snapshots_since)
             first.set()
             if self.watch.feed(frame):
                 await self.publish(video=frame)
@@ -360,15 +391,17 @@ class Source:
             self.stills = 0
             # The sound along in the same session when a screen with a speaker watches: the full view has it at once.
             self.sound_along = self.wants_sound
-            return await self.rtc(('video', 'audio') if self.sound_along else ('video',), take, self.watched)
+            # A try again after the first says nothing of its failure: the log said it once, and says it works again.
+            return await self.rtc(('video', 'audio') if self.sound_along else ('video',), take, self.watched,
+                                  quiet=self.webrtc_tries > 0)
         finally:
             self.sound_along = False
             still.cancel()
 
-    async def rtc(self, kinds, take, keep):
+    async def rtc(self, kinds, take, keep, quiet=False):
         """One WebRTC session of Home Assistant's for the camera's `kinds` ('video', 'audio'): `take(kind, frame)` for
         each frame while `keep()`. False when no frame of the first kind came within WEBRTC_FIRST_SECONDS or the session
-        could not start."""
+        could not start; `quiet` leaves out the log line that says so."""
         try:
             from aiortc import RTCConfiguration, RTCPeerConnection, RTCSessionDescription
             from aiortc.sdp import candidate_from_sdp
@@ -465,7 +498,9 @@ class Source:
                                        return_when=asyncio.FIRST_COMPLETED)
                     if not first.is_set():
                         why = ended(listening) or f'nothing in {WEBRTC_FIRST_SECONDS} s'
-                        LOG.info('Live %s: no WebRTC %s (%s)', self.entity, kind, why)
+                        if not quiet:
+                            LOG.info('Live %s: no WebRTC %s (%s); its snapshots meanwhile, WebRTC again every %d s',
+                                     self.entity, kind, why, WEBRTC_RETRY_SECONDS)
                         return False
                     while keep() and not listening.done() and all(not p.done() for p in pulls):
                         await asyncio.sleep(1)
@@ -479,7 +514,9 @@ class Source:
                     arrived.cancel()
                     listening.cancel()
         except (ConnectionError, OSError, asyncio.TimeoutError) as error:
-            LOG.info('Live %s: no WebRTC %s (%s)', self.entity, kind, error)
+            if not quiet:
+                LOG.info('Live %s: no WebRTC %s (%s); its snapshots meanwhile, WebRTC again every %d s', self.entity,
+                         kind, error, WEBRTC_RETRY_SECONDS)
             return False
         finally:
             for task in pulls:

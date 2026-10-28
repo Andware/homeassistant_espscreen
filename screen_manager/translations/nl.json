@@ -2048,7 +2048,9 @@
         "seconds": "Elke {n} s",
         "live": "Live",
         "paused": "Live gepauzeerd",
-        "cap": "Dit scherm speelt {n} camera's tegelijk live; de andere tonen elke 15 seconden een plaatje. Met twee camera's loopt elke camera vloeiender dan met vier."
+        "cap": "Dit scherm speelt {n} camera's tegelijk live; de andere tonen elke 15 seconden een plaatje. Met twee camera's loopt elke camera vloeiender dan met vier.",
+        "cap_one": "Dit scherm speelt één camera tegelijk live; de andere tonen elke 15 seconden een plaatje.",
+        "streams": "{used} van {most} live streams in gebruik, over alle schermen. Een camera daarboven toont elke 15 seconden een plaatje."
       },
       "picture": {
         "fit": {

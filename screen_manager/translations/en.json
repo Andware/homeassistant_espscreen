@@ -2048,7 +2048,9 @@
         "seconds": "Every {n} s",
         "live": "Live",
         "paused": "Live paused",
-        "cap": "This screen plays {n} cameras live at once; the others show a picture every 15 seconds. With two cameras, each one runs more smoothly than with four."
+        "cap": "This screen plays {n} cameras live at once; the others show a picture every 15 seconds. With two cameras, each one runs more smoothly than with four.",
+        "cap_one": "This screen plays one camera live at a time; the others show a picture every 15 seconds.",
+        "streams": "{used} of {most} live streams in use, across all screens. A camera beyond them shows a picture every 15 seconds."
       },
       "picture": {
         "fit": {

@@ -2483,7 +2483,9 @@
         "seconds": "Alle {n} s",
         "live": "Live",
         "paused": "Live pausiert",
-        "cap": "Dieser Bildschirm zeigt {n} Kameras gleichzeitig live; die anderen zeigen alle 15 Sekunden ein Bild. Mit zwei Kameras läuft jede flüssiger als mit vier."
+        "cap": "Dieser Bildschirm zeigt {n} Kameras gleichzeitig live; die anderen zeigen alle 15 Sekunden ein Bild. Mit zwei Kameras läuft jede flüssiger als mit vier.",
+        "cap_one": "Dieser Bildschirm zeigt eine Kamera gleichzeitig live; die anderen zeigen alle 15 Sekunden ein Bild.",
+        "streams": "{used} von {most} Live-Streams in Gebrauch, über alle Bildschirme. Eine Kamera darüber hinaus zeigt alle 15 Sekunden ein Bild."
       },
       "picture": {
         "fit": {
