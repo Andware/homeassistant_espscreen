@@ -1312,6 +1312,24 @@ inline int preset_lit(const Tile &t) {
   }
   return light_presets::group_shown(*t.presets, each.data(), n, preset_light(t));
 }
+// The preset a tap set on its way, or -1: one of its wishes (its colour and brightness, its effect, a setting) is still
+// live, so Home Assistant has not reported it yet. Its key turns a spinner in the ring's place until it has.
+inline int preset_pending(const Tile &t) {
+  if (!t.presets) return -1;
+  const auto on_way = [&](optimistic::Field field, const std::string &want, const std::string &item = "") {
+    const auto *w = wishes.find(t.entity, field, item);
+    return w && w->want == want;
+  };
+  for (unsigned n = 0; n < t.presets->count; ++n) {
+    const auto &p = t.presets->items[n];
+    bool busy = (p.level && on_way(optimistic::Field::PRESET, light_presets::value(p))) ||
+                (!p.effect.empty() && on_way(optimistic::Field::EFFECT, p.effect));
+    for (const auto &s : p.settings)
+      busy = busy || on_way(s.is_number() ? optimistic::Field::ROW_NUMBER : optimistic::Field::ROW_OPTION, s.text, s.entity);
+    if (busy) return (int) n;
+  }
+  return -1;
+}
 #endif
 inline std::string wish_read(const Tile &t, optimistic::Field field, const std::string &item = "") {
   using F = optimistic::Field;
