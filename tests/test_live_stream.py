@@ -198,6 +198,23 @@ class Stream(unittest.TestCase):
             cap = feed.live_tiles(link.screen) if link.tile and link.screen is not None else None
             self.assertTrue(cap is None or feed.tiles_streaming(link.screen) < cap)
 
+    def test_a_full_view_goes_past_the_limit_while_its_own_tiles_still_stream(self):
+        """A ring or a camera opened full screen covers the screen's live tiles, which end as it opens: at MAX_STREAMS
+        it goes through when that screen's own tiles hold some of them, and is refused otherwise, as a tile is."""
+        feed = live_stream.LiveFeed(None, None, lambda e: True)
+        for i in range(live_stream.MAX_STREAMS):
+            screen = 'guition' if i < 4 else 'd1001'
+            feed.links[feed.link(f'camera.c{i}', (434, 244), cover=True, screen=screen, tile=True)].streaming = 1
+        refused = (feed.link('camera.door', (946, 710), screen='kitchen'),
+                   feed.link('camera.door', (434, 244), cover=True, screen='guition', tile=True),
+                   feed.link('camera.door', (946, 710)))
+        for token in refused:
+            answer = asyncio.run(feed.serve(None, token))
+            self.assertEqual(answer.status, 503)
+        view = feed.links[feed.link('camera.door', (946, 710), screen='guition')]
+        self.assertTrue(feed.streaming() >= live_stream.MAX_STREAMS and feed.tiles_streaming('guition'))
+        self.assertFalse(view.tile or view.screen is None or not feed.tiles_streaming(view.screen), 'the ring of the Guition goes through')
+
     def test_an_unknown_link_and_too_many_streams_are_refused(self):
         (head, got), _, asked = self.run_stream(token='x' * 24, parts=1)
         self.assertEqual(got, [])

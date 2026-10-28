@@ -564,9 +564,11 @@ first ask ("not a stream of pictures (answer 503)"), the screen asks again, and 
 view opened instead of under a second. The add-on's limit is MAX_STREAMS (live_stream.py, 8 streams of every screen
 together, "Too many live cameras"): the Guition's four live tiles and Max's D1001 with its own live tiles fill it, and
 the ring's view asks before the Guition has closed its tiles (live_view's stream 4 starts, then streams 0 to 3 end).
-The screen's own cap (hw.h LIVE_TILES) does not refuse it: a full view is no tile. The fix to weigh: the screen closes
-its live tiles before the view asks (camera_open), or the add-on lets a full view through when the same screen's tiles
-are about to end; either way the ring has its picture at once.
+The screen's own cap (hw.h LIVE_TILES) does not refuse it: a full view is no tile. Done (2026-10-28), both ways: the
+screen's camera_open halts its live tiles before the view asks (live_tiles_halt), and the add-on lets a full view of a
+screen through MAX_STREAMS while that screen's own tiles still stream (live_stream.serve). Measured on the bench Guition
+with the screen's half alone: no 503, the first picture 1.54 s after the view opened (1.3 s of it the app's answer with
+the link, the stream's first picture 226 ms after it started), and the four tiles back by themselves after the ring.
 
 ## 5. The doorbell's talk-back, prepared
 

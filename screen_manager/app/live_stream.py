@@ -152,7 +152,11 @@ class LiveFeed:
         link = self.links.get(token)
         if link is None:
             return web.Response(status=404, text='Unknown link')
-        if self.streaming() >= MAX_STREAMS:
+        # A full view (a camera opened, a doorbell's ring) of a screen whose own live tiles still stream goes through:
+        # the view covers those tiles, and they end the moment it opens. A ring on the bench Guition with four live tiles
+        # and the D1001's own was refused here at its first ask, and its picture came 1.9 s after the view opened
+        # instead of under one (2026-10-28, docs/PLATFORM_PLAN.md 4.9).
+        if self.streaming() >= MAX_STREAMS and (link.tile or link.screen is None or not self.tiles_streaming(link.screen)):
             return web.Response(status=503, text='Too many live cameras')
         # A screen's own count (hw.h LIVE_TILES, docs/PLATFORM_PLAN.md 4.1): its fifth live tile is refused here as the
         # firmware refuses it there, so a screen whose firmware and app disagree never streams more than the lower says.
