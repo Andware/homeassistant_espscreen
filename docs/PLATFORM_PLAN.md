@@ -815,8 +815,12 @@ canvas). The turn now happens in the app, where it costs little, and the screen 
   times in the ten minutes and 11 in three minutes of dragging, against 0 and 33 in two rounds of the build before with
   the same load: what decides it is the encoder, not the turn.
 - **What the PPA still turns per picture:** a tile of the screen's own camera (its frames come upright from the
-  sensor; one turned copy each onto the glass) and LVGL's own flushes. The way out for the first is the sensor's own
-  output turned, or the frame hub turning once for all its consumers: on the list.
+  sensor; one turned copy each onto the glass) and LVGL's own flushes. Tried and left out (2026-10-29, the D1001, three
+  minutes each): the frame turned on its way into the canvas, which converts and scales it anyway, so the copy onto the
+  glass goes straight. Into the canvas 57.7 ms against 52 to 55, composing 30 against 24 to 30, onto the glass 18.0
+  straight against 17.8 to 19.8 turned: no quicker, and still one turned copy a frame, the kind the hang is about,
+  into PSRAM instead of the glass. The sensor cannot turn a quarter (only mirror and flip), and the video wants its
+  frames upright, so a turn in the frame hub would serve the tile alone: the turned copy onto the glass stays.
 - **What the Tab5 should show:** its two live tiles no longer turn on the chip. Whether the stall comes back is for its
   tester to say; the ring of a stall names the copy and its turn as before.
 
