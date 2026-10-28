@@ -53,6 +53,10 @@
 
 ## Recipes for changing the code
 
+- [ARCHITECTURE.md](ARCHITECTURE.md): the one map of the firmware: its layers (the engine per chip, the glass per
+  panel kind, the streams, pictures, the capability record, the governor, the audio owner, plugins), the hard rules
+  between them with the measurement behind each, where the add-on meets them, and what is built against what is still
+  a plan. Read it first.
 - [CATALOGUE.md](CATALOGUE.md): what a tile of each entity type can do, and adding an entity type.
 - [RESPONSIVE.md](RESPONSIVE.md): how one firmware fits every glass: looks, grids, the font set and card design rules.
 - [MODULES.md](MODULES.md): tiers and modules, the parts of the UI only boards with 8 MB of flash or more get (a recipe).

@@ -7,6 +7,11 @@ today; docs/PICTURE_ARCHITECTURE.md says how the picture path is built, this pag
 that already hold stay (AGENTS.md: behaviour lives once, a board file holds hardware and sizes only, no capability rules
 by hand).
 
+> **Where this plan stands (2026-10-28).** This page is a plan with its measurements, written as the work went, so an
+> early section may describe a state that is gone. docs/ARCHITECTURE.md is the map of what is built now; read that for
+> the current shape and this page for why and what was measured. Built: 3.1 to 3.4, 3.2 with the S3 as its second
+> engine, 4.1, 4.4a, 4.7, 4.10, 4.11, 4.12. Open: 4.6, 4.8, 4.9, a second live tile on an S3, and section 5.
+
 ## 1. Where we stand
 
 A few thousand screens run Tessera, a few hundred of them on a P4. The S3 boards keep their refreshed stills and stay
