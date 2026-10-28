@@ -11,26 +11,28 @@
 namespace runtime_tiles {
 
 // The ring round the key of the preset the light shows, or, while a tapped preset is on its way (preset_pending), a
-// spinner turning where its ring will be: the ring's size, width and ink, so the one becomes the other.
+// spinner turning where its ring will be: the ring's size, width and ink, so the one becomes the other. The spinner is
+// the key's sibling, kept in the key's user data: LVGL draws a child only inside its parent's box, which cut the arc to
+// the key's square; the key's parent keeps the ring's room round it.
+static void preset_spinner_drop(lv_obj_t *k) {
+  if (!k) return;
+  if (auto *spin = (lv_obj_t *) lv_obj_get_user_data(k)) lv_obj_delete(spin);
+  lv_obj_set_user_data(k, nullptr);
+}
 static void preset_mark(lv_obj_t *k, bool lit, bool busy) {
   if (!k) return;
-  lv_obj_t *spin = nullptr;
-#if LV_USE_SPINNER
-  for (uint32_t i = 0; i < lv_obj_get_child_count(k); ++i)
-    if (lv_obj_check_type(lv_obj_get_child(k, i), &lv_spinner_class)) spin = lv_obj_get_child(k, i);
-#endif
-  if (!busy && spin) lv_obj_delete(spin);
-  if (busy && !spin) {
-    const int width = std::max(2, ui::px(2));
-    spin = spinner_create(k, lv_obj_get_style_width(k, LV_PART_MAIN) + 2 * (light_presets::ring_pad() + width), width);
-    if (spin) {
-      lv_obj_set_style_arc_opa(spin, LV_OPA_TRANSP, LV_PART_MAIN);
-      lv_obj_set_style_arc_color(spin, theme::color(theme::INK), LV_PART_INDICATOR);
-      lv_obj_add_flag(spin, LV_OBJ_FLAG_IGNORE_LAYOUT);
-      lv_obj_add_flag(k, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
-      lv_obj_center(spin);
-    }
+  auto *spin = (lv_obj_t *) lv_obj_get_user_data(k);
+  if (!busy) preset_spinner_drop(k), spin = nullptr;
+  const int width = std::max(2, ui::px(2)), size = lv_obj_get_style_width(k, LV_PART_MAIN);
+  const int outer = size + 2 * (light_presets::ring_pad() + width);
+  if (busy && !spin && (spin = spinner_create(lv_obj_get_parent(k), outer, width))) {
+    lv_obj_set_style_arc_opa(spin, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_arc_color(spin, theme::color(theme::INK), LV_PART_INDICATOR);
+    lv_obj_add_flag(spin, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_set_user_data(k, spin);
   }
+  // Where the key stands now (the panel places its keys before it marks them).
+  if (spin) lv_obj_set_pos(spin, lv_obj_get_style_x(k, LV_PART_MAIN) - (outer - size) / 2, lv_obj_get_style_y(k, LV_PART_MAIN) - (outer - size) / 2);
   // Without a spinner (a board that builds none) the ring shows at once, as before.
   light_presets::mark(k, busy ? !spin : lit);
 }
@@ -48,7 +50,7 @@ static void preset_key_event(lv_event_t *e){
 static void preset_keys(Widgets &w,const light_presets::Presets *ps,const light_presets::Row &r){
   const int shape=r.size*8+r.count;
   if(ps==w.dots_of&&shape==w.dots_size)return;
-  for(auto *&d:w.dots)if(d){lv_obj_delete(d);d=nullptr;}
+  for(auto *&d:w.dots)if(d){preset_spinner_drop(d);lv_obj_delete(d);d=nullptr;}
   w.dots_of=ps;w.dots_size=shape;
   if(!ps)return;
   for(int n=0;n<r.count;++n){
