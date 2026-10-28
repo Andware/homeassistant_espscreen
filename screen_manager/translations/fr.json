@@ -199,7 +199,12 @@
     },
     "doorbell": {
       "sound_on": "Son activé",
-      "sound_off": "Son coupé"
+      "sound_off": "Son coupé",
+      "door": "Porte",
+      "door_confirm": "Touchez encore pour ouvrir",
+      "door_sent": "Envoyé",
+      "talk": "Parler",
+      "coming_soon": "Bientôt"
     },
     "tile": {
       "tap_to_open": "Ouvrir",
@@ -1528,6 +1533,26 @@
         "timeout": {
           "label": "Délai",
           "help": "Secondes pendant lesquelles la sonnerie reste si personne ne la touche, de {min} à {max}. Vide vaut {default}. Un toucher la garde ouverte."
+        },
+        "sound": {
+          "label": "Son",
+          "help": "Si le son de la sonnette joue dès qu'elle sonne, là où l'écran a un haut-parleur. Vide ou true : la vue s'ouvre avec le son activé. false : elle s'ouvre en silence (un studio, une chambre), et un appui sur Son l'active."
+        },
+        "chime": {
+          "label": "Carillon",
+          "help": "Si l'écran joue son carillon quand on sonne, là où il a un haut-parleur. Vide ou true : il le joue. false : il sonne sans, et la vue s'ouvre quand même."
+        },
+        "lock": {
+          "label": "Serrure",
+          "help": "Une entité de serrure que la touche de porte de la vue déverrouille après un second appui ; la touche montre son état. Une serrure qui demande un code a besoin d'un code par défaut dans Home Assistant (les réglages de la serrure). Laissez vide pour aucune touche de porte."
+        },
+        "door_action": {
+          "label": "Action de porte",
+          "help": "Au lieu d'une serrure : une action Home Assistant que la touche de porte effectue après un second appui, comme script.open_gate ou button.press. `door_data` donne ses champs (entity_id, ...)."
+        },
+        "door_data": {
+          "label": "Données de porte",
+          "help": "Les champs de `door_action`, comme entity_id."
         }
       },
       "endings": {
@@ -4426,11 +4451,12 @@
         "title": "Nouvelle automatisation de sonnette",
         "camera_hint": "Un écran P4 la diffuse en direct avec le son si la caméra en a ; les autres écrans affichent son image.",
         "screens_hint": "Aucun choisi : tous les écrans.",
-        "limits": "Toutes les sonnettes ne peuvent pas tout : le son vient seulement si le flux de la caméra en a. Parler et ouvrir la porte viendront plus tard.",
+        "limits": "Toutes les sonnettes ne peuvent pas tout : le son vient seulement si le flux de la caméra en a. Parler viendra plus tard.",
         "more_cameras": "Une autre caméra…",
         "timeout_hint": "Combien de temps un appel reste ouvert si personne ne touche l'écran. Vide : la valeur par défaut.",
         "summary": {
-          "camera": "Caméra"
+          "camera": "Caméra",
+          "door": "Porte"
         },
         "steps": {
           "rings": {
@@ -4440,6 +4466,10 @@
           "camera": {
             "title": "Quelle caméra ?",
             "help": "La caméra que montrent les écrans quand ça sonne. En général celle de la sonnette."
+          },
+          "door": {
+            "title": "Une porte à ouvrir ?",
+            "help": "La vue de la sonnette peut avoir une touche qui ouvre la porte après un second appui : une serrure, ou une autre action comme un script ou le bouton d'un portail. Vous pouvez la laisser de côté."
           },
           "screens": {
             "title": "Quels écrans ?",
@@ -4457,6 +4487,22 @@
             "title": "Terminer",
             "help": "Faites-en une automatisation à part, ou copiez l'action dans une automatisation que vous avez déjà."
           }
+        },
+        "door": {
+          "none": "Pas de touche de porte",
+          "lock": "Une serrure",
+          "action": "Une autre action",
+          "pick_lock": "Choisir une serrure…",
+          "pick_action": "Choisir ce qu'elle ouvre…",
+          "code": "Cette serrure demande un code : la touche n'apparaît que si la serrure a un code par défaut dans Home Assistant (les réglages de la serrure)."
+        },
+        "sound": {
+          "label": "Entendre la sonnette tout de suite",
+          "hint": "La vue de la sonnette s'ouvre avec son son activé. Désactivez ceci pour un endroit calme, comme un studio : le son attend alors un appui sur Son."
+        },
+        "chime": {
+          "label": "Carillon à la sonnerie",
+          "hint": "L'écran joue un carillon de porte quand quelqu'un sonne. Désactivez ceci si vous ne voulez pas entendre le ding-dong à chaque fois."
         }
       },
       "hero": {

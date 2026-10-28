@@ -112,6 +112,10 @@ def remake(raw, box, cover=False):
 
 # The frames of every stream that wait for a thread or have one now: picture_service's line on a slow still reads it.
 encoding = 0
+# Per camera, the pictures made here that the P4's decoder would refuse (jpeg_size None: empty, too large, not baseline,
+# or a width times height that is not a multiple of 8) or that failed to be made at all; camera_source's frame watch
+# says them in its line.
+refused = {}
 
 class Encoder:
     """JPEGs of decoded video frames at one size, made straight from the decoder's YUV (ffmpeg's mjpeg)."""
@@ -142,7 +146,8 @@ class Encoder:
 class Pictures:
     """The JPEGs of one camera's frames for the screens that watch it, made once per frame and room."""
 
-    def __init__(self):
+    def __init__(self, entity=None):
+        self.entity = entity
         self.encoders, self.pictures = {}, {}
         self.making = asyncio.Lock()  # one picture at a time: an encoder is not for two threads
         self.made = self.made_ms = 0
@@ -182,8 +187,17 @@ class Pictures:
             encoding += 1
             try:
                 jpeg, ms = await loop.run_in_executor(None, encoder.encode, frame.video)
+            except Exception:
+                self.refuse()
+                raise
             finally:
                 encoding -= 1
+        if jpeg is not frame.jpeg and jpeg_size(jpeg) is None:
+            self.refuse()
         self.made += 1
         self.made_ms += ms
         return jpeg
+
+    def refuse(self):
+        if self.entity:
+            refused[self.entity] = refused.get(self.entity, 0) + 1

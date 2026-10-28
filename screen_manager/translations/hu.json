@@ -199,7 +199,12 @@
     },
     "doorbell": {
       "sound_on": "Hang be",
-      "sound_off": "Hang ki"
+      "sound_off": "Hang ki",
+      "door": "Ajtó",
+      "door_confirm": "Koppints újra a nyitáshoz",
+      "door_sent": "Elküldve",
+      "talk": "Beszéd",
+      "coming_soon": "Hamarosan"
     },
     "tile": {
       "tap_to_open": "Megnyitás",
@@ -1528,6 +1533,26 @@
         "timeout": {
           "label": "Időkorlát",
           "help": "Ennyi másodpercig marad a csengetés, ha senki nem érinti meg, {min}–{max}. Üresen {default}. Egy érintés nyitva tartja."
+        },
+        "sound": {
+          "label": "Hang",
+          "help": "Megszólal-e a csengő hangja rögtön, amikor csenget, ahol a képernyőnek van hangszórója. Üres vagy true: a nézet bekapcsolt hanggal nyílik. false: csendben nyílik (stúdió, hálószoba), és egy koppintás a Hangra bekapcsolja."
+        },
+        "chime": {
+          "label": "Csengőhang",
+          "help": "Lejátssza-e a képernyő a csengőhangját, amikor csengetnek, ahol van hangszórója. Üres vagy true: lejátssza. false: anélkül csenget, és a nézet ugyanúgy megnyílik."
+        },
+        "lock": {
+          "label": "Zár",
+          "help": "Egy zár entitás, amelyet a csengőnézet ajtógombja egy második koppintás után nyit ki; a gomb mutatja az állapotát. Egy kódot kérő zárnak alapértelmezett kód kell a Home Assistantben (a zár beállításai). Hagyd üresen, ha nem kell ajtógomb."
+        },
+        "door_action": {
+          "label": "Ajtóművelet",
+          "help": "Zár helyett: egy Home Assistant művelet, amelyet az ajtógomb egy második koppintás után végrehajt, például script.open_gate vagy button.press. A `door_data` adja a mezőit (entity_id, ...)."
+        },
+        "door_data": {
+          "label": "Ajtóadatok",
+          "help": "A `door_action` mezői, például entity_id."
         }
       },
       "endings": {
@@ -4426,11 +4451,12 @@
         "title": "Új csengő-automatizálás",
         "camera_hint": "Egy P4 képernyő élőben, hanggal streameli, ha a kamerának van hangja; a többi képernyő a képét mutatja.",
         "screens_hint": "Nincs kiválasztva: minden képernyő.",
-        "limits": "Nem minden csengő tud mindent: hang csak akkor van, ha a kamera streamjében van. A visszabeszélés és az ajtónyitás később jön.",
+        "limits": "Nem minden csengő tud mindent: hang csak akkor van, ha a kamera streamjében van. A visszabeszélés később jön.",
         "more_cameras": "Másik kamera…",
         "timeout_hint": "Meddig marad nyitva egy csengetés, ha senki nem érinti meg a képernyőt. Üres: az alapérték.",
         "summary": {
-          "camera": "Kamera"
+          "camera": "Kamera",
+          "door": "Ajtó"
         },
         "steps": {
           "rings": {
@@ -4440,6 +4466,10 @@
           "camera": {
             "title": "Melyik kamera?",
             "help": "A kamera, amelyet a képernyők csengetéskor mutatnak. Általában a csengő saját kamerája."
+          },
+          "door": {
+            "title": "Nyitandó ajtó?",
+            "help": "A csengőnézetben lehet egy gomb, amely egy második koppintás után kinyitja az ajtót: egy zár, vagy egy másik művelet, például egy szkript vagy egy kapu gombja. Ki is hagyhatod."
           },
           "screens": {
             "title": "Mely képernyők?",
@@ -4457,6 +4487,22 @@
             "title": "Befejezés",
             "help": "Legyen belőle saját automatizálás, vagy másold a műveletet egy meglévő automatizálásodba."
           }
+        },
+        "door": {
+          "none": "Nincs ajtógomb",
+          "lock": "Egy zár",
+          "action": "Másik művelet",
+          "pick_lock": "Válassz zárat…",
+          "pick_action": "Válaszd ki, mit nyit…",
+          "code": "Ez a zár kódot kér: a gomb csak akkor jelenik meg, ha a zárnak van alapértelmezett kódja a Home Assistantben (a zár beállításai)."
+        },
+        "sound": {
+          "label": "A csengő azonnali hallása",
+          "hint": "A csengőnézet a csengő hangjával bekapcsolva nyílik. Kapcsold ki egy csendes helyen, például egy stúdióban: a hang ekkor egy koppintásra vár a Hangon."
+        },
+        "chime": {
+          "label": "Csengőhang csengetéskor",
+          "hint": "A képernyő ajtócsengő-hangot játszik, amikor valaki csenget. Kapcsold ki, ha nem akarod minden alkalommal hallani a bim-bamot."
         }
       },
       "hero": {

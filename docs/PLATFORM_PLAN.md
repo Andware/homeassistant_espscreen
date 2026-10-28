@@ -510,6 +510,83 @@ the tiles and LVGL (up to 0.74 s measured).
     driver's interrupt, the API's send through esp_hosted, and what the main loop does in that millisecond. Whether a
     screen without a cable on its UART flashes the same is not measured: the bench's UART went to the Mac in every
     build, silent in D and G.
+  - **The add-on's side, measured (2026-10-28).** Since Debug mode (dev 3574f2db) a screen writes warnings and errors
+    alone, and Max then saw a white flash now and then, on every tile of the living room's EZVIZ C6T at once. The app's
+    frame watch (camera_source.FrameWatch, docs/CAMERA.md "Every frame looked at", dev 653f7201 and e421f3bc) looked at
+    every decoded frame on Max's Home Assistant for 25 minutes with the tablet's layout on the bench Guition: camera.max
+    9,186 frames and camera.woonkamer_live 4,872 frames per ten minutes with 0 corrupt, 0 missing, 0 flashes (a single
+    bright frame, and later any brighter moment of up to a second), 0 packets lost, 0 NACKs, 0 PLIs, 0 JPEGs the screen
+    would refuse, 0 stills; nothing dumped. Max called out two flashes (07:10 and 07:14) in the first build's time, when
+    the watch saw single frames alone; the bench Guition wrote no warning or error from 07:15 to 07:34. So the app sends
+    no broken and no too bright frame of the EZVIZ; what Max sees comes after it (the screen's decoding, its copy to the
+    glass, the panel) or is a part of the picture the mean brightness does not show. The white flash stays open; next,
+    the filmed build H on the screen's side. The watch stays on dev as a lasting instrument.
+  - **Others see the same (online, 2026-10-28).** jtenniswood/espcontrol#2118 is this board and this stack: a Guition
+    JC8012P4A1 rev 3.2 with its C6 over ESP-Hosted SDIO, ESPHome 2026.9, IDF 5.5.5, "the whole screen occasionally
+    flashes light blue for about one frame", brought on by HTTP downloads of JPEGs into PSRAM and the firmware's
+    activity in general (here: log lines to the API, which go out through SDIO), with every diagnostic clean at the
+    flash: the underrun interrupt never fires, the DSI host's status is empty, the DW-GDMA reports no error, the
+    framebuffer sampled without blue. Its reporter asks whether ESP-Hosted's SDIO receive into PSRAM can disturb the
+    DPI scan-out without a flag. What helped there: CONFIG_CACHE_L2_CACHE_LINE_64B instead of 128B ("largest effect";
+    our P4 builds already run L2 128 KB with 64-byte lines, which may be why it is rarer here), fewer large LVGL
+    invalidations with transparency or shadow, and no PPA scaling (pictures at their exact size). What did not: the
+    pixel clock at 50 or 60 MHz, the lane rate, a cache-safe DSI interrupt, the AXI-ICM QoS, DMA outstanding, PSRAM at
+    100 MHz (worse), XIP off, CPU rotation, BLE off, SDIO at 20 MHz, the power supply. rokudev/lt-sdk#22: writing into
+    the framebuffer while the GDMA reads it out gives an underrun; a higher GDMA CH_PRIOR did not help; the bridge has
+    registers nobody sets (DSI_BRG_RAW_BUF_CREDIT_CTL, DMA_BLOCK_INTERVAL, DMA_REQ_INTERVAL). Espressif's FAQ for
+    "underrun happens": a lower lane rate or pixel clock, RGB565, SPIRAM_XIP_FROM_PSRAM, CACHE_L2_CACHE_256KB,
+    CACHE_L2_CACHE_LINE_128B, COMPILER_OPTIMIZATION_PERF; the bench builds run OPTIMIZATION_SIZE.
+  - **Work nobody needed, taken off the bus (2026-10-28).** Screen camera 0.6.6 (tessera-plugins 014c427): the frame
+    hub halved every frame of the OV02C10's Full field of view on the PPA, 5 a second at rest (about 11 MB/s of
+    PSRAM), for a video encoder that threw it away while nobody watched; it halves now only while someone watches the
+    video. Five minutes before and after on the bench Guition with four live tiles: 0.0 frames a second halved at rest
+    and with sensing at full speed, the tiles' lay-out 36.3 ms a picture before and 32.1 after, internal RAM 243 and
+    246 KB free, the panel dry 0 times, the cores' load unchanged (the PPA did that work, not a core). Turning the
+    camera off in standby was weighed and left: sensing at 5 a second costs next to nothing after this, and a light
+    level that stops at night is something a person notices.
+  - **One variable a build, measured (2026-10-28)** (the bench Guition, the tablet's layout with four live tiles,
+    Screen camera 0.6.6, Debug mode on, a quarter of an hour each; the reference five minutes): the reference 26.6 and
+    63.2 % on the cores, tiles 9.8 pictures a second, lay-out 32.1 ms, internal RAM 245.8 KB free (243.4 lowest); A, the
+    L2 cache at 256 KB: 23.7 and 65.2 %, 10.8, 32.1 ms, 112.2 KB (110.4), no gain for 133 KB, not taken; B, ESP-Hosted's
+    buffers and tasks inside the chip: 25.9 and 65.1 %, 11.5, 34.2 ms, 213.1 KB (202.9), no gain for 32 to 41 KB, not
+    taken; C, the compiler optimising for speed: 27.7 and 52.1 %, 11.1, 26.5 ms, 238.8 KB (235.5), for 889 KB more
+    firmware, taken for every P4 board (esp32p4-core.yaml). The panel ran dry 0 times in each; whether the flash comes
+    less often cannot be told without eyes.
+  - **Then** (the plan before the measurement): the dev's logging on so the flash shows, a
+    quarter of an hour each, glass::misses and the PPA's waits noted): A, CONFIG_CACHE_L2_CACHE_256KB (128 KB of
+    internal SRAM more for the cache: heap_watch before and after, with four live tiles and the video); B, ESP-Hosted's
+    mempool and tasks out of PSRAM (CONFIG_ESP_HOSTED_MEMPOOL_PREFER_SPIRAM and DFLT_TASK_FROM_SPIRAM off, internal RAM
+    measured); C, COMPILER_OPTIMIZATION_PERF. Then the underrun rig for the D1001's blue frame (a PPA copy loop of
+    1280 x 800 RGB565 until the glass turns blue: does glass::misses count it).
+  - **Wake word under load (the D1001, 2026-10-28 07:45 to 07:50).** Each page change with four live tiles brought 4 to
+    6 "micro_wake_word: Not enough free bytes in ring buffer, resetting" and once "ui_refresh took 63 ms": a measure for
+    the voice assistant under a busy screen.
+
+### 4.8 The D1001's own video loses packets over Wi-Fi (after the doorbell's keys)
+
+Found by the frame watch (2026-10-28): camera.tablet_video, the reTerminal D1001's own camera through Screen camera's
+RTSP and Home Assistant's WebRTC, lost 100 to 780 packets every ten seconds, with 17 to 83 frames of 60 to 120 never
+coming (11,762 packets lost and 1,408 frames missing over the half hour's ten-second lines), and the app sent hundreds
+of NACKs and up to 14 PLIs a ten seconds; Max saw that tile fall behind. The EZVIZ on the same network lost nothing. To
+measure on the D1001: the H.264 encoder's bitrate against what its C6 link carries (the ESP-Hosted SDIO path and the
+air), RTSP over UDP against TCP (go2rtc asks one of them), and the cores' load with four live tiles on the same screen.
+What screen_video can do then: lower its bitrate or frame rate while the uplink loses packets (the RTCP receiver reports
+say so), or offer RTSP over TCP, where a lost packet is sent again instead of a frame breaking.
+
+### 4.9 A ring's live picture is refused once while the screen's live tiles still run (after the doorbell's keys)
+
+Seen at every ring on the bench Guition with the tablet's layout (2026-10-28): the view's stream gets a 503 at its
+first ask ("not a stream of pictures (answer 503)"), the screen asks again, and the picture comes about 1.9 s after the
+view opened instead of under a second. The add-on's limit is MAX_STREAMS (live_stream.py, 8 streams of every screen
+together, "Too many live cameras"): the Guition's four live tiles and Max's D1001 with its own live tiles fill it, and
+the ring's view asks before the Guition has closed its tiles (live_view's stream 4 starts, then streams 0 to 3 end).
+The screen's own cap (hw.h LIVE_TILES) does not refuse it: a full view is no tile. Done (2026-10-28), both ways: the
+screen's camera_open halts its live tiles before the view asks (live_tiles_halt), and the add-on lets a full view of a
+screen through MAX_STREAMS while that screen's own tiles still stream (live_stream.serve). Measured on the bench Guition
+with the screen's half alone: no 503, the first picture 1.54 s after the view opened (1.3 s of it the app's answer with
+the link, the stream's first picture 226 ms after it started), and the four tiles back by themselves after the ring.
+Next: the app makes the ring's link when the event comes, before the screen asks (a link in the op doorbell, or one the
+camera request finds ready), so the first picture can come within half a second.
 
 ## 5. The doorbell's talk-back, prepared
 
@@ -519,20 +596,28 @@ depend on which one wins:
 
 - **The owner.** Section 3.4: a ring claims BOTH, the wake word steps back, the camera's sound keeps playing. That is
   the "always hear the other side" rule.
-- **Push to talk.** The doorbell view gets a hold-to-talk key. While held, the microphone's 16 kHz PCM goes up the
-  camera port as one more stream (a POST of `audio/x-s16le;rate=16000` on `/camera/<token>/talk`), the speaker ducks
-  the camera's sound (the mixer's `apply_ducking`), and echo cancellation is not needed. Released, the uplink closes.
-- **The add-on bridges.** The screen never speaks to a doorbell. The add-on takes the PCM and hands it to the camera's
-  back channel through go2rtc (Reolink takes G.711 there) or to Home Assistant's integration when it exists; the
-  transcoding is ffmpeg's, which the add-on already has. Reolink first, because testers have one.
-- **Unlock** is a Home Assistant action the add-on fires from the view's key, as the doorbell events already are.
+- **Push to talk, half duplex** (the plan as of 2026-10-28). The view has its Talk key already (module_doorbell.cpp),
+  grey with "Coming soon" and no action. Built, it shows only when Home Assistant reports `two_way_audio` true for the
+  ring's camera. While it is held, the ring claims the microphone through the audio owner (3.4), the doorbell's own
+  sound goes silent on the screen (half duplex: no echo cancellation needed, no feedback through the doorbell), and the
+  microphone's 16 kHz PCM goes up the link the view already has to the add-on (a POST of `audio/x-s16le;rate=16000` on
+  `/camera/<token>/talk`). Released, the uplink closes and the doorbell's sound comes back.
+- **The add-on bridges.** The screen never speaks to a doorbell. Home Assistant 2026.11 brings two-way audio for
+  cameras as a Labs preview: `camera/capabilities` says whether a camera has it, and `camera/webrtc/re_offer` adds an
+  audio track to the camera's WebRTC session, for Reolink over RTSP only at first. The add-on encodes the PCM as G.711
+  (PCMA or PCMU, whichever the offer takes) into that track; ffmpeg, which the add-on already has, does the
+  transcoding. Reolink first, because testers have one, built once it runs on a Home Assistant with a Reolink doorbell.
+- **Known risks.** go2rtc #1860: a backchannel that stays open after the talk ends, so the next talk finds it taken; and
+  a Reolink takes one talk connection at a time, so a second screen that holds Talk gets nothing until the first lets go.
+- **Open the door** is built (2026-10-28, docs/DOORBELL.md): the event's `lock` or `door_action`, a Door key that opens
+  after a second tap, and the app performs `lock.unlock` or the action, as it performs an alert's button.
 - **One rule for sound that falls behind, at both ends** (2026-10-25). The add-on drops the oldest part when a screen's
   sound queue is full (`live_stream.SOUND_QUEUE`), and the screen leaves the oldest out when more than 400 ms waits for
   its speaker, down to 150 ms (live_view `SOUND_HIGH`, `SOUND_LOW`). A part that finds the screen's buffer full is left
   out whole, the safety net under it. A conversation at the door keeps the same rule.
 
 Done when (later): a tester holds the key on a D1001 and is heard at a Reolink doorbell, with the doorbell's sound on
-the glass before, during (ducked) and after.
+the glass before and after, silent while the key is held.
 
 ## 6. What stays out
 

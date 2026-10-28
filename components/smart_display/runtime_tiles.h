@@ -12373,6 +12373,9 @@ inline void camera_open(const std::string &entity, const std::string &name, int 
   // The screensaver's photos (app 0.4.89) open the full view as a camera does, under the step's own name.
   if (!camera_supported() || (!valid_entity(entity) && entity != SAVER_PHOTOS)) return;
   camera_close();
+  // The view covers the page: its live tiles stop now, not at the next round, so their streams are gone before the
+  // view's asks for its own (a ring with four live tiles was refused once, PLATFORM_PLAN.md 4.9).
+  live_tiles_halt();
   camera_map_index = map_index;
   // Opened on someone (a person tile tapped): focused from the start, and Back closes the map at once.
   map_focus = focus;

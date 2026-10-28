@@ -199,7 +199,12 @@
     },
     "doorbell": {
       "sound_on": "Dźwięk wł.",
-      "sound_off": "Dźwięk wył."
+      "sound_off": "Dźwięk wył.",
+      "door": "Drzwi",
+      "door_confirm": "Dotknij ponownie, by otworzyć",
+      "door_sent": "Wysłano",
+      "talk": "Mów",
+      "coming_soon": "Wkrótce"
     },
     "tile": {
       "tap_to_open": "Otwórz",
@@ -1528,6 +1533,26 @@
         "timeout": {
           "label": "Limit czasu",
           "help": "Sekundy, przez które dzwonek zostaje, gdy nikt go nie dotknie, od {min} do {max}. Puste to {default}. Dotknięcie utrzymuje go otwartym."
+        },
+        "sound": {
+          "label": "Dźwięk",
+          "help": "Czy dźwięk dzwonka gra od razu, gdy dzwoni, tam gdzie ekran ma głośnik. Puste lub true: widok otwiera się z włączonym dźwiękiem. false: otwiera się cicho (studio, sypialnia), a dotknięcie Dźwięku go włącza."
+        },
+        "chime": {
+          "label": "Gong",
+          "help": "Czy ekran gra swój gong, gdy ktoś dzwoni, tam gdzie ma głośnik. Puste lub true: gra. false: dzwoni bez niego, a widok i tak się otwiera."
+        },
+        "lock": {
+          "label": "Zamek",
+          "help": "Encja zamka, którą przycisk drzwi widoku odblokowuje po drugim dotknięciu; przycisk pokazuje jego stan. Zamek, który prosi o kod, potrzebuje kodu domyślnego w Home Assistant (ustawienia zamka). Pomiń, by nie mieć przycisku drzwi."
+        },
+        "door_action": {
+          "label": "Akcja drzwi",
+          "help": "Zamiast zamka: akcja Home Assistant, którą przycisk drzwi wykonuje po drugim dotknięciu, np. script.open_gate lub button.press. `door_data` podaje jej pola (entity_id, ...)."
+        },
+        "door_data": {
+          "label": "Dane drzwi",
+          "help": "Pola `door_action`, np. entity_id."
         }
       },
       "endings": {
@@ -4426,11 +4451,12 @@
         "title": "Nowa automatyzacja dzwonka",
         "camera_hint": "Ekran P4 streamuje ją na żywo z dźwiękiem, jeśli kamera ma dźwięk; inne ekrany pokazują jej obraz.",
         "screens_hint": "Nic nie wybrano: każdy ekran.",
-        "limits": "Nie każdy dzwonek potrafi wszystko: dźwięk jest tylko, gdy strumień kamery go ma. Rozmowa i otwieranie drzwi przyjdą później.",
+        "limits": "Nie każdy dzwonek potrafi wszystko: dźwięk jest tylko, gdy strumień kamery go ma. Rozmowa przyjdzie później.",
         "more_cameras": "Inna kamera…",
         "timeout_hint": "Jak długo dzwonek zostaje otwarty, gdy nikt nie dotknie ekranu. Puste: domyślnie.",
         "summary": {
-          "camera": "Kamera"
+          "camera": "Kamera",
+          "door": "Drzwi"
         },
         "steps": {
           "rings": {
@@ -4440,6 +4466,10 @@
           "camera": {
             "title": "Która kamera?",
             "help": "Kamera, którą ekrany pokazują, gdy ktoś dzwoni. Zwykle kamera samego dzwonka."
+          },
+          "door": {
+            "title": "Drzwi do otwarcia?",
+            "help": "Widok dzwonka może mieć przycisk, który po drugim dotknięciu otwiera drzwi: zamek albo inna akcja, np. skrypt lub przycisk bramy. Możesz to pominąć."
           },
           "screens": {
             "title": "Które ekrany?",
@@ -4457,6 +4487,22 @@
             "title": "Zakończ",
             "help": "Zrób z tego osobną automatyzację albo skopiuj akcję do automatyzacji, którą już masz."
           }
+        },
+        "door": {
+          "none": "Bez przycisku drzwi",
+          "lock": "Zamek",
+          "action": "Inna akcja",
+          "pick_lock": "Wybierz zamek…",
+          "pick_action": "Wybierz, co otwiera…",
+          "code": "Ten zamek prosi o kod: przycisk pojawia się tylko, gdy zamek ma kod domyślny w Home Assistant (ustawienia zamka)."
+        },
+        "sound": {
+          "label": "Słyszeć dzwonek od razu",
+          "hint": "Widok dzwonka otwiera się z jego dźwiękiem włączonym. Wyłącz to dla cichego miejsca, np. studia: dźwięk czeka wtedy na dotknięcie Dźwięku."
+        },
+        "chime": {
+          "label": "Gong przy dzwonieniu",
+          "hint": "Ekran gra gong drzwiowy, gdy ktoś dzwoni. Wyłącz to, jeśli nie chcesz słyszeć ding-dong za każdym razem."
         }
       },
       "hero": {

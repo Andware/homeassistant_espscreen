@@ -44,6 +44,11 @@ esp32:
       # leave the next buffer without room (heap_watch on a reTerminal D1001, 2026-10-24).
       CONFIG_ESP_HOSTED_MEMPOOL_PREFER_SPIRAM: "y"
       CONFIG_FREERTOS_THREAD_LOCAL_STORAGE_POINTERS: "1"
+      # The compiler optimises for speed, not size (2026-10-28, docs/PLATFORM_PLAN.md 4.7): on the bench Guition 10.1
+      # with four live tiles the second core ran at 52 % instead of 63 and a live tile's picture was laid out in 26.5 ms
+      # instead of 32.1, for 889 KB more firmware (5.54 MB of the 8 MB update slot every P4 board has with its 16 or
+      # 32 MB of flash). Keep the app at 6.5 MB a slot at most: above that, first see what can go before size wins again.
+      CONFIG_COMPILER_OPTIMIZATION_PERF: "y"
 
 psram:
   mode: hex
