@@ -544,7 +544,15 @@ the tiles and LVGL (up to 0.74 s measured).
     246 KB free, the panel dry 0 times, the cores' load unchanged (the PPA did that work, not a core). Turning the
     camera off in standby was weighed and left: sensing at 5 a second costs next to nothing after this, and a light
     level that stops at night is something a person notices.
-  - **Next, one variable a build** (the bench Guition, the tablet's layout, the dev's logging on so the flash shows, a
+  - **One variable a build, measured (2026-10-28)** (the bench Guition, the tablet's layout with four live tiles,
+    Screen camera 0.6.6, Debug mode on, a quarter of an hour each; the reference five minutes): the reference 26.6 and
+    63.2 % on the cores, tiles 9.8 pictures a second, lay-out 32.1 ms, internal RAM 245.8 KB free (243.4 lowest); A, the
+    L2 cache at 256 KB: 23.7 and 65.2 %, 10.8, 32.1 ms, 112.2 KB (110.4), no gain for 133 KB, not taken; B, ESP-Hosted's
+    buffers and tasks inside the chip: 25.9 and 65.1 %, 11.5, 34.2 ms, 213.1 KB (202.9), no gain for 32 to 41 KB, not
+    taken; C, the compiler optimising for speed: 27.7 and 52.1 %, 11.1, 26.5 ms, 238.8 KB (235.5), for 889 KB more
+    firmware, taken for every P4 board (esp32p4-core.yaml). The panel ran dry 0 times in each; whether the flash comes
+    less often cannot be told without eyes.
+  - **Then** (the plan before the measurement): the dev's logging on so the flash shows, a
     quarter of an hour each, glass::misses and the PPA's waits noted): A, CONFIG_CACHE_L2_CACHE_256KB (128 KB of
     internal SRAM more for the cache: heap_watch before and after, with four live tiles and the video); B, ESP-Hosted's
     mempool and tasks out of PSRAM (CONFIG_ESP_HOSTED_MEMPOOL_PREFER_SPIRAM and DFLT_TASK_FROM_SPIRAM off, internal RAM
