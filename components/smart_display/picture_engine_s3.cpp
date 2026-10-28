@@ -1,7 +1,9 @@
 // The picture engine of an ESP32-S3 with PSRAM (picture_engine.h says what and why): Espressif's software JPEG decoder,
-// esp_new_jpeg, with the S3's SIMD, for the stills a screen downloads (docs/PICTURE_ARCHITECTURE.md, section 3.2). It
-// decodes baseline JPEG into RGB565 in LVGL's order, into a picture buffer of its own that LVGL draws, as a BMP's rows
-// went before: nothing writes the glass past LVGL. There is no 2D engine on this chip, so no blit and no streams.
+// esp_new_jpeg, with the S3's SIMD, for the stills a screen downloads and a live tile's pictures
+// (docs/PICTURE_ARCHITECTURE.md, section 3.2). It decodes baseline JPEG into RGB565 in LVGL's order: a still into a
+// picture buffer of its own that LVGL draws, as a BMP's rows went before, and a live tile's picture into its stream's
+// buffer, which blit copies onto the glass with the CPU (there is no 2D engine on this chip: no scale and no turn on the
+// way).
 //
 // The panel of an S3 board reads its picture out of PSRAM while it draws, through bounce buffers on the bus the decoder
 // writes (packages/hardware/esp32s3-rgb.yaml: one frame shifted sideways when a refill came too late). A BMP's rows came
@@ -14,6 +16,9 @@
 #if defined(PICTURE_ENGINE_S3) && defined(SCREEN_PICTURES)
 #include "esphome/core/log.h"
 
+#include <cstring>
+
+#include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <esp_jpeg_dec.h>
 #include <freertos/FreeRTOS.h>
@@ -116,6 +121,32 @@ uint8_t *decode(const uint8_t *data, size_t length, Still &out) {
   out = still;
   out.bytes = size;
   return pixels;
+}
+
+// ---- The copy onto the glass: the CPU's ----
+Client client() {
+  static int token = 0;
+  return &token;
+}
+void drop(Client) {}
+int blit(Client, const Block &b) {
+  if (b.scale != AS_IS || b.turn != 0 || b.yuv420 || !b.in || !b.out) return ESP_ERR_NOT_SUPPORTED;
+  if (b.bx < 0 || b.by < 0 || b.bw <= 0 || b.bh <= 0 || b.bx + b.bw > b.in_w || b.by + b.bh > b.in_rows || b.x < 0 ||
+      b.y < 0 || b.x + b.bw > b.out_w || b.y + b.bh > b.out_h ||
+      static_cast<size_t>(b.out_w) * b.out_h * 2 > b.out_size)
+    return ESP_ERR_INVALID_ARG;
+  const auto *in = static_cast<const uint16_t *>(b.in);
+  auto *out = static_cast<uint16_t *>(b.out);
+  for (int row = 0; row < b.bh; ++row) {
+    const uint16_t *from = in + static_cast<size_t>(b.by + row) * b.in_w + b.bx;
+    uint16_t *to = out + static_cast<size_t>(b.y + row) * b.out_w + b.x;
+    if (!b.swap) {
+      memcpy(to, from, static_cast<size_t>(b.bw) * 2);
+      continue;
+    }
+    for (int i = 0; i < b.bw; ++i) to[i] = static_cast<uint16_t>(from[i] << 8 | from[i] >> 8);
+  }
+  return ESP_OK;
 }
 
 }  // namespace picture_engine

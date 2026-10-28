@@ -49,17 +49,32 @@ CONFIG_SCHEMA = cv.Schema({
 })
 
 
-# The connections a P4 screen holds open at once beside the ones ESPHome's own components count: a live stream for each
-# of live_view::MAX_STREAMS (live_view.h: four tiles, the full view, a plugin's places) and a download in each of
-# picture_fetch's three slots (full, thumb, live). ESPHome sums every component's count into CONFIG_LWIP_MAX_SOCKETS and
-# allocates a socket only once it opens, so a count that covers them costs a few bytes each. Without it a D1001 had 12:
-# four live tiles and the video's three viewers took them, and a fifth tile's still found no connection.
+# The connections a screen that streams holds open at once beside the ones ESPHome's own components count: a live
+# stream for each of live_view::MAX_STREAMS (live_view.h: four tiles, the full view, a plugin's places) and a download in
+# each of picture_fetch's three slots (full, thumb, live). ESPHome sums every component's count into
+# CONFIG_LWIP_MAX_SOCKETS and allocates a socket only once it opens, so a count that covers them costs a few bytes each.
+# Without it a D1001 had 12: four live tiles and the video's three viewers took them, and a fifth tile's still found no
+# connection.
 P4_STREAM_SOCKETS = 7
 PICTURE_SOCKETS = 3
 
 
+def _engine_of(full_config):
+    """This build's row of engine_build.ENGINES: from the chip, and LVGL and PSRAM in the whole configuration."""
+    if not CORE.is_esp32:
+        return engine_build.ENGINES["software"]
+    from esphome.components.esp32 import get_esp32_variant
+
+    return engine_build.ENGINES[
+        engine_build.picture_engine(str(get_esp32_variant()).lower(), bool(full_config.get("lvgl")),
+                                    "psram" in full_config)
+    ]
+
+
 def _sockets(config):
-    if _esp32_p4():
+    import esphome.final_validate as fv
+
+    if "USE_LIVE_VIEW" in _engine_of(fv.full_config.get())["defines"]:
         socket.consume_sockets(P4_STREAM_SOCKETS + PICTURE_SOCKETS, "smart_display")(config)
     return config
 
@@ -164,16 +179,14 @@ def _p4(config):
 # On a P4 with LVGL the hardware JPEG decoder and the PPA write the decoded pictures into the panel's frame buffer past
 # LVGL (picture_engine_p4.cpp, glass_dsi.cpp, live_view.cpp); the panel's handle is picked up as ESP-IDF makes it for
 # ESPHome's display, whichever display platform that is. On an S3 with LVGL and PSRAM Espressif's software decoder
-# turns a JPEG still into the pixels LVGL draws (picture_engine_s3.cpp). Every other build has the headers' inline
-# stubs, nothing added.
+# turns a JPEG still into the pixels LVGL draws (picture_engine_s3.cpp), and a live tile's picture into the RGB panel's
+# frame buffer past LVGL (glass_rgb.cpp, live_view.cpp). Every other build has the headers' inline stubs, nothing added.
 async def _engine(config):
-    from esphome.components.esp32 import add_idf_component, get_esp32_variant
+    from esphome.components.esp32 import add_idf_component
 
     lvgl = CORE.config.get("lvgl")
     lvgl = lvgl[0] if isinstance(lvgl, list) else lvgl
-    engine = engine_build.ENGINES[
-        engine_build.picture_engine(str(get_esp32_variant()).lower(), bool(lvgl), "psram" in CORE.config)
-    ]
+    engine = _engine_of(CORE.config)
     for define in engine["defines"]:
         cg.add_define(define)
     # The linker wraps the engine and the glass need: the panel as ESP-IDF makes it and every PPA client's bursts (so
@@ -183,7 +196,7 @@ async def _engine(config):
         cg.add_build_flag(f"-Wl,--wrap={wrap}")
     for name, ref in engine["components"]:
         add_idf_component(name=name, ref=ref)
-    if "GLASS_DSI" in engine["defines"]:
+    if any(define.startswith("GLASS_") for define in engine["defines"]):
         from esphome.const import CONF_ID
 
         component = await cg.get_variable(lvgl[CONF_ID])

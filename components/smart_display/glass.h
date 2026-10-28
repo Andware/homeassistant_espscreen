@@ -5,11 +5,13 @@
 // and the rooms LVGL keeps out of while a stream writes there. The glass knows pictures, streams, the decoder and the
 // PPA not at all: live_view.cpp (the streams) and picture_engine (the copies) ask it.
 //
-// On an ESP32-P4 with a MIPI-DSI panel (GLASS_DSI and pictures) the glass is direct: glass_dsi.cpp has the panel
-// picked up as ESP-IDF makes it (a linker wrap of esp_lcd_new_panel_dpi), the frame buffer, the lock and LVGL's refresh
-// hooks, the keep-out of LVGL's areas, the panel's underrun counter and the wrap that shortens every PPA client's bursts
-// so the panel keeps its share of the memory bus. Every other board, the host renders and the editor's preview have
-// no direct glass: direct() is false and the rest are inline stubs that cost no flash.
+// On an ESP32-P4 with a MIPI-DSI panel (GLASS_DSI) and on an ESP32-S3 with an RGB panel (GLASS_RGB), with pictures, the
+// glass is direct. glass_core.cpp has what both share: the lock and LVGL's refresh hooks, and the keep-out of LVGL's
+// areas. A panel kind's own file has the panel picked up as ESP-IDF makes it (a linker wrap of esp_lcd_new_panel_dpi or
+// esp_lcd_new_rgb_panel) and its frame buffer: glass_dsi.cpp also the panel's underrun counter and the wrap that shortens
+// every PPA client's bursts so the panel keeps its share of the memory bus; glass_rgb.cpp no counter, as an RGB panel's
+// driver keeps none. Every other board, the host renders and the editor's preview have no direct glass: direct() is
+// false and the rest are inline stubs that cost no flash.
 //
 // Two writers reach the frame buffer, and the lock covers both. LVGL's refresh (on a turned glass through ESPHome's own
 // PPA turn of each strip into a buffer in PSRAM, then the panel's DMA copy) holds it from LV_EVENT_REFR_START to
@@ -22,7 +24,7 @@
 //
 // What a PC can check is pure: a rectangle of the screen on a turned panel (on_panel, tests/test_live_view.cpp).
 #include <cstdint>
-// GLASS_DSI comes with ESPHome's defines (engine_build.py); a PC test has none and builds without it.
+// GLASS_DSI and GLASS_RGB come with ESPHome's defines (engine_build.py); a PC test has neither and builds without them.
 #if __has_include("esphome/core/defines.h")
 #include "esphome/core/defines.h"
 #endif
@@ -64,6 +66,9 @@ inline Rect on_panel(const Rect &r, int turn, int pw, int ph) {
 struct Panel {
   int w = 0, h = 0;
   bool rgb565 = false;
+  // Its RGB565 with the two bytes of a pixel swapped: LVGL draws so for a display that takes them big-endian
+  // (ESPHome's byte_order, LV_COLOR_16_SWAP), and a picture written past LVGL must be too.
+  bool swapped = false;
 };
 // A room LVGL keeps out of while a stream writes there; -1 for none.
 using Room = int;
@@ -72,9 +77,11 @@ constexpr int MAX_ROOMS = 8;
 // in turn with them (picture_engine::decode), as a mutex goes to its highest waiter.
 constexpr unsigned WRITER_PRIORITY = 5;
 
-#if defined(GLASS_DSI) && defined(SCREEN_PICTURES)
-// LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot).
+#if (defined(GLASS_DSI) || defined(GLASS_RGB)) && defined(SCREEN_PICTURES)
+// LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot), and whether it is bound yet (a
+// panel kind's file asks, for direct()).
 void bind(esphome::lvgl::LvglComponent *lvgl);
+bool bound();
 Panel panel();      // 0 x 0 while ESP-IDF made no panel for LVGL
 int turn();         // LVGL's rotation now, degrees clockwise: read every time, the app can stand a screen up at run time
 bool direct();      // a frame buffer a task may write past LVGL: a panel ESP-IDF made with RGB565, and LVGL bound

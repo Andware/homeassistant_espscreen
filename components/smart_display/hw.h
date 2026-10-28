@@ -18,8 +18,9 @@ namespace hw {
 // page showing its stills. The streams a screen can hold (live_view::MAX_STREAMS) is a ceiling above it: four tiles, the
 // full view, a plugin's places.
 // The pictures a second a live tile shows at most, every board alike: a clear limit, at which a reTerminal D1001
-// with four tiles keeps its wake word (10 a second each cost it 51 resets in three minutes, 2026-10-28). A busy screen
-// takes half or a quarter of it (live_view.cpp, pace; the governor, pressure.h).
+// with four tiles keeps its wake word (10 a second each cost it 51 resets in three minutes, 2026-10-28). Each tile gets
+// its share of the engine's budget up to this (picture_engine::tile_pps), a busy screen half or a quarter of that
+// (live_view.cpp, pace; the governor, pressure.h).
 constexpr uint8_t LIVE_TILE_PPS = 6;
 
 struct Caps {

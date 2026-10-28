@@ -9,9 +9,11 @@ Three things, each a define the C++ builds under, and one may come without the o
   between). PICTURE_ENGINE_S3 is Espressif's software JPEG decoder, esp_new_jpeg, with the ESP32-S3's SIMD, for a board
   with PSRAM to decode into (picture_engine_s3.cpp); it has no 2D engine. Without either, the BMP rows of picture_fetch.
 - The glass (glass.h): a frame buffer a task may write past LVGL. GLASS_DSI is a P4's MIPI-DSI panel as ESP-IDF makes it
-  (glass_dsi.cpp); whether a P4's display is one is found at run time (glass::direct).
+  (glass_dsi.cpp), GLASS_RGB an S3's RGB panel (glass_rgb.cpp); whether a board's display is one is found at run time
+  (glass::direct), and an S3 with another panel shows stills.
 - The live streams (live_view.h): USE_LIVE_VIEW, a camera's pictures written onto the glass as they come. They need an
-  engine that copies pixels and a glass to copy them onto: on a P4 alone today.
+  engine that copies pixels and a glass to copy them onto: a P4's PPA, or an S3's CPU for a live tile's picture as the
+  app sends it.
 
 A chip with another decoder or panel kind is a row here, with its own files beside these; nothing in picture_fetch,
 live_view, live_spots or runtime_tiles changes for it.
@@ -26,9 +28,10 @@ ENGINES = {
         "components": (),
     },
     "s3": {
-        "defines": ("PICTURE_ENGINE_S3",),
-        # The decoder's memory from PSRAM first (picture_engine_s3.cpp).
-        "wraps": ("jpeg_calloc", "jpeg_calloc_inner", "jpeg_calloc_align", "jpeg_calloc_align_inner"),
+        "defines": ("PICTURE_ENGINE_S3", "GLASS_RGB", "USE_LIVE_VIEW"),
+        # The RGB panel picked up as ESP-IDF makes it (glass_rgb.cpp), and the decoder's memory from PSRAM first
+        # (picture_engine_s3.cpp).
+        "wraps": ("esp_lcd_new_rgb_panel", "jpeg_calloc", "jpeg_calloc_inner", "jpeg_calloc_align", "jpeg_calloc_align_inner"),
         # Espressif's registry component, MIT licence; its README has the S3's figures (docs/research/s3-jpeg-2026-10-28.md).
         "components": (("espressif/esp_new_jpeg", "1.0.2"),),
     },

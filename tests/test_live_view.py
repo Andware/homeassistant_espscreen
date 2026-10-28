@@ -56,15 +56,16 @@ class P4Build(unittest.TestCase):
         self.assertEqual(engine_build.picture_engine('esp32s3', False, True), 'software')
         for variant in ('esp32', 'esp32c3', 'host'):
             self.assertEqual(engine_build.picture_engine(variant, True, True), 'software')
-        # Three things, each its own define: the engine, the glass and the streams; a P4 has all three, an S3 an engine.
+        # Three things, each its own define: the engine, the glass and the streams; a P4 and an S3 have all three, each
+        # its own glass.
         self.assertEqual(engine_build.ENGINES['p4']['defines'], ('PICTURE_ENGINE_P4', 'GLASS_DSI', 'USE_LIVE_VIEW'))
-        self.assertEqual(engine_build.ENGINES['s3']['defines'], ('PICTURE_ENGINE_S3',))
+        self.assertEqual(engine_build.ENGINES['s3']['defines'], ('PICTURE_ENGINE_S3', 'GLASS_RGB', 'USE_LIVE_VIEW'))
         self.assertEqual(engine_build.ENGINES['s3']['components'], (('espressif/esp_new_jpeg', '1.0.2'),))
         self.assertEqual(engine_build.ENGINES['software'], {'defines': (), 'wraps': (), 'components': ()})
 
     def test_the_wraps_are_the_engines_and_the_glasss(self):
-        # __init__.py adds the wraps the P4 engine names, from the table and nowhere else; glass_dsi.cpp and
-        # ppa_guard.cpp define them, and no file defines one the table does not name.
+        # __init__.py adds the wraps an engine names, from the table and nowhere else; the engine's and the glass's own
+        # files define them, and no file defines one the table does not name.
         init = (COMPONENT / '__init__.py').read_text()
         self.assertIn('for wrap in engine["wraps"]:', init)
         self.assertIn('cg.add_build_flag(f"-Wl,--wrap={wrap}")', init)
@@ -73,17 +74,20 @@ class P4Build(unittest.TestCase):
         for name in ('glass_dsi.cpp', 'ppa_guard.cpp', 'live_view.cpp', 'picture_engine_p4.cpp'):
             defined |= set(re.findall(r'__wrap_(\w+)\(', (COMPONENT / name).read_text()))
         self.assertEqual(defined, set(engine_build.ENGINES['p4']['wraps']))
-        s3 = set(re.findall(r'__wrap_(\w+)\(', (COMPONENT / 'picture_engine_s3.cpp').read_text()))
+        s3 = set()
+        for name in ('glass_rgb.cpp', 'picture_engine_s3.cpp'):
+            s3 |= set(re.findall(r'__wrap_(\w+)\(', (COMPONENT / name).read_text()))
         self.assertEqual(s3, set(engine_build.ENGINES['s3']['wraps']))
         # The diagnostic wraps every ESP32 gets come from their own table, and abort_record.cpp defines exactly those.
         self.assertIn('for wrap in DIAGNOSTIC_WRAPS:', init)
         diagnostic = set(re.findall(r'__wrap_(\w+)\(', (COMPONENT / 'abort_record.cpp').read_text()))
         self.assertEqual(diagnostic, set(re.search(r'DIAGNOSTIC_WRAPS = \(([^)]*)\)', init)[1].replace('"', '').replace(',', ' ').split()))
         # The defines the table gives are the ones the code builds under: the engines in picture_engine.h and their own
-        # files, the glass in glass.h and glass_dsi.cpp, the streams in live_view.h and live_view.cpp.
+        # files, the glasses in glass.h and their own files, the streams in live_view.h and live_view.cpp.
         for define, names in (('PICTURE_ENGINE_P4', ('picture_engine.h', 'picture_engine_p4.cpp', 'ppa_guard.cpp')),
                               ('PICTURE_ENGINE_S3', ('picture_engine.h', 'picture_engine_s3.cpp')),
                               ('GLASS_DSI', ('glass.h', 'glass_dsi.cpp')),
+                              ('GLASS_RGB', ('glass.h', 'glass_rgb.cpp')),
                               ('USE_LIVE_VIEW', ('live_view.h', 'live_view.cpp'))):
             for name in names:
                 self.assertIn(define, (COMPONENT / name).read_text(), name)
@@ -104,10 +108,11 @@ class Sockets(unittest.TestCase):
 
 class ChipFactsBehindTheEngine(unittest.TestCase):
     """The P4's facts live behind the picture engine (docs/PLATFORM_PLAN.md 3.2): outside the engine's own files the
-    code names no sixteenths, no PPA, no JPEG driver and no MIPI panel; it asks picture_engine (limits, fit, cut, blit)
-    and glass. Comments and strings may name them."""
+    code names no sixteenths, no PPA, no JPEG driver and no panel driver; it asks picture_engine (limits, fit, cut,
+    blit) and glass, whose panel files (glass_dsi.cpp, glass_rgb.cpp) are the only ones to name ESP-IDF's panels.
+    Comments and strings may name them."""
     ALLOWED = {'picture_engine.h', 'picture_engine_p4.cpp', 'ppa_guard.h', 'ppa_guard.cpp', 'picture_jpeg.h',
-               'glass_dsi.cpp'}
+               'glass_dsi.cpp', 'glass_rgb.cpp'}
     RULES = {'sixteenths': r'\bsixteenths\b', 'PPA': r'\bppa_\w+\s*\(|\bPPA_[A-Z0-9_]+',
              'JPEG driver': r'\bjpeg_(?:decoder|decode|alloc|new|del)\w*', 'MIPI': r'\bmipi\w*|\bMIPI\w*|\besp_lcd_\w+'}
 
@@ -139,7 +144,7 @@ class GlassTurns(unittest.TestCase):
         live = (COMPONENT / 'live_view.cpp').read_text()
         # A stream's task runs below the wake word and asks for the glass at the writers' priority, back once it let go.
         self.assertIn('constexpr unsigned STREAM_PRIORITY = 2;', live)
-        self.assertIn('"live_view", STACK_BYTES, s, STREAM_PRIORITY, 1)', live)
+        self.assertIn('"live_view", STACK_BYTES, s, STREAM_PRIORITY,\n                          picture_engine::limits().stream_core)', live)
         take = live[live.index('static uint32_t take_glass() {'):live.index('static void turn_loader(Stream &s) {')]
         steps = ['vTaskPrioritySet(nullptr, glass::WRITER_PRIORITY);', 'glass::hold_counted();', 'glass::release();',
                  'vTaskPrioritySet(nullptr, STREAM_PRIORITY);']

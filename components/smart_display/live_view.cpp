@@ -121,7 +121,7 @@ struct Stream {
   // Time a picture waited for the glass (glass::hold) while it was laid out, inside copy_us; and of a tile's lay-out, the
   // PPA's copy into its card and onto the glass (each under the glass) and the composing between them.
   std::atomic<uint32_t> wait_us{0}, into_us{0}, compose_us{0}, onto_us{0};
-  // A live tile pauses after a picture instead of reading on: to keep to hw::LIVE_TILE_PPS, and on a busy screen (the
+  // A live tile pauses after a picture instead of reading on: to keep to its share (tile_gap_us), and on a busy screen (the
   // governor's LIVE_TILES, pressure.h) to half or a quarter of that or of its own pace, whichever is slower. It reads
   // nothing meanwhile, so the app sends fewer (it makes the next picture once the last one left its host) and the
   // Wi-Fi rests too. Leaving pictures out undecoded saved nothing, as the tile only read the next one sooner (a
@@ -132,6 +132,7 @@ struct Stream {
   int64_t free_at = 0;
   std::atomic<uint32_t> pauses{0}, paused_us{0}, net_us{0};
   std::atomic<uint32_t> passed{0};  // pictures of a stream passed for a newer one (read_stream)
+  int64_t view_at = 0;               // a full view's last picture shown, for the engine's view_pps
   // How long its pictures and its sound waited on their way (X-Made: Wait).
   Wait picture_wait, sound_wait;
   // When the way to the first picture went by (ms after start, written once by the task, read after `shown`).
@@ -198,6 +199,16 @@ struct Stream {
 };
 static Stream *streams[MAX_STREAMS] = {};
 static_assert(MAX_STREAMS <= glass::MAX_ROOMS, "every stream has a room on the glass");
+// The live tiles streaming, a camera's or the screen's own: counted as they open and as they are reaped, on the main
+// loop, and read by every tile's pace (tile_pps).
+static std::atomic<int> tiles_open{0};
+// What one tile waits between pictures: the engine's budget shared among the tiles streaming (picture_engine::tile_pps),
+// on a busy screen half or a quarter of that (the governor's LIVE_TILES, pressure.h).
+static int64_t tile_gap_us() {
+  const int pps = picture_engine::tile_pps(picture_engine::limits().tile_budget_pps,
+                                           tiles_open.load(std::memory_order_relaxed), hw::LIVE_TILE_PPS);
+  return 1000000 / pps;
+}
 
 static void free_stream(Stream *s) {
   if (s->sound) vStreamBufferDelete(s->sound);  // static: frees nothing, its memory is the stream's own below
@@ -227,6 +238,7 @@ static esp_err_t copy(Stream &s, const void *in, int in_w, int rows, int bx, int
   block.in = in, block.in_w = in_w, block.in_rows = rows, block.bx = bx, block.by = by, block.bw = bw, block.bh = bh;
   block.out = out, block.out_size = out_size, block.out_w = ow, block.out_h = oh, block.x = x, block.y = y;
   block.scale = scale, block.turn = turn;
+  block.swap = out == glass::frame_buffer() && glass::panel().swapped;
   return static_cast<esp_err_t>(picture_engine::blit(s.ppa, block));
 }
 
@@ -371,17 +383,19 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still, int 
       return;
     }
   }
-  // The decoder works through the 2D-DMA, as the PPA and the panel's copy of each of LVGL's strips do: it decodes
-  // while it holds the glass (glass.h). Its wait counts in the glass's report, not in the stream's own.
-  take_glass();
+  // A P4's decoder works through the 2D-DMA, as the PPA and the panel's copy of each of LVGL's strips do: it decodes
+  // while it holds the glass (glass.h). Its wait counts in the glass's report, not in the stream's own. An S3's decodes
+  // with the CPU, and holds nothing (picture_engine::Limits::decode_on_glass).
+  const bool on_glass = picture_engine::limits().decode_on_glass;
+  if (on_glass) take_glass();
   if (s.stopping) {
-    give_glass();
+    if (on_glass) give_glass();
     return;
   }
   const int64_t t0 = esp_timer_get_time();
   const bool decoded = picture_engine::decode_into(data, length, s.picture, s.picture_size);
   const int64_t t1 = esp_timer_get_time();
-  give_glass();
+  if (on_glass) give_glass();
   if (!decoded) {
     s.skipped++;
     return;
@@ -488,8 +502,8 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still, int 
   s.shown++;
 }
 
-// After a live tile's picture: its pace kept and the pause it owes, to hw::LIVE_TILE_PPS or to a busy screen's share of
-// it (Stream, pace_us). Each 20 ms it looks again whether the pressure eased or the stream stops; it reads nothing
+// After a live tile's picture: its pace kept and the pause it owes, to its share of the engine's budget or to a busy
+// screen's share of that (Stream, pace_us). Each 20 ms it looks again whether the pressure eased or the stream stops; it reads nothing
 // meanwhile.
 static void pace(Stream &s) {
   const int64_t now = esp_timer_get_time();
@@ -498,7 +512,7 @@ static void pace(Stream &s) {
   if (took > 0 && took < PACE_GAP_US)
     s.pace_us = s.pace_us ? static_cast<uint32_t>((3 * static_cast<int64_t>(s.pace_us) + took) / 4)
                           : static_cast<uint32_t>(took);
-  const int64_t base = std::max<int64_t>(s.pace_us, 1000000 / hw::LIVE_TILE_PPS);
+  const int64_t base = std::max<int64_t>(s.pace_us, tile_gap_us());
   const bool busy = pressure::level_of(pressure::LIVE_TILES) > 0;
   if (busy) s.pauses++;
   for (;;) {
@@ -683,8 +697,8 @@ void own_frame(const uint8_t *data, int width, int height, bool yuv420) {
       s->skipped++;
       continue;
     }
-    // Its next frame after its pace: six a second, a busy screen's tile three or one and a half.
-    s->own_next = now + (static_cast<int64_t>(1000000 / hw::LIVE_TILE_PPS) << pressure::level_of(pressure::LIVE_TILES));
+    // Its next frame after its pace: its share of the budget, a busy screen's tile half or a quarter of that.
+    s->own_next = now + (tile_gap_us() << pressure::level_of(pressure::LIVE_TILES));
     s->own_full.store(true, std::memory_order_release);
     xTaskNotifyGive(s->task.handle);
   }
@@ -808,6 +822,16 @@ static bool read_stream(Stream &s) {
                 return;
               }
             }
+            // A full view on an engine that decodes so many a second at most: one that comes sooner is passed.
+            const uint8_t most = picture_engine::limits().view_pps;
+            if (!s.look.tile && most && !reader.still()) {
+              const int64_t now = esp_timer_get_time();
+              if (s.view_at && now - s.view_at < 1000000 / most) {
+                s.passed++;
+                return;
+              }
+              s.view_at = now;
+            }
             show(s, s.input, length, reader.still(), reader.turn());
             return;
           }
@@ -853,8 +877,10 @@ static void task_main(void *arg) {
   psram_task::finish(in_psram);
 }
 
+bool full_view() { return available() && picture_engine::limits().picture_bytes > 0; }
+
 Handle open(const std::string &url, const Rect &area, const Look &look, bool sound, audio_owner::Role role) {
-  if (!available() || area.empty()) return -1;
+  if (!available() || area.empty() || (!look.tile && !full_view())) return -1;
   int slot = -1;
   for (int i = 0; i < MAX_STREAMS && slot < 0; ++i)
     if (!streams[i]) slot = i;
@@ -927,12 +953,14 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     return -1;
   }
   streams[slot] = s;
-  if (!psram_task::start(s->task, task_main, "live_view", STACK_BYTES, s, STREAM_PRIORITY, 1)) {
+  if (!psram_task::start(s->task, task_main, "live_view", STACK_BYTES, s, STREAM_PRIORITY,
+                          picture_engine::limits().stream_core)) {
     streams[slot] = nullptr;
     free_stream(s);
     return -1;
   }
   if (own) own_add(s);
+  if (look.tile) tiles_open.fetch_add(1, std::memory_order_relaxed);
   if (s->sound || role == audio_owner::Role::DOORBELL) {
     // The camera's sound claims the speaker (audio_owner.h) in the role its opener gave: as CAMERA_SOUND music pauses
     // for it, and a voice session or a doorbell takes it and gives it back, since the camera stays open; as DOORBELL
@@ -1129,6 +1157,7 @@ void tick(const std::function<void(Handle, Event)> &tell) {
     if (s->done.load(std::memory_order_acquire)) {
       const bool in_psram = psram_task::in_psram(s->task);
       if (s->source == &OWN_CAMERA) own_remove(s);  // the camera's task copies into it no more
+      if (s->look.tile) tiles_open.fetch_sub(1, std::memory_order_relaxed);
       psram_task::reap(s->task);  // its task deleted (a stack in PSRAM) before anything of the stream is freed
       speak(*s, false);
       report(slot, *s, now, true);

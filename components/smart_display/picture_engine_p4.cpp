@@ -130,6 +130,7 @@ void drop(Client client) {
 }
 int blit(Client client, const Block &b) {
   if (!client) return ESP_ERR_INVALID_STATE;
+  if (b.swap) return ESP_ERR_NOT_SUPPORTED;  // no P4 panel ESPHome makes is drawn big-endian
   ppa_srm_oper_config_t srm{};
   srm.in.buffer = b.in;
   srm.in.pic_w = b.in_w;

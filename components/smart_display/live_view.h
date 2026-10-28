@@ -463,8 +463,12 @@ enum class Event : uint8_t {
 // Its stills come as JPEG too, through the engine (picture_engine.h, docs/PICTURES.md "Formats"); LVGL is bound to the
 // glass at boot (glass::bind, smart_display/__init__.py).
 #if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
-// Whether this screen streams: a P4 whose panel ESP-IDF made with an RGB565 frame buffer, and LVGL bound.
+// Whether this screen streams: a P4 or an S3 whose panel ESP-IDF made with an RGB565 frame buffer a task may write
+// (glass::direct), and LVGL bound.
 bool available();
+// And whether it streams a camera full screen too: not where the engine takes no full view's picture; its view then
+// shows the stills of every board.
+bool full_view();
 // Streams `url` into `area`, the screen as LVGL lays it out, looking as `look` says. -1 when it cannot start (no room
 // for another stream, no memory): its owner shows its stills. `sound`: the stream may carry the camera's sound, which
 // goes to the board's speaker (bind_speaker) unless muted, claimed from the audio owner (audio_owner.h) in `role`:
@@ -485,7 +489,7 @@ uint32_t misses();
 // The screen's own camera on a tile of its own (plugin API 0.22, docs/PLATFORM_PLAN.md 4.11). A plugin with the camera
 // offers its frames once (own_offer, its setup), and the hello then says "own_camera", so the app answers such a tile
 // "own:". While a tile of it is open, own_wanted says so, and the plugin hands each frame to own_frame on its camera's
-// task: the tile takes one when its pace says (hw::LIVE_TILE_PPS, a busy screen's share), copies it into its card with
+// task: the tile takes one when its pace says (its share of the engine's budget, a busy screen's share of that), copies it into its card with
 // the PPA (scaled, from the camera's YUV420 or RGB565) when the glass is free at once, and lays it onto the glass on its
 // own task. Never waits: a frame it cannot take now goes by.
 void own_offer();
@@ -499,6 +503,7 @@ size_t held_bytes();
 #else
 inline size_t held_bytes() { return 0; }
 inline bool available() { return false; }
+inline bool full_view() { return false; }
 inline Handle open(const std::string &, const Rect &, const Look & = Look{}, bool = false,
                    audio_owner::Role = audio_owner::Role::CAMERA_SOUND) {
   return -1;

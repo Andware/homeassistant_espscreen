@@ -3,9 +3,14 @@
 // pixels and pixels into other pixels, and which formats this screen's decoder takes. Three engines, chosen by the chip
 // when the firmware is built (engine_build.py), as the firmware chooses its modules: on an ESP32-P4 the hardware JPEG
 // decoder and the PPA, with ppa_guard between (PICTURE_ENGINE_P4, picture_engine_p4.cpp); on an ESP32-S3 with PSRAM
-// Espressif's software JPEG decoder, which decodes the stills LVGL draws and has no blit (PICTURE_ENGINE_S3,
-// picture_engine_s3.cpp); everywhere else the BMP decoder row by row (picture_fetch::Decoder) and no blit at all, since
-// LVGL draws every still there: the inline stubs below, which cost no flash.
+// Espressif's software JPEG decoder, which decodes the stills LVGL draws and a live tile's pictures, and a blit by the
+// CPU that copies a picture as it is (PICTURE_ENGINE_S3, picture_engine_s3.cpp); everywhere else the BMP decoder row by
+// row (picture_fetch::Decoder) and no blit at all, since LVGL draws every still there: the inline stubs below, which
+// cost no flash.
+//
+// The app sends a live tile's pictures at its card's size and turned as the glass is (the hello's picture_turn,
+// live_stream.py), so an engine never has to scale or turn for a tile: the S3's blit does neither, and the P4's PPA does
+// so only for an app that sends them upright (live_view.cpp, turn_between).
 //
 // The engine knows the decoder, the PPA, the guard and the decoder's memory; it knows nothing of streams, sockets,
 // owners or LVGL objects. The glass (glass.h) is held around every decode and every blit: by the engine itself for a
@@ -49,6 +54,8 @@ struct Block {
   // `in` is a camera's YUV420 (ESP's packed layout, as the P4's ISP gives it, BT.601 limited range), turned into RGB565
   // on the way; its block's offsets and size even. The screen's own camera on a tile of its own (live_view.cpp).
   bool yuv420 = false;
+  // `out` wants each RGB565 pixel's two bytes swapped (a panel LVGL draws big-endian, glass::Panel::swapped).
+  bool swap = false;
 };
 // A client of the PPA, one per stream; nullptr for none.
 using Client = void *;
@@ -130,13 +137,26 @@ inline Cut cut(int w, int h, int cw, int ch, bool contain) {
 // ---- What this engine takes (docs/PICTURE_ARCHITECTURE.md, section 2.4) ----
 // The numbers the shared code reads instead of a chip's: the burst every 2D-DMA client moves in, so the panel's own DMA
 // gets its turn on the memory bus (glass.h, "The panel's share of the memory bus"), the largest picture a stream's
-// part may be, a full view's and a tile's, and how many live camera tiles the screen streams at once (hw::caps, the
-// hello's live_tiles, docs/PLATFORM_PLAN.md 4.1). 0 takes no pictures at all, never "no limit".
+// part may be, a full view's and a tile's (0: no such stream), how many live camera tiles the screen streams at once
+// (hw::caps, the hello's live_tiles, docs/PLATFORM_PLAN.md 4.1), whether a decode holds the glass, as one that runs on
+// the 2D-DMA must (glass.h: its one user at a time), the most pictures a second a full view decodes (0: as they come;
+// the pictures that come sooner are passed, and the sound plays on), the pictures a second all live tiles share
+// (tile_pps), and the core a stream's task decodes and copies on. 0 takes no pictures at all, never "no limit".
 struct Limits {
   int burst_bytes;
   size_t picture_bytes, tile_picture_bytes;
   uint8_t live_tiles;
+  bool decode_on_glass;
+  uint8_t view_pps;
+  uint8_t tile_budget_pps;
+  uint8_t stream_core;
 };
+// The pictures a second each of `tiles` live tiles shows: the engine's budget shared among them, at least 2 (fewer
+// reads as stills) and at most `most` (hw::LIVE_TILE_PPS, every board alike). On a P4 four tiles keep their 6 each; an
+// S3's budget of 8 would give two tiles 4 each and three 2 (its CPU decodes them all).
+inline int tile_pps(int budget, int tiles, int most) {
+  return std::max(2, std::min(most, budget / std::max(tiles, 1)));
+}
 
 // The PPA's angle for a turn as LVGL counts it: the PPA counts counter-clockwise (0, 90, 180, 270 as 0 to 3, the order
 // of ppa_srm_rotation_angle_t and of ppa_guard::Angle), so LVGL's 90 is the PPA's 270 and the other way round. Written
@@ -147,11 +167,19 @@ inline int ppa_angle(int turn) { return turn == 90 ? 3 : turn == 180 ? 2 : turn 
 // The P4's: bursts of 64 bytes instead of ESP-IDF's 128, or the DSI bridge runs dry and the panel shows a frame of blue
 // (lvgl/lvgl #9590); a full view's picture of at most 1 MB and a tile's of 384 KB, over what a 1280 x 800 JPEG of a busy
 // camera is (150 to 250 KB) and a tile's room needs (docs/CAMERA.md, "Live on the P4 boards", 2026-10-10); four live
-// tiles at once, measured on a reTerminal D1001 and a Guition 10.1 (docs/PLATFORM_PLAN.md 4.1).
-constexpr Limits limits() { return {64, 1024 * 1024, 384 * 1024, 4}; }
+// tiles at once, measured on a reTerminal D1001 and a Guition 10.1 (docs/PLATFORM_PLAN.md 4.1), 24 pictures a second
+// among them: 6 each, as before the budget.
+constexpr Limits limits() { return {64, 1024 * 1024, 384 * 1024, 4, true, 0, 24, 1}; }
 #elif defined(PICTURE_ENGINE_S3) && defined(SCREEN_PICTURES)
-// The S3's: no 2D engine, so no bursts and no live streams; its stills come whole from a download (picture_fetch).
-constexpr Limits limits() { return {0, 0, 0, 0}; }
+// The S3's: no 2D engine, so no bursts; one live tile, its picture at most 128 KB (the app's JPEG of a 4-inch card is
+// about 10 KB), decoded by the CPU off the glass on core 0, away from LVGL's; a full view's picture at most 256 KB, as
+// the app sends it to fit the glass (a picture it would have to scale up is refused by blit, and the view keeps its
+// stills), eight a second at most. Measured on a Guition 4848S040 (2026-10-28, docs/CAMERA.md "Live on an ESP32-S3"):
+// each live tile costs about 11 KB of internal RAM for its socket's Wi-Fi and lwIP buffers, and two took it down to
+// 16 KB, three to 3 KB, so one; its budget of 8 pictures a second is the one a second tile would share. With the tile
+// decoding on core 1, LVGL's core was 38 % busy and LVGL refreshed 410 times in 10 s of dragging; on core 0, 23 % and
+// 435.
+constexpr Limits limits() { return {0, 256 * 1024, 128 * 1024, 1, false, 8, 8, 0}; }
 #endif
 #if (defined(PICTURE_ENGINE_P4) || defined(PICTURE_ENGINE_S3)) && defined(SCREEN_PICTURES)
 // This screen's decoder takes JPEG: its questions name it first (runtime_tiles::picture_ask), the download gathers a
@@ -176,11 +204,13 @@ bool decode_into(const uint8_t *data, size_t length, uint8_t *into, size_t into_
 // for a JPEG the decoder cannot read. From a download's task.
 uint8_t *decode(const uint8_t *data, size_t length, Still &out);
 #endif
-#if defined(PICTURE_ENGINE_P4) && defined(SCREEN_PICTURES)
-// A PPA client with the glass's bursts (glass.h), and its end.
+#if (defined(PICTURE_ENGINE_P4) || defined(PICTURE_ENGINE_S3)) && defined(SCREEN_PICTURES)
+// A client of the engine's copies, and its end: on a P4 a PPA client with the glass's bursts (glass.h), on an S3 a token.
 Client client();
 void drop(Client client);
-// The copy, through the guard: 0 when it is done, else ESP-IDF's error. The caller holds the glass.
+// The copy: 0 when it is done, else ESP-IDF's error. The caller holds the glass. On a P4 the PPA's, through the guard,
+// scaled and turned as the block says; on an S3 the CPU's, row by row, and only at AS_IS and turned 0 (the app sends a
+// live tile's pictures at the card's size and turned as the glass is): anything else is refused.
 int blit(Client client, const Block &block);
 #else
 inline Client client() { return nullptr; }
@@ -188,7 +218,7 @@ inline void drop(Client) {}
 inline int blit(Client, const Block &) { return -1; }
 #endif
 #if !(defined(PICTURE_ENGINE_P4) || defined(PICTURE_ENGINE_S3)) || !defined(SCREEN_PICTURES)
-constexpr Limits limits() { return {0, 0, 0, 0}; }
+constexpr Limits limits() { return {0, 0, 0, 0, false, 0, 0, 1}; }
 constexpr bool JPEG = false;
 inline const std::vector<std::string> &whole_formats() {
   static const std::vector<std::string> none;

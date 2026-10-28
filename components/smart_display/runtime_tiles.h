@@ -11663,7 +11663,7 @@ inline live_view::Rect live_area() {
 // A camera opened by itself (not a map, an image or the screensaver), on a board that streams, until its streams
 // failed TRIES times for this opening.
 inline bool live_wanted() {
-  if (!live_view::available() || !camera.open() || camera.entity.rfind("camera.", 0) != 0 || camera_map_index >= 0 ||
+  if (!live_view::full_view() || !camera.open() || camera.entity.rfind("camera.", 0) != 0 || camera_map_index >= 0 ||
       saver_camera || !camera.stream.may() || boot_trial::on(esphome::millis()))
     return false;
   const auto area = live_area();
