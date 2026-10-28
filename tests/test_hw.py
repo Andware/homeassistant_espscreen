@@ -118,7 +118,9 @@ class AppSide(unittest.TestCase):
         # the app's 503 for a stream beyond them (live_stream.py) is never reached by such a firmware: it is the net for
         # one that does not cap, and no proof on glass can show it.
         source = (ROOT / 'screen_manager' / 'app' / 'live_stream.py').read_text()
-        self.assertIn("return web.Response(status=503, text=f'This screen plays {cap} cameras live at once')", source)
+        self.assertIn("return f'This screen plays {cap} cameras live at once'", source)
+        # The stream and a tile's picture at a time both answer it (LiveFeed.refused).
+        self.assertEqual(source.count('return web.Response(status=503, text=why)'), 2)
 
 
 if __name__ == '__main__':

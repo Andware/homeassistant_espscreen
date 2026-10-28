@@ -238,3 +238,102 @@ class Stream(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Pull(unittest.TestCase):
+    """A live tile that asks for each picture (GET /camera/<token>.jpg on its stream's link, LiveFeed.pull), through the
+    camera port's own routes (picture_links.web_app) on a real socket, over one kept connection as the screen asks."""
+
+    def run_pull(self, asks, links=1, camera_stops_after=None, between=0.0):
+        from aiohttp import ClientSession, web
+        import picture_links
+        picture = jpeg(512, 288)
+        fetched = []
+
+        async def fetch(name):
+            fetched.append(name)
+            if camera_stops_after is not None and len(fetched) > camera_stops_after:
+                await asyncio.sleep(60)
+            await asyncio.sleep(0.01)
+            return picture
+
+        async def main():
+            live = live_stream.LiveFeed(fetch, None, lambda name: False)
+            app = picture_links.web_app(picture_links.Links(), live)
+            runner = web.AppRunner(app)
+            await runner.setup()
+            site = web.TCPSite(runner, '127.0.0.1', 0)
+            await site.start()
+            port = site._server.sockets[0].getsockname()[1]
+            tokens = [live.link('camera.door', (492, 268), tile=True, screen='text.tablet') for _ in range(links)]
+            answers = []
+            async with ClientSession() as http:
+                for _ in range(asks):
+                    for token in tokens:
+                        async with http.get(f'http://127.0.0.1:{port}/camera/{token}.jpg') as r:
+                            answers.append((token, r.status, r.headers.get('X-Made'), r.headers.get('Content-Type'),
+                                            await r.read()))
+                    await asyncio.sleep(between)
+                streaming = live.streaming()
+            await runner.cleanup()
+            return answers, streaming, picture, live
+
+        return asyncio.run(main())
+
+    def test_a_tile_gets_one_newer_picture_an_ask(self):
+        answers, streaming, picture, _ = self.run_pull(3)
+        self.assertEqual([a[1] for a in answers], [200, 200, 200])
+        # A JPEG for the card each time (made for its box, as the stream makes them), stamped as it leaves.
+        self.assertTrue(all(a[2] and a[3] == 'image/jpeg' and a[4][:2] == b'\xff\xd8' for a in answers),
+                        [a[:4] for a in answers])
+        # Each answer was made after the one before it, and the link streamed while it was asked.
+        made = [int(a[2]) for a in answers]
+        self.assertEqual(made, sorted(made))
+        self.assertEqual(streaming, 1)
+
+    def test_no_new_frame_in_time_answers_204(self):
+        saved = live_stream.PULL_SECONDS
+        live_stream.PULL_SECONDS = 0.3
+        try:
+            answers, _, _, _ = self.run_pull(2, camera_stops_after=1)
+        finally:
+            live_stream.PULL_SECONDS = saved
+        self.assertEqual([a[1] for a in answers], [200, 204])
+        self.assertEqual(answers[1][4], b'')
+
+    def test_two_tiles_of_one_camera_each_get_their_pictures(self):
+        answers, streaming, picture, live = self.run_pull(2, links=2)
+        self.assertEqual([a[1] for a in answers], [200] * 4)
+        self.assertEqual(streaming, 2)
+        self.assertEqual(len(live.sources), 1)  # one camera for both
+
+    def test_a_lease_ends_after_the_last_ask(self):
+        saved = live_stream.PULL_LEASE
+        live_stream.PULL_LEASE = 0.2
+        try:
+            answers, streaming, _, live = self.run_pull(1, between=0.6)
+        finally:
+            live_stream.PULL_LEASE = saved
+        self.assertEqual(answers[0][1], 200)
+        self.assertEqual(streaming, 0)
+        self.assertTrue(all(link.lease is None for link in live.links.values()))
+
+    def test_an_unknown_live_link_is_not_found(self):
+        from aiohttp import ClientSession, web
+        import picture_links
+
+        async def main():
+            live = live_stream.LiveFeed(None, None, lambda name: False)
+            live.link('camera.door', (492, 268), tile=True)
+            runner = web.AppRunner(picture_links.web_app(picture_links.Links(), live))
+            await runner.setup()
+            site = web.TCPSite(runner, '127.0.0.1', 0)
+            await site.start()
+            port = site._server.sockets[0].getsockname()[1]
+            async with ClientSession() as http:
+                async with http.get(f'http://127.0.0.1:{port}/camera/{"x" * 24}.jpg') as r:
+                    status = r.status
+            await runner.cleanup()
+            return status
+
+        self.assertEqual(asyncio.run(main()), 404)

@@ -32,6 +32,11 @@ SEND_BUFFER = 65536       # what may wait in this host's socket for a screen: a 
 # its camera, and the screen's own TCP window as many again: a tile showed pictures a second or two old (a reTerminal
 # D1001, 2026-10-28, X-Made). Its link keeps two or three of them here; the screen shows the newest of what reached it.
 TILE_SEND_BUFFER = 16384
+# A live tile on firmware that asks for each picture (pull, below): an ask waits this long for a frame newer than the one
+# its link had, then answers 204 and the screen asks again; a link nobody asked for this long after its last answer
+# lets its camera go, as a stream that ended.
+PULL_SECONDS = 2.0
+PULL_LEASE = 3.0
 # What a screen that streams says in its hello (live_view.h): a camera tile set to Live, pace 0, streams there, and Live
 # is the default pace of its camera tiles.
 SCREEN_FEATURE = 'live'
@@ -56,11 +61,15 @@ def live_pace(message, tile, features):
 
 
 class Link:
-    __slots__ = ('entity', 'box', 'used', 'streaming', 'made', 'cover', 'sound', 'warm', 'screen', 'tile')
+    __slots__ = ('entity', 'box', 'used', 'streaming', 'made', 'cover', 'sound', 'warm', 'screen', 'tile', 'pulled',
+                 'until', 'lease', 'held', 'began', 'sent', 'size')
 
     def __init__(self, entity, box, now, cover=False, sound=False, warm=False, screen=None, tile=False):
         self.entity, self.box, self.used, self.streaming, self.made = entity, box, now, 0, now
         self.cover, self.sound, self.warm, self.screen, self.tile = cover, sound, warm, screen, tile
+        # Pulled one picture an ask (LiveFeed.pull): the frame it had last, until when its lease runs, the task that ends
+        # it, the cameras it holds, and its count for the log.
+        self.pulled, self.until, self.lease, self.held, self.began, self.sent, self.size = 0, 0.0, None, [], now, 0, 0
 
 
 class LiveFeed:
@@ -151,22 +160,90 @@ class LiveFeed:
     def pictures_of(self, entity):
         return self.pictures.setdefault(entity, live_pictures.Pictures(entity))
 
-    async def serve(self, request, token):
-        from aiohttp import web
-        link = self.links.get(token)
-        if link is None:
-            return web.Response(status=404, text='Unknown link')
+    def refused(self, link):
+        """Why a stream of `link` may not start now (a text for 503), or None."""
         # A full view (a camera opened, a doorbell's ring) of a screen whose own live tiles still stream goes through:
         # the view covers those tiles, and they end the moment it opens. A ring on the bench Guition with four live tiles
         # and the D1001's own was refused here at its first ask, and its picture came 1.9 s after the view opened
         # instead of under one (2026-10-28, docs/PLATFORM_PLAN.md 4.9).
         if self.streaming() >= MAX_STREAMS and (link.tile or link.screen is None or not self.tiles_streaming(link.screen)):
-            return web.Response(status=503, text='Too many live cameras')
+            return 'Too many live cameras'
         # A screen's own count (hw.h LIVE_TILES, docs/PLATFORM_PLAN.md 4.1): its fifth live tile is refused here as the
         # firmware refuses it there, so a screen whose firmware and app disagree never streams more than the lower says.
         cap = self.live_tiles(link.screen) if link.tile and link.screen is not None else None
         if cap is not None and self.tiles_streaming(link.screen) >= cap:
-            return web.Response(status=503, text=f'This screen plays {cap} cameras live at once')
+            return f'This screen plays {cap} cameras live at once'
+        return None
+
+    async def pull(self, request, token):
+        """A live tile's next picture, one an ask over a kept connection (GET /camera/<token>.jpg on the same link as
+        the stream; firmware that asks so, live_view.cpp): the JPEG of the camera's newest frame for its card once that
+        is newer than the one the link had, or after PULL_SECONDS without one 204, and the screen asks again. Nothing
+        waits between here and the screen, so its pictures are as new as the camera's, and the bytes are what it shows:
+        a screen that asks less, by its own pace or a busy screen's, gets less. The first ask starts the link as a
+        stream would (the same limits, the camera held, the tiles of its screen held), and the link counts as streaming
+        until PULL_LEASE after its last answer."""
+        from aiohttp import web
+        link = self.links.get(token)
+        if link is None:
+            return web.Response(status=404, text='Unknown link')
+        if link.lease is None:
+            why = self.refused(link)
+            if why:
+                return web.Response(status=503, text=why)
+            link.streaming += 1
+            source = self.source(link.entity)
+            source.wants_sound = source.wants_sound or link.warm
+            source.viewers += 1
+            source.idle_since = None
+            source.start()
+            link.held, link.began, link.sent, link.size = self.hold(link), self.clock(), 0, 0
+            link.lease = asyncio.create_task(self.lease(link, source))
+        source = self.sources[link.entity]
+        source.start()  # again if its camera ended meanwhile, as a screen's new stream would
+        link.until = self.clock() + PULL_SECONDS + PULL_LEASE
+        frame = await source.next(link.pulled, PULL_SECONDS)
+        jpeg = await self.pictures_of(link.entity).picture(frame, link.box, link.cover) if frame is not None else None
+        link.until = self.clock() + PULL_LEASE
+        if not jpeg:
+            return web.Response(status=204, headers={'Cache-Control': 'no-cache'})
+        link.pulled = frame.number
+        link.sent += 1
+        link.size += len(jpeg)
+        # X-Made as on the stream (serve): this host's clock in ms as the picture leaves.
+        headers = {'Cache-Control': 'no-cache', 'X-Made': str(int(time.monotonic() * 1000) & 0xFFFFFFFF)}
+        if frame.still:
+            headers['X-Picture'] = 'still'
+        return web.Response(body=jpeg, content_type='image/jpeg', headers=headers)
+
+    async def lease(self, link, source):
+        """A pulled link's stream, from its first ask until PULL_LEASE after its last answer: then it lets its camera go
+        as an ended stream does."""
+        try:
+            while self.clock() < link.until:
+                await asyncio.sleep(min(0.5, max(0.05, link.until - self.clock())))
+        finally:
+            link.lease = None
+            link.streaming -= 1
+            link.used = self.clock()
+            self.let_go(link.held)
+            link.held = []
+            source.viewers -= 1
+            if not source.viewers:
+                source.idle_since = time.monotonic()
+            seconds = max(0.001, self.clock() - link.began)
+            LOG.info('Live %s (%s, asked a picture at a time): %d pictures in %.0f s, %.1f a second, %d KB a picture',
+                     link.entity, source.route, link.sent, seconds, link.sent / seconds,
+                     link.size // max(1, link.sent) // 1024)
+
+    async def serve(self, request, token):
+        from aiohttp import web
+        link = self.links.get(token)
+        if link is None:
+            return web.Response(status=404, text='Unknown link')
+        why = self.refused(link)
+        if why:
+            return web.Response(status=503, text=why)
         link.streaming += 1
         source = self.source(link.entity)
         jpegs = self.pictures_of(link.entity)
