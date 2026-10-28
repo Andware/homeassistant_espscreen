@@ -125,12 +125,15 @@ class Stream(unittest.TestCase):
                     break
                 data += chunk
                 while True:
-                    found = re.search(rb'Content-Length: (\d+)\r\n\r\n', data)
-                    if not found or len(data) < found.end() + int(found.group(1)):
+                    # A part's head in any order of its lines, as the screen reads it (picture_fetch::parse_head).
+                    end = data.find(b'\r\n\r\n', data.find(b'--frame'))
+                    length = re.search(rb'Content-Length: (\d+)\r\n', data[:end + 2]) if end >= 0 else None
+                    if not length or len(data) < end + 4 + int(length.group(1)):
                         break
-                    self.heads.append(data[:found.end()])
-                    got.append(data[found.end():found.end() + int(found.group(1))])
-                    data = data[found.end() + int(found.group(1)):]
+                    body = end + 4
+                    self.heads.append(data[:body])
+                    got.append(data[body:body + int(length.group(1))])
+                    data = data[body + int(length.group(1)):]
             writer.close()
             await asyncio.sleep(0.1)
             await runner.cleanup()
@@ -144,6 +147,14 @@ class Stream(unittest.TestCase):
         # The P4 takes the camera's own JPEG as it is: this app spent nothing on it.
         self.assertTrue(all(part == picture for part in got))
         self.assertTrue(set(asked) == {'camera.door'})
+
+    def test_every_picture_says_when_it_left(self):
+        """X-Made: the app's clock in ms as a picture leaves, which the screen sets beside its own to see how long its
+        pictures wait on the way (live_view.cpp)."""
+        (_, got), _, _ = self.run_stream(parts=2)
+        made = [re.search(rb'\r\nX-Made: (\d+)\r\n', head) for head in self.heads]
+        self.assertTrue(len(got) == 2 and all(made), self.heads)
+        self.assertLessEqual(int(made[0].group(1)), int(made[1].group(1)))
 
     def test_a_snapshot_camera_is_live_from_its_first_picture(self):
         self.run_stream()

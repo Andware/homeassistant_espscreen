@@ -193,8 +193,11 @@ class LiveFeed:
                 jpeg = await jpegs.picture(frame, link.box, link.cover)
                 if not jpeg:
                     continue
-                await write(b'--frame\r\nContent-Type: image/jpeg\r\n%sContent-Length: %d\r\n\r\n'
-                            % (b'X-Picture: still\r\n' if frame.still else b'', len(jpeg)), jpeg)
+                # X-Made: this host's clock in ms as the picture leaves for the screen, which sets it beside its own
+                # to see how long a picture waits on the way (live_view.cpp, its pictures' wait).
+                await write(b'--frame\r\nContent-Type: image/jpeg\r\n%sContent-Length: %d\r\nX-Made: %d\r\n\r\n'
+                            % (b'X-Picture: still\r\n' if frame.still else b'', len(jpeg),
+                               int(time.monotonic() * 1000) & 0xFFFFFFFF), jpeg)
                 if not sent:
                     LOG.info('Live %s: first picture %.1f s after the link went out (the screen came %.1f s after it); '
                              'its source: %s', link.entity, self.clock() - link.made, began - link.made,
