@@ -536,6 +536,14 @@ the tiles and LVGL (up to 0.74 s measured).
     registers nobody sets (DSI_BRG_RAW_BUF_CREDIT_CTL, DMA_BLOCK_INTERVAL, DMA_REQ_INTERVAL). Espressif's FAQ for
     "underrun happens": a lower lane rate or pixel clock, RGB565, SPIRAM_XIP_FROM_PSRAM, CACHE_L2_CACHE_256KB,
     CACHE_L2_CACHE_LINE_128B, COMPILER_OPTIMIZATION_PERF; the bench builds run OPTIMIZATION_SIZE.
+  - **Work nobody needed, taken off the bus (2026-10-28).** Screen camera 0.6.6 (tessera-plugins 014c427): the frame
+    hub halved every frame of the OV02C10's Full field of view on the PPA, 5 a second at rest (about 11 MB/s of
+    PSRAM), for a video encoder that threw it away while nobody watched; it halves now only while someone watches the
+    video. Five minutes before and after on the bench Guition with four live tiles: 0.0 frames a second halved at rest
+    and with sensing at full speed, the tiles' lay-out 36.3 ms a picture before and 32.1 after, internal RAM 243 and
+    246 KB free, the panel dry 0 times, the cores' load unchanged (the PPA did that work, not a core). Turning the
+    camera off in standby was weighed and left: sensing at 5 a second costs next to nothing after this, and a light
+    level that stops at night is something a person notices.
   - **Next, one variable a build** (the bench Guition, the tablet's layout, the dev's logging on so the flash shows, a
     quarter of an hour each, glass::misses and the PPA's waits noted): A, CONFIG_CACHE_L2_CACHE_256KB (128 KB of
     internal SRAM more for the cache: heap_watch before and after, with four live tiles and the video); B, ESP-Hosted's
@@ -569,6 +577,8 @@ screen's camera_open halts its live tiles before the view asks (live_tiles_halt)
 screen through MAX_STREAMS while that screen's own tiles still stream (live_stream.serve). Measured on the bench Guition
 with the screen's half alone: no 503, the first picture 1.54 s after the view opened (1.3 s of it the app's answer with
 the link, the stream's first picture 226 ms after it started), and the four tiles back by themselves after the ring.
+Next: the app makes the ring's link when the event comes, before the screen asks (a link in the op doorbell, or one the
+camera request finds ready), so the first picture can come within half a second.
 
 ## 5. The doorbell's talk-back, prepared
 
