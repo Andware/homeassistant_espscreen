@@ -6,6 +6,7 @@
 // way in and on its way back.
 #include "ppa_guard.h"
 #include "ppa_trace.h"
+#include "glass.h"
 #include "esphome/core/defines.h"  // USE_LIVE_VIEW: the header above has no ESPHome in it
 #ifdef USE_LIVE_VIEW
 #include <atomic>
@@ -213,7 +214,9 @@ extern "C" esp_err_t __wrap_ppa_do_scale_rotate_mirror(ppa_client_handle_t clien
   if (!config) return __real_ppa_do_scale_rotate_mirror(client, config);
   const uint32_t seq = note(config);
   int pieces = 0;
+  const int64_t from = esp_timer_get_time();
   const esp_err_t err = copy_guarded(client, config, pieces);
+  glass::engine_took(static_cast<uint32_t>(esp_timer_get_time() - from));  // LVGL's turn of a flush (glass.h, Held)
   came_back(seq, pieces, err);
   return err;
 }

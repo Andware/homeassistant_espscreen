@@ -71,6 +71,16 @@ struct Stream {
   // the task just before it copies one); until then LVGL draws as ever, a spinner turning while the camera comes.
   glass::Room room = -1;
   std::atomic<uint32_t> shown{0}, bytes{0}, decode_us{0}, copy_us{0}, skipped{0};
+  // Time a picture waited for the glass (glass::hold) while it was laid out, inside copy_us; and of a tile's lay-out, the
+  // PPA's copy into its card and onto the glass (each under the glass) and the composing between them.
+  std::atomic<uint32_t> wait_us{0}, into_us{0}, compose_us{0}, onto_us{0};
+  // The time recv waited for the app.
+  std::atomic<uint32_t> net_us{0};
+  // How long its pictures waited on their way (X-Made, the app's clock set beside this one): over the least seen, on
+  // average and at most.
+  bool aged = false;
+  int32_t youngest = 0;
+  std::atomic<uint32_t> ages{0}, age_ms{0}, age_most_ms{0};
   // When the way to the first picture went by (ms after start, written once by the task, read after `shown`).
   uint32_t started_at = 0, connected_ms = 0, answered_ms = 0, first_bytes_ms = 0;
   uint32_t live_ms = 0;  // its first live picture (written once by the task, read after `live`)
@@ -114,7 +124,9 @@ struct Stream {
   // The main loop's own: the report of the last REPORT_MS, the first picture, its first live one and sound told, the
   // speaker started.
   bool told_first = false, told_live = false, told_sound = false, speaking = false;
-  uint32_t reported_at = 0, reported_shown = 0, reported_bytes = 0, reported_decode = 0, reported_copy = 0;
+  uint32_t reported_at = 0, reported_shown = 0, reported_bytes = 0, reported_decode = 0, reported_copy = 0,
+           reported_wait = 0, reported_net = 0, reported_into = 0, reported_compose = 0, reported_onto = 0,
+           reported_ages = 0, reported_age = 0;
   psram_task::Task task;  // its task, its stack in PSRAM: the main loop deletes it once done (psram_task.h)
   std::atomic<uint32_t> stack_left{0};  // what of its stack the task never used, in bytes (written before `done`)
 };
@@ -184,11 +196,14 @@ static void turn_loader(Stream &s) {
   if (err != ESP_OK) s.warming = false;  // the loader stops where it stands; the pictures go on
 }
 
-// One picture of `length` bytes in the stream's input: decoded, laid out, and copied onto the glass. `still`: the
-// camera's still from before its stream came, with the loader over it on a tile.
-static void show(Stream &s, size_t length, bool still) {
+// The glass held for a copy of the lay-out, and how long that waited for it (another stream's copy, LVGL's flush).
+static void hold_timed(Stream &s) { s.wait_us += glass::hold_counted(); }
+
+// One picture of `length` bytes at `data` (the stream's input): decoded, laid out, and copied onto the glass.
+// `still`: the camera's still from before its stream came, with the loader over it on a tile.
+static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   picture_engine::Still info;
-  if (!picture_engine::info(s.input, length, info)) {
+  if (!picture_engine::info(data, length, info)) {
     s.skipped++;
     return;
   }
@@ -225,14 +240,14 @@ static void show(Stream &s, size_t length, bool still) {
     }
   }
   // The decoder works through the 2D-DMA, as the PPA and the panel's copy of each of LVGL's strips do: it decodes
-  // while it holds the glass (glass.h).
-  glass::hold();
+  // while it holds the glass (glass.h). Its wait counts in the glass's report, not in the stream's own.
+  glass::hold_counted();
   if (s.stopping) {
     glass::release();
     return;
   }
   const int64_t t0 = esp_timer_get_time();
-  const bool decoded = picture_engine::decode_into(s.input, length, s.picture, s.picture_size);
+  const bool decoded = picture_engine::decode_into(data, length, s.picture, s.picture_size);
   const int64_t t1 = esp_timer_get_time();
   glass::release();
   if (!decoded) {
@@ -240,8 +255,8 @@ static void show(Stream &s, size_t length, bool still) {
     return;
   }
   if (s.shown == 0)
-    ESP_LOGD(TAG, "picture %dx%d decoded in %u us, for %dx%d at %d,%d", w, h, (unsigned) (t1 - t0), where.w, where.h,
-             where.x, where.y);
+    ESP_LOGI(TAG, "picture %dx%d (decoded %d wide) in %u us, for %dx%d at %d,%d, scale %d", w, h, stride_w,
+             (unsigned) (t1 - t0), where.w, where.h, where.x, where.y, s.look.tile ? into.scale : scale);
   const glass::Panel panel = glass::panel();
   const size_t glass_size = static_cast<size_t>(panel.w) * panel.h * 2;
   esp_err_t err = ESP_OK;
@@ -263,26 +278,33 @@ static void show(Stream &s, size_t length, bool still) {
     }
     if (!into.covers(cw, ch)) memset(s.canvas, 0, static_cast<size_t>(cw) * ch * 2);
     // Into the card's canvas, not the glass, but through the PPA all the same: with the glass held.
-    glass::hold();
+    hold_timed(s);
+    int64_t from = esp_timer_get_time();
     err = copy(s, s.picture, stride_w, rows, into.in_x, into.in_y, into.in_w, into.in_h, s.canvas, s.canvas_size, cw,
                ch, into.out_x, into.out_y, into.scale, 0);
     glass::release();
+    int64_t to = esp_timer_get_time();
+    s.into_us += static_cast<uint32_t>(to - from);
     if (err == ESP_OK) {
       compose(s.canvas, cw, cw, ch, s.look);
       loading = still && lay_loader(s);
+      from = esp_timer_get_time();
+      s.compose_us += static_cast<uint32_t>(from - to);
       const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
-      glass::hold();
+      hold_timed(s);
+      from = esp_timer_get_time();
       if (!s.stopping) {
         glass::place(s.room, s.area);  // from now on LVGL draws nothing here
         err = copy(s, s.canvas, cw, ch, 0, 0, cw, ch, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
                    target.y, picture_engine::AS_IS, s.turn);
       }
       glass::release();
+      s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - from);
     }
   } else {
     // The full view: scaled to fill its room on the way (the app sends the camera's own size where that is smaller).
     const Rect target = on_panel(where, s.turn, panel.w, panel.h);
-    glass::hold();
+    hold_timed(s);
     if (!s.stopping) {
       glass::place(s.room, where);
       err = copy(s, s.picture, stride_w, rows, 0, 0, w, h, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
@@ -304,6 +326,20 @@ static void show(Stream &s, size_t length, bool still) {
     s.live = true;
   }
   s.shown++;
+}
+
+// A picture's wait on its way: the app's clock and this one differ by a constant (and a drift of milliseconds an
+// hour), so the least difference seen is the way at its quickest and what lies over it the wait.
+static void age(Stream &s, uint32_t made) {
+  const int32_t gap = static_cast<int32_t>(static_cast<uint32_t>(esp_timer_get_time() / 1000) - made);
+  if (!s.aged || gap < s.youngest) {
+    s.youngest = gap;
+    s.aged = true;
+  }
+  const uint32_t waited = static_cast<uint32_t>(gap - s.youngest);
+  s.ages++;
+  s.age_ms += waited;
+  if (waited > s.age_most_ms) s.age_most_ms = waited;
 }
 
 static void stream(Stream &s) {
@@ -337,8 +373,10 @@ static void stream(Stream &s) {
   Reader reader(s.look.tile ? most.tile_picture_bytes : most.picture_bytes);
   uint32_t heard = esphome::millis();
   while (!s.stopping) {
+    const int64_t asked = esp_timer_get_time();
     const int n = recv(fd, chunk, CHUNK, 0);
     const int error = errno;
+    s.net_us += static_cast<uint32_t>(esp_timer_get_time() - asked);
     turn_loader(s);
     if (n < 0 && (error == EAGAIN || error == EWOULDBLOCK)) {
       if (esphome::millis() - heard < QUIET_MS) continue;
@@ -362,7 +400,8 @@ static void stream(Stream &s) {
         },
         [&s, &reader](size_t length, bool audio) {
           if (!audio) {
-            show(s, length, reader.still());
+            if (reader.has_made()) age(s, reader.made());
+            show(s, s.input, length, reader.still());
             return;
           }
           // Sound: into the buffer the main loop plays from; none of it while muted. Whole samples only, so the buffer,
@@ -561,7 +600,9 @@ static void speak(Stream &s, bool on) {
 size_t held_bytes() {
   size_t held = 0;
   for (auto *s : streams)
-    if (s && !s->stopping) held += s->input_size + static_cast<size_t>(std::max(0, s->area.w)) * std::max(0, s->area.h) * 2;
+    if (s && !s->stopping)
+      held += s->input_size +
+              static_cast<size_t>(std::max(0, s->area.w)) * std::max(0, s->area.h) * 2;
   return held;
 }
 
@@ -576,13 +617,36 @@ void close(Handle handle) {
 static void report(int slot, Stream &s, uint32_t now, bool last) {
   const uint32_t span = now - s.reported_at;
   if (span == 0) return;
-  const uint32_t shown = s.shown, bytes = s.bytes, decode = s.decode_us, copied = s.copy_us;
+  const uint32_t shown = s.shown, bytes = s.bytes, decode = s.decode_us, copied = s.copy_us, waited = s.wait_us;
+  const uint32_t net = s.net_us;
   const uint32_t frames = shown - s.reported_shown;
-  ESP_LOGI(TAG, "%s %d: %.1f pictures/s, %u KB/s, decoding %.1f ms and laying out %.1f ms a picture, %u skipped in all, "
-           "the panel ran dry %u times since boot",
+  // Laying out is the picture's copies and composing; the wait for the glass inside it is said apart.
+  const uint32_t wait = waited - s.reported_wait, lay = copied - s.reported_copy;
+  ESP_LOGI(TAG, "%s %d: %.1f pictures/s, %u KB/s, waiting %.1f ms for the app, decoding %.1f ms, waiting %.1f ms for the "
+           "glass and laying out %.1f ms a picture, %u skipped in all, the panel ran dry %u times since boot",
            last ? "ended" : "stream", slot, frames * 1000.0f / span, (unsigned) ((bytes - s.reported_bytes) / span),
-           frames ? (decode - s.reported_decode) / 1000.0f / frames : 0.0f,
-           frames ? (copied - s.reported_copy) / 1000.0f / frames : 0.0f, (unsigned) s.skipped, (unsigned) glass::misses());
+           frames ? (net - s.reported_net) / 1000.0f / frames : 0.0f,
+           frames ? (decode - s.reported_decode) / 1000.0f / frames : 0.0f, frames ? wait / 1000.0f / frames : 0.0f,
+           frames ? (lay > wait ? lay - wait : 0) / 1000.0f / frames : 0.0f, (unsigned) s.skipped,
+           (unsigned) glass::misses());
+  const uint32_t into = s.into_us, composed = s.compose_us, onto = s.onto_us;
+  if (frames && s.look.tile)
+    ESP_LOGI(TAG, "%s %d: of laying out, %.1f ms a picture into its card, %.1f ms composing and %.1f ms onto the glass",
+             last ? "ended" : "stream", slot, (into - s.reported_into) / 1000.0f / frames,
+             (composed - s.reported_compose) / 1000.0f / frames, (onto - s.reported_onto) / 1000.0f / frames);
+  s.reported_into = into;
+  s.reported_compose = composed;
+  s.reported_onto = onto;
+  const uint32_t ages = s.ages, aged = s.age_ms;
+  if (ages != s.reported_ages)
+    ESP_LOGI(TAG, "%s %d: its pictures waited %.0f ms on their way (at most %u) over the quickest",
+             last ? "ended" : "stream", slot,
+             static_cast<float>(aged - s.reported_age) / static_cast<float>(ages - s.reported_ages),
+             (unsigned) s.age_most_ms.exchange(0));
+  s.reported_ages = ages;
+  s.reported_age = aged;
+  s.reported_wait = waited;
+  s.reported_net = net;
   s.reported_at = now;
   s.reported_shown = shown;
   s.reported_bytes = bytes;
@@ -590,10 +654,33 @@ static void report(int slot, Stream &s, uint32_t now, bool last) {
   s.reported_copy = copied;
 }
 
+// Who kept the streams waiting for the glass these 10 s (glass.h, Held), while any stream is open.
+static void report_glass(uint32_t now) {
+  static uint32_t reported_at = 0;
+  if (now - reported_at < REPORT_MS) return;
+  const uint32_t span = reported_at ? now - reported_at : REPORT_MS;
+  reported_at = now;
+  const glass::Held h = glass::held_since();
+  const uint32_t drawing = h.refresh_us > h.flush_us ? h.refresh_us - h.flush_us : 0;
+  const uint32_t copying = h.flush_us > h.turn_us ? h.flush_us - h.turn_us : 0;
+  ESP_LOGI(TAG, "glass: in %u ms LVGL refreshed %u times and flushed %u, holding the glass %.1f ms in all (at most %.1f): "
+           "drawing %.1f ms, turning on the PPA %.1f ms (at most %.1f), copying to the panel %.1f ms (a flush at most "
+           "%.1f); the streams waited %u times, %.1f ms behind LVGL (at most %.1f), %.1f ms behind another stream "
+           "(at most %.1f) and %.1f ms behind another writer (at most %.1f)",
+           (unsigned) span, (unsigned) h.refreshes, (unsigned) h.flushes, h.refresh_us / 1000.0f,
+           h.refresh_most_us / 1000.0f, drawing / 1000.0f, h.turn_us / 1000.0f, h.turn_most_us / 1000.0f,
+           copying / 1000.0f, h.flush_most_us / 1000.0f, (unsigned) h.waits, h.behind_lvgl_us / 1000.0f,
+           h.behind_lvgl_most_us / 1000.0f, h.behind_stream_us / 1000.0f, h.behind_stream_most_us / 1000.0f,
+           h.behind_other_us / 1000.0f, h.behind_other_most_us / 1000.0f);
+}
+
 void tick(const std::function<void(Handle, Event)> &tell) {
   const uint32_t now = esphome::millis();
   const int turn = glass::turn();
   glass::tick();
+  bool any = false;
+  for (int slot = 0; slot < MAX_STREAMS; ++slot) any = any || streams[slot] != nullptr;
+  if (any) report_glass(now);
   for (int slot = 0; slot < MAX_STREAMS; ++slot) {
     Stream *s = streams[slot];
     if (!s) continue;
