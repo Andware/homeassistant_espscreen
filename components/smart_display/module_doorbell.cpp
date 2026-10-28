@@ -66,6 +66,9 @@ doorbell_door::Door door;
 lv_obj_t *door_key = nullptr, *door_icon = nullptr, *door_text = nullptr, *door_line = nullptr;
 doorbell_door::Look door_shown{};
 std::string door_line_said;
+// Where pill() put the door key's word: its left, and its top with a line under it and without one, so a new line
+// moves it up or down and never sideways.
+int door_word_x = 0, door_word_top = 0, door_word_alone = 0;
 
 void say(const char *what) {
   ESP_LOGI(TAG, "%s (%s)", what, now_ring.camera.c_str());
@@ -177,6 +180,16 @@ int word_at(int key_h) {
   return key_h * 42 / 100 + glyph + key_h / 4;
 }
 
+// The tops of a key's word and of the line under it, the two on the key's middle a little apart; and the word's top alone.
+struct Rows { int top, line, alone; };
+Rows two_rows(int key_h) {
+  const lv_font_t *word = title_font();
+  const int high = word ? lv_font_get_line_height(word) : key_h / 3;
+  const int low = detail_font ? lv_font_get_line_height(detail_font) : high / 2, gap = std::max(1, low / 6);
+  const int top = (key_h - high - gap - low) / 2;
+  return {top, top + high + gap, (key_h - high) / 2};
+}
+
 // A key of the view: a pill as wide as its place, its glyph and its word at the left, as the keys of a card are; with
 // `line`, a smaller line under the word (the door's state, Talk's "Coming soon").
 lv_obj_t *pill(lv_obj_t *root, const live_view::Rect &at, lv_obj_t *&icon, lv_obj_t *&text, lv_obj_t **line = nullptr) {
@@ -206,16 +219,17 @@ lv_obj_t *pill(lv_obj_t *root, const live_view::Rect &at, lv_obj_t *&icon, lv_ob
     lv_obj_set_style_text_color(part, theme::color(theme::ON_ACCENT), 0);
   }
   if (line) {
-    // The word and the line together on the key's middle, the line in the card's detail font.
+    // The word and the line together on the key's middle, a sixth of the line's height apart, the line in the card's
+    // detail font. Placed from the key's top: offsets from its middle left the line on the word (2026-10-28, a photo).
     *line = lv_label_create(key);
     if (detail_font) lv_obj_set_style_text_font(*line, detail_font, 0);
     lv_label_set_long_mode(*line, LV_LABEL_LONG_DOT);
     lv_obj_set_width(*line, std::max(1, at.w - word_x - pad));
     lv_obj_remove_flag(*line, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_text_color(*line, theme::color(theme::ON_ACCENT), 0);
-    const int high = word ? lv_font_get_line_height(word) : at.h / 3, low = detail_font ? lv_font_get_line_height(detail_font) : high / 2;
-    lv_obj_align(text, LV_ALIGN_LEFT_MID, word_x, -low / 2);
-    lv_obj_align(*line, LV_ALIGN_LEFT_MID, word_x, high / 2);
+    const auto rows = two_rows(at.h);
+    lv_obj_align(text, LV_ALIGN_TOP_LEFT, word_x, rows.top);
+    lv_obj_align(*line, LV_ALIGN_TOP_LEFT, word_x, rows.line);
   }
   return key;
 }
@@ -239,8 +253,7 @@ void paint_door(uint32_t now) {
   lv_label_set_text(door_icon, look.glyph);
   lv_label_set_text(door_line, line.c_str());
   // Without a line (an action's key at rest) the word stands on the key's middle.
-  const int low = detail_font ? lv_font_get_line_height(detail_font) : 0;
-  lv_obj_align(door_text, LV_ALIGN_LEFT_MID, word_at(lv_obj_get_style_height(door_key, LV_PART_MAIN)), line.empty() ? 0 : -low / 2);
+  lv_obj_align(door_text, LV_ALIGN_TOP_LEFT, door_word_x, line.empty() ? door_word_alone : door_word_top);
   if (line.empty()) lv_obj_add_flag(door_line, LV_OBJ_FLAG_HIDDEN);
   else lv_obj_remove_flag(door_line, LV_OBJ_FLAG_HIDDEN);
 }
@@ -323,7 +336,11 @@ void build(lv_obj_t *root, const std::string &name) {
     // Two taps open the door (doorbell_door.h); the second says "door", and ESP Screens performs it.
     door_shown = {};
     door_line_said = "-";
-    door_key = pill(root, slot(p, at++, keys), door_icon, door_text, &door_line);
+    const auto door_at = slot(p, at++, keys);
+    door_key = pill(root, door_at, door_icon, door_text, &door_line);
+    door_word_x = word_at(door_at.h);
+    door_word_top = two_rows(door_at.h).top;
+    door_word_alone = two_rows(door_at.h).alone;
     lv_label_set_text(door_text, screen_text::tr(screen_text::txt::doorbell_door));
     lv_obj_add_event_cb(door_key, [](lv_event_t *) {
       touch();
