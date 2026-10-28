@@ -52,9 +52,11 @@ STREAM_FEATURE = catalogue.bits('camera', 'STREAM')
 # whatever they are, so a quiet log still says the watch runs.
 FRAME_REPORT_SECONDS = 10
 FRAME_TOTALS_SECONDS = 300
-# A flash: a frame at least FLASH_RISE times as bright as the one before and FLASH_STEPS of 255 brighter, after which the
-# next falls back at least halfway. A camera's own change of light (a lamp, its night mode) stays bright.
-FLASH_RISE, FLASH_STEPS = 1.4, 12
+# A flash: the picture at least FLASH_RISE times as bright as before it (the median of its last frames) and FLASH_STEPS of
+# 255 brighter, falling back at least halfway within FLASH_FRAMES frames. One frame or a second of them: Max saw the
+# flash on every tile of the living room's camera at once (2026-10-28), and a camera's own jump of exposure lasts
+# frames, not one. A change of light that stays (a lamp, the camera's night mode) is no flash.
+FLASH_RISE, FLASH_STEPS, FLASH_FRAMES = 1.25, 8, 15
 # A gap: frames this many times the usual step between their timestamps apart.
 GAP_STEPS = 1.8
 # Evidence, on the bench: with this file in Home Assistant's config folder each flagged frame, the two before and the two
@@ -112,25 +114,32 @@ def luma(frame):
 
 
 class FrameDump:
-    """The JPEGs of a flagged frame, the two before it and the two after it (DUMP_DIR/<entity>/<pts>.jpg), made in a
-    thread of their own, at most DUMP_MOST files in all."""
+    """The JPEGs of a flagged moment (DUMP_DIR/<entity>/<pts>.jpg): a corrupt frame or a flash, with the two frames before
+    it and the two after it, made in a thread of their own, at most DUMP_MOST files in all. Every frame is kept as a copy
+    of THUMB_WIDTH pixels wide while the dump is on, so a flash of a second of 1080p does not hold seconds of 1080p."""
+
+    THUMB_WIDTH = 480
 
     def __init__(self, entity, folder=None, most=DUMP_MOST):
         self.folder = Path(folder or DUMP_DIR) / entity.replace('.', '_')
-        self.most, self.recent, self.after = most, collections.deque(maxlen=4), 0
+        self.most, self.recent, self.after = most, collections.deque(maxlen=FLASH_FRAMES + 4), 0
 
-    def frame(self, frame, flagged=False, late=False):
-        """Every frame the watch keeps; `flagged` this one, `late` the one before it (a flash shows one frame later)."""
-        self.recent.append(frame)
-        if late:
-            self.write(list(self.recent))  # the two before the flash, the flash and this, the first after it
-            self.after = max(self.after, 1)
-        elif flagged:
-            self.write(list(self.recent)[-3:])
+    def frame(self, frame, flagged=0):
+        """Every frame the watch keeps; `flagged` the number of frames up to this one that make the moment (1 for this
+        frame alone): those and the two before them go out now, the two after them as they come."""
+        try:
+            width = min(self.THUMB_WIDTH, frame.width)
+            thumb = frame.reformat(width=width, height=max(2, frame.height * width // frame.width // 2 * 2), format='rgb24')
+        except Exception:  # noqa: BLE001 - only evidence
+            return
+        thumb.pts = frame.pts
+        self.recent.append(thumb)
+        if flagged:
+            self.write(list(self.recent)[-(flagged + 2):])
             self.after = 2
         elif self.after:
             self.after -= 1
-            self.write([frame])
+            self.write([thumb])
 
     def write(self, frames):
         def save():
@@ -157,7 +166,9 @@ class FrameWatch:
         self.now = dict.fromkeys(self.COUNTS, 0)
         self.total = dict.fromkeys(self.COUNTS, 0)
         self.last_pts, self.steps = None, collections.deque(maxlen=30)
-        self.window = collections.deque(maxlen=2)  # (pts, brightness, key) of the last two frames shown
+        # The brightness of the last frames before any flash, and the flash going on: {'pts', 'base', 'peak', 'frames',
+        # 'key'} from its first bright frame.
+        self.calm, self.bright = collections.deque(maxlen=8), None
         self.reported = self.totaled = clock()
 
     def count(self, what, n=1):
@@ -184,23 +195,38 @@ class FrameWatch:
             self.count('corrupt')
             LOG.info('Live %s: corrupt frame left out (pts %s%s)', self.entity, pts, ', a key frame' if key else '')
             if self.dump:
-                self.dump.frame(frame, flagged=True)
+                self.dump.frame(frame, flagged=1)
             return False
         try:
             y = self.brightness(frame)
         except Exception:  # noqa: BLE001 - only for the count: the frame is shown whatever happens here
             return True
-        late = False
-        if len(self.window) == 2:
-            (_, before, _), (flash_pts, bright, flash_key) = self.window
-            if bright >= before * FLASH_RISE and bright - before >= FLASH_STEPS and y <= before + (bright - before) / 2:
+        flagged = 0
+        flash = self.bright
+        if flash is None:
+            base = sorted(self.calm)[len(self.calm) // 2] if len(self.calm) >= 3 else None
+            if base is not None and y >= base * FLASH_RISE and y - base >= FLASH_STEPS:
+                self.bright = {'pts': pts, 'base': base, 'peak': y, 'frames': 1, 'key': key}
+            else:
+                self.calm.append(y)
+        else:
+            flash['frames'] += 1
+            flash['peak'] = max(flash['peak'], y)
+            if y <= flash['base'] + (flash['peak'] - flash['base']) / 2:
                 self.count('flashes')
-                late = True
-                LOG.warning('Live %s: a flash frame at pts %s%s: brightness %.0f, %.0f, then %.0f', self.entity, flash_pts,
-                            ', a key frame' if flash_key else '', before, bright, y)
-        self.window.append((pts, y, key))
+                flagged = flash['frames']  # its bright frames and this one it fell back on
+                LOG.warning('Live %s: a flash at pts %s%s, %d frame(s): brightness %.0f, up to %.0f, then %.0f', self.entity,
+                            flash['pts'], ', a key frame' if flash['key'] else '', flash['frames'] - 1, flash['base'],
+                            flash['peak'], y)
+                self.bright = None
+                self.calm.append(y)
+            elif flash['frames'] > FLASH_FRAMES:
+                # The light changed and stays: the new light is calm.
+                self.bright = None
+                self.calm.clear()
+                self.calm.append(y)
         if self.dump:
-            self.dump.frame(frame, late=late)
+            self.dump.frame(frame, flagged=flagged)
         return True
 
     def due(self):

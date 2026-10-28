@@ -275,8 +275,9 @@ often a Raspberry Pi, so each kind of camera takes the cheapest road:
 
 - a frame the decoder marks corrupt (`is_corrupt`, after packets that never came) is left out, and the screen keeps the
   one before;
-- a gap in the frames' timestamps (frames that never came), a flash (a frame at least 1.4 times and 12 steps of 255
-  brighter than the one before, after which the next falls back at least halfway), the packets lost on the way, the
+- a gap in the frames' timestamps (frames that never came), a flash (the picture at least 1.25 times and 8 steps of 255
+  brighter than the median of its last frames, falling back at least halfway within 15 frames: one bright frame or a
+  second of them, as a camera's own jump of exposure), the packets lost on the way, the
   NACKs and PLIs the app sent back (aiortc asks the camera for a new key frame after a loss it cannot mend), the JPEGs
   a screen would refuse and the stills are counted;
 - the app's log says them every 10 seconds when anything but frames was counted, a flash at once with its timestamp and
@@ -286,8 +287,8 @@ often a Raspberry Pi, so each kind of camera takes the cheapest road:
 
 The brightness comes from a grid of 40 x 24 pixels that FFmpeg's scaler picks in grey: 0.05 ms for a 1080p frame. For
 evidence, an empty file `tessera_frame_dump` in Home Assistant's config folder makes the app keep each flagged frame,
-the two before it and the two after it as JPEGs in `tessera_diagnostics/frames/<camera>/` there, at most 50 in all, the
-oldest going first; delete the file to stop it.
+the two before it and the two after it as JPEGs 480 pixels wide in `tessera_diagnostics/frames/<camera>/` there, at most
+50 in all, the oldest going first; delete the file to stop it.
 
 **What it costs Home Assistant's host.** Decoding costs what the camera's resolution costs, so give a camera's tile the
 camera's low-resolution stream where the integration offers one (most do, as a second camera entity). Measured on a PC

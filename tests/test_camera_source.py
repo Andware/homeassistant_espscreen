@@ -52,19 +52,26 @@ class FrameWatch(unittest.TestCase):
         self.now[0] = camera_source.FRAME_REPORT_SECONDS
         self.assertIn('1 corrupt', watch.line())
 
-    def test_a_flash_is_one_bright_frame_between_two_darker_ones(self):
+    def test_a_flash_is_a_bright_frame_or_a_second_of_them_that_falls_back(self):
         watch = self.watch()
         for i, y in enumerate((80, 80, 80, 130, 81, 80)):
             if y == 81:
                 with self.assertLogs(camera_source.LOG, 'WARNING') as said:
                     watch.feed(Picture(i * 6000, y=y))
-                self.assertIn('flash frame at pts 18000', said.output[0])
+                self.assertIn('flash at pts 18000, 1 frame(s)', said.output[0])
             else:
                 watch.feed(Picture(i * 6000, y=y))
         self.assertEqual(watch.total['flashes'], 1)
-        # A light that goes on and stays on, or a slow rise, is no flash; nor is a small step on a dark picture.
+        # Half a second of a brighter picture, as a camera's exposure jumps, then back.
+        longer = self.watch()
+        with self.assertLogs(camera_source.LOG, 'WARNING') as said:
+            for i, y in enumerate((70, 72, 71, 70, 110, 140, 150, 140, 120, 100, 80, 72, 71)):
+                longer.feed(Picture(i * 6000, y=y))
+        self.assertEqual(longer.total['flashes'], 1)
+        self.assertIn('5 frame(s): brightness 71, up to 150, then 100', said.output[0])
+        # A light that goes on and stays on is no flash; nor is a small step on a dark picture.
         steady = self.watch()
-        for i, y in enumerate((80, 80, 130, 130, 131, 20, 20, 31, 20)):
+        for i, y in enumerate([80] * 5 + [130] * 30 + [20, 20, 20, 26, 20]):
             steady.feed(Picture(i * 6000, y=y))
         self.assertEqual(steady.total['flashes'], 0)
 
@@ -121,6 +128,8 @@ class FrameDump(unittest.TestCase):
             watch = camera_source.FrameWatch('camera.porch', dump=dump)
             for i, grey in enumerate((60, 60, 60, 220, 60, 60, 60, 60)):
                 watch.feed(frame(i, grey))
+            # A frame of 1080p is kept small.
+            self.assertEqual(dump.recent[-1].width, min(camera_source.FrameDump.THUMB_WIDTH, 64))
             await asyncio.sleep(0.5)  # the JPEGs are written in a thread
             return watch
 
@@ -128,7 +137,7 @@ class FrameDump(unittest.TestCase):
             watch = asyncio.run(run(folder))
             written = sorted(int(path.stem) for path in Path(folder).glob('camera_porch/*.jpg'))
         self.assertEqual(watch.total['flashes'], 1)
-        self.assertEqual(written, [1, 2, 3, 4, 5], 'the flash at 3, the two before and the two after')
+        self.assertEqual(written, [1, 2, 3, 4, 5, 6], 'the flash at 3, the two before, the frame it fell back on and two after')
 
     def test_aiortcs_receiver_has_the_two_senders_the_watch_counts(self):
         try:
