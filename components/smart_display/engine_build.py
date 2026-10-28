@@ -6,7 +6,8 @@ Three things, each a define the C++ builds under, and one may come without the o
 
 - The engine (picture_engine.h): what turns a picture's bytes into pixels. PICTURE_ENGINE_P4 is the ESP32-P4's hardware
   JPEG decoder and its PPA, which also scales, turns and copies pixels (picture_engine_p4.cpp, with ppa_guard.cpp
-  between). Without it, the BMP rows of picture_fetch.
+  between). PICTURE_ENGINE_S3 is Espressif's software JPEG decoder, esp_new_jpeg, with the ESP32-S3's SIMD, for a board
+  with PSRAM to decode into (picture_engine_s3.cpp); it has no 2D engine. Without either, the BMP rows of picture_fetch.
 - The glass (glass.h): a frame buffer a task may write past LVGL. GLASS_DSI is a P4's MIPI-DSI panel as ESP-IDF makes it
   (glass_dsi.cpp); whether a P4's display is one is found at run time (glass::direct).
 - The live streams (live_view.h): USE_LIVE_VIEW, a camera's pictures written onto the glass as they come. They need an
@@ -24,15 +25,23 @@ ENGINES = {
         "wraps": ("esp_lcd_new_panel_dpi", "ppa_register_client", "ppa_do_scale_rotate_mirror"),
         "components": (),
     },
+    "s3": {
+        "defines": ("PICTURE_ENGINE_S3",),
+        "wraps": (),
+        # Espressif's registry component, MIT licence; its README has the S3's figures (docs/research/s3-jpeg-2026-10-28.md).
+        "components": (("espressif/esp_new_jpeg", "1.0.2"),),
+    },
     "software": {"defines": (), "wraps": (), "components": ()},
 }
 
 
 def picture_engine(variant, has_lvgl, has_psram=False):
-    """The engine a build gets: 'p4' for an ESP32-P4 with LVGL, else 'software'. `variant` as ESPHome names it,
-    lowercase; `has_psram` for an engine that needs PSRAM to decode into."""
+    """The engine a build gets: 'p4' for an ESP32-P4 with LVGL, 's3' for an ESP32-S3 with LVGL and PSRAM, else
+    'software'. `variant` as ESPHome names it, lowercase."""
     if not has_lvgl:
         return "software"
     if variant == "esp32p4":
         return "p4"
+    if variant == "esp32s3" and has_psram:
+        return "s3"
     return "software"

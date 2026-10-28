@@ -51,10 +51,15 @@ class P4Build(unittest.TestCase):
     def test_the_engine_follows_the_chip_lvgl_and_psram_not_a_board(self):
         self.assertEqual(engine_build.picture_engine('esp32p4', True), 'p4')
         self.assertEqual(engine_build.picture_engine('esp32p4', False), 'software')
-        for variant in ('esp32', 'esp32s3', 'esp32c3', 'host'):
+        self.assertEqual(engine_build.picture_engine('esp32s3', True, True), 's3')
+        self.assertEqual(engine_build.picture_engine('esp32s3', True, False), 'software')  # nowhere to decode into
+        self.assertEqual(engine_build.picture_engine('esp32s3', False, True), 'software')
+        for variant in ('esp32', 'esp32c3', 'host'):
             self.assertEqual(engine_build.picture_engine(variant, True, True), 'software')
-        # Three things, each its own define: the engine, the glass and the streams; a P4 has all three.
+        # Three things, each its own define: the engine, the glass and the streams; a P4 has all three, an S3 an engine.
         self.assertEqual(engine_build.ENGINES['p4']['defines'], ('PICTURE_ENGINE_P4', 'GLASS_DSI', 'USE_LIVE_VIEW'))
+        self.assertEqual(engine_build.ENGINES['s3']['defines'], ('PICTURE_ENGINE_S3',))
+        self.assertEqual(engine_build.ENGINES['s3']['components'], (('espressif/esp_new_jpeg', '1.0.2'),))
         self.assertEqual(engine_build.ENGINES['software'], {'defines': (), 'wraps': (), 'components': ()})
 
     def test_the_wraps_are_the_engines_and_the_glasss(self):
@@ -75,6 +80,7 @@ class P4Build(unittest.TestCase):
         # The defines the table gives are the ones the code builds under: the engines in picture_engine.h and their own
         # files, the glass in glass.h and glass_dsi.cpp, the streams in live_view.h and live_view.cpp.
         for define, names in (('PICTURE_ENGINE_P4', ('picture_engine.h', 'picture_engine_p4.cpp', 'ppa_guard.cpp')),
+                              ('PICTURE_ENGINE_S3', ('picture_engine.h', 'picture_engine_s3.cpp')),
                               ('GLASS_DSI', ('glass.h', 'glass_dsi.cpp')),
                               ('USE_LIVE_VIEW', ('live_view.h', 'live_view.cpp'))):
             for name in names:

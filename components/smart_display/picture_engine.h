@@ -1,10 +1,11 @@
 #pragma once
 // The picture engine: decode, scale, turn (docs/PICTURE_ARCHITECTURE.md, section 3.2). What turns a picture's bytes into
-// pixels and pixels into other pixels, and which formats this screen's decoder takes. Two engines, chosen by the chip
+// pixels and pixels into other pixels, and which formats this screen's decoder takes. Three engines, chosen by the chip
 // when the firmware is built (engine_build.py), as the firmware chooses its modules: on an ESP32-P4 the hardware JPEG
-// decoder and the PPA, with ppa_guard between (PICTURE_ENGINE_P4, picture_engine_p4.cpp); everywhere else the BMP
-// decoder row by row (picture_fetch::Decoder) and no blit at all, since LVGL draws every still there: the inline stubs
-// below, which cost no flash.
+// decoder and the PPA, with ppa_guard between (PICTURE_ENGINE_P4, picture_engine_p4.cpp); on an ESP32-S3 with PSRAM
+// Espressif's software JPEG decoder, which decodes the stills LVGL draws and has no blit (PICTURE_ENGINE_S3,
+// picture_engine_s3.cpp); everywhere else the BMP decoder row by row (picture_fetch::Decoder) and no blit at all, since
+// LVGL draws every still there: the inline stubs below, which cost no flash.
 //
 // The engine knows the decoder, the PPA, the guard and the decoder's memory; it knows nothing of streams, sockets,
 // owners or LVGL objects. The glass (glass.h) is held around every decode and every blit: by the engine itself for a
@@ -148,8 +149,13 @@ inline int ppa_angle(int turn) { return turn == 90 ? 3 : turn == 180 ? 2 : turn 
 // camera is (150 to 250 KB) and a tile's room needs (docs/CAMERA.md, "Live on the P4 boards", 2026-10-10); four live
 // tiles at once, measured on a reTerminal D1001 and a Guition 10.1 (docs/PLATFORM_PLAN.md 4.1).
 constexpr Limits limits() { return {64, 1024 * 1024, 384 * 1024, 4}; }
+#elif defined(PICTURE_ENGINE_S3) && defined(SCREEN_PICTURES)
+// The S3's: no 2D engine, so no bursts and no live streams; its stills come whole from a download (picture_fetch).
+constexpr Limits limits() { return {0, 0, 0, 0}; }
+#endif
+#if (defined(PICTURE_ENGINE_P4) || defined(PICTURE_ENGINE_S3)) && defined(SCREEN_PICTURES)
 // This screen's decoder takes JPEG: its questions name it first (runtime_tiles::picture_ask), the download gathers a
-// JPEG answer whole (picture_fetch::Gather) and the streams are JPEG (live_view.h).
+// JPEG answer whole (picture_fetch::Gather) and a P4's streams are JPEG (live_view.h).
 constexpr bool JPEG = true;
 // The formats the decoder takes whole, not row by row as it streams: named first in every question.
 const std::vector<std::string> &whole_formats();
@@ -166,15 +172,22 @@ bool info(const uint8_t *data, size_t length, Still &out);
 // A whole JPEG decoded into `into` (`into_size` bytes, at least `out.bytes` of info): RGB565 in LVGL's order. The caller
 // holds the glass.
 bool decode_into(const uint8_t *data, size_t length, uint8_t *into, size_t into_size);
-// A whole JPEG decoded into a buffer of its own (free() it), the glass held meanwhile; nullptr before ready() or for a
-// JPEG the decoder cannot read. From a download's task.
+// A whole JPEG decoded into a buffer of its own (free() it), the glass held meanwhile on a P4; nullptr before ready() or
+// for a JPEG the decoder cannot read. From a download's task.
 uint8_t *decode(const uint8_t *data, size_t length, Still &out);
+#endif
+#if defined(PICTURE_ENGINE_P4) && defined(SCREEN_PICTURES)
 // A PPA client with the glass's bursts (glass.h), and its end.
 Client client();
 void drop(Client client);
 // The copy, through the guard: 0 when it is done, else ESP-IDF's error. The caller holds the glass.
 int blit(Client client, const Block &block);
 #else
+inline Client client() { return nullptr; }
+inline void drop(Client) {}
+inline int blit(Client, const Block &) { return -1; }
+#endif
+#if !(defined(PICTURE_ENGINE_P4) || defined(PICTURE_ENGINE_S3)) || !defined(SCREEN_PICTURES)
 constexpr Limits limits() { return {0, 0, 0, 0}; }
 constexpr bool JPEG = false;
 inline const std::vector<std::string> &whole_formats() {
@@ -194,9 +207,6 @@ inline uint8_t *output(size_t, size_t *got) {
 inline bool info(const uint8_t *, size_t, Still &) { return false; }
 inline bool decode_into(const uint8_t *, size_t, uint8_t *, size_t) { return false; }
 inline uint8_t *decode(const uint8_t *, size_t, Still &) { return nullptr; }
-inline Client client() { return nullptr; }
-inline void drop(Client) {}
-inline int blit(Client, const Block &) { return -1; }
 #endif
 
 }  // namespace picture_engine
