@@ -92,7 +92,8 @@ struct Stream {
   uint32_t pace_us = 0;
   int64_t free_at = 0;
   std::atomic<uint32_t> pauses{0}, paused_us{0}, net_us{0};
-  // A live tile shows the newest picture there is. Between the app and the screen a dozen of a tile's pictures fit
+  // On a stream (an app before a tile asked for each picture, pull below), a live tile shows the newest picture there
+  // is. Between the app and the screen a dozen of a tile's pictures fit
   // (the app's send buffer, the screen's TCP window of 64 KB), and a tile that read them one by one showed pictures a
   // second or two old (a reTerminal D1001, 2026-10-28, X-Made). So a picture waits in `pending` (the buffer `input`
   // filled, swapped with `spare`) while more bytes wait in the socket, and goes once none do, or after NEWEST_WAIT_US;
@@ -413,8 +414,125 @@ static void pace(Stream &s) {
   if (busy) s.paused_us += static_cast<uint32_t>(s.free_at - now);
 }
 
+// A live tile asks for each picture (the link's .jpg, live_stream.py pull): one at a time over a kept connection, when
+// its pace says (pace: hw::LIVE_TILE_PPS, a busy screen's share of it), so nothing waits on the way and the app sends
+// only what the tile shows. An ask with nothing newer within the app's wait answers 204, and the tile asks again. False
+// when the app has no such link (an app before it answers 404 at the first ask): the stream below then.
+static bool pull(Stream &s, const picture_fetch::Address &address) {
+  const std::string path = pull_path(address.path);
+  if (path.empty()) return false;
+  const int fd = picture_fetch::connect_to(address, WAIT_MS);
+  if (fd < 0) {
+    ESP_LOGW(TAG, "no connection to %s:%u", address.host.c_str(), address.port);
+    s.failed = true;
+    return true;
+  }
+  s.connected_ms = esphome::millis() - s.started_at;
+  auto *chunk = static_cast<uint8_t *>(roomy::allocate(CHUNK));
+  if (!chunk) {
+    ::close(fd);
+    s.failed = true;
+    return true;
+  }
+  if (s.under) {  // a tile with a loader waits in short steps, so its loader turns between the stills
+    timeval step{0, static_cast<suseconds_t>(LOADER_STEP_MS * 1000)};
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &step, sizeof(step));
+  }
+  const std::string ask = "GET " + path + " HTTP/1.1\r\nHost: " + address.host + "\r\n\r\n";
+  const size_t most = picture_engine::limits().tile_picture_bytes;
+  bool supported = true, first = true;
+  std::string head;
+  while (!s.stopping) {
+    if (!picture_fetch::send_all(fd, ask)) {
+      ESP_LOGW(TAG, "the app's link closed");
+      s.failed = true;
+      break;
+    }
+    // The answer: its head, then Content-Length bytes of picture (none for 204). The app sends nothing unasked, so what
+    // one read brings past the head is this picture's.
+    head.clear();
+    size_t length = 0, got = 0;
+    picture_fetch::Head h;
+    uint32_t heard = esphome::millis();
+    bool broken = false;
+    while (!s.stopping) {
+      const int64_t asked = esp_timer_get_time();
+      const int n = recv(fd, chunk, CHUNK, 0);
+      const int error = errno;
+      s.net_us += static_cast<uint32_t>(esp_timer_get_time() - asked);
+      turn_loader(s);
+      if (n < 0 && (error == EAGAIN || error == EWOULDBLOCK)) {
+        if (esphome::millis() - heard < QUIET_MS) continue;
+        ESP_LOGW(TAG, "the app went quiet");
+        broken = true;
+        break;
+      }
+      if (n <= 0) {
+        ESP_LOGW(TAG, "the app's link ended (%d, errno %d)", n, error);
+        broken = true;
+        break;
+      }
+      heard = esphome::millis();
+      if (s.bytes == 0) s.first_bytes_ms = heard - s.started_at;
+      s.bytes += n;
+      size_t at = 0;
+      if (!h.complete) {
+        head.append(reinterpret_cast<const char *>(chunk), n);
+        h = picture_fetch::parse_head(head.data(), head.size());
+        if (!h.complete) {
+          if (head.size() >= MAX_HEAD) broken = true;
+          if (broken) break;
+          continue;
+        }
+        if (!s.answered_ms) s.answered_ms = heard - s.started_at;
+        if (h.status == 404 && first) {
+          supported = false;
+          break;
+        }
+        if (h.status == 204) break;
+        if (h.status != 200 || !h.has_length || h.content_length == 0 || h.content_length > most ||
+            h.content_length > s.input_size) {
+          ESP_LOGW(TAG, "not a picture (answer %d, %u bytes)", h.status, (unsigned) h.content_length);
+          broken = true;
+          break;
+        }
+        length = h.content_length;
+        at = n - (head.size() - h.length);  // where this read's picture bytes begin
+      }
+      const size_t take = std::min(static_cast<size_t>(n) - at, length - got);
+      memcpy(s.input + got, chunk + at, take);
+      got += take;
+      if (got == length) break;
+    }
+    first = false;
+    if (broken) {
+      s.failed = true;
+      break;
+    }
+    if (!supported || s.stopping) break;
+    if (h.status == 204 || got != length || length == 0) continue;
+    if (h.has_made) age(s, h.made);
+    show(s, s.input, length, h.still);
+    if (!h.still) pace(s);
+  }
+  ::close(fd);
+  roomy::release(chunk);
+  if (!supported) ESP_LOGI(TAG, "the app sends this tile as a stream (it asks for no picture at a time)");
+  return supported;
+}
+
 static void stream(Stream &s) {
   const auto address = picture_fetch::split(s.url);
+  if (s.look.tile && address.ok && pull(s, address)) return;
+  // A tile on an app before pull keeps the newest picture of its stream (Stream, pending).
+  if (s.look.tile && !s.spare) {
+    size_t spare_size = 0;
+    s.spare = picture_engine::input(s.input_size, &spare_size);
+    if (spare_size != s.input_size) {
+      if (s.spare) free(s.spare);
+      s.spare = nullptr;  // without it the tile shows each picture as it comes
+    }
+  }
   const int fd = address.ok ? picture_fetch::connect_to(address, WAIT_MS) : -1;
   if (fd < 0) {
     ESP_LOGW(TAG, "no connection to %s:%u", address.host.c_str(), address.port);
@@ -551,14 +669,6 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   s->started_at = s->reported_at = esphome::millis();
   s->input = picture_engine::input(look.tile ? picture_engine::limits().tile_picture_bytes : picture_engine::limits().picture_bytes,
                                    &s->input_size);
-  if (look.tile) {
-    size_t spare_size = 0;
-    s->spare = picture_engine::input(s->input_size, &spare_size);
-    if (spare_size != s->input_size) {
-      if (s->spare) free(s->spare);
-      s->spare = nullptr;  // without it the tile shows each picture as it comes, as before
-    }
-  }
   s->ppa = picture_engine::client();
   bool ok = s->input && s->ppa;
   if (ok && sound && has_speaker()) {

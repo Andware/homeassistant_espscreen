@@ -67,6 +67,13 @@ inline bool is_stream(const std::string &url) {
   const std::string path = url.substr(0, end);
   return path.size() > 6 && path.compare(path.size() - 6, 6, ".mjpeg") == 0;
 }
+// The same link's pictures one an ask (the app's .jpg on a stream's token, live_stream.py pull): a live tile asks for
+// each, so nothing queues on the way and its bytes are what it shows. Empty for a path that is no stream's.
+inline std::string pull_path(const std::string &path) {
+  if (!is_stream(path)) return "";
+  const size_t found = path.find_first_of("?#"), end = found == std::string::npos ? path.size() : found;
+  return path.substr(0, end - 6) + ".jpg" + path.substr(end);
+}
 
 // ---- The stream: plain HTTP/1.0 (no chunks), then parts, each with a head that names its Content-Length ----
 // feed() takes the bytes as they come, in any pieces. A part is a picture (image/jpeg) or, for a full view with sound,

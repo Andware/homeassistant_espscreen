@@ -120,6 +120,22 @@ static void made() {
   }
 }
 
+// A stream's link and the same link's pictures one an ask; nothing for a link that is no stream's. And the answer to
+// an ask as the screen reads it: its status, its length, its stamp and whether it is a still.
+static void pulling() {
+  assert(pull_path("/camera/abcdefghijklmnopqrstuvwx.mjpeg") == "/camera/abcdefghijklmnopqrstuvwx.jpg");
+  assert(pull_path("/camera/abc.mjpeg?x=1") == "/camera/abc.jpg?x=1");
+  assert(pull_path("/camera/abc.bmp").empty() && pull_path("/camera/abc.jpg").empty());
+  const std::string ok = "HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nX-Made: 4242\r\nX-Picture: still\r\n"
+                         "Content-Length: 4\r\n\r\nJPEG";
+  const auto h = picture_fetch::parse_head(ok.data(), ok.size());
+  assert(h.complete && h.status == 200 && h.has_length && h.content_length == 4 && h.has_made && h.made == 4242 &&
+         h.still && ok.substr(h.length) == "JPEG");
+  const std::string none = "HTTP/1.1 204 No Content\r\nCache-Control: no-cache\r\n\r\n";
+  const auto n = picture_fetch::parse_head(none.data(), none.size());
+  assert(n.complete && n.status == 204 && !n.has_length && n.length == none.size());
+}
+
 // The loader in a live tile's corner while its stills show: where it lies, and the spinner it draws as it turns.
 static void loading() {
   Look look;
@@ -262,6 +278,7 @@ int main() {
   framing();
   marking();
   made();
+  pulling();
   loading();
   links();
   panel();
