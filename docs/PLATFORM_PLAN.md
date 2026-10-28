@@ -731,6 +731,45 @@ over the network to the same screen, to be decoded there. Now the screen draws i
   Guition's in software); ringing, answering and hanging up through the app. The picture of oneself is today's tile of
   the own camera.
 
+### 4.12 Live pictures come turned for a turned glass (2026-10-28)
+
+On a glass that LVGL turns (the M5Stack Tab5, the reTerminal D1001 and the Guition 10.1: panels made upright, shown on
+their side) every live picture went onto the glass through a turned PPA copy, the class of copy that stopped the Tab5
+three times in two days (4.7: 618x307 turned 270 to 16,646, twice; the third, before 9eef23bf, a copy into a card's
+canvas). The turn now happens in the app, where it costs little, and the screen copies a live picture straight:
+
+- **The tie.** A screen whose glass is turned says in its hello `picture_turn`, LVGL's turn as the hello leaves
+  (hw.cpp). The app turns every live picture of that screen by it, a tile's, a plugin's place's and the full view's, the
+  same for a picture at a time and for a stream (live_pictures.TURNS: Pillow's transpose for a camera's JPEG, FFmpeg's
+  transpose filter in YUV for video), its size worked out upright as before and then turned, and says so on every
+  picture, `X-Turn` (live_stream.py). A picture it cannot turn goes upright without `X-Turn`, counted in the camera's
+  frame watch line ("pictures not turned for a turned glass"), and the screen turns it itself: a turned screen never
+  goes without its picture for the app's turn. The screen reads `X-Turn` per picture (picture_fetch::parse_head), so an
+  app before it, which turns nothing and says nothing, gets the turned copy as before, and a screen stood up at run time
+  copies what is left between the picture's turn and the glass's (turn_between).
+- **The overlay, once.** What a tile lays over each picture is made once at a stream's first picture for the way its
+  pictures lie, with the CPU (live_view.h, Overlay): the shade as how deep it darkens each row, or each column of a card
+  on its side, and the corners and the name as short segments of pixels, each with one colour and how much of the
+  picture it hides, laid after the shade. Each picture then costs the shade's darkening as before and one blend a pixel
+  of the corners and the name; within a step of RGB565 of the three blends it replaces (tests/test_live_view.cpp,
+  composing). A first version kept a colour and a coverage for every covered pixel of the card in PSRAM and composed in
+  33 to 42 ms where the old composing took 30 on the D1001: the shade is a table now. The loader over a still lies and
+  turns in the same way. A full view's room is worked out on its picture upright, and the picture scaled straight onto it.
+- **Measured** (2026-10-28, ten minutes at rest, four live tiles on each board, one of the D1001's its own camera): every
+  tile of the app's pictures copied at 0 on both boards (the stream's ten-second line, "turned 0 on the way"), the own
+  tile at 270. Per picture, composing 26.4 ms on the D1001 and 15.0 on the Guition (30.0 and 16.2 before), onto the glass
+  16.9 and 6.3 (17.6 and 6.1 turned): the straight copy is no quicker, the point is the hang. 5.2 and 5.6 pictures a
+  second, 6 and 11 ms on the way, the panel dry 0 times, internal RAM at its lowest 191 and 196 KB. The app's share of
+  Home Assistant's processor went from 43.9 to 45.3 % turning the pictures of seven tiles. The D1001's video was watched
+  all along by the Guition's tile of it (13 frames a second encoded, a third of a core), and its wake word fell behind 10
+  times in the ten minutes and 11 in three minutes of dragging, against 0 and 33 in two rounds of the build before with
+  the same load: what decides it is the encoder, not the turn.
+- **What the PPA still turns per picture:** a tile of the screen's own camera (its frames come upright from the
+  sensor; one turned copy each onto the glass) and LVGL's own flushes. The way out for the first is the sensor's own
+  output turned, or the frame hub turning once for all its consumers: on the list.
+- **What the Tab5 should show:** its two live tiles no longer turn on the chip. Whether the stall comes back is for its
+  tester to say; the ring of a stall names the copy and its turn as before.
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community

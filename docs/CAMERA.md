@@ -425,7 +425,10 @@ rather than working (2026-10-23). So the firmware guards every `ppa_do_scale_rot
 hardware would stall on while the driver leaves the bypass off is copied in pieces, each of which the engine takes
 whole; two in almost every case, never more than six. A block the driver takes as it is costs nothing. The log names
 the first eight such copies (`ppa_guard: a turned copy of WxH would hang the 2D-DMA`); `tests/test_ppa_guard.cpp`
-proves the pieces cover the block once and land where the whole would.
+proves the pieces cover the block once and land where the whole would. Copies the guard calls safe stalled a Tab5 all
+the same (docs/PLATFORM_PLAN.md 4.7), so since 2026-10-28 live pictures come turned from the app on a turned glass
+(the hello's `picture_turn`, each picture's `X-Turn`) and go onto the glass in a straight copy; a tile lays its card
+over each picture as it lies (PLATFORM_PLAN 4.12).
 
 **The main loop and the C6's answers.** On a P4 the Wi-Fi runs on the ESP32-C6, and some things the main loop asks
 about it (the signal strength for the Wi-Fi sensor, the access point, the power save mode at standby and at wake, the
