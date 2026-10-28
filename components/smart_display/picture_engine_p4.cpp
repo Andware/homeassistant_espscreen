@@ -3,7 +3,7 @@
 // the whole MCUs it writes (picture_jpeg.h), the PPA's block copy with its scale and turn, and the client with the
 // glass's bursts are the streams' before the move, written once here for the streams and the stills alike.
 #include "picture_engine.h"
-#if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
+#if defined(PICTURE_ENGINE_P4) && defined(SCREEN_PICTURES)
 #include <atomic>
 
 #include "esphome/core/log.h"

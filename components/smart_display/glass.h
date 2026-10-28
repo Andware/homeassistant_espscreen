@@ -5,7 +5,7 @@
 // and the rooms LVGL keeps out of while a stream writes there. The glass knows pictures, streams, the decoder and the
 // PPA not at all: live_view.cpp (the streams) and picture_engine (the copies) ask it.
 //
-// On an ESP32-P4 with a MIPI-DSI panel (USE_LIVE_VIEW and pictures) the glass is direct: glass_dsi.cpp has the panel
+// On an ESP32-P4 with a MIPI-DSI panel (GLASS_DSI and pictures) the glass is direct: glass_dsi.cpp has the panel
 // picked up as ESP-IDF makes it (a linker wrap of esp_lcd_new_panel_dpi), the frame buffer, the lock and LVGL's refresh
 // hooks, the keep-out of LVGL's areas, the panel's underrun counter and the wrap that shortens every PPA client's bursts
 // so the panel keeps its share of the memory bus. Every other board, the host renders and the editor's preview have
@@ -22,7 +22,7 @@
 //
 // What a PC can check is pure: a rectangle of the screen on a turned panel (on_panel, tests/test_live_view.cpp).
 #include <cstdint>
-// USE_LIVE_VIEW comes with ESPHome's defines (smart_display/__init__.py); a PC test has none and builds without it.
+// GLASS_DSI comes with ESPHome's defines (engine_build.py); a PC test has none and builds without it.
 #if __has_include("esphome/core/defines.h")
 #include "esphome/core/defines.h"
 #endif
@@ -72,7 +72,7 @@ constexpr int MAX_ROOMS = 8;
 // in turn with them (picture_engine::decode), as a mutex goes to its highest waiter.
 constexpr unsigned WRITER_PRIORITY = 5;
 
-#if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
+#if defined(GLASS_DSI) && defined(SCREEN_PICTURES)
 // LVGL, which says how the glass is turned (smart_display/__init__.py binds it at boot).
 void bind(esphome::lvgl::LvglComponent *lvgl);
 Panel panel();      // 0 x 0 while ESP-IDF made no panel for LVGL

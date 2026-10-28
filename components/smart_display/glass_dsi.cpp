@@ -4,7 +4,7 @@
 // the lock's reach, the keep-out's rule and the invalidations are those of the streams before the move.
 #include "glass.h"
 #include "picture_engine.h"
-#if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
+#if defined(GLASS_DSI) && defined(SCREEN_PICTURES)
 #include <atomic>
 
 #include "esphome/components/lvgl/lvgl_esphome.h"

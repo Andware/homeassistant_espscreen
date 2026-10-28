@@ -12,7 +12,7 @@ import esphome.config_validation as cv
 from esphome.components import socket
 from esphome.core import CORE
 
-from . import hw_build, modules, p4_build, screen_text_gen
+from . import engine_build, hw_build, modules, p4_build, screen_text_gen
 
 CODEOWNERS = []
 AUTO_LOAD = ["json"]
@@ -67,7 +67,7 @@ def _sockets(config):
 FINAL_VALIDATE_SCHEMA = _sockets
 
 
-# The linker wraps every ESP32 build gets, beside the picture engine's (p4_build.ENGINES): what an abort said, kept
+# The linker wraps every ESP32 build gets, beside the picture engine's (engine_build.ENGINES): what an abort said, kept
 # across the reset (abort_record.h, which defines them).
 DIAGNOSTIC_WRAPS = ("panic_abort",)
 
@@ -104,7 +104,9 @@ async def to_code(config):
         for wrap in DIAGNOSTIC_WRAPS:
             cg.add_build_flag(f"-Wl,--wrap={wrap}")
     if _esp32_p4():
-        await _p4(config)
+        _p4(config)
+    if CORE.is_esp32:
+        await _engine(config)
     # The capability record's build half (hw.h, docs/PLATFORM_PLAN.md 3.3): what the configuration contains, a speaker, a
     # microphone, an echo canceller, a camera of the board's own, as defines; the boot adds what only it knows.
     for define in hw_build.defines(CORE.config):
@@ -133,7 +135,7 @@ def _tier(config):
     _LOGGER.info("Tier %s: %s", tier, ", ".join(modules.modules_for(tier)) or "no modules")
 
 
-# ---- The ESP32-P4 boards (docs/CAMERA.md, "Live on the P4 boards"; docs/PICTURE_ARCHITECTURE.md, section 3.9) ----
+# ---- The ESP32-P4 boards' network (docs/CAMERA.md, "Live on the P4 boards") ----
 # Keyed on the chip, never on a board: a new P4 board has all of this without a line in its file, and the boards with
 # less memory never do. The facts themselves are p4_build.py's, free of ESPHome, so tests/test_live_view.py checks them.
 def _esp32_p4():
@@ -150,31 +152,42 @@ def p4_network_options(own):
     return p4_build.network_options(own)
 
 
-async def _p4(config):
+def _p4(config):
     from esphome.components.esp32 import add_idf_sdkconfig_option
 
     own = ((CORE.config.get("esp32") or {}).get("framework") or {}).get("sdkconfig_options") or {}
     for name, value in p4_network_options(own).items():
         add_idf_sdkconfig_option(name, value)
-    # The picture engine and the glass (p4_build.picture_engine): on a P4 with LVGL the hardware JPEG decoder and the
-    # PPA write the decoded pictures into the panel's frame buffer past LVGL (picture_engine_p4.cpp, glass_dsi.cpp,
-    # live_view.cpp); the panel's handle is picked up as ESP-IDF makes it for ESPHome's display, whichever display
-    # platform that is. Every other build has the software engine: the headers' inline stubs, nothing added.
+
+
+# ---- The picture engine, the glass and the live streams (engine_build.py; docs/PICTURE_ARCHITECTURE.md, 3.9) ----
+# On a P4 with LVGL the hardware JPEG decoder and the PPA write the decoded pictures into the panel's frame buffer past
+# LVGL (picture_engine_p4.cpp, glass_dsi.cpp, live_view.cpp); the panel's handle is picked up as ESP-IDF makes it for
+# ESPHome's display, whichever display platform that is. On an S3 with LVGL and PSRAM Espressif's software decoder
+# turns a JPEG still into the pixels LVGL draws (picture_engine_s3.cpp). Every other build has the headers' inline
+# stubs, nothing added.
+async def _engine(config):
+    from esphome.components.esp32 import add_idf_component, get_esp32_variant
+
     lvgl = CORE.config.get("lvgl")
     lvgl = lvgl[0] if isinstance(lvgl, list) else lvgl
-    engine = p4_build.ENGINES[p4_build.picture_engine("esp32p4", bool(lvgl))]
-    if not engine["define"]:
-        return
-    cg.add_define(engine["define"])
+    engine = engine_build.ENGINES[
+        engine_build.picture_engine(str(get_esp32_variant()).lower(), bool(lvgl), "psram" in CORE.config)
+    ]
+    for define in engine["defines"]:
+        cg.add_define(define)
     # The linker wraps the engine and the glass need: the panel as ESP-IDF makes it and every PPA client's bursts (so
     # the panel's own DMA keeps up: glass.h, "The panel's share of the memory bus"), and the guard that copies a turned
     # block the 2D-DMA would never finish in pieces (ppa_guard.h).
     for wrap in engine["wraps"]:
         cg.add_build_flag(f"-Wl,--wrap={wrap}")
-    from esphome.const import CONF_ID
+    for name, ref in engine["components"]:
+        add_idf_component(name=name, ref=ref)
+    if "GLASS_DSI" in engine["defines"]:
+        from esphome.const import CONF_ID
 
-    component = await cg.get_variable(lvgl[CONF_ID])
-    cg.add(cg.RawExpression(f"glass::bind({component})"))
+        component = await cg.get_variable(lvgl[CONF_ID])
+        cg.add(cg.RawExpression(f"glass::bind({component})"))
 
 
 # ---- Plugins (docs/PLUGINS.md) ----

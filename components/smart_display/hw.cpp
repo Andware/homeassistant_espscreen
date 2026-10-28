@@ -29,6 +29,7 @@ Facts facts() {
   f.camera = true;
 #endif
   f.live_video = live_view::available();
+  f.live_tiles = picture_engine::limits().live_tiles;
 #ifdef USE_ESP32
   f.psram_bytes = static_cast<uint32_t>(heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
   f.internal_bytes = static_cast<uint32_t>(heap_caps_get_total_size(MALLOC_CAP_INTERNAL));

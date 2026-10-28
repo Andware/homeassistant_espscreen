@@ -61,6 +61,15 @@ class Wiring(unittest.TestCase):
         self.assertIn('#include "hw.h"', (COMPONENT / 'smart_display.h').read_text())
         self.assertIn('#include "hw.h"', (COMPONENT / 'plugin_api.h').read_text())
 
+    def test_the_live_tiles_are_the_engines(self):
+        # How many live tiles a screen streams at once is its picture engine's (picture_engine::limits): four on a P4, as
+        # docs/PLATFORM_PLAN.md 4.1 and the add-on's editor text say; none on an S3, whose engine decodes stills only.
+        engine = (COMPONENT / 'picture_engine.h').read_text()
+        self.assertIn('constexpr Limits limits() { return {64, 1024 * 1024, 384 * 1024, 4}; }', engine)
+        self.assertIn('constexpr Limits limits() { return {0, 0, 0, 0}; }', engine)
+        self.assertIn('f.live_tiles = picture_engine::limits().live_tiles;', (COMPONENT / 'hw.cpp').read_text())
+        self.assertNotIn('LIVE_TILES =', (COMPONENT / 'hw.h').read_text())
+
     def test_the_cpp_test_is_in_the_runner(self):
         self.assertTrue((ROOT / 'tests' / 'test_hw.cpp').exists())
 

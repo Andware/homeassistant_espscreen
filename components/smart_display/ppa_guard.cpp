@@ -7,8 +7,8 @@
 #include "ppa_guard.h"
 #include "ppa_trace.h"
 #include "glass.h"
-#include "esphome/core/defines.h"  // USE_LIVE_VIEW: the header above has no ESPHome in it
-#ifdef USE_LIVE_VIEW
+#include "esphome/core/defines.h"  // PICTURE_ENGINE_P4: the header above has no ESPHome in it
+#ifdef PICTURE_ENGINE_P4
 #include <atomic>
 #include <cstdio>
 #include <cstring>

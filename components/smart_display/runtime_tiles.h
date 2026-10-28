@@ -11956,8 +11956,8 @@ inline void live_tiles_round() {
         if (room.w < 64 || room.h < 64 || drawn_over(place, room.x, room.y, room.w, room.h)) return;
         spots.want(place_spot(w, place, camera, contain, room));
       });
-    // At most hw::LIVE_TILES camera tiles stream at once (hw.h, docs/PLATFORM_PLAN.md 4.1), the first by tile order; the
-    // rest keep their stills, which a live tile loads every 15 s anyway (its asker's `every`). The app gives those tiles
+    // At most hw::caps().live_tiles camera tiles stream at once (the picture engine's, docs/PLATFORM_PLAN.md 4.1), the
+    // first by tile order; the rest keep their stills, which a live tile loads every 15 s anyway (its asker's `every`). The app gives those tiles
     // the same count from the hello, and the editor says so on the fifth tile. Logged when the count of tiles left out
     // changes, so the log says which page did it.
     size_t streaming = 0, left_out = 0;

@@ -1,10 +1,10 @@
 #pragma once
 // The picture engine: decode, scale, turn (docs/PICTURE_ARCHITECTURE.md, section 3.2). What turns a picture's bytes into
-// pixels and pixels into other pixels, and which formats this screen's decoder takes. Two engines, chosen when the
-// firmware is built, as the firmware chooses its modules: on an ESP32-P4 with a MIPI-DSI panel (USE_LIVE_VIEW and
-// pictures) the hardware JPEG decoder and the PPA, with ppa_guard between (picture_engine_p4.cpp); everywhere else the
-// software engine, which is the BMP decoder row by row (picture_fetch::Decoder) and no blit at all, since LVGL draws
-// every still there: the inline stubs below, which cost no flash.
+// pixels and pixels into other pixels, and which formats this screen's decoder takes. Two engines, chosen by the chip
+// when the firmware is built (engine_build.py), as the firmware chooses its modules: on an ESP32-P4 the hardware JPEG
+// decoder and the PPA, with ppa_guard between (PICTURE_ENGINE_P4, picture_engine_p4.cpp); everywhere else the BMP
+// decoder row by row (picture_fetch::Decoder) and no blit at all, since LVGL draws every still there: the inline stubs
+// below, which cost no flash.
 //
 // The engine knows the decoder, the PPA, the guard and the decoder's memory; it knows nothing of streams, sockets,
 // owners or LVGL objects. The glass (glass.h) is held around every decode and every blit: by the engine itself for a
@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-// USE_LIVE_VIEW comes with ESPHome's defines (smart_display/__init__.py); a PC test has none and builds without it.
+// The engine's define comes with ESPHome's defines (engine_build.py); a PC test has none and builds without it.
 #if __has_include("esphome/core/defines.h")
 #include "esphome/core/defines.h"
 #endif
@@ -128,11 +128,13 @@ inline Cut cut(int w, int h, int cw, int ch, bool contain) {
 
 // ---- What this engine takes (docs/PICTURE_ARCHITECTURE.md, section 2.4) ----
 // The numbers the shared code reads instead of a chip's: the burst every 2D-DMA client moves in, so the panel's own DMA
-// gets its turn on the memory bus (glass.h, "The panel's share of the memory bus"), and the largest picture a stream's
-// part may be, a full view's and a tile's. 0 takes no pictures at all, never "no limit".
+// gets its turn on the memory bus (glass.h, "The panel's share of the memory bus"), the largest picture a stream's
+// part may be, a full view's and a tile's, and how many live camera tiles the screen streams at once (hw::caps, the
+// hello's live_tiles, docs/PLATFORM_PLAN.md 4.1). 0 takes no pictures at all, never "no limit".
 struct Limits {
   int burst_bytes;
   size_t picture_bytes, tile_picture_bytes;
+  uint8_t live_tiles;
 };
 
 // The PPA's angle for a turn as LVGL counts it: the PPA counts counter-clockwise (0, 90, 180, 270 as 0 to 3, the order
@@ -140,11 +142,12 @@ struct Limits {
 // here once; the camera plugin's copy of its driver keeps its own (ppa_rotation_for_clockwise), as a copy must.
 inline int ppa_angle(int turn) { return turn == 90 ? 3 : turn == 180 ? 2 : turn == 270 ? 1 : 0; }
 
-#if defined(USE_LIVE_VIEW) && defined(SCREEN_PICTURES)
+#if defined(PICTURE_ENGINE_P4) && defined(SCREEN_PICTURES)
 // The P4's: bursts of 64 bytes instead of ESP-IDF's 128, or the DSI bridge runs dry and the panel shows a frame of blue
 // (lvgl/lvgl #9590); a full view's picture of at most 1 MB and a tile's of 384 KB, over what a 1280 x 800 JPEG of a busy
-// camera is (150 to 250 KB) and a tile's room needs (docs/CAMERA.md, "Live on the P4 boards", 2026-10-10).
-constexpr Limits limits() { return {64, 1024 * 1024, 384 * 1024}; }
+// camera is (150 to 250 KB) and a tile's room needs (docs/CAMERA.md, "Live on the P4 boards", 2026-10-10); four live
+// tiles at once, measured on a reTerminal D1001 and a Guition 10.1 (docs/PLATFORM_PLAN.md 4.1).
+constexpr Limits limits() { return {64, 1024 * 1024, 384 * 1024, 4}; }
 // This screen's decoder takes JPEG: its questions name it first (runtime_tiles::picture_ask), the download gathers a
 // JPEG answer whole (picture_fetch::Gather) and the streams are JPEG (live_view.h).
 constexpr bool JPEG = true;
@@ -172,7 +175,7 @@ void drop(Client client);
 // The copy, through the guard: 0 when it is done, else ESP-IDF's error. The caller holds the glass.
 int blit(Client client, const Block &block);
 #else
-constexpr Limits limits() { return {0, 0, 0}; }
+constexpr Limits limits() { return {0, 0, 0, 0}; }
 constexpr bool JPEG = false;
 inline const std::vector<std::string> &whole_formats() {
   static const std::vector<std::string> none;
