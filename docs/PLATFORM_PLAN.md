@@ -557,6 +557,17 @@ air), RTSP over UDP against TCP (go2rtc asks one of them), and the cores' load w
 What screen_video can do then: lower its bitrate or frame rate while the uplink loses packets (the RTCP receiver reports
 say so), or offer RTSP over TCP, where a lost packet is sent again instead of a frame breaking.
 
+### 4.9 A ring's live picture is refused once while the screen's live tiles still run (after the doorbell's keys)
+
+Seen at every ring on the bench Guition with the tablet's layout (2026-10-28): the view's stream gets a 503 at its
+first ask ("not a stream of pictures (answer 503)"), the screen asks again, and the picture comes about 1.9 s after the
+view opened instead of under a second. The add-on's limit is MAX_STREAMS (live_stream.py, 8 streams of every screen
+together, "Too many live cameras"): the Guition's four live tiles and Max's D1001 with its own live tiles fill it, and
+the ring's view asks before the Guition has closed its tiles (live_view's stream 4 starts, then streams 0 to 3 end).
+The screen's own cap (hw.h LIVE_TILES) does not refuse it: a full view is no tile. The fix to weigh: the screen closes
+its live tiles before the view asks (camera_open), or the add-on lets a full view through when the same screen's tiles
+are about to end; either way the ring has its picture at once.
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community
