@@ -510,6 +510,28 @@ the tiles and LVGL (up to 0.74 s measured).
     driver's interrupt, the API's send through esp_hosted, and what the main loop does in that millisecond. Whether a
     screen without a cable on its UART flashes the same is not measured: the bench's UART went to the Mac in every
     build, silent in D and G.
+  - **The add-on's side, measured (2026-10-28).** Since Debug mode (dev 3574f2db) a screen writes warnings and errors
+    alone, and Max then saw a white flash now and then, on every tile of the living room's EZVIZ C6T at once. The app's
+    frame watch (camera_source.FrameWatch, docs/CAMERA.md "Every frame looked at", dev 653f7201 and e421f3bc) looked at
+    every decoded frame on Max's Home Assistant for 25 minutes with the tablet's layout on the bench Guition: camera.max
+    9,186 frames and camera.woonkamer_live 4,872 frames per ten minutes with 0 corrupt, 0 missing, 0 flashes (a single
+    bright frame, and later any brighter moment of up to a second), 0 packets lost, 0 NACKs, 0 PLIs, 0 JPEGs the screen
+    would refuse, 0 stills; nothing dumped. Max called out two flashes (07:10 and 07:14) in the first build's time, when
+    the watch saw single frames alone; the bench Guition wrote no warning or error from 07:15 to 07:34. So the app sends
+    no broken and no too bright frame of the EZVIZ; what Max sees comes after it (the screen's decoding, its copy to the
+    glass, the panel) or is a part of the picture the mean brightness does not show. The white flash stays open; next,
+    the filmed build H on the screen's side. The watch stays on dev as a lasting instrument.
+
+### 4.8 The D1001's own video loses packets over Wi-Fi (after the doorbell's keys)
+
+Found by the frame watch (2026-10-28): camera.tablet_video, the reTerminal D1001's own camera through Screen camera's
+RTSP and Home Assistant's WebRTC, lost 100 to 780 packets every ten seconds, with 17 to 83 frames of 60 to 120 never
+coming (11,762 packets lost and 1,408 frames missing over the half hour's ten-second lines), and the app sent hundreds
+of NACKs and up to 14 PLIs a ten seconds; Max saw that tile fall behind. The EZVIZ on the same network lost nothing. To
+measure on the D1001: the H.264 encoder's bitrate against what its C6 link carries (the ESP-Hosted SDIO path and the
+air), RTSP over UDP against TCP (go2rtc asks one of them), and the cores' load with four live tiles on the same screen.
+What screen_video can do then: lower its bitrate or frame rate while the uplink loses packets (the RTCP receiver reports
+say so), or offer RTSP over TCP, where a lost packet is sent again instead of a frame breaking.
 
 ## 5. The doorbell's talk-back, prepared
 
