@@ -53,6 +53,7 @@ constexpr size_t CHUNK = 16 * 1024;
 constexpr int64_t PACE_GAP_US = 2000000, NEWEST_WAIT_US = 250000;
 constexpr uint32_t PAUSE_STEP_MS = 20;
 constexpr uint32_t STACK_BYTES = 6144;  // a stream task's stack (psram_task.h), its high water logged as it ends
+constexpr unsigned STREAM_PRIORITY = 2;  // below the wake word's inference (3), above the main loop (1): take_glass
 constexpr uint32_t WAIT_MS = 500;  // a read waits this long, so a stop is seen within it
 // ---- The glass (glass.h): the panel, its frame buffer, the one-writer lock and the rooms LVGL keeps out of ----
 bool available() { return glass::direct(); }
@@ -204,6 +205,20 @@ static bool lay_loader(Stream &s) {
 }
 // Its next turn, between the stills: the square as composed again, the loader over it, and that square alone onto the
 // glass, every LOADER_STEP_MS while the task waits for the stream's next bytes.
+// A stream's task runs below the voice assistant's wake word (STREAM_PRIORITY), and asks for and holds the glass at
+// glass::WRITER_PRIORITY, in turn with the other streams and a still's download (picture_engine::decode), then goes back:
+// composing a picture and reading the app run below the voice. At WRITER_PRIORITY throughout, four tiles' composing (30
+// ms of wall clock a picture on a reTerminal D1001) and the screen's own video (priority 4) left the wake word's
+// inference (ESPHome's micro_wake_word, priority 3) behind 644 times in an hour at rest (2026-10-28).
+static uint32_t take_glass() {
+  vTaskPrioritySet(nullptr, glass::WRITER_PRIORITY);
+  return glass::hold_counted();
+}
+static void give_glass() {
+  glass::release();
+  vTaskPrioritySet(nullptr, STREAM_PRIORITY);
+}
+
 static void turn_loader(Stream &s) {
   const uint32_t now = esphome::millis();
   int lx = 0, ly = 0;
@@ -217,16 +232,16 @@ static void turn_loader(Stream &s) {
   const glass::Panel panel = glass::panel();
   const Rect target = on_panel(Rect{s.area.x + lx, s.area.y + ly, size, size}, s.turn, panel.w, panel.h);
   esp_err_t err = ESP_OK;
-  glass::hold();
+  take_glass();
   if (!s.stopping && glass::armed(s.room))
     err = copy(s, s.canvas, cw, ch, lx, ly, size, size, glass::frame_buffer(), static_cast<size_t>(panel.w) * panel.h * 2,
                panel.w, panel.h, target.x, target.y, 16, s.turn);
-  glass::release();
+  give_glass();
   if (err != ESP_OK) s.warming = false;  // the loader stops where it stands; the pictures go on
 }
 
 // The glass held for a copy of the lay-out, and how long that waited for it (another stream's copy, LVGL's flush).
-static void hold_timed(Stream &s) { s.wait_us += glass::hold_counted(); }
+static void hold_timed(Stream &s) { s.wait_us += take_glass(); }
 
 // One picture of `length` bytes at `data` (the stream's input, or its pending newest): decoded, laid out, and copied
 // onto the glass. `still`: the camera's still from before its stream came, with the loader over it on a tile.
@@ -270,15 +285,15 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   }
   // The decoder works through the 2D-DMA, as the PPA and the panel's copy of each of LVGL's strips do: it decodes
   // while it holds the glass (glass.h). Its wait counts in the glass's report, not in the stream's own.
-  glass::hold_counted();
+  take_glass();
   if (s.stopping) {
-    glass::release();
+    give_glass();
     return;
   }
   const int64_t t0 = esp_timer_get_time();
   const bool decoded = picture_engine::decode_into(data, length, s.picture, s.picture_size);
   const int64_t t1 = esp_timer_get_time();
-  glass::release();
+  give_glass();
   if (!decoded) {
     s.skipped++;
     return;
@@ -310,7 +325,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
       err = copy(s, s.picture, stride_w, rows, into.in_x, into.in_y, cw, ch, glass::frame_buffer(), glass_size, panel.w,
                  panel.h, target.x, target.y, picture_engine::AS_IS, s.turn);
     }
-    glass::release();
+    give_glass();
     s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - from);
   } else if (s.look.tile) {
     // The card: the picture cut or fitted into it, on black where it leaves room, then the shade, corners and name.
@@ -332,7 +347,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
     int64_t from = esp_timer_get_time();
     err = copy(s, s.picture, stride_w, rows, into.in_x, into.in_y, into.in_w, into.in_h, s.canvas, s.canvas_size, cw,
                ch, into.out_x, into.out_y, into.scale, 0);
-    glass::release();
+    give_glass();
     int64_t to = esp_timer_get_time();
     s.into_us += static_cast<uint32_t>(to - from);
     if (err == ESP_OK) {
@@ -348,7 +363,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
         err = copy(s, s.canvas, cw, ch, 0, 0, cw, ch, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
                    target.y, picture_engine::AS_IS, s.turn);
       }
-      glass::release();
+      give_glass();
       s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - from);
     }
   } else {
@@ -360,7 +375,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
       err = copy(s, s.picture, stride_w, rows, 0, 0, w, h, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
                  target.y, scale, s.turn);
     }
-    glass::release();
+    give_glass();
   }
   if (err != ESP_OK) {
     ESP_LOGW(TAG, "copy to the glass failed: %s", esp_err_to_name(err));
@@ -714,7 +729,7 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     return -1;
   }
   streams[slot] = s;
-  if (!psram_task::start(s->task, task_main, "live_view", STACK_BYTES, s, glass::WRITER_PRIORITY, 1)) {
+  if (!psram_task::start(s->task, task_main, "live_view", STACK_BYTES, s, STREAM_PRIORITY, 1)) {
     streams[slot] = nullptr;
     free_stream(s);
     return -1;
