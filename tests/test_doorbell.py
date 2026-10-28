@@ -118,6 +118,13 @@ class TheFirmwareReadsTheSame(unittest.TestCase):
         # No switch of its own any more: which screens get a ring is the event's `screen`.
         self.assertNotIn('ts_doorbell', (ROOT / 'packages/features/audio-player.yaml').read_text())
 
+    def test_the_chime_has_half_a_second_ahead(self):
+        # The chime is handed over every 250 ms (camera_tick). At the bus's own rate ts_speaker's resampler hands it
+        # straight to the mixer's announcement input, so that input holds half a second itself: with ESPHome's 100 ms a
+        # Guition's chime came in pieces of 200 ms with gaps between (2026-10-28).
+        player = (ROOT / 'packages/features/audio-player.yaml').read_text()
+        self.assertRegex(player, r'- id: ts_announcement_input\n\s+buffer_duration: 500ms\n')
+
 
 class TheAutomations(unittest.TestCase):
     automation = {'alias': 'Doorbell Front door', 'triggers': [{'trigger': 'doorbell.rang', 'target': {'entity_id': 'event.front_door_doorbell'}}],
