@@ -248,8 +248,13 @@ stills on a P4 too.
 **How it travels.** The screen asks for the camera as for a still, with one key more: `live`, the room below its top
 bar in pixels (`1280x715`). An app that knows streams answers with a link on its camera port that ends in `.mjpeg`; an
 older app answers with a still, and the screen shows stills. The link serves `multipart/x-mixed-replace`: one baseline
-JPEG a part, each with its Content-Length, over plain HTTP/1.0. The app makes the next picture once the last one has
-left its host, always of the newest frame the camera gave, so a slow Wi-Fi gets fewer pictures and never older ones.
+JPEG a part, each with its Content-Length and X-Made (the app's clock in ms as it leaves), over plain HTTP/1.0. The
+app makes the next picture once the last one has left its host, always of the newest frame the camera gave. Between
+the app and the screen a dozen of a tile's small pictures still fit (the app's socket buffer, the screen's TCP window
+of 64 KB), and a tile that read them one by one showed pictures a second old, so a live tile shows the newest picture
+that reached it and passes the older ones, and the app keeps a tile's socket buffer at 16 KB (docs/PLATFORM_PLAN.md
+4.10). A tile shows at most six pictures a second (hw::LIVE_TILE_PPS). Its line in the screen's log every 10 s says
+how long its pictures waited on the way and how many older ones it passed.
 The app serves at most eight streams at once, of every screen together (a page of live tiles and a camera full
 screen); a stream it refuses leaves that screen with its stills. A screen runs at most seven of its own.
 

@@ -588,6 +588,94 @@ the link, the stream's first picture 226 ms after it started), and the four tile
 Next: the app makes the ring's link when the event comes, before the screen asks (a link in the op doorbell, or one the
 camera request finds ready), so the first picture can come within half a second.
 
+### 4.10 The governor: what a busy screen gives up first (v1, 2026-10-28)
+
+`components/smart_display/pressure.h` (tests/test_pressure.cpp), run from runtime_tiles.h on the camera's tick (250 ms).
+The work of a screen in one fixed order, from what never waits to what gives up first: the glass, the voice assistant,
+a doorbell's ring, the live tiles, the screen's own camera (its video), its sensing (light level, motion) and the
+background (pictures fetched ahead for pages out of sight). Each has a level: 0 runs as it is, 1 does half, 2 a
+quarter; the glass, the voice and a ring are never squeezed.
+
+- **One mechanism.** Every sign of trouble climbs one step of a table, from the bottom of the order up: step 1 the
+  background, sensing and the camera to 1; step 2 the camera to 2 and the live tiles to 1; step 3 the live tiles to 2.
+  A sign within 20 s of the last one climbs, a burst within 2 s is one sign, and every 10 s without one the screen
+  steps back down one, the live tiles first. A sign of a work above the tiles takes them at once: the wake word's
+  reset climbs straight to step 2 (pressure.h, FLOOR), as on the D1001 its resets came seconds to a minute apart and
+  the slow climb stopped at step 1 every time.
+- **The signs**, all measured: the panel ran dry (glass::misses), ESPHome's "<component> took a long time" (the main
+  loop held up) and micro_wake_word's "Not enough free bytes in ring buffer ... Resetting" (its inference fell behind),
+  the last two from ESPHome's log listeners (pressure_log: only a count, on any task), warnings that come with Debug
+  mode off too.
+- **Before any sign, the finger.** While one is on the glass, the camera, sensing and the background step down one;
+  once it drags past a tap's reach (or holds a slider), the live tiles too; a second after it lets go, all back at once.
+  A tile at half its pictures during a drag of half a second goes unseen.
+- **The knobs.** A live tile pauses after a picture until two or four times its own pace at rest has gone by, and
+  reads nothing from its socket meanwhile (live_view, pace; never a full view or a still), so the app, which makes
+  the next picture once the last one left its host, sends fewer and the Wi-Fi rests too. The first build left
+  pictures out before decoding them instead, and that saved nothing: the stream is pulled, so the tile only read the
+  next picture sooner (the D1001: 6.5 pictures a second shown either way, 26 KB/s became 60). Paced, a tile showed 4.1
+  a second at 17 to 19 KB/s against 5.6 at 27 at rest. The background fetches nothing ahead; a plugin asks
+  `tessera::squeeze(Work)` (plugin API 0.21): Screen camera 0.6.7 encodes every other frame or one in four of its
+  video (after its own pace, which already leaves out every other frame of a camera at 30 a second) and samples its
+  sensing half or a quarter as often.
+- **What it says.** The diagnostic sensor "Pressure" in Home Assistant ("normal", or for example "live tiles 1/2, own
+  camera 1/4, sensing 1/2, background 1/2 (the wake word fell behind)") and one warning in the log at every change; a
+  live tile's line says how many pictures it left out. A mark on a squeezed tile is for v2.
+- **Measured before it** (the reTerminal D1001, 2026-10-28, slider drags in a light's card with page 1's four live
+  tiles and the camera's video): 27 wake word resets in 7 moments, ui_refresh up to 71 ms, the panel dry once, the
+  cores at 73 and 57 % (the H.264 encoder 34.5 % of core 0), the tiles' lay-out 132 ms a picture against 32 on the
+  Guition; the same drags on a page without live tiles: none of that. A light's card covers the tiles, and a covered
+  tile stops, so the rounds after it drag up and down over the four live tiles themselves (from one tile to the one
+  below, so no tile takes it for a tap; far from the edges, so it is no edge swipe).
+- **The finger and the signs, on the D1001.** Three minutes of drags: the governor steps down within 250 ms of the
+  finger and back a second after it lets go; without the finger's rule (a bench switch) the wake word's resets alone
+  climb it to live tiles at 1/2 and 1/4 and back. The panel ran dry 0 times in every round.
+
+#### What keeps a live tile waiting (measured 2026-10-28)
+
+The D1001's tiles waited 40 to 90 ms a picture for the glass, up to 320, where the Guition's waited almost none. The
+glass's lock, counted every 10 s (glass.h, Held; live_view's "glass:" line), says who held it:
+
+- **Not LVGL.** Its refreshes held the glass 7 to 50 ms a second at rest and 23 during drags (drawing 11, the PPA's
+  turn of its flush 7, the panel's copy with its wait for the end of it 4), at most 157 ms once for a page's redraw.
+- **Not the stills.** Pictures fetched ahead and a still's decode: 1 to 17 ms a second of the streams' waits.
+- **The tiles themselves.** 1.6 to 2.6 s a second of waiting, summed over four tiles, was behind another tile. A tile's
+  picture held the glass about 40 ms: decoding 4, the PPA's copy into the card's canvas 18, its copy onto the glass,
+  turned, 18.5 (composing the card, 20 ms, runs outside it). Four tiles at 5.5 to 6.5 pictures a second fill it.
+
+The lock is also the rule of one user of the 2D-DMA at a time (the JPEG decoder, the PPA and LVGL's copy to the panel;
+two at once from different tasks hang, espressif/esp-idf #18999 and #19108), and the PPA is one engine, so the copies
+cannot move out from under it. What helps is less work for it: a live tile's picture the app sent at the card's own
+size is composed where it was decoded and copied once, onto the glass, with no canvas between. On the D1001 a tile then
+showed 8 to 10 pictures a second where it showed 5.3 to 6.3, its wait for the glass 22 to 30 ms instead of 60 to 84
+(the copy onto the glass 17 ms; composing, outside the lock, 31 to 35 ms of wall clock, with the tasks' CPU unchanged at
+9 %). At that rate the wake word fell behind 51 times in three minutes, so a live tile keeps to six pictures a second
+on every board (hw::LIVE_TILE_PPS), and a busy screen's tile to three or one and a half. With all of it (one copy, the
+newest picture below, six a second), three minutes of drags over the four tiles: the D1001's tiles at rest 5.6 to 5.7
+pictures a second, 35 to 69 ms on the way, waiting 0.5 to 2.9 ms for the glass, the cores at 59.9 and 44.8 % (the
+lowest of the day), one moment of 12 wake word resets on which the tiles gave way at once; the Guition 10.1's 5.6 a
+second, 13 to 62 ms on the way, the copy onto the glass 6 ms, the cores at 19.6 and 30.9 %, no reset; the panel ran dry
+0 times on either.
+
+#### Pictures a second old: the queue on the way (measured 2026-10-28)
+
+The app makes a tile's next picture once the last one left its host, so a screen that reads slower than its camera sets
+the pace; but what lies between them holds a dozen of a tile's few KB pictures: the app's socket buffer (64 KB, which
+Linux doubles) and the screen's TCP window (64 KB, raised for downloads; lwIP has no smaller one for a single socket).
+Every picture now says when it left (X-Made, the app's clock in ms), and the screen sets that beside its own: what lies
+over the quickest picture seen is its wait on the way ("its pictures waited ... ms on their way" in a tile's line).
+
+- **At rest** three of four tiles showed pictures 0.86 to 1.18 s old on average (up to 2.3 s), one 74 ms.
+- **Paused for a busy screen** without more, 11 to 14 s old: the tile read nothing, and the buffers filled.
+- **The fix**: a live tile shows the newest picture there is. A whole picture waits while more bytes wait in its
+  socket (a second input buffer, recv with MSG_PEEK and MSG_DONTWAIT) and goes once none do, or after 250 ms; the older
+  ones are passed and counted. The app keeps a tile's socket buffer at 16 KB. Measured: 19 to 41 ms on the way at rest
+  and during drags, at most 160; a tile passed 1 to 85 older pictures in 10 s. It reads at its camera's pace now (40 to
+  140 KB/s a tile against 26 to 50), which the screen takes; the full view, with its sound between the pictures, reads
+  as before.
+- **Next**: a tile's link asks for each picture (one at a time over a kept connection, the app answering with the
+  newest), so nothing queues, the bytes are what is shown and the governor's pause is not asking.
+
 ## 5. The doorbell's talk-back, prepared
 
 Not built now: Home Assistant is expected to bring a two-way audio path of its own within months, and the community
