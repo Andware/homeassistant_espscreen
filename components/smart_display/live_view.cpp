@@ -51,6 +51,8 @@ constexpr size_t CHUNK = 16 * 1024;
 // paused), and the step it looks again at. And how long a tile's newest picture waits for a newer one while bytes keep
 // coming (Stream, pending), so a long queue never holds the tile still.
 constexpr int64_t PACE_GAP_US = 2000000, NEWEST_WAIT_US = 250000;
+// A full view's picture this much later on its way than the quickest is a frame behind its sound (stream, Wait).
+constexpr uint32_t STALE_MS = 150;
 constexpr uint32_t PAUSE_STEP_MS = 20;
 constexpr uint32_t STACK_BYTES = 6144;  // a stream task's stack (psram_task.h), its high water logged as it ends
 constexpr unsigned STREAM_PRIORITY = 2;  // below the wake word's inference (3), above the main loop (1): take_glass
@@ -67,6 +69,29 @@ bool has_speaker() { return speaker != nullptr; }
 #else
 bool has_speaker() { return false; }
 #endif
+
+// How long the parts of a stream waited on their way, from the app's X-Made: the app's clock and this one differ by a
+// constant (and a drift of milliseconds an hour), so the least difference seen is the way at its quickest and what lies
+// over it the wait. Kept by the stream's task, read by the main loop for its report.
+struct Wait {
+  bool seen = false;
+  int32_t quickest = 0;
+  std::atomic<uint32_t> count{0}, total_ms{0}, most_ms{0};
+  uint32_t reported_count = 0, reported_total = 0;
+  // A part that left the app at `made` came now: its wait, which is also counted.
+  uint32_t add(uint32_t made) {
+    const int32_t gap = static_cast<int32_t>(static_cast<uint32_t>(esp_timer_get_time() / 1000) - made);
+    if (!seen || gap < quickest) {
+      quickest = gap;
+      seen = true;
+    }
+    const uint32_t waited = static_cast<uint32_t>(gap - quickest);
+    count++;
+    total_ms += waited;
+    if (waited > most_ms) most_ms = waited;
+    return waited;
+  }
+};
 
 // ---- One stream ----
 struct Stream {
@@ -105,11 +130,8 @@ struct Stream {
   uint32_t pending_made = 0;
   int64_t pending_since = 0;
   std::atomic<uint32_t> passed{0};
-  // How long its pictures waited on their way (X-Made, the app's clock set beside this one): over the least seen, on
-  // average and at most.
-  bool aged = false;
-  int32_t youngest = 0;
-  std::atomic<uint32_t> ages{0}, age_ms{0}, age_most_ms{0};
+  // How long its pictures and its sound waited on their way (X-Made: Wait).
+  Wait picture_wait, sound_wait;
   // When the way to the first picture went by (ms after start, written once by the task, read after `shown`).
   uint32_t started_at = 0, connected_ms = 0, answered_ms = 0, first_bytes_ms = 0;
   uint32_t live_ms = 0;  // its first live picture (written once by the task, read after `live`)
@@ -155,7 +177,7 @@ struct Stream {
   bool told_first = false, told_live = false, told_sound = false, speaking = false;
   uint32_t reported_at = 0, reported_shown = 0, reported_bytes = 0, reported_decode = 0, reported_copy = 0,
            reported_wait = 0, reported_net = 0, reported_into = 0, reported_compose = 0, reported_onto = 0,
-           reported_ages = 0, reported_age = 0, reported_passed = 0, reported_pauses = 0, reported_paused = 0;
+           reported_passed = 0, reported_pauses = 0, reported_paused = 0;
   psram_task::Task task;  // its task, its stack in PSRAM: the main loop deletes it once done (psram_task.h)
   // A tile of the screen's own camera (is_own, plugin API 0.22): its card's canvas filled from a camera frame on the
   // camera's task (own_frame), then `own_full` until its own task laid it onto the glass; and when it takes the next.
@@ -398,20 +420,6 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   s.shown++;
 }
 
-// A picture's wait on its way: the app's clock and this one differ by a constant (and a drift of milliseconds an
-// hour), so the least difference seen is the way at its quickest and what lies over it the wait.
-static void age(Stream &s, uint32_t made) {
-  const int32_t gap = static_cast<int32_t>(static_cast<uint32_t>(esp_timer_get_time() / 1000) - made);
-  if (!s.aged || gap < s.youngest) {
-    s.youngest = gap;
-    s.aged = true;
-  }
-  const uint32_t waited = static_cast<uint32_t>(gap - s.youngest);
-  s.ages++;
-  s.age_ms += waited;
-  if (waited > s.age_most_ms) s.age_most_ms = waited;
-}
-
 // After a live tile's picture: its pace kept and the pause it owes, to hw::LIVE_TILE_PPS or to a busy screen's share of
 // it (Stream, pace_us). Each 20 ms it looks again whether the pressure eased or the stream stops; it reads nothing
 // meanwhile.
@@ -531,7 +539,7 @@ static bool pull(Stream &s, const picture_fetch::Address &address) {
     }
     if (!supported || s.stopping) break;
     if (h.status == 204 || got != length || length == 0) continue;
-    if (h.has_made) age(s, h.made);
+    if (h.has_made) s.picture_wait.add(h.made);
     show(s, s.input, length, h.still);
     if (!h.still) pace(s);
   }
@@ -722,7 +730,7 @@ static void stream(Stream &s) {
           if (audio) return s.sound && length <= SOUND_PART ? s.sound_part : nullptr;
           return length <= s.input_size ? s.input : nullptr;
         },
-        [&s, &reader](size_t length, bool audio) {
+        [&s, &reader, fd](size_t length, bool audio) {
           if (!audio) {
             // A live tile's picture waits for a newer one (Stream, pending); a full view and the stills go at once.
             if (s.look.tile && !reader.still() && s.spare) {
@@ -737,7 +745,16 @@ static void stream(Stream &s) {
               std::swap(s.input, s.spare);
               return;
             }
-            if (reader.has_made()) age(s, reader.made());
+            // A full view keeps its picture with its sound, the clock it plays to: a picture more than a frame later
+            // than the quickest, with more bytes already waiting, is passed for the newer one behind it, while the
+            // sound that came with it plays on.
+            if (reader.has_made() && s.picture_wait.add(reader.made()) > STALE_MS && !reader.still()) {
+              uint8_t next = 0;
+              if (recv(fd, &next, 1, MSG_PEEK | MSG_DONTWAIT) > 0) {
+                s.passed++;
+                return;
+              }
+            }
             show(s, s.input, length, reader.still());
             return;
           }
@@ -746,6 +763,7 @@ static void stream(Stream &s) {
           // off plays seconds of full-scale noise (a ring on a reTerminal D1001, 2026-10-25), until another odd write
           // puts it right by chance. So a part goes in whole or not at all, never cut to the room left.
           s.heard = true;
+          if (reader.has_made()) s.sound_wait.add(reader.made());
           if (length & 1) s.odd_parts.fetch_add(1, std::memory_order_relaxed);
           if (s.muted || s.yielded) return;
           const size_t whole = length & ~static_cast<size_t>(1);
@@ -764,7 +782,7 @@ static void stream(Stream &s) {
     if (s.pending) {
       uint8_t next = 0;
       if (recv(fd, &next, 1, MSG_PEEK | MSG_DONTWAIT) <= 0 || esp_timer_get_time() - s.pending_since > NEWEST_WAIT_US) {
-        if (s.pending_has_made) age(s, s.pending_made);
+        if (s.pending_has_made) s.picture_wait.add(s.pending_made);
         show(s, s.pending, s.pending_length, false);
         s.pending = nullptr;
         pace(s);
@@ -994,15 +1012,22 @@ static void report(int slot, Stream &s, uint32_t now, bool last) {
   s.reported_into = into;
   s.reported_compose = composed;
   s.reported_onto = onto;
-  const uint32_t ages = s.ages, aged = s.age_ms;
-  if (ages != s.reported_ages)
+  Wait &pw = s.picture_wait, &sw = s.sound_wait;
+  const uint32_t pictures = pw.count, picture_total = pw.total_ms, sounds = sw.count, sound_total = sw.total_ms;
+  if (pictures != pw.reported_count)
     ESP_LOGI(TAG, "%s %d: its pictures waited %.0f ms on their way (at most %u) over the quickest; %u older ones passed "
              "for a newer", last ? "ended" : "stream", slot,
-             static_cast<float>(aged - s.reported_age) / static_cast<float>(ages - s.reported_ages),
-             (unsigned) s.age_most_ms.exchange(0), (unsigned) (passed - s.reported_passed));
+             static_cast<float>(picture_total - pw.reported_total) / static_cast<float>(pictures - pw.reported_count),
+             (unsigned) pw.most_ms.exchange(0), (unsigned) (passed - s.reported_passed));
+  if (sounds != sw.reported_count)
+    ESP_LOGI(TAG, "%s %d: its sound waited %.0f ms on its way (at most %u) over the quickest, %u pieces", last ? "ended" : "stream",
+             slot, static_cast<float>(sound_total - sw.reported_total) / static_cast<float>(sounds - sw.reported_count),
+             (unsigned) sw.most_ms.exchange(0), (unsigned) (sounds - sw.reported_count));
   s.reported_passed = passed;
-  s.reported_ages = ages;
-  s.reported_age = aged;
+  pw.reported_count = pictures;
+  pw.reported_total = picture_total;
+  sw.reported_count = sounds;
+  sw.reported_total = sound_total;
   if (pauses != s.reported_pauses)
     ESP_LOGI(TAG, "%s %d: paused %u times for a busy screen since the last report, %.1f s in all, its pace %.0f ms",
              last ? "ended" : "stream", slot, (unsigned) (pauses - s.reported_pauses),
