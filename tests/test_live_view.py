@@ -118,7 +118,13 @@ class GlassTurns(unittest.TestCase):
     def test_a_still_waits_at_the_streams_priority(self):
         self.assertIn('constexpr unsigned WRITER_PRIORITY = 5;', (COMPONENT / 'glass.h').read_text())
         live = (COMPONENT / 'live_view.cpp').read_text()
-        self.assertIn('"live_view", STACK_BYTES, s, glass::WRITER_PRIORITY, 1)', live)
+        # A stream's task runs below the wake word and asks for the glass at the writers' priority, back once it let go.
+        self.assertIn('constexpr unsigned STREAM_PRIORITY = 2;', live)
+        self.assertIn('"live_view", STACK_BYTES, s, STREAM_PRIORITY, 1)', live)
+        take = live[live.index('static uint32_t take_glass() {'):live.index('static void turn_loader(Stream &s) {')]
+        steps = ['vTaskPrioritySet(nullptr, glass::WRITER_PRIORITY);', 'glass::hold_counted();', 'glass::release();',
+                 'vTaskPrioritySet(nullptr, STREAM_PRIORITY);']
+        self.assertEqual([take.index(step) for step in steps], sorted(take.index(step) for step in steps))
         engine = (COMPONENT / 'picture_engine_p4.cpp').read_text()
         decode = engine[engine.index('uint8_t *decode('):engine.index('// ---- The PPA ----')]
         # Raised before the wait, held only around the glass, and back at its own once it let go.
