@@ -92,8 +92,13 @@ class FrameWatch(unittest.TestCase):
         told = watch.line(lost=5, nacks=4, plis=1, refused=2, stills=1)
         self.assertIn('1 frames (1 key)', told)
         self.assertIn('5 packets lost, 4 NACKs and 1 PLIs sent; 2 JPEGs the screen would refuse, 1 stills', told)
+        self.assertNotIn('not turned', told)
         self.now[0] += camera_source.FRAME_REPORT_SECONDS
         self.assertIsNone(watch.line(lost=5, nacks=4, plis=1, refused=2, stills=1), 'nothing new: quiet')
+        # Pictures for a turned glass that went upright (live_pictures.not_turned) are said when there are any.
+        self.now[0] += camera_source.FRAME_REPORT_SECONDS
+        told = watch.line(lost=5, nacks=4, plis=1, refused=2, stills=1, not_turned=3)
+        self.assertIn('0 stills, 3 pictures not turned for a turned glass in', told)
         self.now[0] = camera_source.FRAME_TOTALS_SECONDS
         self.assertIn('since the stream began', watch.line(lost=5))
 

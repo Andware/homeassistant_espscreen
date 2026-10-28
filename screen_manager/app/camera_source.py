@@ -159,7 +159,7 @@ class FrameWatch:
     timestamps, a flash (FLASH_RISE) and the key frames are counted; `line` says it all every FRAME_REPORT_SECONDS when
     any of it is not 0, with the transport's packets lost, NACKs, PLIs and live_pictures' JPEGs the screen would refuse."""
 
-    COUNTS = ('frames', 'corrupt', 'gaps', 'flashes', 'keys', 'lost', 'nacks', 'plis', 'refused', 'stills')
+    COUNTS = ('frames', 'corrupt', 'gaps', 'flashes', 'keys', 'lost', 'nacks', 'plis', 'refused', 'stills', 'not_turned')
 
     def __init__(self, entity, clock=time.monotonic, brightness=luma, dump=None):
         self.entity, self.clock, self.brightness, self.dump = entity, clock, brightness, dump
@@ -232,12 +232,13 @@ class FrameWatch:
     def due(self):
         return self.clock() - self.reported >= FRAME_REPORT_SECONDS
 
-    def line(self, lost=0, nacks=0, plis=0, refused=0, stills=0):
+    def line(self, lost=0, nacks=0, plis=0, refused=0, stills=0, not_turned=0):
         """The report since the last one once FRAME_REPORT_SECONDS went by, when anything but frames was counted (and
         the totals every FRAME_TOTALS_SECONDS whatever they are); None otherwise. The transport's and the JPEGs' counts
         are handed in as totals since the session began."""
         now = self.clock()
-        for what, value in (('lost', lost), ('nacks', nacks), ('plis', plis), ('refused', refused), ('stills', stills)):
+        for what, value in (('lost', lost), ('nacks', nacks), ('plis', plis), ('refused', refused), ('stills', stills),
+                            ('not_turned', not_turned)):
             if value > self.total[what]:
                 self.count(what, value - self.total[what])
         if now - self.reported < FRAME_REPORT_SECONDS:
@@ -254,7 +255,8 @@ class FrameWatch:
     def words(c):
         return (f"{c['frames']} frames ({c['keys']} key), {c['corrupt']} corrupt, {c['gaps']} missing, {c['flashes']} flashes; "
                 f"{c['lost']} packets lost, {c['nacks']} NACKs and {c['plis']} PLIs sent; {c['refused']} JPEGs the screen "
-                f"would refuse, {c['stills']} stills")
+                f"would refuse, {c['stills']} stills" + (f", {c['not_turned']} pictures not turned for a turned glass"
+                                                          if c['not_turned'] else ''))
 
 
 class Source:
@@ -354,6 +356,7 @@ class Source:
             self.route = 'webrtc'
             self.watch = FrameWatch(self.entity, dump=FrameDump(self.entity) if DUMP_MARK.exists() else None)
             live_pictures.refused.pop(self.entity, None)
+            live_pictures.not_turned.pop(self.entity, None)
             self.stills = 0
             # The sound along in the same session when a screen with a speaker watches: the full view has it at once.
             self.sound_along = self.wants_sound
@@ -496,7 +499,7 @@ class Source:
         except Exception:  # noqa: BLE001 - the stats only for the log
             pass
         told = watch.line(lost=lost, nacks=asked['nacks'], plis=asked['plis'], refused=live_pictures.refused.get(self.entity, 0),
-                          stills=self.stills)
+                          stills=self.stills, not_turned=live_pictures.not_turned.get(self.entity, 0))
         if told:
             LOG.info('%s', told)
 

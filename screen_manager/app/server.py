@@ -1292,6 +1292,12 @@ class Manager:
             return None
         return (getattr(sender, 'caps', None) or {}).get('live_tiles')
 
+    def picture_turn_of(self, inbox):
+        """How the screen of `inbox` takes its live pictures: turned as its glass is (90, 180 or 270, its hello's
+        picture_turn), or 0 upright."""
+        sender = self.page_senders.get(self.aliases.get(inbox, inbox))
+        return (getattr(sender, 'caps', None) or {}).get('picture_turn') or 0 if sender is not None else 0
+
     def own_camera_of(self, inbox, screen, entity):
         """Whether `entity` is the screen of `inbox`'s own camera as Home Assistant shows it (Video in Home Assistant: the
         tessera_video camera on the screen's own device) and the screen draws a tile of it from the camera itself (its

@@ -244,7 +244,7 @@ class Pull(unittest.TestCase):
     """A live tile that asks for each picture (GET /camera/<token>.jpg on its stream's link, LiveFeed.pull), through the
     camera port's own routes (picture_links.web_app) on a real socket, over one kept connection as the screen asks."""
 
-    def run_pull(self, asks, links=1, camera_stops_after=None, between=0.0):
+    def run_pull(self, asks, links=1, camera_stops_after=None, between=0.0, turn=0):
         from aiohttp import ClientSession, web
         import picture_links
         picture = jpeg(512, 288)
@@ -265,14 +265,14 @@ class Pull(unittest.TestCase):
             site = web.TCPSite(runner, '127.0.0.1', 0)
             await site.start()
             port = site._server.sockets[0].getsockname()[1]
-            tokens = [live.link('camera.door', (492, 268), tile=True, screen='text.tablet') for _ in range(links)]
+            tokens = [live.link('camera.door', (492, 268), tile=True, screen='text.tablet', turn=turn) for _ in range(links)]
             answers = []
             async with ClientSession() as http:
                 for _ in range(asks):
                     for token in tokens:
                         async with http.get(f'http://127.0.0.1:{port}/camera/{token}.jpg') as r:
                             answers.append((token, r.status, r.headers.get('X-Made'), r.headers.get('Content-Type'),
-                                            await r.read()))
+                                            await r.read(), r.headers.get('X-Turn')))
                     await asyncio.sleep(between)
                 streaming = live.streaming()
             await runner.cleanup()
@@ -300,6 +300,22 @@ class Pull(unittest.TestCase):
             live_stream.PULL_SECONDS = saved
         self.assertEqual([a[1] for a in answers], [200, 204])
         self.assertEqual(answers[1][4], b'')
+
+    def test_a_tile_of_a_turned_glass_gets_its_pictures_turned_and_says_so(self):
+        # A screen that takes its live pictures turned (caps picture_turn): each answer the upright one turned, with
+        # X-Turn; an upright one has no X-Turn.
+        turned, _, _, _ = self.run_pull(1, turn=270)
+        upright, _, _, _ = self.run_pull(1)
+        self.assertEqual((turned[0][5], upright[0][5]), ('270', None))
+        width, height = Image.open(io.BytesIO(upright[0][4])).size
+        self.assertEqual(Image.open(io.BytesIO(turned[0][4])).size, (height, width))
+        # A link turns by a turn a glass has, the full view's as a tile's.
+        live = live_stream.LiveFeed(None, None, lambda name: False)
+        self.assertEqual(live.links[live.link('camera.door', (1280, 720), turn=270)].turn, 270)
+        self.assertEqual(live.links[live.link('camera.door', (492, 268), tile=True, turn=45)].turn, 0)
+        # A part of the stream says it the same way.
+        self.assertIn(b'X-Turn: 90\r\n', live_stream.part_head(b'image/jpeg', 10, turn=90))
+        self.assertNotIn(b'X-Turn', live_stream.part_head(b'image/jpeg', 10))
 
     def test_two_tiles_of_one_camera_each_get_their_pictures(self):
         answers, streaming, picture, live = self.run_pull(2, links=2)

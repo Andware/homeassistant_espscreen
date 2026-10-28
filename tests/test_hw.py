@@ -99,6 +99,14 @@ class AppSide(unittest.TestCase):
         self.assertFalse(own('camera.door') or own('camera.other') or own('camera.tablet_video', {}))
         sender.caps = {'own_camera': False}
         self.assertFalse(own('camera.tablet_video'))
+        # A glass turned so that the screen takes its live pictures turned (picture_turn): only a turn a glass has.
+        self.assertEqual(caps['picture_turn'], 0)
+        self.assertEqual(page_delivery.caps_of({'caps': {'picture_turn': 270}})['picture_turn'], 270)
+        for odd in (45, True, '90', -90, 360):
+            self.assertEqual(page_delivery.caps_of({'caps': {'picture_turn': odd}})['picture_turn'], 0, odd)
+        manager.page_senders['text.tablet'].caps = {'picture_turn': 90}
+        self.assertEqual(server.Manager.picture_turn_of(manager, 'text.tablet'), 90)
+        self.assertEqual(server.Manager.picture_turn_of(manager, 'text.other'), 0)
         # An older firmware sends no record: live follows the feature, the counts are unknown (None), the rest False.
         old = page_delivery.caps_of({'features': ['live', 'pictures']})
         self.assertEqual(old['live'], True)
@@ -125,6 +133,8 @@ class AppSide(unittest.TestCase):
         self.assertEqual(page_delivery.caps_line(caps), 'live, 4 live tiles, speaker, microphone, camera, no echo '
                          'cancellation, 28272 KB PSRAM, 519 KB internal RAM')
         self.assertEqual(page_delivery.caps_line(page_delivery.caps_of({'features': ['pictures']})), 'no echo cancellation')
+        self.assertEqual(page_delivery.caps_line(page_delivery.caps_of({'caps': {'picture_turn': 270}})),
+                         "no echo cancellation, live pictures turned 270")
 
     def test_the_editor_gets_the_record(self):
         # The inventory's screen carries it (server.py, caps_of_screen) and the editor marks a live camera beyond

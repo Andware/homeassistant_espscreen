@@ -49,11 +49,12 @@ def made():
     return int(time.monotonic() * 1000) & 0xFFFFFFFF
 
 
-def part_head(content_type, length, still=False):
-    """The head of one part of a stream: its type, whether it is a camera's still from before its stream came, its
-    length and its X-Made."""
-    return b'--frame\r\nContent-Type: %s\r\n%sContent-Length: %d\r\nX-Made: %d\r\n\r\n' % (
-        content_type, b'X-Picture: still\r\n' if still else b'', length, made())
+def part_head(content_type, length, still=False, turn=0):
+    """The head of one part of a stream: its type, whether it is a camera's still from before its stream came, how its
+    picture is turned for a turned glass (X-Turn, live_pictures.TURNS), its length and its X-Made."""
+    return b'--frame\r\nContent-Type: %s\r\n%s%sContent-Length: %d\r\nX-Made: %d\r\n\r\n' % (
+        content_type, b'X-Picture: still\r\n' if still else b'', b'X-Turn: %d\r\n' % turn if turn else b'', length,
+        made())
 
 
 def live_pace(message, tile, features):
@@ -74,12 +75,14 @@ def live_pace(message, tile, features):
 
 
 class Link:
-    __slots__ = ('entity', 'box', 'used', 'streaming', 'made', 'cover', 'sound', 'warm', 'screen', 'tile', 'pulled',
-                 'until', 'lease', 'held', 'began', 'sent', 'size')
+    __slots__ = ('entity', 'box', 'used', 'streaming', 'made', 'cover', 'sound', 'warm', 'screen', 'tile', 'turn',
+                 'pulled', 'until', 'lease', 'held', 'began', 'sent', 'size')
 
-    def __init__(self, entity, box, now, cover=False, sound=False, warm=False, screen=None, tile=False):
+    def __init__(self, entity, box, now, cover=False, sound=False, warm=False, screen=None, tile=False, turn=0):
         self.entity, self.box, self.used, self.streaming, self.made = entity, box, now, 0, now
         self.cover, self.sound, self.warm, self.screen, self.tile = cover, sound, warm, screen, tile
+        # A screen whose glass is turned and that takes its live pictures so (caps picture_turn): they go out turned.
+        self.turn = turn if turn in live_pictures.TURNS else 0
         # Pulled one picture an ask (LiveFeed.pull): the frame it had last, until when its lease runs, the task that ends
         # it, the cameras it holds, and its count for the log.
         self.pulled, self.until, self.lease, self.held, self.began, self.sent, self.size = 0, 0.0, None, [], now, 0, 0
@@ -104,14 +107,15 @@ class LiveFeed:
         for token in [t for t, link in self.links.items() if not link.streaming and now - link.used > LINK_SECONDS]:
             del self.links[token]
 
-    def link(self, entity, box, cover=False, sound=False, warm=False, screen=None, tile=False):
+    def link(self, entity, box, cover=False, sound=False, warm=False, screen=None, tile=False, turn=0):
         """A new link's token: the full view's (`box` its room, `sound` with the camera's sound for a screen with a
         speaker), or a live `tile`'s (`box` its card, `cover` when its picture fills the card rather than showing whole,
-        `warm` when its screen has a speaker: the camera's sound comes along in the source, for the full view). `screen`
-        is the inbox of the screen that asked."""
+        `warm` when its screen has a speaker: the camera's sound comes along in the source, for the full view). `turn`:
+        the glass's, for a screen that takes its live pictures turned so. `screen` is the inbox of the screen that
+        asked."""
         self.prune()
         token = secrets.token_urlsafe(18)
-        self.links[token] = Link(entity, box, self.clock(), cover, sound, warm, screen, tile)
+        self.links[token] = Link(entity, box, self.clock(), cover, sound, warm, screen, tile, turn)
         return token
 
     def hold(self, link):
@@ -161,7 +165,7 @@ class LiveFeed:
             return None
         if frame.jpeg is not None:
             return frame.jpeg
-        return await self.pictures_of(entity).picture(frame, (live_pictures.MAX_SIDE, live_pictures.MAX_SIDE))
+        return (await self.pictures_of(entity).picture(frame, (live_pictures.MAX_SIDE, live_pictures.MAX_SIDE)))[0]
 
     def source(self, entity):
         source = self.sources.get(entity)
@@ -237,7 +241,8 @@ class LiveFeed:
         source.start()  # again if its camera ended meanwhile, as a screen's new stream would
         link.until = self.clock() + PULL_SECONDS + PULL_LEASE
         frame = await source.next(link.pulled, PULL_SECONDS)
-        jpeg = await self.pictures_of(link.entity).picture(frame, link.box, link.cover) if frame is not None else None
+        jpeg, turn = await self.pictures_of(link.entity).picture(frame, link.box, link.cover, link.turn) \
+            if frame is not None else (None, 0)
         link.until = self.clock() + PULL_LEASE
         if not jpeg:
             return web.Response(status=204, headers={'Cache-Control': 'no-cache'})
@@ -247,6 +252,8 @@ class LiveFeed:
         headers = {'Cache-Control': 'no-cache', 'X-Made': str(made())}
         if frame.still:
             headers['X-Picture'] = 'still'
+        if turn:
+            headers['X-Turn'] = str(turn)
         return web.Response(body=jpeg, content_type='image/jpeg', headers=headers)
 
     async def lease(self, link, source):
@@ -285,10 +292,10 @@ class LiveFeed:
                 if frame is None or request.transport is None:
                     return
                 last = frame.number
-                jpeg = await jpegs.picture(frame, link.box, link.cover)
+                jpeg, turn = await jpegs.picture(frame, link.box, link.cover, link.turn)
                 if not jpeg:
                     continue
-                await write(part_head(b'image/jpeg', len(jpeg), frame.still), jpeg)
+                await write(part_head(b'image/jpeg', len(jpeg), frame.still, turn), jpeg)
                 if not link.sent:
                     LOG.info('Live %s: first picture %.1f s after the link went out (the screen came %.1f s after it); '
                              'its source: %s', link.entity, self.clock() - link.made, link.began - link.made,

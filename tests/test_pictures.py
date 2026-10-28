@@ -707,7 +707,13 @@ class Service(unittest.IsolatedAsyncioTestCase):
                                 live=(320, 180))
             found = await self.service.answer('text.hall', self.manager.player, question)
             self.assertTrue(found.stream and found.url.endswith(suffix), (fit, found))
-        self.assertEqual(self.stream.calls[-1], ('camera.porch', (320, 180), {'cover': False, 'screen': 'text.hall', 'tile': True}))
+        self.assertEqual(self.stream.calls[-1], ('camera.porch', (320, 180), {'cover': False, 'screen': 'text.hall', 'tile': True,
+                                                                               'turn': 0}))
+        # On a screen that takes its live pictures turned, a plugin's place gets them turned too.
+        self.manager.picture_turn_of = lambda inbox: 270
+        await self.service.answer('text.hall', self.manager.player, question)
+        self.assertEqual(self.stream.calls[-1][2]['turn'], 270)
+        del self.manager.picture_turn_of
         other = Question(owner, (Source('camera', 'camera.drive'),), (320, 180), (Place(0, 0, 320, 180),), live=(320, 180))
         found = await self.service.answer('text.hall', self.manager.player, other)
         self.assertTrue(found.problem and not found.url)
@@ -715,14 +721,25 @@ class Service(unittest.IsolatedAsyncioTestCase):
     async def test_a_camera_that_streams(self):
         found = await self.service.answer('text.hall', self.manager.player, self.read({'entity': 'camera.porch', 'live': '1280x744', 'sound': '1'}))
         self.assertEqual((found.url, found.stream, found.shown), (f'http://192.168.1.57:8098/camera/{"S" * 24}.mjpeg', True, ('camera.porch',)))
-        self.assertEqual(self.stream.calls, [('camera.porch', (1280, 744), {'sound': True, 'screen': 'text.hall'})])
+        self.assertEqual(self.stream.calls, [('camera.porch', (1280, 744), {'sound': True, 'screen': 'text.hall', 'turn': 0})])
         self.assertEqual(self.fetched, [], 'a stream needs no still')
         # A camera tile set to Live streams into its card's size, filled or whole as the tile says.
         found = await self.service.answer('text.hall', self.manager.player, self.read(
             {'tiles': 'camera.drive', 'idx': '9', 'size': '54', 'bg': 'FFFFFF', 'atlas': '[[0,0,300,200,12,0]]', 'live': '300x200', 'sound': '1'}))
         self.assertTrue(found.stream)
         self.assertTrue(found.url.endswith('.mjpeg?fit=contain'))
-        self.assertEqual(self.stream.calls[-1], ('camera.drive', (300, 200), {'cover': False, 'warm': True, 'screen': 'text.hall', 'tile': True}))
+        self.assertEqual(self.stream.calls[-1], ('camera.drive', (300, 200), {'cover': False, 'warm': True, 'screen': 'text.hall', 'tile': True,
+                                                                               'turn': 0}))
+
+    async def test_a_turned_glass_gets_its_live_pictures_turned(self):
+        # A screen whose glass is turned and whose hello says it takes its live pictures so (caps picture_turn, Manager.
+        # picture_turn_of): the links of its live tiles and of its full view turn them.
+        self.manager.picture_turn_of = lambda inbox: 270 if inbox == 'text.hall' else 0
+        await self.service.answer('text.hall', self.manager.player, self.read(
+            {'tiles': 'camera.drive', 'idx': '9', 'size': '54', 'bg': 'FFFFFF', 'atlas': '[[0,0,300,200,12,0]]', 'live': '300x200'}))
+        self.assertEqual(self.stream.calls[-1][2]['turn'], 270)
+        await self.service.answer('text.hall', self.manager.player, self.read({'entity': 'camera.porch', 'live': '1280x744'}))
+        self.assertEqual(self.stream.calls[-1][2]['turn'], 270)
 
     async def test_a_tile_of_the_screens_own_camera_is_drawn_by_the_screen(self):
         # The screen's own camera on a tile of its own (plugin API 0.22): the screen draws it from the camera, so the
