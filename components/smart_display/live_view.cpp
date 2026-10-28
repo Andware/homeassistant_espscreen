@@ -431,10 +431,10 @@ static void pace(Stream &s) {
     s.pace_us = s.pace_us ? static_cast<uint32_t>((3 * static_cast<int64_t>(s.pace_us) + took) / 4)
                           : static_cast<uint32_t>(took);
   const int64_t base = std::max<int64_t>(s.pace_us, 1000000 / hw::LIVE_TILE_PPS);
-  const bool busy = pressure::level_now(pressure::LIVE_TILES) > 0;
+  const bool busy = pressure::level_of(pressure::LIVE_TILES) > 0;
   if (busy) s.pauses++;
   for (;;) {
-    const uint8_t level = pressure::level_now(pressure::LIVE_TILES);
+    const uint8_t level = pressure::level_of(pressure::LIVE_TILES);
     if (s.stopping || esp_timer_get_time() + took >= now + (base << level)) break;
     vTaskDelay(pdMS_TO_TICKS(PAUSE_STEP_MS));
   }
@@ -614,7 +614,7 @@ void own_frame(const uint8_t *data, int width, int height, bool yuv420) {
       continue;
     }
     // Its next frame after its pace: six a second, a busy screen's tile three or one and a half.
-    s->own_next = now + (static_cast<int64_t>(1000000 / hw::LIVE_TILE_PPS) << pressure::level_now(pressure::LIVE_TILES));
+    s->own_next = now + (static_cast<int64_t>(1000000 / hw::LIVE_TILE_PPS) << pressure::level_of(pressure::LIVE_TILES));
     s->own_full.store(true, std::memory_order_release);
     xTaskNotifyGive(s->task.handle);
   }

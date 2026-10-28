@@ -1,7 +1,9 @@
 #pragma once
 // The screen's governor (docs/PLATFORM_PLAN.md 4.10): what a busy screen gives up first, so the glass and the voice
-// never do. Pure logic, free of LVGL and ESP-IDF, so tests/test_pressure.cpp checks it on a PC; runtime_tiles.h feeds
-// it and asks it, live_view.cpp and the plugins (plugin API 0.21, tessera::squeeze) act on it.
+// never do. Pure logic, free of LVGL and ESP-IDF, so tests/test_pressure.cpp checks it on a PC. Its whole API: on the
+// main loop Governor::signal (a sign of trouble), touching (the finger) and tick (runtime_tiles.h pressure_tick, which
+// also sets the shared levels); on any task level_of(Work), which live_view.cpp and the plugins (plugin API 0.21,
+// tessera::squeeze) act on. STEPS and FLOOR below are the one place the order and the steps are written.
 //
 // The work of a screen in a fixed order, from what must never wait to what waits first: the glass, the voice
 // assistant, a doorbell's ring, the live tiles, the screen's own camera (its video), its sensing (light level and
@@ -50,7 +52,7 @@ inline const char *sign_name(Sign s) {
 class Governor {
  public:
   // A sign of trouble at `now` (ms).
-  void sign(Sign s, uint32_t now) {
+  void signal(Sign s, uint32_t now) {
     signs_[s]++;
     if (step_ < FLOOR[s]) {
       step_ = FLOOR[s];
@@ -69,7 +71,7 @@ class Governor {
     last_sign_ = climbed_ = changed_ = stamp(now);
   }
   // The finger: on the glass, and whether it drags (past the tap's limit) or a page moves.
-  void finger(bool down, bool dragging, uint32_t now) {
+  void touching(bool down, bool dragging, uint32_t now) {
     if (down) {
       down_ = true;
       dragging_ = dragging_ || dragging;
@@ -115,6 +117,6 @@ class Governor {
 // The levels as the main loop set them last, for every task: live_view's streams, a plugin on the camera's task
 // (tessera::squeeze). The main loop's governor is runtime_tiles::governor.
 inline std::atomic<uint8_t> shared[WORKS];
-inline uint8_t level_now(Work w) { return w < WORKS ? shared[w].load(std::memory_order_relaxed) : 0; }
+inline uint8_t level_of(Work w) { return w < WORKS ? shared[w].load(std::memory_order_relaxed) : 0; }
 
 }  // namespace pressure

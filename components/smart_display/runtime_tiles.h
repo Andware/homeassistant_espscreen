@@ -12516,7 +12516,7 @@ inline void pressure_listen() {
 }
 
 // The finger, from the touch panel's own path (touch_input) and the bench's: down, and whether it drags.
-inline void pressure_finger(bool down, bool dragging) { governor.finger(down, dragging, esphome::millis()); }
+inline void pressure_finger(bool down, bool dragging) { governor.touching(down, dragging, esphome::millis()); }
 
 inline std::string pressure_text() {
   using namespace pressure;
@@ -12539,13 +12539,13 @@ inline std::string pressure_text() {
 // levels for every task.
 inline void pressure_tick(uint32_t now) {
   const uint32_t misses = glass::misses();
-  if (misses != glass_misses_seen) { glass_misses_seen = misses; governor.sign(pressure::GLASS_MISS, now); }
+  if (misses != glass_misses_seen) { glass_misses_seen = misses; governor.signal(pressure::GLASS_MISS, now); }
   const uint32_t resets = wake_word_resets.load(std::memory_order_relaxed);
-  if (resets != wake_word_seen) { wake_word_seen = resets; governor.sign(pressure::WAKE_WORD_RESET, now); }
+  if (resets != wake_word_seen) { wake_word_seen = resets; governor.signal(pressure::WAKE_WORD_RESET, now); }
   const uint32_t holds = loop_holds.load(std::memory_order_relaxed);
-  if (holds != loop_holds_seen) { loop_holds_seen = holds; governor.sign(pressure::SLOW_LOOP, now); }
+  if (holds != loop_holds_seen) { loop_holds_seen = holds; governor.signal(pressure::SLOW_LOOP, now); }
   // A slider held is a drag, whichever finger holds it (the touch panel's, or the bench's own pointer).
-  if (captured_slider) governor.finger(true, true, now);
+  if (captured_slider) governor.touching(true, true, now);
   governor.tick(now);
   for (int w = 0; w < pressure::WORKS; ++w)
     pressure::shared[w].store(governor.level(static_cast<pressure::Work>(w)), std::memory_order_relaxed);
@@ -12930,7 +12930,7 @@ inline void card_picture_wants() {
   // Ahead only while the store has room to spare: over its budget a page out of sight lets its pictures go
   // (picture_away), and fetching them ahead again would only send them round.
   const bool ahead = awake() && pictures_kept() && !prepare_busy() && pictures.size() < pictures.budget / 4 * 3 &&
-                     pressure::level_now(pressure::BACKGROUND) == 0;  // a busy screen fetches nothing ahead
+                     pressure::level_of(pressure::BACKGROUND) == 0;  // a busy screen fetches nothing ahead
   const bool tiles = tile_pictures_supported() && model.ready();
   each_card([&](Widgets &w) {
 #if LV_USE_IMAGE

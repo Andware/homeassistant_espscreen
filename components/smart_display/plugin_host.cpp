@@ -433,7 +433,7 @@ void capturing(const Plugin *plugin, Capture what, bool on) {
   capture_dot::capturing(plugin, what == Capture::SENSING, on);
 }
 
-uint8_t squeeze(Work work) { return pressure::level_now(static_cast<pressure::Work>(static_cast<uint8_t>(work))); }
+uint8_t squeeze(Work work) { return pressure::level_of(static_cast<pressure::Work>(static_cast<uint8_t>(work))); }
 
 void offer_own_frames() { live_view::own_offer(); }
 bool own_tile_wants() { return live_view::own_wanted(); }
