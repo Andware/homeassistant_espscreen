@@ -28,6 +28,7 @@ static void preset_mark(lv_obj_t *k, bool lit, bool busy) {
   if (busy && !spin && (spin = spinner_create(lv_obj_get_parent(k), outer, width))) {
     lv_obj_set_style_arc_opa(spin, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_arc_color(spin, theme::color(theme::INK), LV_PART_INDICATOR);
+    lv_obj_set_style_arc_opa(spin, light_presets::RING_OPA, LV_PART_INDICATOR);
     lv_obj_add_flag(spin, LV_OBJ_FLAG_IGNORE_LAYOUT);
     lv_obj_set_user_data(k, spin);
   }

@@ -253,6 +253,8 @@ inline int gap() { return ui::px(ui::large() ? 10 : 6); }
 // How far the ring round a key reaches outside it: its pad and its width (mark).
 inline int ring_pad() { return std::max(2, ui::px(3)); }
 inline int ring() { return ring_pad() + std::max(2, ui::px(2)); }
+// The ring's ink at half strength: a dark grey on a light look, a light grey on a dark one, never the text's full black.
+constexpr lv_opa_t RING_OPA = LV_OPA_50;
 
 // A key's colours that follow the look (a change of look paints them again): the amber of a brightness alone, the plain
 // grey of a key without a colour (an effect, the lamp's own preset), the hairline and the ring; a colour is the light's.
@@ -264,6 +266,10 @@ inline void paint(lv_obj_t *k, const Preset &p) {
   lv_obj_set_style_bg_color(k, lv_color_mix(lv_color_black(), fill, 31), LV_STATE_PRESSED);
   lv_obj_set_style_border_color(k, theme::color(theme::LINE), 0);
   lv_obj_set_style_outline_color(k, theme::color(theme::INK), 0);
+  lv_obj_set_style_outline_opa(k, RING_OPA, 0);
+  // Its text (key()), in the ink of the look on a plain key, else the one that reads on the disc's colour.
+  if (auto *l = lv_obj_get_child(k, 0))
+    lv_obj_set_style_text_color(l, theme::color(p.neutral() ? theme::INK : dark_ink(p) ? theme::PRESET_INK_DARK : theme::PRESET_INK_LIGHT), 0);
 }
 // One round key: the disc in the preset's colour, a hairline round a pale one, `text` in the middle (Presets::label), and
 // a ring round the preset the light shows now. `font` writes the text.
@@ -287,8 +293,6 @@ inline lv_obj_t *key(lv_obj_t *parent, const Preset &p, int size, const lv_font_
     auto *l = lv_label_create(k);
     lv_obj_remove_flag(l, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_text_font(l, font, 0);
-    const auto ink = p.neutral() ? theme::INK : dark_ink(p) ? theme::PRESET_INK_DARK : theme::PRESET_INK_LIGHT;
-    lv_obj_set_style_text_color(l, theme::color(ink), 0);
     // Quiet: the colour is the key, its brightness a whisper on it.
     lv_obj_set_style_text_opa(l, p.neutral() ? LV_OPA_70 : LV_OPA_40, 0);
     lv_label_set_text(l, text.c_str());
