@@ -187,9 +187,14 @@ fact of the hardware, and where:
 | Fact | Where it is read | Where it has effect |
 |---|---|---|
 | the chip is an ESP32-P4 | `__init__.py` (`_esp32_p4`, `_engine`) | `P4_NETWORK`; `PICTURE_ENGINE_P4`, `GLASS_DSI`, `USE_LIVE_VIEW` and the three wraps (`engine_build.py`) |
-| the chip is an ESP32-S3 with PSRAM and LVGL | `__init__.py` (`_engine`) | `PICTURE_ENGINE_S3` and the esp_new_jpeg component (`engine_build.py`) |
-| how many live tiles at once | `picture_engine::limits().live_tiles` (four on the P4, none on the S3) | `hw::caps`, the hello, the editor |
+| the chip is an ESP32-S3 with PSRAM and LVGL | `__init__.py` (`_engine`) | `PICTURE_ENGINE_S3`, `GLASS_RGB`, `USE_LIVE_VIEW`, the esp_new_jpeg component and the wraps of its allocator and of `esp_lcd_new_rgb_panel` (`engine_build.py`) |
+| how many live tiles at once | `picture_engine::limits().live_tiles` (four on the P4, one on the S3: each tile's Wi-Fi and lwIP buffers cost the S3 about 11 KB of internal RAM, CAMERA.md "Live on an ESP32-S3") | `hw::caps`, the hello, the editor |
+| the pictures a second the live tiles share | `picture_engine::limits().tile_budget_pps` (24 on the P4, 8 on the S3), shared by `picture_engine::tile_pps` | each tile's pace (`live_view.cpp`, `tile_gap_us`) |
+| the core a stream decodes on | `picture_engine::limits().stream_core` (1 on the P4, 0 on the S3, away from LVGL) | the stream's task (`live_view::open`) |
+| whether a decode holds the glass, and a full view's pace | `picture_engine::limits()` (`decode_on_glass`: the P4's decoder runs on the 2D-DMA, the S3's on the CPU; `view_pps` 8 on the S3) | `live_view.cpp` |
 | the panel is MIPI-DSI | `glass_dsi.cpp` (the wrap of `esp_lcd_new_panel_dpi`) | a P4 with an RGB panel would find no frame buffer and show stills |
+| the panel is an S3's RGB panel | `glass_rgb.cpp` (the wrap of `esp_lcd_new_rgb_panel`, its frame buffer; no underrun count, `misses` 0) | an S3 with a SPI or QSPI panel finds no frame buffer and shows stills |
+| LVGL draws big-endian | `glass_rgb.cpp` (`LV_COLOR_16_SWAP`, `glass::Panel::swapped`) | `picture_engine::Block::swap`, the S3's blit |
 | the frame buffer is RGB565 | `glass_dsi.cpp` | `glass::direct()`, `live_view::available()` |
 | each 2D-DMA client's burst | `picture_engine::limits().burst_bytes` (64 on the P4: the panel's bridge runs dry on ESP-IDF's 128, lvgl/lvgl #9590) | the streams' and LVGL's PPA clients (`glass_dsi.cpp`) |
 | the largest picture a stream's part may be | `picture_engine::limits()` (`picture_bytes` 1 MB, `tile_picture_bytes` 384 KB on the P4, over a busy camera's 150 to 250 KB at 1280 x 800, CAMERA.md 2026-10-10; 0 elsewhere, no part at all) | `live_view::Reader`, a stream's input buffer |

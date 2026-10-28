@@ -87,8 +87,8 @@ Done when: `grep -rn "PPA\|sixteenth\|MIPI\|JPEG" components/smart_display/*.h` 
 Built in part (2026-10-28), with the S3 as the second engine that proves the seam:
 
 - `USE_LIVE_VIEW` meant three things at once. Each is its own define now, from one table by chip (`engine_build.py`):
-  the engine (`PICTURE_ENGINE_P4`, `PICTURE_ENGINE_S3`), the glass (`GLASS_DSI`) and the streams (`USE_LIVE_VIEW`).
-  A P4 builds the same code as before.
+  the engine (`PICTURE_ENGINE_P4`, `PICTURE_ENGINE_S3`), the glass (`GLASS_DSI`, `GLASS_RGB`) and the streams
+  (`USE_LIVE_VIEW`). A P4 builds the same code as before; an S3 has all three too.
 - How many live tiles a screen streams at once is the engine's (`limits().live_tiles`), where `hw.h` had a constant.
 - The S3 with PSRAM decodes JPEG stills in software (`picture_engine_s3.cpp`, esp_new_jpeg 1.0.2): its questions name
   JPEG first, and the app sends photographs as JPEG. Its decoder writes a row of MCUs at a time with a pause between, as
@@ -106,9 +106,14 @@ Built in part (2026-10-28), with the S3 as the second engine that proves the sea
   | from the ask to the picture ready | 426 to 559 ms | 120 to 439 ms, 45 to 59 of it decoding |
   | internal RAM at its lowest | 42 KB | 43 KB (33 KB with the decoder's memory inside the chip) |
 
-- Still to do: the grep and its test above; the engine API that does not speak the PPA (a target and one call that
-  decodes, scales, cuts and turns, which the S3's decoder does in one pass) waits for its first caller, live pictures
-  on an RGB panel, so that it is shaped by a use rather than ahead of one.
+- Live pictures on an S3's RGB panel (2026-10-28): the glass is split into what every panel shares (`glass_core.cpp`:
+  the lock, LVGL's hooks, the rooms) and a file per panel kind (`glass_dsi.cpp`, `glass_rgb.cpp`); the S3 engine
+  decodes a stream's picture off the glass and copies it with the CPU (`blit`, as it is and not turned), and the
+  engine's limits say what differs (`decode_on_glass`, `view_pps`, `live_tiles`, `tile_budget_pps`, `stream_core`;
+  4.1, docs/CAMERA.md "Live on an ESP32-S3"). The seam the streams use is the one they had, `Block` and `blit`: the
+  app sends a tile's pictures at the card's size and turned as the glass is, so no engine scales or turns for a tile,
+  and no further engine API came of this first caller.
+- Still to do: the grep and its test above.
 
 ### 3.3 One capability record
 
@@ -257,6 +262,16 @@ Why four: the soak numbers (two tiles plus the video held 175 KB internal RAM fr
 for two more; the SDIO link carries it; and a user who reads "4" trusts the screen more than one who finds out which
 fifth tile silently stopped. `MAX_STREAMS` stays seven for a page of four tiles, the full view and plugin places; it is
 a ceiling, not the cap.
+
+**The engine's numbers (2026-10-28).** The cap and the pace are the picture engine's (`picture_engine::limits`): its
+`live_tiles` and `tile_budget_pps`, the pictures a second all streaming tiles share (`picture_engine::tile_pps`: the
+budget over the tiles, at least 2, at most `hw::LIVE_TILE_PPS`). A P4 has 4 and 24, so its four tiles keep 6 each as
+before. An ESP32-S3 with an RGB panel has 1 and 8 (docs/CAMERA.md, "Live on an ESP32-S3"): its CPU decodes every
+picture, and each live tile took about 11 KB of internal RAM for its connection's Wi-Fi and lwIP buffers, two tiles the
+lowest down to 16 KB and three to 3 KB on a Guition 4848S040. A second S3 tile waits for those buffers in PSRAM
+(`CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP`), measured against the panel's bounce buffers and 32 KB at the lowest; its
+budget of 8 would give two tiles 4 each. The engine also names the core a stream's task runs on (`stream_core`): 1 on
+a P4, 0 on an S3, where it took LVGL's core from 39 to 23 % busy with one tile.
 
 ### 4.2 The source scales, not the screen
 

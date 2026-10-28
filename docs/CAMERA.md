@@ -242,8 +242,9 @@ Guition it comes in about 1.8 s (2.8 s with 4 KB).
 
 A camera opened full screen on a board with an ESP32-P4 (the reTerminal D1001, the M5Stack Tab5, the Waveshare
 ESP32-P4 panel and the Guition P4 boards) plays live, at the camera's own pace, about a tenth of a second behind the
-camera. Every other board keeps the still of every four seconds above. A map, an image entity and the screensaver stay
-stills on a P4 too.
+camera. An ESP32-S3 board with an RGB panel plays live too, one tile at a time (see
+[Live on an ESP32-S3](#live-on-an-esp32-s3)). Every other board keeps the still of every four seconds above. A map, an
+image entity and the screensaver stay stills on a P4 too.
 
 **How it travels.** The screen asks for the camera as for a still, with one key more: `live`, the room below its top
 bar in pixels (`1280x715`). An app that knows streams answers with a link on its camera port that ends in `.mjpeg`; an
@@ -255,7 +256,9 @@ of 64 KB), and a tile that read them one by one showed pictures a second old. So
 instead: GET on the same link with `.jpg` for `.mjpeg`, over a kept connection (HTTP/1.1), and the app answers with the
 JPEG of the camera's newest frame once it is newer than the last it sent on that link, or 204 after 2 s, and the tile
 asks again; the link counts as a stream from its first ask until 3 s after its last answer. A tile asks at most six
-times a second (hw::LIVE_TILE_PPS), a busy screen's tile less (docs/PLATFORM_PLAN.md 4.10). An app without it answers
+times a second (hw::LIVE_TILE_PPS): the picture engine's budget of pictures a second shared among the tiles that stream
+(`picture_engine::tile_pps`, 24 on a P4, so four tiles keep six each), never fewer than two; a busy screen's tile asks
+half or a quarter of that (docs/PLATFORM_PLAN.md 4.10). An app without it answers
 404, and the tile reads the stream, showing the newest picture that reached it and passing the older ones; the app
 keeps a tile's socket buffer at 16 KB. Its line in the screen's log every 10 s says how long it waited for the app,
 how long its pictures waited on the way and how many older ones it passed.
@@ -476,6 +479,47 @@ takes long enough that ESP-IDF's default TCP receive window (5,760 bytes) held a
 boards build with a window of 64 KB (`components/smart_display/__init__.py`, keyed on the chip): about 2.6 MB/s, for the
 live camera and for every picture. The other boards keep the default: the window holds for every connection, and a
 board without PSRAM has no room for it.
+
+## Live on an ESP32-S3
+
+An ESP32-S3 board with PSRAM whose display is an RGB panel (`packages/hardware/esp32s3-rgb.yaml`, such as the Guition
+4848S040) plays a camera tile live and a camera opened full screen live, over the same link and the same asks as a P4
+(above): the app cannot tell the two apart, and the screen's hello says how many live tiles it takes (`live_tiles`). An
+S3 with another kind of display (a SPI or QSPI panel, whose frame buffer a task cannot write) and every ESP32 board
+keep the stills.
+
+**What differs from a P4.** The S3 has no hardware JPEG decoder and no 2D engine, so its CPU does both
+(`picture_engine_s3.cpp`): Espressif's software decoder (esp_new_jpeg) decodes each picture into the stream's buffer in
+PSRAM, and a copy row by row puts it on the glass. That copy neither scales nor turns, so the app sends a tile's
+pictures at the card's size and turned as the glass is (the hello's `picture_turn`), and a full view's to fit the glass;
+a picture that would need scaling is refused, and the view keeps its stills. The decode runs on core 0, away from
+LVGL's core 1. The screen runs:
+
+- **One live tile at a time.** A second camera tile on the same page shows its stills. Each live tile costs about 11 KB
+  of the chip's internal RAM for its connection's Wi-Fi and network buffers, and the RGB panel's S3 has little of it.
+- **Six pictures a second on that tile** at most, as on a P4; while a finger drags, the governor halves it.
+- **A full view of at most eight pictures a second.** The tile under it stops while the view is open and comes back
+  when it closes.
+
+**Measured** on a Guition 4848S040 (dev, 2026-10-28, a WebRTC camera, a tile of 448 x 118, each setting for 150 s):
+
+| | Pictures a second each | Decoding | Core 0 / core 1 | Internal RAM at its lowest |
+|---|---|---|---|---|
+| One tile, decoding on core 1 | 5.6 | 35 ms | 3 / 39 % | 49 to 53 KB |
+| One tile, decoding on core 0 | 5.7 | 33 ms | 27 / 23 % | 49 to 53 KB |
+| Two tiles, decoding on core 0 | 3.8 | 40 ms | 37 / 39 % | 16 KB |
+| Three tiles, decoding on core 1 | 1.9 | 37 to 50 ms | 3 / 53 % | 3 KB |
+
+The lows of one tile come from six boots with the tile and the full view in turn; the core does not change them. So
+one tile, decoding on core 0. With a finger dragging over the tile for 90 s LVGL refreshed 435 times in 10 s with
+the decoding on core 0 and 410 on core 1, and no loop was slow either way. A full view of 480 x 404 showed 5.3 pictures
+a second, 37 ms decoding each (on core 1). A second tile would need the Wi-Fi's and lwIP's buffers in PSRAM, which is not measured
+yet (docs/PLATFORM_PLAN.md 4.1).
+
+**What only an eye sees.** An RGB panel reads its picture out of PSRAM while it draws, and when a refill of its buffers
+comes too late it starts the next frame shifted sideways for one frame, and tells nobody (ESP-IDF counts no underrun on
+this panel, so the glass's `ran dry` stays 0 here). A live tile or a full view adds work on that same memory. Whoever
+sees a frame jump sideways on an S3 while a camera plays, please say so through the app's report.
 
 ## Network
 
