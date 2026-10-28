@@ -7,9 +7,10 @@
 //   pictures and sound (the full view, and a tile of an app before asking), or the screen's own camera's frames (a tile
 //   of it, plugin API 0.22). Each runs on the stream's task until the stream stops.
 // - What every stream does with a picture, shared: decoded with the hardware JPEG decoder, laid out (a full view's
-//   scaled to fill its room; a tile's composed as its card, corners, shade and name, live_view::compose) and copied onto
-//   the glass with the PPA, turned as LVGL turns its drawing; a live tile kept to its pace (pace), a busy screen's tile
-//   to a share of it (the governor, pressure.h).
+//   scaled to fill its room; a tile's card, corners, shade and name, laid over it as one overlay made once,
+//   live_view::Overlay) and copied onto the glass with the PPA, turned as LVGL turns its drawing where the app did not
+//   turn the picture so already (X-Turn); a live tile kept to its pace (pace), a busy screen's tile to a share of it
+//   (the governor, pressure.h).
 //
 // A copy happens with the glass held (glass.h: one writer at a time, and one user of the 2D-DMA) and only while nobody
 // stopped the stream, so once close() returns nothing of it writes the glass any more and LVGL may draw there at once.
@@ -140,6 +141,15 @@ struct Stream {
   uint8_t *input = nullptr, *picture = nullptr;
   uint16_t *canvas = nullptr;
   size_t input_size = 0, picture_size = 0, canvas_size = 0;
+  // What a tile lays over each picture (live_view.h, Overlay), made at its first picture for the way its pictures lie:
+  // `lies` degrees turned (X-Turn; -1 before the first); its shade, and its marks' segments and pixels, in PSRAM.
+  // `onto_turn`: what the PPA still turns on a picture's way onto the glass, for the report.
+  int lies = -1;
+  uint8_t *over_shade = nullptr, *over_alpha = nullptr;
+  OverlaySegment *over_segments = nullptr;
+  uint16_t *over_color = nullptr;
+  Overlay over;
+  std::atomic<int> onto_turn{0};
   // The camera's sound (a full view on a board with a speaker): parts the task puts in `sound`, which the main loop
   // hands to the speaker unless `muted`.
   // Its storage in PSRAM, its control (with the spinlock its critical sections take) inside the chip: made static over
@@ -198,6 +208,10 @@ static void free_stream(Stream *s) {
   if (s->input) free(s->input);
   if (s->picture) free(s->picture);
   if (s->canvas) free(s->canvas);
+  if (s->over_shade) free(s->over_shade);
+  if (s->over_segments) free(s->over_segments);
+  if (s->over_alpha) free(s->over_alpha);
+  if (s->over_color) free(s->over_color);
   if (s->name) free(s->name);
   if (s->under) free(s->under);
   picture_engine::drop(s->ppa);
@@ -216,17 +230,59 @@ static esp_err_t copy(Stream &s, const void *in, int in_w, int rows, int bx, int
   return static_cast<esp_err_t>(picture_engine::blit(s.ppa, block));
 }
 
+// A tile's overlay (live_view.h) for pictures that lie turned `lies`: made once, on the stream's task, at its first
+// picture; again only if its pictures came to lie otherwise. False without the memory for it.
+static bool overlay_for(Stream &s, int lies) {
+  if (s.lies == lies) return true;
+  const int64_t from = esp_timer_get_time();
+  const int w = s.area.w, h = s.area.h;
+  for (void *old : {static_cast<void *>(s.over_shade), static_cast<void *>(s.over_segments),
+                    static_cast<void *>(s.over_alpha), static_cast<void *>(s.over_color)})
+    if (old) free(old);
+  s.over_shade = s.over_alpha = nullptr, s.over_segments = nullptr, s.over_color = nullptr, s.lies = -1;
+  Overlay o{turned_w(w, h, lies), turned_h(w, h, lies)};
+  s.over_shade = static_cast<uint8_t *>(heap_caps_malloc(std::max(w, h), MALLOC_CAP_SPIRAM));
+  if (!s.over_shade) return false;
+  o.shade_count = overlay_shade(s.look, w, h, lies, s.over_shade, o.shade_by_column, o.shade_from);
+  size_t pixels = 0;
+  o.count = overlay_marks(s.look, w, h, lies, nullptr, pixels);
+  s.over_segments = static_cast<OverlaySegment *>(
+      heap_caps_malloc(sizeof(OverlaySegment) * std::max(o.count, 1), MALLOC_CAP_SPIRAM));
+  s.over_alpha = static_cast<uint8_t *>(heap_caps_malloc(std::max<size_t>(pixels, 1), MALLOC_CAP_SPIRAM));
+  s.over_color = static_cast<uint16_t *>(heap_caps_malloc(std::max<size_t>(pixels, 1) * 2, MALLOC_CAP_SPIRAM));
+  if (!s.over_segments || !s.over_alpha || !s.over_color) return false;
+  overlay_marks(s.look, w, h, lies, s.over_segments, pixels, s.over_alpha, s.over_color);
+  o.shade = s.over_shade, o.segments = s.over_segments, o.alpha = s.over_alpha, o.color = s.over_color;
+  s.over = o;
+  s.lies = lies;
+  ESP_LOGI(TAG, "its card's overlay for pictures turned %d: a shade of %d %s, %d marks of %u pixels, made in %u ms", lies,
+           o.shade_count, o.shade_by_column ? "columns" : "rows", o.count, (unsigned) pixels,
+           (unsigned) ((esp_timer_get_time() - from) / 1000));
+  return true;
+}
+
+// A tile's loader square: where it lies in the card's canvas, as the pictures lie (s.lies), and on the glass.
+static bool loader_square(const Stream &s, Rect &in_canvas, Rect &on_glass) {
+  int lx = 0, ly = 0;
+  if (s.lies < 0 || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return false;
+  const int size = s.look.loader;
+  in_canvas = in_turned(Rect{lx, ly, size, size}, s.lies, s.area.w, s.area.h);
+  const glass::Panel panel = glass::panel();
+  on_glass = on_panel(Rect{s.area.x + lx, s.area.y + ly, size, size}, s.turn, panel.w, panel.h);
+  return true;
+}
+
 // A tile's loader over a still (live_view.h, "Until it is live"): its square of the card as composed kept in `under`,
 // and the loader drawn over it as it stands now.
 static bool lay_loader(Stream &s) {
-  int lx = 0, ly = 0;
-  if (!s.under || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return false;
-  const int cw = s.area.w, size = s.look.loader;
+  Rect at, unused;
+  if (!s.under || !loader_square(s, at, unused)) return false;
+  const int cw = s.over.w, size = s.look.loader;
   for (int j = 0; j < size; ++j)
-    memcpy(s.under + static_cast<size_t>(j) * size, s.canvas + static_cast<size_t>(ly + j) * cw + lx,
+    memcpy(s.under + static_cast<size_t>(j) * size, s.canvas + static_cast<size_t>(at.y + j) * cw + at.x,
            static_cast<size_t>(size) * 2);
   s.turned_at = esphome::millis();
-  draw_loader(s.canvas, cw, lx, ly, s.look, s.turned_at);
+  draw_loader(s.canvas, cw, at.x, at.y, s.look, s.turned_at);
   return true;
 }
 // Its next turn, between the stills: the square as composed again, the loader over it, and that square alone onto the
@@ -247,21 +303,21 @@ static void give_glass() {
 
 static void turn_loader(Stream &s) {
   const uint32_t now = esphome::millis();
-  int lx = 0, ly = 0;
-  if (!s.warming || now - s.turned_at < LOADER_STEP_MS || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return;
+  Rect at, target;
+  if (!s.warming || now - s.turned_at < LOADER_STEP_MS || !loader_square(s, at, target)) return;
   s.turned_at = now;
-  const int cw = s.area.w, ch = s.area.h, size = s.look.loader;
+  const int cw = s.over.w, ch = s.over.h, size = s.look.loader;
   for (int j = 0; j < size; ++j)
-    memcpy(s.canvas + static_cast<size_t>(ly + j) * cw + lx, s.under + static_cast<size_t>(j) * size,
+    memcpy(s.canvas + static_cast<size_t>(at.y + j) * cw + at.x, s.under + static_cast<size_t>(j) * size,
            static_cast<size_t>(size) * 2);
-  draw_loader(s.canvas, cw, lx, ly, s.look, now);
+  draw_loader(s.canvas, cw, at.x, at.y, s.look, now);
   const glass::Panel panel = glass::panel();
-  const Rect target = on_panel(Rect{s.area.x + lx, s.area.y + ly, size, size}, s.turn, panel.w, panel.h);
   esp_err_t err = ESP_OK;
   take_glass();
   if (!s.stopping && glass::armed(s.room))
-    err = copy(s, s.canvas, cw, ch, lx, ly, size, size, glass::frame_buffer(), static_cast<size_t>(panel.w) * panel.h * 2,
-               panel.w, panel.h, target.x, target.y, 16, s.turn);
+    err = copy(s, s.canvas, cw, ch, at.x, at.y, size, size, glass::frame_buffer(),
+               static_cast<size_t>(panel.w) * panel.h * 2, panel.w, panel.h, target.x, target.y, picture_engine::AS_IS,
+               turn_between(s.lies, s.turn));
   give_glass();
   if (err != ESP_OK) s.warming = false;  // the loader stops where it stands; the pictures go on
 }
@@ -270,8 +326,10 @@ static void turn_loader(Stream &s) {
 static void hold_timed(Stream &s) { s.wait_us += take_glass(); }
 
 // One picture of `length` bytes at `data`: decoded, laid out, and copied onto the glass. `still`: the camera's still
-// from before its stream came, with the loader over it on a tile.
-static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
+// from before its stream came, with the loader over it on a tile. `turn`: how the app turned the picture for a turned
+// glass (X-Turn, the hello's picture_turn): a tile lays its card over it as it lies, and the PPA turns only what is left
+// between the picture and the glass, nothing on a glass the app turned it for.
+static void show(Stream &s, const uint8_t *data, size_t length, bool still, int turn) {
   picture_engine::Still info;
   if (!picture_engine::info(data, length, info)) {
     s.skipped++;
@@ -281,15 +339,19 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   const int stride_w = info.stride;
   const int rows = static_cast<int>(info.bytes / 2 / info.stride);
   const int w = info.w, h = info.h;
-  // Where it goes: a full view's picture as large as fits its room, a tile's into its card.
+  // Where it goes: a full view's picture as large as fits its room, worked out on the picture upright; a tile's into its
+  // card, the card as the picture lies.
   int scale = 0;
   Rect where;
   picture_engine::Cut into;
+  const int lies = turn;
+  const int cw = turned_w(s.area.w, s.area.h, lies), ch = turned_h(s.area.w, s.area.h, lies);
   if (s.look.tile) {
-    into = picture_engine::cut(w, h, s.area.w, s.area.h, s.look.contain);
+    into = picture_engine::cut(w, h, cw, ch, s.look.contain);
     if (into.ok) where = s.area;
   } else {
-    const picture_engine::Fit f = picture_engine::fit(w, h, s.area.x, s.area.y, s.area.w, s.area.h);
+    const picture_engine::Fit f =
+        picture_engine::fit(turned_w(w, h, lies), turned_h(w, h, lies), s.area.x, s.area.y, s.area.w, s.area.h);
     if (!f.empty()) where = Rect{f.x, f.y, f.w, f.h};
     scale = f.scale;
   }
@@ -331,7 +393,14 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
   const size_t glass_size = static_cast<size_t>(panel.w) * panel.h * 2;
   esp_err_t err = ESP_OK;
   bool loading = false;
-  const int cw = s.area.w, ch = s.area.h;
+  if (s.look.tile && !overlay_for(s, lies)) {
+    ESP_LOGW(TAG, "no memory for the overlay of a card of %dx%d", s.area.w, s.area.h);
+    s.failed = true;
+    s.stopping = true;
+    return;
+  }
+  const int onto = turn_between(lies, s.turn);
+  s.onto_turn = onto;
   // A live tile's picture the app sent at the card's own size (it makes them for the card, a few pixels over): the card
   // is composed in the decoded picture where it lies, and the PPA copies it once, onto the glass. Through the card's
   // canvas the PPA worked twice under the glass, and four tiles waited their turn for it: on a reTerminal D1001 18 ms
@@ -341,7 +410,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
       into.in_w == cw && into.in_h == ch) {
     int64_t from = esp_timer_get_time();
     uint16_t *card = reinterpret_cast<uint16_t *>(s.picture) + static_cast<size_t>(into.in_y) * stride_w + into.in_x;
-    compose(card, stride_w, cw, ch, s.look);
+    lay_overlay(card, stride_w, s.over);
     const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
     s.compose_us += static_cast<uint32_t>(esp_timer_get_time() - from);
     hold_timed(s);
@@ -349,7 +418,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
     if (!s.stopping) {
       glass::place(s.room, s.area);  // from now on LVGL draws nothing here
       err = copy(s, s.picture, stride_w, rows, into.in_x, into.in_y, cw, ch, glass::frame_buffer(), glass_size, panel.w,
-                 panel.h, target.x, target.y, picture_engine::AS_IS, s.turn);
+                 panel.h, target.x, target.y, picture_engine::AS_IS, onto);
     }
     give_glass();
     s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - from);
@@ -377,7 +446,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
     int64_t to = esp_timer_get_time();
     s.into_us += static_cast<uint32_t>(to - from);
     if (err == ESP_OK) {
-      compose(s.canvas, cw, cw, ch, s.look);
+      lay_overlay(s.canvas, cw, s.over);
       loading = still && lay_loader(s);
       from = esp_timer_get_time();
       s.compose_us += static_cast<uint32_t>(from - to);
@@ -387,7 +456,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
       if (!s.stopping) {
         glass::place(s.room, s.area);  // from now on LVGL draws nothing here
         err = copy(s, s.canvas, cw, ch, 0, 0, cw, ch, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
-                   target.y, picture_engine::AS_IS, s.turn);
+                   target.y, picture_engine::AS_IS, onto);
       }
       give_glass();
       s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - from);
@@ -399,7 +468,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still) {
     if (!s.stopping) {
       glass::place(s.room, where);
       err = copy(s, s.picture, stride_w, rows, 0, 0, w, h, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
-                 target.y, scale, s.turn);
+                 target.y, scale, onto);
     }
     give_glass();
   }
@@ -541,7 +610,7 @@ static bool ask_each(Stream &s) {
     if (!supported || s.stopping) break;
     if (h.status == 204 || got != length || length == 0) continue;
     if (h.has_made) s.picture_wait.add(h.made);
-    show(s, s.input, length, h.still);
+    show(s, s.input, length, h.still, h.turn);
     if (!h.still) pace(s);
   }
   ::close(fd);
@@ -622,16 +691,24 @@ void own_frame(const uint8_t *data, int width, int height, bool yuv420) {
   xSemaphoreGive(own_lock);
 }
 
-// The tile's own task: its card composed over the frame the camera's task copied in, and laid onto the glass.
+// The tile's own task: its card laid over the frame the camera's task copied in, and laid onto the glass. The frames
+// come upright, so this is the one live tile whose pictures the PPA still turns onto a turned glass, once a picture
+// (docs/PLATFORM_PLAN.md 4.12).
 static bool take_frames(Stream &s) {
   s.connected_ms = s.answered_ms = s.first_bytes_ms = esphome::millis() - s.started_at;
   const glass::Panel panel = glass::panel();
   const size_t glass_size = static_cast<size_t>(panel.w) * panel.h * 2;
   const int cw = s.area.w, ch = s.area.h;
+  if (!overlay_for(s, 0)) {
+    ESP_LOGW(TAG, "no memory for the overlay of a card of %dx%d", cw, ch);
+    s.failed = true;
+    return true;
+  }
+  s.onto_turn = s.turn;
   while (!s.stopping) {
     if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(WAIT_MS)) || !s.own_full.load(std::memory_order_acquire)) continue;
     const int64_t t0 = esp_timer_get_time();
-    compose(s.canvas, cw, cw, ch, s.look);
+    lay_overlay(s.canvas, cw, s.over);
     const int64_t t1 = esp_timer_get_time();
     s.compose_us += static_cast<uint32_t>(t1 - t0);
     const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
@@ -731,7 +808,7 @@ static bool read_stream(Stream &s) {
                 return;
               }
             }
-            show(s, s.input, length, reader.still());
+            show(s, s.input, length, reader.still(), reader.turn());
             return;
           }
           // Sound: into the buffer the main loop plays from; none of it while muted. Whole samples only, so the buffer,
@@ -981,9 +1058,10 @@ static void report(int slot, Stream &s, uint32_t now, bool last) {
            pauses != s.reported_pauses ? ", paused for a busy screen" : "", (unsigned) glass::misses());
   const uint32_t into = s.into_us, composed = s.compose_us, onto = s.onto_us;
   if (frames && s.look.tile)
-    ESP_LOGI(TAG, "%s %d: of laying out, %.1f ms a picture into its card, %.1f ms composing and %.1f ms onto the glass",
-             last ? "ended" : "stream", slot, (into - s.reported_into) / 1000.0f / frames,
-             (composed - s.reported_compose) / 1000.0f / frames, (onto - s.reported_onto) / 1000.0f / frames);
+    ESP_LOGI(TAG, "%s %d: of laying out, %.1f ms a picture into its card, %.1f ms composing and %.1f ms onto the glass, "
+             "turned %d on the way", last ? "ended" : "stream", slot, (into - s.reported_into) / 1000.0f / frames,
+             (composed - s.reported_compose) / 1000.0f / frames, (onto - s.reported_onto) / 1000.0f / frames,
+             s.onto_turn.load());
   s.reported_into = into;
   s.reported_compose = composed;
   s.reported_onto = onto;
