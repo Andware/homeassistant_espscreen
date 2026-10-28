@@ -521,6 +521,30 @@ the tiles and LVGL (up to 0.74 s measured).
     no broken and no too bright frame of the EZVIZ; what Max sees comes after it (the screen's decoding, its copy to the
     glass, the panel) or is a part of the picture the mean brightness does not show. The white flash stays open; next,
     the filmed build H on the screen's side. The watch stays on dev as a lasting instrument.
+  - **Others see the same (online, 2026-10-28).** jtenniswood/espcontrol#2118 is this board and this stack: a Guition
+    JC8012P4A1 rev 3.2 with its C6 over ESP-Hosted SDIO, ESPHome 2026.9, IDF 5.5.5, "the whole screen occasionally
+    flashes light blue for about one frame", brought on by HTTP downloads of JPEGs into PSRAM and the firmware's
+    activity in general (here: log lines to the API, which go out through SDIO), with every diagnostic clean at the
+    flash: the underrun interrupt never fires, the DSI host's status is empty, the DW-GDMA reports no error, the
+    framebuffer sampled without blue. Its reporter asks whether ESP-Hosted's SDIO receive into PSRAM can disturb the
+    DPI scan-out without a flag. What helped there: CONFIG_CACHE_L2_CACHE_LINE_64B instead of 128B ("largest effect";
+    our P4 builds already run L2 128 KB with 64-byte lines, which may be why it is rarer here), fewer large LVGL
+    invalidations with transparency or shadow, and no PPA scaling (pictures at their exact size). What did not: the
+    pixel clock at 50 or 60 MHz, the lane rate, a cache-safe DSI interrupt, the AXI-ICM QoS, DMA outstanding, PSRAM at
+    100 MHz (worse), XIP off, CPU rotation, BLE off, SDIO at 20 MHz, the power supply. rokudev/lt-sdk#22: writing into
+    the framebuffer while the GDMA reads it out gives an underrun; a higher GDMA CH_PRIOR did not help; the bridge has
+    registers nobody sets (DSI_BRG_RAW_BUF_CREDIT_CTL, DMA_BLOCK_INTERVAL, DMA_REQ_INTERVAL). Espressif's FAQ for
+    "underrun happens": a lower lane rate or pixel clock, RGB565, SPIRAM_XIP_FROM_PSRAM, CACHE_L2_CACHE_256KB,
+    CACHE_L2_CACHE_LINE_128B, COMPILER_OPTIMIZATION_PERF; the bench builds run OPTIMIZATION_SIZE.
+  - **Next, one variable a build** (the bench Guition, the tablet's layout, the dev's logging on so the flash shows, a
+    quarter of an hour each, glass::misses and the PPA's waits noted): A, CONFIG_CACHE_L2_CACHE_256KB (128 KB of
+    internal SRAM more for the cache: heap_watch before and after, with four live tiles and the video); B, ESP-Hosted's
+    mempool and tasks out of PSRAM (CONFIG_ESP_HOSTED_MEMPOOL_PREFER_SPIRAM and DFLT_TASK_FROM_SPIRAM off, internal RAM
+    measured); C, COMPILER_OPTIMIZATION_PERF. Then the underrun rig for the D1001's blue frame (a PPA copy loop of
+    1280 x 800 RGB565 until the glass turns blue: does glass::misses count it).
+  - **Wake word under load (the D1001, 2026-10-28 07:45 to 07:50).** Each page change with four live tiles brought 4 to
+    6 "micro_wake_word: Not enough free bytes in ring buffer, resetting" and once "ui_refresh took 63 ms": a measure for
+    the voice assistant under a busy screen.
 
 ### 4.8 The D1001's own video loses packets over Wi-Fi (after the doorbell's keys)
 
