@@ -45,6 +45,9 @@ struct Block {
   int out_w = 0, out_h = 0, x = 0, y = 0;
   int scale = 16;  // AS_IS
   int turn = 0;
+  // `in` is a camera's YUV420 (ESP's packed layout, as the P4's ISP gives it, BT.601 limited range), turned into RGB565
+  // on the way; its block's offsets and size even. The screen's own camera on a tile of its own (live_view.cpp).
+  bool yuv420 = false;
 };
 // A client of the PPA, one per stream; nullptr for none.
 using Client = void *;

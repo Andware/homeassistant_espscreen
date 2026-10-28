@@ -82,6 +82,8 @@ void *frame_buffer();  // that buffer, panel().w x panel().h RGB565, found as ne
 // One writer at a time: LVGL for the whole of each refresh, a task for each decode and each copy. Recursive.
 void hold();
 void release();
+// The glass at once or not at all (the screen's own camera, on its camera's task, which must never wait for it).
+bool try_hold();
 // LVGL holds the glass while it refreshes, from now on and for good (the hooks on REFR_START and REFR_READY). False
 // while LVGL has no display yet.
 bool watch();
@@ -133,6 +135,7 @@ inline bool direct() { return false; }
 inline void *frame_buffer() { return nullptr; }
 inline void hold() {}
 inline void release() {}
+inline bool try_hold() { return true; }
 inline bool watch() { return false; }
 inline Room reserve(const Rect &) { return -1; }
 inline void place(Room, const Rect &) {}

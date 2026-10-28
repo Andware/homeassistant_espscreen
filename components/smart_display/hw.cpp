@@ -51,6 +51,9 @@ void hello(JsonObject root) {
   caps["microphone"] = c.microphone;
   caps["echo_cancel"] = c.echo_cancel;
   caps["camera"] = c.camera;
+  // A plugin hands this screen's own camera to a live tile of its own (plugin API 0.22): the app answers such a tile
+  // "own:" (live_view.h is_own) instead of a link.
+  caps["own_camera"] = live_view::own_offered();
   caps["live_tiles"] = c.live_tiles;
   caps["psram_kb"] = c.psram_bytes / 1024;
   caps["internal_kb"] = c.internal_bytes / 1024;

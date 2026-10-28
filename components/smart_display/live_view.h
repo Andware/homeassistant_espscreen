@@ -61,8 +61,13 @@ static_assert(SOUND_PART % 2 == 0 && SOUND_BUFFER % 2 == 0 && SOUND_LOW % 2 == 0
               "the sound moves in whole samples, two bytes each");
 static_assert(SOUND_LOW < SOUND_HIGH && SOUND_HIGH < SOUND_BUFFER, "the sound catches up before its buffer runs full");
 
-// A link to a stream rather than to a still: the app serves both on its camera port, a still as .bmp.
+// The app's answer for a live tile of this screen's own camera (plugin API 0.22): no link, the tile is drawn from the
+// camera's frames on the screen itself (open, own_frame). "own:", with "?fit=contain" as any tile's link may have.
+inline bool is_own(const std::string &url) { return url.compare(0, 4, "own:") == 0; }
+// A link to a stream rather than to a still: the app serves both on its camera port, a still as .bmp. The own camera's
+// answer counts as one.
 inline bool is_stream(const std::string &url) {
+  if (is_own(url)) return true;
   const size_t end = url.find_first_of("?#");
   const std::string path = url.substr(0, end);
   return path.size() > 6 && path.compare(path.size() - 6, 6, ".mjpeg") == 0;
@@ -336,6 +341,16 @@ void close(Handle handle);
 void tick(const std::function<void(Handle, Event)> &tell);
 // How often the panel ran dry since boot (a frame of blue: glass.h, "The panel's share of the memory bus").
 uint32_t misses();
+// The screen's own camera on a tile of its own (plugin API 0.22, docs/PLATFORM_PLAN.md 4.11). A plugin with the camera
+// offers its frames once (own_offer, its setup), and the hello then says "own_camera", so the app answers such a tile
+// "own:". While a tile of it is open, own_wanted says so, and the plugin hands each frame to own_frame on its camera's
+// task: the tile takes one when its pace says (hw::LIVE_TILE_PPS, a busy screen's share), copies it into its card with
+// the PPA (scaled, from the camera's YUV420 or RGB565) when the glass is free at once, and lays it onto the glass on its
+// own task. Never waits: a frame it cannot take now goes by.
+void own_offer();
+bool own_offered();
+bool own_wanted();
+void own_frame(const uint8_t *data, int width, int height, bool yuv420);
 // What the streams that run hold of the board's memory, about (docs/PICTURES.md: the streams take their share of the one
 // picture budget while they run): each stream's input and its decoded picture of its room, from what the main loop
 // set when it opened, so never read under a task.
@@ -352,6 +367,10 @@ inline void mute(Handle, bool) {}
 inline void close(Handle) {}
 inline void tick(const std::function<void(Handle, Event)> &) {}
 inline uint32_t misses() { return 0; }
+inline void own_offer() {}
+inline bool own_offered() { return false; }
+inline bool own_wanted() { return false; }
+inline void own_frame(const uint8_t *, int, int, bool) {}
 #endif
 
 }  // namespace live_view

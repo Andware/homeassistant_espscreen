@@ -16,6 +16,7 @@
 #include "camera_turn.h"
 #include "glass.h"
 #include "pressure.h"
+#include "live_view.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -433,6 +434,12 @@ void capturing(const Plugin *plugin, Capture what, bool on) {
 }
 
 uint8_t squeeze(Work work) { return pressure::level_now(static_cast<pressure::Work>(static_cast<uint8_t>(work))); }
+
+void offer_own_frames() { live_view::own_offer(); }
+bool own_tile_wants() { return live_view::own_wanted(); }
+void own_frame(const OwnFrame &frame) {
+  live_view::own_frame(frame.data, frame.width, frame.height, frame.format == FrameFormat::YUV420);
+}
 
 int camera_turn() {
 #ifndef SCREEN_CAMERA_ORIENTATION

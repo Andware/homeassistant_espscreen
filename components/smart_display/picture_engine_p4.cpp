@@ -138,7 +138,11 @@ int blit(Client client, const Block &b) {
   srm.in.block_h = b.bh;
   srm.in.block_offset_x = b.bx;
   srm.in.block_offset_y = b.by;
-  srm.in.srm_cm = PPA_SRM_COLOR_MODE_RGB565;
+  srm.in.srm_cm = b.yuv420 ? PPA_SRM_COLOR_MODE_YUV420 : PPA_SRM_COLOR_MODE_RGB565;
+  if (b.yuv420) {
+    srm.in.yuv_range = PPA_COLOR_RANGE_LIMIT;
+    srm.in.yuv_std = PPA_COLOR_CONV_STD_RGB_YUV_BT601;
+  }
   srm.out.buffer = b.out;
   srm.out.buffer_size = b.out_size;
   srm.out.pic_w = b.out_w;

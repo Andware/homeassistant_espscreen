@@ -67,6 +67,11 @@ void hold() {
   xSemaphoreTakeRecursive(lock, portMAX_DELAY);
   if (depth++ == 0) holder.store(OTHER, std::memory_order_relaxed);
 }
+bool try_hold() {
+  if (!lock || xSemaphoreTakeRecursive(lock, 0) != pdTRUE) return false;
+  if (depth++ == 0) holder.store(OTHER, std::memory_order_relaxed);
+  return true;
+}
 void release() {
   if (!lock) return;
   if (--depth == 0) holder.store(NOBODY, std::memory_order_relaxed);

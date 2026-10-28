@@ -157,6 +157,11 @@ struct Stream {
            reported_wait = 0, reported_net = 0, reported_into = 0, reported_compose = 0, reported_onto = 0,
            reported_ages = 0, reported_age = 0, reported_passed = 0, reported_pauses = 0, reported_paused = 0;
   psram_task::Task task;  // its task, its stack in PSRAM: the main loop deletes it once done (psram_task.h)
+  // A tile of the screen's own camera (is_own, plugin API 0.22): its card's canvas filled from a camera frame on the
+  // camera's task (own_frame), then `own_full` until its own task laid it onto the glass; and when it takes the next.
+  bool own = false;
+  std::atomic<bool> own_full{false};
+  int64_t own_next = 0;
   std::atomic<uint32_t> stack_left{0};  // what of its stack the task never used, in bytes (written before `done`)
 };
 static Stream *streams[MAX_STREAMS] = {};
@@ -536,7 +541,122 @@ static bool pull(Stream &s, const picture_fetch::Address &address) {
   return supported;
 }
 
+// ---- The screen's own camera on a tile of its own (live_view.h, own_frame) ----
+// The open tiles of it, which the camera's task reads under own_lock while it fills one's canvas; the main loop takes a
+// tile out under it before it frees the stream. The camera's task never waits for it: a frame it cannot take goes by.
+static Stream *own_tiles[MAX_STREAMS] = {};
+static SemaphoreHandle_t own_lock = nullptr;
+static std::atomic<bool> offered{false};
+static std::atomic<int> own_open{0};
+
+void own_offer() { offered.store(true, std::memory_order_release); }
+bool own_offered() { return offered.load(std::memory_order_acquire) && available(); }
+bool own_wanted() { return own_open.load(std::memory_order_relaxed) > 0; }
+
+static void own_add(Stream *s) {
+  if (!own_lock) own_lock = xSemaphoreCreateMutex();
+  xSemaphoreTake(own_lock, portMAX_DELAY);
+  for (auto &slot : own_tiles)
+    if (!slot) {
+      slot = s;
+      break;
+    }
+  xSemaphoreGive(own_lock);
+  own_open.fetch_add(1, std::memory_order_relaxed);
+}
+static void own_remove(Stream *s) {
+  if (!own_lock) return;
+  xSemaphoreTake(own_lock, portMAX_DELAY);
+  for (auto &slot : own_tiles)
+    if (slot == s) {
+      slot = nullptr;
+      own_open.fetch_sub(1, std::memory_order_relaxed);
+    }
+  xSemaphoreGive(own_lock);
+}
+
+void own_frame(const uint8_t *data, int width, int height, bool yuv420) {
+  if (!data || width <= 0 || height <= 0 || !own_wanted() || !own_lock) return;
+  if (xSemaphoreTake(own_lock, 0) != pdTRUE) return;
+  const int64_t now = esp_timer_get_time();
+  for (Stream *s : own_tiles) {
+    if (!s || s->stopping || s->own_full.load(std::memory_order_acquire) || now < s->own_next || !s->canvas) continue;
+    const int cw = s->area.w, ch = s->area.h;
+    picture_engine::Cut into = picture_engine::cut(width, height, cw, ch, s->look.contain);
+    if (!into.ok) continue;
+    if (yuv420) {  // the PPA reads YUV420 in pairs of pixels and rows
+      into.in_x &= ~1;
+      into.in_y &= ~1;
+      into.in_w &= ~1;
+      into.in_h &= ~1;
+    }
+    if (!glass::try_hold()) continue;  // the glass is busy: this frame goes by, the next one comes
+    if (!into.covers(cw, ch)) memset(s->canvas, 0, static_cast<size_t>(cw) * ch * 2);
+    picture_engine::Block block;
+    block.in = data, block.in_w = width, block.in_rows = height, block.bx = into.in_x, block.by = into.in_y;
+    block.bw = into.in_w, block.bh = into.in_h, block.out = s->canvas, block.out_size = s->canvas_size;
+    block.out_w = cw, block.out_h = ch, block.x = into.out_x, block.y = into.out_y, block.scale = into.scale;
+    block.yuv420 = yuv420;
+    const int64_t from = esp_timer_get_time();
+    const int err = picture_engine::blit(s->ppa, block);
+    glass::release();
+    s->into_us += static_cast<uint32_t>(esp_timer_get_time() - from);
+    if (err != 0) {
+      s->skipped++;
+      continue;
+    }
+    // Its next frame after its pace: six a second, a busy screen's tile three or one and a half.
+    s->own_next = now + (static_cast<int64_t>(1000000 / hw::LIVE_TILE_PPS) << pressure::level_now(pressure::LIVE_TILES));
+    s->own_full.store(true, std::memory_order_release);
+    xTaskNotifyGive(s->task.handle);
+  }
+  xSemaphoreGive(own_lock);
+}
+
+// The tile's own task: its card composed over the frame the camera's task copied in, and laid onto the glass.
+static void own_stream(Stream &s) {
+  s.connected_ms = s.answered_ms = s.first_bytes_ms = esphome::millis() - s.started_at;
+  const glass::Panel panel = glass::panel();
+  const size_t glass_size = static_cast<size_t>(panel.w) * panel.h * 2;
+  const int cw = s.area.w, ch = s.area.h;
+  while (!s.stopping) {
+    if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(WAIT_MS)) || !s.own_full.load(std::memory_order_acquire)) continue;
+    const int64_t t0 = esp_timer_get_time();
+    compose(s.canvas, cw, cw, ch, s.look);
+    const int64_t t1 = esp_timer_get_time();
+    s.compose_us += static_cast<uint32_t>(t1 - t0);
+    const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
+    hold_timed(s);
+    const int64_t t2 = esp_timer_get_time();
+    esp_err_t err = ESP_OK;
+    if (!s.stopping) {
+      glass::place(s.room, s.area);  // from now on LVGL draws nothing here
+      err = copy(s, s.canvas, cw, ch, 0, 0, cw, ch, glass::frame_buffer(), glass_size, panel.w, panel.h, target.x,
+                 target.y, picture_engine::AS_IS, s.turn);
+    }
+    give_glass();
+    s.onto_us += static_cast<uint32_t>(esp_timer_get_time() - t2);
+    s.copy_us += static_cast<uint32_t>(esp_timer_get_time() - t0);
+    s.own_full.store(false, std::memory_order_release);
+    if (err != ESP_OK) {
+      ESP_LOGW(TAG, "copy to the glass failed: %s", esp_err_to_name(err));
+      s.failed = true;
+      break;
+    }
+    s.warming = false;
+    if (!s.live) {
+      s.live_ms = esphome::millis() - s.started_at;
+      s.live = true;
+    }
+    s.shown++;
+  }
+}
+
 static void stream(Stream &s) {
+  if (s.own) {
+    own_stream(s);
+    return;
+  }
   const auto address = picture_fetch::split(s.url);
   if (s.look.tile && address.ok && pull(s, address)) return;
   // A tile on an app before pull keeps the newest picture of its stream (Stream, pending).
@@ -682,10 +802,19 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
   s->look.name = nullptr;
   s->turn = glass::turn();
   s->started_at = s->reported_at = esphome::millis();
-  s->input = picture_engine::input(look.tile ? picture_engine::limits().tile_picture_bytes : picture_engine::limits().picture_bytes,
-                                   &s->input_size);
+  s->own = is_own(url);
+  if (s->own) {
+    // The card's canvas the camera's frames are copied into: no input, no decoded picture.
+    s->canvas_size = (static_cast<size_t>(area.w) * area.h * 2 + 127) & ~static_cast<size_t>(127);
+    s->canvas = static_cast<uint16_t *>(heap_caps_aligned_calloc(128, 1, s->canvas_size, MALLOC_CAP_SPIRAM));
+    if (!s->canvas) s->canvas_size = 0;
+  } else {
+    s->input = picture_engine::input(look.tile ? picture_engine::limits().tile_picture_bytes
+                                               : picture_engine::limits().picture_bytes,
+                                     &s->input_size);
+  }
   s->ppa = picture_engine::client();
-  bool ok = s->input && s->ppa;
+  bool ok = (s->own ? s->canvas != nullptr : s->input != nullptr) && s->ppa;
   if (ok && sound && has_speaker()) {
     // The camera's sound between the task and the main loop: its storage in PSRAM (only the task and the speaker's copy
     // read it), its control inside the chip (see Stream::sound).
@@ -734,6 +863,7 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     free_stream(s);
     return -1;
   }
+  if (s->own) own_add(s);
   if (s->sound || role == audio_owner::Role::DOORBELL) {
     // The camera's sound claims the speaker (audio_owner.h) in the role its opener gave: as CAMERA_SOUND music pauses
     // for it, and a voice session or a doorbell takes it and gives it back, since the camera stays open; as DOORBELL
@@ -920,6 +1050,7 @@ void tick(const std::function<void(Handle, Event)> &tell) {
     if (!s) continue;
     if (s->done.load(std::memory_order_acquire)) {
       const bool in_psram = psram_task::in_psram(s->task);
+      if (s->own) own_remove(s);  // the camera's task copies into it no more
       psram_task::reap(s->task);  // its task deleted (a stack in PSRAM) before anything of the stream is freed
       speak(*s, false);
       report(slot, *s, now, true);

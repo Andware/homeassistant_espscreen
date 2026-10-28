@@ -91,7 +91,10 @@ namespace tessera {
 // 0.21: squeeze(), how much of its work a busy screen asks a plugin to give up now (the governor, pressure.h): the
 // screen's own camera's video, its sensing and work in the background do half or a quarter while a finger is on the
 // glass or the screen shows signs of trouble, so the glass and the voice never wait.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 21;
+// 0.22: the screen's own camera on a live tile of its own: a plugin with the camera offers its frames (offer_own_frames)
+// and hands them over while such a tile shows (own_tile_wants, own_frame); the tile is drawn from them on the screen,
+// with no encoder, no app and no network between.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 22;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -589,6 +592,20 @@ enum class Work : uint8_t { OWN_CAMERA = 4, SENSING = 5, BACKGROUND = 6 };
 // finger is on the glass; it goes back by itself. Any task may ask, at any moment, and nothing waits on it. A plugin
 // that gives up frames of a video leaves them out before it encodes them, so its stream stays whole.
 uint8_t squeeze(Work work);
+// The screen's own camera on a live tile of its own (0.22, docs/PLATFORM_PLAN.md 4.11). A plugin that has the camera's
+// frames offers them once, in its setup: the screen's hello then says so, and the app answers a live tile of this
+// screen's own camera with no link but this. While such a tile is on the glass, own_tile_wants() is true, and the plugin
+// hands each frame to own_frame() on its camera's task, as the camera gave it: the core takes what it needs before it
+// returns (a copy of the part it shows, at its pace), never waits, and lets a frame it cannot take go by.
+enum class FrameFormat : uint8_t { RGB565, YUV420 };  // YUV420: the P4's packed layout (ISP, encoder), BT.601 limited
+struct OwnFrame {
+  const uint8_t *data = nullptr;
+  uint16_t width = 0, height = 0;
+  FrameFormat format = FrameFormat::RGB565;
+};
+void offer_own_frames();
+bool own_tile_wants();
+void own_frame(const OwnFrame &frame);
 // How far the screen's own camera turns its picture to stand upright (0.19), 0 or 180: half way round when the board
 // mounts its sensor upside down against the glass (its CAMERA_ORIENTATION), and half way again while the screen is
 // turned half way round from lying down. A quarter turn (a screen stood up) changes nothing; the picture stays lying

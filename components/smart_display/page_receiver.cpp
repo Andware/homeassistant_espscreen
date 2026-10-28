@@ -422,7 +422,8 @@ std::string receive(const std::string &payload) {
       // "psaver" (plugin API 0.14): the pictures of a plugin's screensaver; `e` names it (plugin:<p>.<saver>).
       // "plive" (plugin API 0.17, a question only): the stream of a plugin tile's live place; `e` names its camera.
       if (view == "live" ? !valid_entity_list(entity) : (!valid_entity(entity) && entity != SAVER_PHOTOS) || (view != "full" && view != "alert" && view != "cover" && view != "lib" && view != "saver" && view != "vmap" && view != "pcard" && view != "psaver" && view != "plive")) return false;
-      if (!url.empty() && url.rfind("http://", 0) != 0) return false;
+      // A link on the LAN, or "own:" for a live tile of this screen's own camera (plugin API 0.22, live_view::is_own).
+      if (!url.empty() && url.rfind("http://", 0) != 0 && !(view == "live" && live_view::is_own(url))) return false;
       // Every answer but an alert's carries the number of its question; one to an older question is dropped. A tile's
       // picture is the answer to that tile's last question (tile_picture::Questions).
       const bool current = view == "live" ? tile_questions.answered(number) >= 0
