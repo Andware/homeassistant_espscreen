@@ -631,8 +631,12 @@ screen's camera_open halts its live tiles before the view asks (live_tiles_halt)
 screen through MAX_STREAMS while that screen's own tiles still stream (live_stream.serve). Measured on the bench Guition
 with the screen's half alone: no 503, the first picture 1.54 s after the view opened (1.3 s of it the app's answer with
 the link, the stream's first picture 226 ms after it started), and the four tiles back by themselves after the ring.
-Next: the app makes the ring's link when the event comes, before the screen asks (a link in the op doorbell, or one the
-camera request finds ready), so the first picture can come within half a second.
+Done (2026-10-28): the app makes each view screen's link as the event comes and sends it in the op doorbell (`l`,
+Manager.doorbell_link), its room coming with the screen's first open (`?room=WxH`), and starts the camera's source at
+once (LiveFeed.warm); the view opens it before its first round and asks for nothing. On the bench Guition: the link open
+17 to 22 ms after the view opened (245 asking first), the first picture 340 to 440 ms after it with the camera running
+for the tiles, 330 to 670 ms with it cold. The first ring after a restart of the screen or the app connected slowly
+(1.2 s), which is the first connection, not the ring.
 
 ### 4.10 The governor: what a busy screen gives up first (v1, 2026-10-28)
 
