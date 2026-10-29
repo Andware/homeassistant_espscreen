@@ -104,6 +104,10 @@ class Governor {
       if (w == OWN_CAMERA || w == SENSING || w == BACKGROUND) touch = 1;
       if (w == LIVE_TILES && dragging_) touch = 1;
     }
+    // While someone hears the microphone (a camera opened full screen with sound on another screen, a conversation),
+    // the screen's own camera is the conversation: its frames go whole, whatever the step or a finger (2026-10-29, Max
+    // and a Guition 10.1 watching a reTerminal D1001 full screen: each tap and each slow loop halved his picture there).
+    if (w == OWN_CAMERA && heard_) return 0;
     const uint8_t stepped = STEPS[step_][w];
     const uint8_t least = w == LIVE_TILES && heard_ ? MOST - 1 : 0;
     const uint8_t level = stepped > touch ? stepped : touch;

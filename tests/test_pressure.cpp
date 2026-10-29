@@ -110,7 +110,11 @@ static void test_heard() {
   assert(g.level(LIVE_TILES) == 2 && g.level(OWN_CAMERA) == 0 && g.level(SENSING) == 0 && g.level(BACKGROUND) == 0);
   for (Work w : {GLASS, VOICE, DOORBELL}) assert(g.level(w) == 0);
   g.signal(SLOW_LOOP, 1000);
-  assert(g.step() == 1 && g.level(LIVE_TILES) == 2 && g.level(OWN_CAMERA) == 1);
+  // The screen's own camera is the conversation: whole frames while someone hears it, whatever the step or a finger.
+  assert(g.step() == 1 && g.level(LIVE_TILES) == 2 && g.level(OWN_CAMERA) == 0);
+  g.touching(true, false, 1100);
+  assert(g.level(OWN_CAMERA) == 0 && g.level(SENSING) == 1);
+  g.touching(false, false, 1200);
   g.heard(false);
   assert(g.level(LIVE_TILES) == 0 && g.level(OWN_CAMERA) == 1);
 }
