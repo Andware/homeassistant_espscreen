@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A screen's log says why the chip started.** The first line after boot names the reset: power on, a software reset, a watchdog, or a brown-out of the supply. A troubleshooting report reads it, so a screen that restarted because its power dipped (a Tab5 as its charger was plugged in) says so instead of "no crash record".
+
 - **Plugin API 0.24 keeps one way for each thing (for plugin makers).** Removed, as each had a newer form beside it: `Plugin::on_touch` (use `on_press`), `tessera::action(service, entity, key, value)` (use `tessera::action(service, entity, fields)` with a JSON object, or no fields), the picture address `saver:picture` (use `step:`) and a tile's `memory: { bytes: n }` (write the number). A plugin that still uses one of them no longer builds; of the plugins in the plugin list one did, and its maker is told.
 
 - **The reTerminal D1001 no longer shows a frame of blue now and then.** A whole frame of light blue flashed on a page of live camera tiles, while the screen's own count of the panel running dry stayed at 0. The DSI host's line was rounded a half clock longer than the panel's line, every line (880 pixels a line at 1.5 Gbps and 80 MHz make 2062.5 clocks). The line is now 896 pixels, 2100 clocks exactly, and the panel refreshes at 67 Hz instead of 69. To be confirmed by testers who saw the flash.
