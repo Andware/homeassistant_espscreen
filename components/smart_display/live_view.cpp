@@ -1056,6 +1056,11 @@ static void speak(Stream &s, bool on) {
     speaker->set_audio_stream_info(esphome::audio::AudioStreamInfo(16, 1, SOUND_RATE));
     speaker->start();
     s.speaking = true;
+    s.dry = false;
+  }
+  if (s.dry) {
+    if (xStreamBufferBytesAvailable(s.sound) < SOUND_LOW) return;  // a new run-up first, as at the start
+    s.dry = false;
   }
   // Behind the picture (a burst after a hiccup in the stream): the oldest goes, down to SOUND_LOW, the rest of the piece
   // the speaker had not taken first. Every tick, whatever the speaker takes, so a speaker that is full does not hold it
@@ -1077,7 +1082,13 @@ static void speak(Stream &s, bool on) {
     if (s.piece_left == 0) {
       s.piece_left = xStreamBufferReceive(s.sound, s.sound_piece, SOUND_PART, 0);
       s.piece_at = 0;
-      if (s.piece_left == 0) return;
+      if (s.piece_left == 0) {
+        if (rounds == 0) {  // nothing waited at all: the buffer ran dry
+          s.dry = true;
+          ++s.ran_dry;
+        }
+        return;
+      }
     }
     // Every piece is whole samples (the task writes only those); a write the speaker took an odd number of bytes of goes
     // on from the very next byte, the other half of that sample first, so its count is even again.
@@ -1148,9 +1159,11 @@ static void report(int slot, Stream &s, uint32_t now, bool last) {
              static_cast<float>(picture_total - pw.reported_total) / static_cast<float>(pictures - pw.reported_count),
              (unsigned) pw.most_ms.exchange(0), (unsigned) (passed - s.reported_passed));
   if (sounds != sw.reported_count)
-    ESP_LOGI(TAG, "%s %d: its sound waited %.0f ms on its way (at most %u) over the quickest, %u pieces", last ? "ended" : "stream",
+    ESP_LOGI(TAG, "%s %d: its sound waited %.0f ms on its way (at most %u) over the quickest, %u pieces; ran dry %u times, "
+             "caught up %u times since the start", last ? "ended" : "stream",
              slot, static_cast<float>(sound_total - sw.reported_total) / static_cast<float>(sounds - sw.reported_count),
-             (unsigned) sw.most_ms.exchange(0), (unsigned) (sounds - sw.reported_count));
+             (unsigned) sw.most_ms.exchange(0), (unsigned) (sounds - sw.reported_count), (unsigned) s.ran_dry,
+             (unsigned) s.caught_up);
   s.reported_passed = passed;
   pw.reported_count = pictures;
   pw.reported_total = picture_total;
