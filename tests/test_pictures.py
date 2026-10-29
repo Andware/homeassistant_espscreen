@@ -55,7 +55,6 @@ class Sources(unittest.TestCase):
             'library:media_player.spotify/12': Source('library', 'media_player.spotify/12'),
             'photos:': Source('photos'),
             'step:': Source('step'),
-            'saver:picture': Source('step'),     # its name in plugin API 0.14 to 0.16
             'https://api.example.org/a.jpg': Source('url', 'https://api.example.org/a.jpg'),
             '/api/image/serve/abc/512x512': Source('ha', '/api/image/serve/abc/512x512'),
             '/api/image_proxy/image.door?token=1': Source('ha', '/api/image_proxy/image.door?token=1'),
@@ -66,7 +65,7 @@ class Sources(unittest.TestCase):
         # Its text again, as a log and a question name it.
         for text in ('tile:3', 'map:2?focus=person.sam&move=1,-2', 'camera:camera.porch', 'photos:', 'step:', '/local/me.png'):
             self.assertEqual(pq.source(text).text, text)
-        self.assertEqual(pq.source('saver:picture').text, 'step:')
+        self.assertIsNone(pq.source('saver:picture'))   # its name in plugin API 0.14 to 0.16, gone in 0.24: one form
         for bad in (None, '', 42, 'x' * 600, 'nope:1', 'tile', 'tile:256', 'tile:x', 'tile:3?focus=person.sam',
                     'map:2?zoom=1', 'map:2?focus', 'camera:media_player.kitchen', 'camera:Camera.porch', 'cover:camera.porch',
                     'vacuum:camera.porch', 'entity:nothing', 'library:media_player.spotify', 'library:media_player.spotify/abc',
@@ -280,7 +279,7 @@ class Legacy(unittest.TestCase):
                                                 Place(40, 0, 60, 90, 6, 0, 'within', 0x202020, mirror=True)))
         card = self.read({**base, 'card': '1', 'for': 'media_player.kitchen'})
         self.assertEqual((card.kind, card.question.owner), ('pcard', Owner('plugin_card', -1, 'plugin:bus.next', 'media_player.kitchen')))
-        saver = self.read({**base, 'saver': '1', 'for': 'weather.home', 'src': '["saver:picture","step:"]'})
+        saver = self.read({**base, 'saver': '1', 'for': 'weather.home', 'src': '["step:","step:"]'})
         self.assertEqual((saver.kind, saver.question.owner, saver.question.sources),
                          ('psaver', Owner('plugin_saver', -1, 'plugin:bus.next', 'weather.home'), (Source('step'), Source('step'))))
         for bad in ({'idx': 'x'}, {'card': '1', 'saver': '1'}, {'card': '1', 'for': 'screen.clock'}, {'bg': 'red'},

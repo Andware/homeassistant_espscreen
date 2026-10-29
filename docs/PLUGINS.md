@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.23 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.24 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -136,7 +136,7 @@ typed end to end, within the 4 KB message.
 | A fetch once per value | `each: <list option>`: one ask per value, `{<option>}` in the URL that value, each a question of its own shared as every other. The map runs per answer (`{each: value}` or `{each: label}` as a field), then `sort` and `limit` over all of them together; a map of one object gives one item per value. A value whose ask failed is left out and makes the list `stale`; the tile waits only when none has an answer. | `plugin_manifest.check_fetch`, `Plugins.asks`, `tile_data`, `refresh_data`, `plugin_fetch.apply_each` |
 | A list in one ask | `{name\|,}` joins a list option's values, each percent-encoded in a URL, by the separator after the bar (1 to 3 characters). A list in a plain `{name}` is refused by the check. | `FETCH_PLACEHOLDER`, `plugin_fetch.fill` |
 | One word per value | A fetch gets every value as one word: `true`/`false`, a whole number without `.0`, a pick as its value (`plugin_fetch.word_of`). The editor sends options as JSON, never in a query string, so `3` stays a number and a toggle one word. | `words_of` |
-| An action of several fields | `tessera::action(service, entity, fields)`: a JSON object of up to 16 fields, together 1 KB. Texts go in the action's `data` as they are; every other value in `data_template` as the Python literal Home Assistant's ESPHome integration reads back into its type (`helpers/template`, `_parse_result`), with a brace in a text written `\x7b`/`\x7d` so nothing a plugin sends is ever a template. Through the screen's own route, as a tap's: the entity's tiles wait for the answer; `entity` "" for an action whose fields name their own target. | `plugin_action.h` (pure, `tests/test_plugin_action.cpp`), `plugin_host.cpp`; the render harness checks what Home Assistant gets |
+| An action | `tessera::action(service, entity)`, or `tessera::action(service, entity, fields)` with a JSON object of up to 16 fields, together 1 KB. Texts go in the action's `data` as they are; every other value in `data_template` as the Python literal Home Assistant's ESPHome integration reads back into its type (`helpers/template`, `_parse_result`), with a brace in a text written `\x7b`/`\x7d` so nothing a plugin sends is ever a template. Through the screen's own route, as a tap's: the entity's tiles wait for the answer; `entity` "" for an action whose fields name their own target. | `plugin_action.h` (pure, `tests/test_plugin_action.cpp`), `plugin_host.cpp`; the render harness checks what Home Assistant gets |
 
 The options of a tile go to the screen with its data in one message, so the options of a tile together take at most
 1280 bytes (`pm.OPTIONS_BYTES`, `core.PLUGIN_OPTIONS_BYTES`, `PLUGIN_OPTIONS_BYTES` in the editor, a test keeps them
@@ -227,7 +227,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | A top bar item | `add_bar_item`, its icon in a `tone` (0.8); `header_bar::Kind::plugin` | `validate_header` type `plugin`, `content` all or icon (wire `o`), sent to a screen whose hello says `plugins` | "From plugins" in Top bar, Add; Show: icon and words, or icon only |
 | Settings rows | `settings(SettingsPage&)`; `settings_screen::plugin_pages` | `Plugins.settings_for`, `set_setting`: the manifest's `settings` (switch, number, select, text, button with its `status`), entities of the screen's own device found in the entity registry (`_setting_entities`) | in the plugin's details on the screen's Plugins tab (`PluginSettings.vue`), with its inputs and parts; Screen settings links there |
 | A question to Home Assistant | `tessera::send`, `on_message` (op `plugin`) | `Plugins.answer`: only `permissions.ha_commands`, logged; an answer the manifest's `answers` maps goes as its fields, the rest as it came; both bounded (`bounded`, 3.2 KB, by bytes) | the commands under "What it may do" |
-| The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_touch` (0.3: every tap `screen_input::TouchGuard` takes, through `screen_hooks::touched()`), `on_press` and `on_step(Step)` (0.11, "Touch feedback" below) | | |
+| The moments | `on_ready`, `on_interval` (every 250 ms; `on_tick` before 0.4), `on_standby`, `before_update`, `on_cards_closed`, `on_alert`, `on_press` and `on_step(Step)` (0.11, "Touch feedback" below) | | |
 | Pictures in one system (0.17) | `ui::picture(parent, Placeholder::NONE)`, a place without its block; `on_picture(place, PictureState)` on a `Tile`, a `Card` and a `Saver` (`plugin_host::picture_outcome`, from `tile_picture_done`); the core's own sources as an address; `slide_pictures` from any call; `ui::live`, a tile's place that streams its camera on a P4 (`plugin_host::live_places`, `runtime_tiles` live places, the answer `plive`); `tessera::capturing` and the camera's dot (`plugin_host::camera_dot_update`); "Pictures on a plugin tile" below | `plugin_pictures.py` reads `cover:`, `camera:`, `entity:` and `step:`; `Manager.plugin_picture`; `picture_service._stream` streams a live place's own camera | nothing |
 | Waking the screen (0.16) | `tessera::wake(plugin)`: `plugin_host::wake`, which `packages/core.yaml` points at the script `wake_from`, the one way Home Assistant's Wake button and a board's sensor take; "Waking the screen" below | nothing | nothing |
 | Entities chosen per tile (0.15) | nothing new: the tile reads `x.entities.<option id>` (state, name, attributes, updated) from its data | an option of kind `entity` (`plugin_manifest.check_option`, `option_value`); `Plugins.tile_message` puts each chosen entity's `state_part` under `entities`, `related_entities` follows them | the tile's inspector: a searchable entity picker per option (`PluginOptions.vue`) |
@@ -265,7 +265,7 @@ So a new control needs at most one line, by what it is:
 
 `touch_feedback.h` is free of LVGL (`tests/test_touch_feedback.cpp`); `touch_feedback_lvgl.h` is included by
 `plugin_host.cpp` alone and starts listening when the first plugin starts, so a screen without plugins has none of it.
-`on_touch` (0.3) stays what it was: the tap the touch filter took, as the finger lets go.
+`on_touch` (0.3, the tap as the finger let go) is gone since 0.24: `on_press` is the one moment for a click.
 
 ## Waking the screen (0.16)
 
@@ -447,7 +447,7 @@ picture store of a 4-inch Guition's size, so its renders show every picture of a
 **The core's sources (0.17).** Besides a web address, a place may name what the core already shows: `cover:<entity>`,
 a media player's cover, `camera:<entity>`, a camera's picture, and `entity:<entity>`, an entity's own picture, each
 only for the entity the tile, card or step shows (`picture_sources`, `_plugin_entities`), and `step:`, the screensaver
-step's own picture (`saver:picture` is still read). The app answers them as it answers a tile of that entity: the same
+step's own picture. The app answers them as it answers a tile of that entity: the same
 fetching, the same newest frame of a camera's stream while one runs, no permission of the network needed.
 
 **Live (0.17).** A tile's place with the address `camera:<entity>` of its own entity that the tile set live
@@ -502,9 +502,9 @@ added; within major 0 none is renamed or taken away.
 
 | Step | `x` |
 |---|---|
-| media | `entity`, `name`, `title`, `artist`, `album`, `state`, `features` (Home Assistant's `supported_features`), `muted`, `volume` (0 to 1), `duration`, `position`, `position_at` (seconds since 1970), `picture` (`saver:picture` while there is a cover), `mark` (the cover's mark), `colour` (`#rrggbb`) |
+| media | `entity`, `name`, `title`, `artist`, `album`, `state`, `features` (Home Assistant's `supported_features`), `muted`, `volume` (0 to 1), `duration`, `position`, `position_at` (seconds since 1970), `picture` (`step:` while there is a cover), `mark` (the cover's mark), `colour` (`#rrggbb`) |
 | clock | `temperature` (`21°`, `""` for none), `items` (`[{icon, text, since?}]`: a codepoint of Tessera's set, its words, or the moment it counts from) |
-| photos | `picture` (`saver:picture`), `mark`, `index`, `count`, `album` |
+| photos | `picture` (`step:`), `mark`, `index`, `count`, `album` |
 | own | the fetch's answer and the entity's `state`, `name`, `attributes` and fields, as a plugin tile's `x`, and `entity`, the entity chosen for the step: the screen asks for the step's Home Assistant pictures for it, so a field of the fetch's answer called `entity` gives way to it |
 
 **On the screen** (`plugin_host.cpp`, "A plugin's screensaver"): runtime_tiles makes the black glass on LVGL's top layer
@@ -524,7 +524,7 @@ and `saver_woke` keeps that touch from reaching a tile.
 
 **Pictures.** A saver's places are asked for as a card's (`saver_picture_want`, `SAVER_OWNER`, `Kind::CARD` 2), with
 the owner `plugin_saver` and the entity of a step of its own (an older app gets `saver` instead of `card`, `for`, and
-answers `psaver`). The address `step:` (`saver:picture` before 0.17) is the step's own picture: the app answers it
+answers `psaver`). The address `step:` is the step's own picture: the app answers it
 with the cover of the player on the glass or the photo of the photos step (`Manager.saver_picture`), cut to the place. Its key carries the step's `mark`, so the next cover or photo is another
 picture under the same address. The store counts a saver's places as on the glass (`card_draws`, `card_letgo`).
 

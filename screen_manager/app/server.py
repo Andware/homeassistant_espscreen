@@ -3739,7 +3739,7 @@ class Manager:
                 self.ha.changed.set()
 
     async def saver_picture(self, inbox, screen, kind):
-        """The picture of the step a plugin's screensaver face draws (plugin API 0.14, 'saver:picture'): the cover of the
+        """The picture of the step a plugin's screensaver face draws (its address `step:`): the cover of the
         player the music step shows, or the photo of the photos step; None while there is none."""
         if kind.get('step') == 'photos':
             return self.photos.raw(inbox)

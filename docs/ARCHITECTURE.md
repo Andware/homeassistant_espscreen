@@ -174,7 +174,9 @@ and prepares the keys; the talk-back is prepared in the audio owner and not buil
 `plugin_api.h` is what a component of someone else may use: tile types, cards, top bar items, settings rows, questions
 to the app, audio through the owner, `squeeze` (0.21) and the screen's own camera's frames for a tile of its own
 (0.22). The core keeps a list and names no plugin; a tile type the screen lacks draws as a plain card, never an error.
-Tessera's own plugins move with the API in the same release, no compatibility layer. Detail: docs/PLUGINS.md;
+Tessera's own plugins move with the API in the same release, no compatibility layer, and the API keeps one form for
+each thing (0.24 took away `on_touch`, the key and value form of `action`, `saver:picture` and `memory: {bytes}`);
+its history is the plugins repository's, not the header's. Detail: docs/PLUGINS.md;
 the plugins repository's docs/FIRMWARE_API.md.
 
 ### 11. Watchers and records

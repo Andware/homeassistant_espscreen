@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **Plugin API 0.24 keeps one way for each thing (for plugin makers).** Removed, as each had a newer form beside it: `Plugin::on_touch` (use `on_press`), `tessera::action(service, entity, key, value)` (use `tessera::action(service, entity, fields)` with a JSON object, or no fields), the picture address `saver:picture` (use `step:`) and a tile's `memory: { bytes: n }` (write the number). A plugin that still uses one of them no longer builds; of the plugins in the plugin list one did, and its maker is told.
+
 - **The reTerminal D1001 no longer shows a frame of blue now and then.** A whole frame of light blue flashed on a page of live camera tiles, while the screen's own count of the panel running dry stayed at 0. The DSI host's line was rounded a half clock longer than the panel's line, every line (880 pixels a line at 1.5 Gbps and 80 MHz make 2062.5 clocks). The line is now 896 pixels, 2100 clocks exactly, and the panel refreshes at 67 Hz instead of 69. To be confirmed by testers who saw the flash.
 
 - **A screen whose camera is watched with sound slows its own live tiles.** While someone hears a screen's microphone (its video open with sound on another screen, in Home Assistant, or a call later on), its live camera tiles run at a quarter of their pictures a second. Four live tiles on the same screen crowded its Wi-Fi so much that its sound reached the viewer in bursts a second late and the viewing screen cut most of it away: words gone, bits doubled. Needs Screen camera 0.6.12.

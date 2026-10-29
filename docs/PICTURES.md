@@ -196,7 +196,7 @@ H.264 and sends JPEG (`camera_source.py`, `live_pictures.py`).
 - Whether a place's picture came: `on_picture(place, state)` on a tile, a card and a screensaver (`PictureState`
   `SHOWN`, `NONE`, `FAILED`), once per address, so a plugin can show something else where a picture does not come.
 - The core's sources (`cover:<entity>`, `camera:<entity>`, `entity:<entity>`, `step:`) for a place of that entity, under
-  the same rules as the core's own pictures. `saver:picture` stays as another name for `step:`.
+  the same rules as the core's own pictures.
 - `slide_pictures` may be called from any call of a tile or card, `on_state` included.
 - `ui::live(place)`: a tile's place with the address `camera:<entity>` of its own entity streams on a screen that
   streams, exactly as a camera tile set to Live (`runtime_tiles` live places: on the glass, the page still, nothing over

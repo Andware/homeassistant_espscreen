@@ -13537,7 +13537,7 @@ inline lv_obj_t *saver_glass() {
 inline void saver_show() {
   saver_now = saver_next;
   // A plugin's face or step (plugin API 0.14): the plugin draws on the glass; the step's picture is a place of its own
-  // (saver:picture), loaded by the plugin host, so the full view stays closed.
+  // (step:), loaded by the plugin host, so the full view stays closed.
   if (saver_plugin_draws(saver_now)) {
     saver_pictures = camera_supported();
     // A face with the step's own picture under it (`backdrop`): the full view as Tessera's own face opens it, bare, and
