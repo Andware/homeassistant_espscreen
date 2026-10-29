@@ -70,6 +70,13 @@ class Governor {
     cause_ = s;
     last_sign_ = climbed_ = changed_ = stamp(now);
   }
+  // Someone hears the screen's microphone (plugin API 0.23, capturing(SOUND): its camera watched with its sound, a
+  // call): a conversation, which goes before the live tiles on the sending side too. The tiles stay at a quarter while
+  // it lasts, whatever the steps say; the camera, sensing and the background follow the steps as before. On a
+  // reTerminal D1001 four live tiles beside its own video stalled its Wi-Fi uplink and the sound reached the viewer in
+  // bursts a second late, 2.4 s at most (2026-10-29, docs/PLATFORM_PLAN.md 5.1).
+  void heard(bool on) { heard_ = on; }
+  bool heard() const { return heard_; }
   // The finger: on the glass, and whether it drags (past the tap's limit) or a page moves.
   void touching(bool down, bool dragging, uint32_t now) {
     if (down) {
@@ -98,7 +105,9 @@ class Governor {
       if (w == LIVE_TILES && dragging_) touch = 1;
     }
     const uint8_t stepped = STEPS[step_][w];
-    return stepped > touch ? stepped : touch;
+    const uint8_t least = w == LIVE_TILES && heard_ ? MOST - 1 : 0;
+    const uint8_t level = stepped > touch ? stepped : touch;
+    return level > least ? level : least;
   }
   uint8_t step() const { return step_; }
   Sign cause() const { return cause_; }
@@ -110,7 +119,7 @@ class Governor {
   uint8_t step_ = 0;
   Sign cause_ = GLASS_MISS;
   uint32_t last_sign_ = 0, climbed_ = 0, changed_ = 0, let_go_ = 0;
-  bool down_ = false, dragging_ = false;
+  bool down_ = false, dragging_ = false, heard_ = false;
   uint32_t signs_[SIGNS] = {};
 };
 

@@ -644,7 +644,11 @@ for the tiles, 330 to 670 ms with it cold. The first ring after a restart of the
 The work of a screen in one fixed order, from what never waits to what gives up first: the glass, the voice assistant,
 a doorbell's ring, the live tiles, the screen's own camera (its video), its sensing (light level, motion) and the
 background (pictures fetched ahead for pages out of sight). Each has a level: 0 runs as it is, 1 does half, 2 a
-quarter; the glass, the voice and a ring are never squeezed.
+quarter; the glass, the voice and a ring are never squeezed. Since 2026-10-29 (plugin API 0.23, `heard`): while someone
+hears the screen's microphone (its video watched with its sound, Screen camera 0.6.12; a call, 5.1) the live tiles stay
+at a quarter whatever the steps say, so the conversation's uplink is not starved by them: on a reTerminal D1001 four
+live tiles beside its own video stalled the uplink, the sound reached the viewing screen in bursts a second late (2.4 s
+at most) and that screen cut more than half of it away.
 
 - **One mechanism.** Every sign of trouble climbs one step of a table, from the bottom of the order up: step 1 the
   background, sensing and the camera to 1; step 2 the camera to 2 and the live tiles to 1; step 3 the live tiles to 2.

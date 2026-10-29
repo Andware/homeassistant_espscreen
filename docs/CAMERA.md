@@ -676,7 +676,11 @@ assistant can listen at the same time.
 
 - lwIP's TCP send buffer of 5760 bytes lets four segments travel at once, which over the ESP32-C6's Wi-Fi caps one
   connection near 1.5 Mbit/s and holds the sound up behind the picture for seconds. Every P4 gets 65534
-  (`P4_NETWORK` in `components/smart_display/__init__.py`).
+  (`P4_NETWORK` in `components/smart_display/__init__.py`). Picture and sound still share that one connection: when
+  the uplink stalls (four live tiles on the same screen, 2026-10-29) a picture waited in send() and the sound behind
+  it, in bursts a second late at the app. Since Screen camera 0.6.10 a picture that finds the connection more than
+  half full is left behind and the sound goes between the packets of a long one; since 0.6.12 and plugin API 0.23
+  the screen keeps its live tiles at a quarter while anyone hears its microphone (the governor, PLATFORM_PLAN 4.10).
 - Internal RAM is what a P4 runs short of. The encoder keeps about 104 KB of it and Opus about 25 KB, for as long as
   the screen runs. What every connection holds unsent or unread lived there too: with live camera tiles on the glass
   and the video playing, free internal RAM fell from 160 KB to 13 KB in two seconds and the C6's driver aborted the

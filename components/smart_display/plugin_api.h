@@ -94,7 +94,9 @@ namespace tessera {
 // 0.22: the screen's own camera on a live tile of its own: a plugin with the camera offers its frames (offer_own_frames)
 // and hands them over while such a tile shows (own_tile_wants, own_frame); the tile is drawn from them on the screen,
 // with no encoder, no app and no network between.
-constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 22;
+// 0.23: Capture::SOUND, someone hears what the screen's microphone hears (its video watched with its sound, a call):
+// the governor keeps the live tiles at a quarter while it lasts, so the conversation's uplink is not starved by them.
+constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 23;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
 // VALUE is the big number of a watch card, HEADLINE a card's large words, TITLE a card's name, BODY its second line,
@@ -574,13 +576,17 @@ void refresh();
 // a setting for it, off until someone turns it on (docs/PLUGINS.md, "Waking the screen").
 void wake(const Plugin *plugin);
 // What a plugin captures on the screen itself (0.17): its own camera, watched (CAMERA: someone sees what it sees), or
-// for sensing alone (SENSING, 0.20: a light level, motion, and no picture leaves the screen or reaches a person).
-enum class Capture : uint8_t { CAMERA, SENSING };
+// for sensing alone (SENSING, 0.20: a light level, motion, and no picture leaves the screen or reaches a person), or
+// its microphone, heard (SOUND, 0.23: someone hears what it hears, as a viewer of its video with sound or a call).
+enum class Capture : uint8_t { CAMERA, SENSING, SOUND };
 // A plugin uses the screen's own camera on the screen itself (0.17, docs/PICTURES.md "Capture"): true while it does,
 // false once it stops, for each Capture on its own. The core shows a dot in the glass's top right corner, on top of
 // everything, while anything uses the camera, and no plugin or setting can take it away: solid while anyone watches
 // (a plugin's CAMERA, or Home Assistant taking pictures or a stream of the camera, `ts_camera`, which the core sees by
 // itself), a ring while the camera only senses (SENSING, 0.20). What a plugin does on the screen it must say here.
+// SOUND (0.23) changes no dot: the screen squeezes its live tiles to a quarter while someone hears the microphone
+// (pressure.h, heard), since a conversation goes before the tiles on the sending side too; on a reTerminal D1001 four
+// live tiles beside its own video stalled the uplink and the sound reached its viewer in bursts a second late.
 // Call it from the plugin's own calls (the screen's loop).
 void capturing(const Plugin *plugin, Capture what, bool on);
 // The work a busy screen may squeeze (0.21, docs/PLATFORM_PLAN.md 4.10), in the order it gives up: the screen's own

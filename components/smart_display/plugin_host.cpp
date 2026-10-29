@@ -429,7 +429,13 @@ void wake(const Plugin *plugin) {
 // A plugin that uses the screen's own camera on the screen itself says so (0.17), watched or for sensing alone (0.20):
 // the core's dot shows while one does (capture_dot.h).
 void capturing(const Plugin *plugin, Capture what, bool on) {
-  if (!plugin || (what != Capture::CAMERA && what != Capture::SENSING)) return;
+  if (!plugin) return;
+  // Someone hears the microphone (0.23): the governor's rule, no dot (pressure.h, heard).
+  if (what == Capture::SOUND) {
+    runtime_tiles::governor.heard(on);
+    return;
+  }
+  if (what != Capture::CAMERA && what != Capture::SENSING) return;
   capture_dot::capturing(plugin, what == Capture::SENSING, on);
 }
 

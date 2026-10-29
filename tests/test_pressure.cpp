@@ -102,6 +102,19 @@ static void test_finger() {
   assert(g.level(OWN_CAMERA) == 2 && g.level(LIVE_TILES) == 1);
 }
 
+// While someone hears the microphone, the live tiles stay at a quarter whatever the steps and the finger say; the
+// camera, sensing and the background follow the steps as before, and the tiles are free again once nobody hears.
+static void test_heard() {
+  Governor g;
+  g.heard(true);
+  assert(g.level(LIVE_TILES) == 2 && g.level(OWN_CAMERA) == 0 && g.level(SENSING) == 0 && g.level(BACKGROUND) == 0);
+  for (Work w : {GLASS, VOICE, DOORBELL}) assert(g.level(w) == 0);
+  g.signal(SLOW_LOOP, 1000);
+  assert(g.step() == 1 && g.level(LIVE_TILES) == 2 && g.level(OWN_CAMERA) == 1);
+  g.heard(false);
+  assert(g.level(LIVE_TILES) == 0 && g.level(OWN_CAMERA) == 1);
+}
+
 int main() {
   test_never_squeezed();
   test_steps_in_order();
@@ -109,6 +122,8 @@ int main() {
   test_wake_word_takes_the_tiles();
   test_rest();
   test_finger();
-  std::puts("PASS: the governor's order, its steps, a burst as one sign, the rest, the wake word's floor and the finger");
+  test_heard();
+  std::puts("PASS: the governor's order, its steps, a burst as one sign, the rest, the wake word's floor, the finger and "
+            "someone hearing the microphone");
   return 0;
 }

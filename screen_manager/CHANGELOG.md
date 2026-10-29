@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A screen whose camera is watched with sound slows its own live tiles.** While someone hears a screen's microphone (its video open with sound on another screen, in Home Assistant, or a call later on), its live camera tiles run at a quarter of their pictures a second. Four live tiles on the same screen crowded its Wi-Fi so much that its sound reached the viewer in bursts a second late and the viewing screen cut most of it away: words gone, bits doubled. Needs Screen camera 0.6.12.
+
 - **A live camera tile shows its name the way its card does.** Over the live picture the name stands at the bottom of the card in light letters, also when the tile had no still picture before its stream began; it stood dark and halfway up before.
 
 - **"Reinstall from dev" on a build server builds dev again.** A screen whose YAML follows the dev branch took the build server's last firmware when its YAML had not changed, although dev had: the server fetches the branch itself. Such a build is now taken again only within the update it was made for.

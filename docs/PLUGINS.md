@@ -5,7 +5,7 @@ from a web service, hardware on one board, a feature not everyone needs. How to 
 [github.com/MaxGramser/tessera-plugins](https://github.com/MaxGramser/tessera-plugins) (its `docs/` and `AGENTS.md`).
 This page is the core's side: what the firmware, the add-on and the editor do, and the rules a change here keeps.
 
-Plugins are on in every app since 0.4.87 (the plugin API is 0.22 now); before, only in the dev app.
+Plugins are on in every app since 0.4.87 (the plugin API is 0.23 now); before, only in the dev app.
 `core.plugins_enabled()` is the one switch: false takes the Plugins page, its routes and its loops out of the app.
 
 **The API's number.** A plugin builds on every core with the same major and at least its minor. From 1.0 on that is a
@@ -238,6 +238,7 @@ beside it, read again a few times after a press, so a test can say how it went. 
 | The camera only sensing (0.20) | `Capture::SENSING` beside `Capture::CAMERA` in `tessera::capturing`: `capture_dot.h` draws the dot solid while anyone watches (a plugin's CAMERA, Home Assistant's pictures and stream) and as a ring while plugins only sense | nothing | nothing |
 | A busy screen (0.21) | `tessera::squeeze(Work)`: how much of its video, its sensing or its background work a plugin gives up now (0, half, three quarters), from the governor (`pressure.h`, docs/PLATFORM_PLAN.md 4.10) | nothing | nothing |
 | The screen's own camera on a tile of its own (0.22) | `tessera::offer_own_frames()` once in the plugin's setup, then while `tessera::own_tile_wants()` is true each camera frame to `tessera::own_frame(OwnFrame)` on the camera's task: RGB565 or the P4's YUV420, as the camera gave it. The screen's hello says `own_camera`, the app answers a live tile of the screen's own Video camera `own:`, and the screen draws it from the frames, with no encoder, app or network between. Screen camera 0.6.8 does it. |
+| Someone hears the screen's microphone (0.23) | `tessera::capturing(plugin, Capture::SOUND, on)` from the plugin's own calls while anyone hears what the microphone hears (its video watched with its sound, a call). No dot changes; the screen keeps its live tiles at a quarter while it lasts, so the conversation's uplink is not starved by them (the governor, docs/PLATFORM_PLAN.md 4.10 and 5.1). Screen camera 0.6.12 says it while its video plays with sound. |
 | Who may play and listen (0.19) | `tessera::audio::claim`, `release`, `open`, `held`, `holder` over `audio_owner.h` (docs/PLATFORM_PLAN.md 3.4): one owner of the loudspeaker and the microphone, roles DOORBELL, VOICE, CAMERA_SOUND, MEDIA, `lost` and `regained`; the core's own claims in `live_view.cpp` (a full view's sound, as CAMERA_SOUND or, for the view a ring opened, DOORBELL: `live_view::open`'s `role`, from `runtime_tiles` `live_begin`) and `features/audio-player.yaml` (music, through the media player's `on_play`, `on_pause`, `on_idle`) | nothing | nothing |
 | A board's own hardware | the plugin's `plugin.yaml` (audio codecs, a relay), its `boards` in the manifest | offered only to the screens of those boards | the Plugins page says which boards |
 

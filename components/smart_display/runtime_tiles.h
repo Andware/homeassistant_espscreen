@@ -12639,7 +12639,7 @@ inline void pressure_finger(bool down, bool dragging) { governor.touching(down, 
 
 inline std::string pressure_text() {
   using namespace pressure;
-  if (governor.step() == 0 && !governor.touched()) return "normal";
+  if (governor.step() == 0 && !governor.touched() && !governor.heard()) return "normal";
   static const char *const NAMES[WORKS] = {"glass", "voice", "doorbell", "live tiles", "own camera", "sensing", "background"};
   std::string text;
   for (int w = LIVE_TILES; w < WORKS; ++w) {
@@ -12650,7 +12650,8 @@ inline std::string pressure_text() {
     text += l == 1 ? " 1/2" : " 1/4";
   }
   if (text.empty()) return "normal";
-  text += governor.step() ? std::string(" (") + sign_name(governor.cause()) + ")" : std::string(" (a finger)");
+  text += governor.step() ? std::string(" (") + sign_name(governor.cause()) + ")"
+          : governor.touched() ? std::string(" (a finger)") : std::string(" (someone hears the microphone)");
   return text;
 }
 
