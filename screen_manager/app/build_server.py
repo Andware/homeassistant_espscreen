@@ -365,8 +365,9 @@ class BuildServer:
         self.previewed = {}       # (host, port) -> the server's pin, from the preview the person checked
         self.task = None          # the link while paired, or the wait for the person to accept
         self.building = None      # what the server builds for this app now: {'file', 'phase', 'started'}
-        # Per profile the bundle the server built last and its images: an update builds, then installs, the same YAML,
-        # and the second asks the server nothing when nothing changed.
+        # Per profile the bundle the server built last, its images and when: an update builds, then installs, the same
+        # YAML, and the second asks the server nothing when nothing changed. A YAML that follows a branch (follows_branch)
+        # is the same YAML after a push too, so its build is taken again only within the same update.
         self.built = {}
         self._private = None
         self.rev = int(time.time() * 1000)   # from the start time: a restarted app never counts below an open page
@@ -636,7 +637,8 @@ class BuildServer:
             # What is in it, not the gzip around it, whose header carries the time it was packed.
             digest = hashlib.sha256(gzip.decompress(bundle)).hexdigest()
             done = self.built.get(profile.name)
-            if done and done[0] == digest and done[2] == server['pin'] and all(p is None or p.is_file() for p in done[1].values()):
+            if done and done[0] == digest and done[2] == server['pin'] and all(p is None or p.is_file() for p in done[1].values()) \
+                    and (time.time() - done[3] < REUSE_MOVING_SECONDS or not follows_branch(profile)):
                 log(f'Build server: the YAML is the same as in the build {name} just made; using that firmware.')
                 now = time.time()
                 for path in done[1].values():
@@ -679,7 +681,7 @@ class BuildServer:
                 raise Fallback('lost', str(error)) from None
             archive = await self._artifacts(job)
             images = await asyncio.to_thread(stage_artifacts, archive, Path(data) / 'build' / stem / 'server')
-            self.built[profile.name] = (digest, images, server['pin'])
+            self.built[profile.name] = (digest, images, server['pin'], time.time())
             seconds = round(time.monotonic() - started)
             log(f'Build server: built on {name} in {seconds // 60} min {seconds % 60} s.')
             self.last = {'file': profile.name, 'where': 'server', 'server': name, 'seconds': seconds, 'at': time.time()}
@@ -759,6 +761,23 @@ class BuildServer:
             if len(data) != got['size'] or hashlib.sha256(data).hexdigest() != got['sha256']:
                 raise Fallback('fetch', 'the firmware came back damaged')
             return data
+
+
+# A screen's YAML whose packages come from a branch (`ref: dev` or `ref: main`, the app's channels) builds something
+# else after every push with the same text: the server fetches the branch as it builds, the bundle carries only the
+# YAML. Its build is taken again only this long after it was made, the build and the install of one update; a
+# release tag or a commit always builds the same. Seen 2026-10-29: a reinstall from dev took the build of 37 minutes
+# before and installed the firmware the screen already had.
+REUSE_MOVING_SECONDS = 120
+MOVING_REF = re.compile(r'(?m)^[ \t]+ref:[ \t]*["\']?(?:main|dev)["\']?[ \t]*(?:#.*)?$')
+
+
+def follows_branch(profile):
+    """True when the screen's YAML takes a package from a branch (MOVING_REF); also when it cannot be read."""
+    try:
+        return bool(MOVING_REF.search(Path(profile).read_text()))
+    except (OSError, UnicodeDecodeError):
+        return True
 
 
 async def make_bundle(profile, root, env, log):

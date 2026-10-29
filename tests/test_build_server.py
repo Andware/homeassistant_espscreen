@@ -184,9 +184,9 @@ class BuildServerTest(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(0.02)
         self.fail(f'not linked: {self.server.connection} {self.server.error}')
 
-    async def build(self, logs=None, phases=None):
+    async def build(self, logs=None, phases=None, text='esphome: {}'):
         profile = self.data / 'kitchen.yaml'
-        profile.write_text('esphome: {}')
+        profile.write_text(text)
         logs, phases = (logs if logs is not None else []), (phases if phases is not None else [])
         return await self.server.compile(profile, self.data, self.data, {}, logs.append, phases.append)
 
@@ -275,6 +275,26 @@ class BuildServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.receiver.bundles), 1)
         self.assertEqual(first, second)
         self.assertTrue(any('the same as in the build' in line for line in logs))
+
+    async def test_a_yaml_on_a_branch_builds_again_after_the_update_it_was_built_for(self):
+        # The same `ref: dev` is another firmware after a push: the server fetches the branch, the bundle has the YAML.
+        await self.paired()
+        on_dev = 'packages:\n  display:\n    url: https://github.com/example/screens\n    ref: dev\n'
+        await self.build(text=on_dev)
+        await self.build(text=on_dev)   # the install of the same update
+        self.assertEqual(len(self.receiver.bundles), 1)
+        digest, images, pin, at = self.server.built['kitchen.yaml']
+        self.server.built['kitchen.yaml'] = (digest, images, pin, at - build_server.REUSE_MOVING_SECONDS - 1)
+        logs = []
+        await self.build(logs, text=on_dev)   # a reinstall later
+        self.assertEqual(len(self.receiver.bundles), 2)
+        self.assertFalse(any('the same as in the build' in line for line in logs))
+        # A release tag builds the same whenever.
+        tagged = on_dev.replace('ref: dev', 'ref: screens-v0.57.0')
+        digest, images, pin, at = self.server.built['kitchen.yaml']
+        self.server.built['kitchen.yaml'] = (digest, images, pin, at - 3600)
+        await self.build(text=tagged)
+        self.assertEqual(len(self.receiver.bundles), 2)
 
     async def test_a_build_that_fails_on_the_server_fails(self):
         await self.paired()
