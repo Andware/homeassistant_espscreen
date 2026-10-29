@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **A live camera tile shows when it slows down.** When a screen is busy (a finger on the glass, the wake word falling behind) it shows its live camera tiles at half or a quarter of their pictures a second. Each such tile now shows a small slow-speed icon in its top right corner while that lasts, so a slower picture is no mystery.
+
 - **A doorbell's picture comes sooner.** When someone rings, the app now prepares the camera's live picture for each screen at once and sends it along with the ring, so the screen no longer has to ask for it first: the picture is on the glass in about half a second.
 
 - **Choose how long a missed ring stays in the top bar.** The doorbell wizard asks how long a ring nobody answered stays in the top bar of your screens: 10 or 30 minutes, an hour, four hours, or until someone opens it. A new doorbell automation keeps it for 30 minutes; your existing automations keep their missed rings until they are opened, as before. In your own automation the field is `keep_minutes`. The screen takes the ring away by itself when the time is up, also while it was in standby.

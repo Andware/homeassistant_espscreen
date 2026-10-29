@@ -186,6 +186,10 @@ struct Look {
   // The name as LVGL draws it (ARGB8888, w x h with `stride` pixels a row), at x, y on the card; copied at open().
   const uint32_t *name = nullptr;
   int name_x = 0, name_y = 0, name_w = 0, name_h = 0, name_stride = 0;
+  // The mark of a squeezed tile, as LVGL draws it (ARGB8888 as the name, where the loader turns): laid over the pictures
+  // only while the governor squeezes the live tiles (pressure.h, docs/PLATFORM_PLAN.md 4.10); copied at open().
+  const uint32_t *badge = nullptr;
+  int badge_x = 0, badge_y = 0, badge_w = 0, badge_h = 0, badge_stride = 0;
   // The loader in the card's top right corner until the camera is live ("Until it is live", below): `loader` pixels
   // across, `loader_margin` from the card's edges, its ring `loader_arc` wide; 0: none.
   int loader = 0, loader_margin = 0, loader_arc = 0;
@@ -253,18 +257,24 @@ struct Cover {
   uint16_t color = 0;
   uint8_t alpha = 0;
 };
-inline Cover marks_at(const Look &look, int w, int h, int x, int y) {
+// The ARGB8888 pixel at x, y of an image w x h laid at ix, iy (`stride` pixels a row, 0 for w), or 0 outside it.
+inline uint32_t argb_at(const uint32_t *px, int ix, int iy, int w, int h, int stride, int x, int y) {
+  if (!px || x < ix || y < iy || x >= ix + w || y >= iy + h) return 0;
+  return px[static_cast<size_t>(y - iy) * (stride ? stride : w) + (x - ix)];
+}
+// `badge`: with the mark of a squeezed tile over the rest (Look::badge).
+inline Cover marks_at(const Look &look, int w, int h, int x, int y, bool badge = false) {
   if (!look.tile) return {};
   const unsigned corner = look.radius > 0 ? corner_at(x, y, w, h, look.radius) : 0;
-  uint32_t name = 0;
-  if (look.name && x >= look.name_x && y >= look.name_y && x < look.name_x + look.name_w && y < look.name_y + look.name_h)
-    name = look.name[static_cast<size_t>(y - look.name_y) * (look.name_stride ? look.name_stride : look.name_w) +
-                     (x - look.name_x)];
-  const unsigned over = name >> 24;
-  if (!corner) return {rgb565(name), static_cast<uint8_t>(over)};
-  if (!over) return {look.ground, static_cast<uint8_t>(corner)};
-  // The name over a corner's edge: each layer over what lies under it, how much of the picture still shows and the
-  // colour laid over it so far, weighted by how much it covers.
+  const uint32_t name = argb_at(look.name, look.name_x, look.name_y, look.name_w, look.name_h, look.name_stride, x, y);
+  const uint32_t mark =
+      badge ? argb_at(look.badge, look.badge_x, look.badge_y, look.badge_w, look.badge_h, look.badge_stride, x, y) : 0;
+  const unsigned over = name >> 24, top = mark >> 24;
+  if (!corner && !top) return {rgb565(name), static_cast<uint8_t>(over)};
+  if (!corner && !over) return {rgb565(mark), static_cast<uint8_t>(top)};
+  if (!over && !top) return {look.ground, static_cast<uint8_t>(corner)};
+  // The name or the mark over a corner's edge, or over each other: each layer over what lies under it, how much of the
+  // picture still shows and the colour laid over it so far, weighted by how much it covers.
   float keep = 1, r = 0, g = 0, b = 0;
   auto lay = [&](unsigned alpha, uint16_t c) {
     const float a = alpha / 255.0f;
@@ -275,6 +285,7 @@ inline Cover marks_at(const Look &look, int w, int h, int x, int y) {
   };
   lay(corner, look.ground);
   lay(over, rgb565(name));
+  lay(top, rgb565(mark));
   const float covers = 1 - keep;
   auto level = [&](float v, int most) { return static_cast<unsigned>(std::min<float>(most, v / covers * most + 0.5f)); };
   return {static_cast<uint16_t>(level(r, 31) << 11 | level(g, 63) << 5 | level(b, 31)),
@@ -324,7 +335,7 @@ inline int overlay_shade(const Look &look, int w, int h, int turn, uint8_t *dept
 // The marks' segments of that card: with `segments` null only counted (how many, and the pixels they hold, for the
 // memory), else written, and with `alpha` and `color` their pixels too.
 inline int overlay_marks(const Look &look, int w, int h, int turn, OverlaySegment *segments, size_t &pixels,
-                         uint8_t *alpha = nullptr, uint16_t *color = nullptr) {
+                         uint8_t *alpha = nullptr, uint16_t *color = nullptr, bool badge = false) {
   const int tw = turned_w(w, h, turn), th = turned_h(w, h, turn);
   int count = 0;
   pixels = 0;
@@ -333,7 +344,7 @@ inline int overlay_marks(const Look &look, int w, int h, int turn, OverlaySegmen
     while (gx < tw) {
       int x = 0, y = 0;
       upright_of(turn, w, h, gx, gy, x, y);
-      if (!marks_at(look, w, h, x, y).alpha) {
+      if (!marks_at(look, w, h, x, y, badge).alpha) {
         ++gx;
         continue;
       }
@@ -342,7 +353,7 @@ inline int overlay_marks(const Look &look, int w, int h, int turn, OverlaySegmen
       int to = gx + 1, quiet = 0;
       for (int at = gx + 1; at < tw && quiet < MARK_GAP; ++at) {
         upright_of(turn, w, h, at, gy, x, y);
-        if (marks_at(look, w, h, x, y).alpha) {
+        if (marks_at(look, w, h, x, y, badge).alpha) {
           to = at + 1;
           quiet = 0;
         } else {
@@ -354,7 +365,7 @@ inline int overlay_marks(const Look &look, int w, int h, int turn, OverlaySegmen
                                          static_cast<uint32_t>(pixels)};
         for (int at = from; alpha && at < to; ++at) {
           upright_of(turn, w, h, at, gy, x, y);
-          const Cover c = marks_at(look, w, h, x, y);
+          const Cover c = marks_at(look, w, h, x, y, badge);
           alpha[pixels + at - from] = c.alpha;
           color[pixels + at - from] = c.color;
         }

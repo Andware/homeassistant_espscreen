@@ -319,6 +319,22 @@ static void composing() {
   assert(marks_at(look, w, h, 20, 2).alpha == 0 && marks_at(look, w, h, 20, h - 1).alpha == 0);
   // The full view lays nothing over its picture.
   assert(marks_at(Look{}, w, h, 0, 0).alpha == 0);
+  // The squeezed mark (Look::badge): there only with `badge`, over what lies under it, and the rest as before.
+  {
+    const uint32_t mark[4] = {0xFFFFFFFF, 0x00000000, 0x99000000, 0xFFFFFFFF};
+    Look squeezed = look;
+    squeezed.badge = mark, squeezed.badge_x = 10, squeezed.badge_y = 4, squeezed.badge_w = 2, squeezed.badge_h = 2;
+    assert(marks_at(squeezed, w, h, 10, 4).alpha == 0 && marks_at(squeezed, w, h, 10, 4, true).alpha == 255);
+    assert(marks_at(squeezed, w, h, 10, 4, true).color == 0xFFFF && marks_at(squeezed, w, h, 11, 4, true).alpha == 0);
+    assert(marks_at(squeezed, w, h, 10, 5, true).alpha == 0x99 && marks_at(squeezed, w, h, 10, 5, true).color == 0);
+    assert(marks_at(squeezed, w, h, 30, 14, true).color == 0xFFFF && marks_at(squeezed, w, h, 0, 0, true).color == look.ground);
+    // The overlay with it has more marks than the one without, and the one without is the plain one.
+    size_t with = 0, without = 0, plain = 0;
+    overlay_marks(squeezed, w, h, 0, nullptr, with, nullptr, nullptr, true);
+    overlay_marks(squeezed, w, h, 0, nullptr, without);
+    overlay_marks(look, w, h, 0, nullptr, plain);
+    assert(with == without + 3 && without == plain);
+  }
   {
     uint8_t depth[64];
     bool by_column = true;

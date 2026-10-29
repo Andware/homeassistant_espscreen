@@ -670,7 +670,11 @@ quarter; the glass, the voice and a ring are never squeezed.
   sensing half or a quarter as often.
 - **What it says.** The diagnostic sensor "Pressure" in Home Assistant ("normal", or for example "live tiles 1/2, own
   camera 1/4, sensing 1/2, background 1/2 (the wake word fell behind)") and one warning in the log at every change; a
-  live tile's line says how many pictures it left out. A mark on a squeezed tile is for v2.
+  live tile's line says how many pictures it left out. And the tile itself (2026-10-29): while the governor squeezes the
+  live tiles, each shows speedometer-slow in white on a round dark chip where its loader turns (runtime_tiles
+  live_badge, Look::badge). LVGL draws the chip once as the stream opens, off the glass; the stream makes its overlay
+  with the mark the first time the tiles are squeezed (240 to 350 ms on the D1001, once) and lays that one over its
+  pictures while they are, the plain one at rest, composing as fast as before (26.5 to 30 ms a picture).
 - **Measured before it** (the reTerminal D1001, 2026-10-28, slider drags in a light's card with page 1's four live
   tiles and the camera's video): 27 wake word resets in 7 moments, ui_refresh up to 71 ms, the panel dry once, the
   cores at 73 and 57 % (the H.264 encoder 34.5 % of core 0), the tiles' lay-out 132 ms a picture against 32 on the

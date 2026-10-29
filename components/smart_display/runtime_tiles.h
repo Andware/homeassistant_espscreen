@@ -11810,6 +11810,45 @@ inline void live_loader(live_view::Look &look) {
   look.loader_ring = live_view::rgb565(theme::hex(theme::CAMERA_TRACK));
   look.loader_turn = live_view::rgb565(theme::ha::RAIN);
 }
+// The mark of a squeezed live tile (docs/PLATFORM_PLAN.md 4.10): speedometer-slow in white on a round dark chip where
+// the loader turns (live_view::loader_spot), drawn once by LVGL off the glass and copied by the stream (Look::badge),
+// which lays it over its pictures while the governor squeezes the live tiles. Nullptr without the glyph or snapshots;
+// the caller destroys it after live_view::open.
+inline constexpr uint32_t SQUEEZED_GLYPH = 0xF0F86;  // speedometer-slow, in the status font (packages/core.yaml)
+inline lv_draw_buf_t *live_badge(live_view::Look &look, int card_w, int card_h) {
+#if LV_USE_SNAPSHOT
+  int x = 0, y = 0;
+  lv_font_glyph_dsc_t glyph;
+  if (!header_status_font || !live_view::loader_spot(look, card_w, card_h, x, y) ||
+      !lv_font_get_glyph_dsc(header_status_font, &glyph, SQUEEZED_GLYPH, 0))
+    return nullptr;
+  lv_obj_t *off = lv_obj_create(nullptr);  // a screen never shown: the chip is drawn for the snapshot alone
+  lv_obj_t *chip = lv_obj_create(off);
+  lv_obj_remove_style_all(chip);
+  lv_obj_set_size(chip, look.loader, look.loader);
+  lv_obj_set_style_radius(chip, LV_RADIUS_CIRCLE, 0);
+  lv_obj_set_style_bg_color(chip, lv_color_black(), 0);
+  lv_obj_set_style_bg_opa(chip, LV_OPA_60, 0);
+  lv_obj_t *icon = lv_label_create(chip);
+  lv_obj_set_style_text_font(icon, header_status_font, 0);
+  lv_obj_set_style_text_color(icon, lv_color_white(), 0);
+  lv_label_set_text(icon, "\U000F0F86");
+  lv_obj_center(icon);
+  lv_obj_update_layout(off);
+  lv_draw_buf_t *drawn = lv_snapshot_take(chip, LV_COLOR_FORMAT_ARGB8888);
+  lv_obj_delete(off);
+  if (!drawn) return nullptr;
+  look.badge = reinterpret_cast<const uint32_t *>(drawn->data);
+  look.badge_w = drawn->header.w;
+  look.badge_h = drawn->header.h;
+  look.badge_stride = drawn->header.stride / 4;
+  look.badge_x = x;
+  look.badge_y = y;
+  return drawn;
+#else
+  return nullptr;
+#endif
+}
 // A tile's spot: its card's room on the glass. A place's: the place's room, its camera and its fit.
 inline live_spots::Spot tile_spot(const Widgets &w, const Tile &t) {
   live_spots::Spot spot;
@@ -11908,9 +11947,11 @@ inline live_view::Handle live_spot_open(const live_spots::Spot &spot, const std:
       look.name_y = at.y1 - ext - spot.room.y;
     }
 #endif
+    lv_draw_buf_t *badge = live_badge(look, spot.room.w, spot.room.h);
   const live_view::Handle handle = live_view::open(url, spot.room, look);
 #if LV_USE_SNAPSHOT
     if (name) lv_draw_buf_destroy(name);
+    if (badge) lv_draw_buf_destroy(badge);
 #endif
     return handle;
   }

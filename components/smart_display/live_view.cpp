@@ -106,12 +106,29 @@ struct Source {
 };
 
 // ---- One stream ----
+// One overlay of a tile (live_view.h, Overlay) made for pictures that lie `lies` degrees turned (-1: not made): its shade,
+// and its marks' segments and pixels, in PSRAM.
+struct MadeOverlay {
+  int lies = -1;
+  uint8_t *shade = nullptr, *alpha = nullptr;
+  OverlaySegment *segments = nullptr;
+  uint16_t *color = nullptr;
+  Overlay over;
+  void clear() {
+    for (void *part : {static_cast<void *>(shade), static_cast<void *>(segments), static_cast<void *>(alpha),
+                       static_cast<void *>(color)})
+      if (part) free(part);
+    *this = MadeOverlay{};
+  }
+};
+
 struct Stream {
   const Source *source = nullptr;
   std::string url;
   Rect area;
   Look look;
-  uint32_t *name = nullptr;  // the stream's own copy of look.name
+  uint32_t *name = nullptr;   // the stream's own copy of look.name
+  uint32_t *badge = nullptr;  // and of look.badge
   int turn = 0;
   std::atomic<bool> stopping{false}, done{false}, failed{false};
   // Its room on the glass (glass.h): LVGL is kept out of where its picture lies from the first picture on (placed by
@@ -142,14 +159,10 @@ struct Stream {
   uint8_t *input = nullptr, *picture = nullptr;
   uint16_t *canvas = nullptr;
   size_t input_size = 0, picture_size = 0, canvas_size = 0;
-  // What a tile lays over each picture (live_view.h, Overlay), made at its first picture for the way its pictures lie:
-  // `lies` degrees turned (X-Turn; -1 before the first); its shade, and its marks' segments and pixels, in PSRAM.
+  // What a tile lays over each picture (MadeOverlay), made at its first picture for the way its pictures lie (X-Turn);
+  // and the same with the mark of a squeezed tile, made the first time the governor squeezes the live tiles.
   // `onto_turn`: what the PPA still turns on a picture's way onto the glass, for the report.
-  int lies = -1;
-  uint8_t *over_shade = nullptr, *over_alpha = nullptr;
-  OverlaySegment *over_segments = nullptr;
-  uint16_t *over_color = nullptr;
-  Overlay over;
+  MadeOverlay plain, squeezed;
   std::atomic<int> onto_turn{0};
   // The camera's sound (a full view on a board with a speaker): parts the task puts in `sound`, which the main loop
   // hands to the speaker unless `muted`.
@@ -219,11 +232,10 @@ static void free_stream(Stream *s) {
   if (s->input) free(s->input);
   if (s->picture) free(s->picture);
   if (s->canvas) free(s->canvas);
-  if (s->over_shade) free(s->over_shade);
-  if (s->over_segments) free(s->over_segments);
-  if (s->over_alpha) free(s->over_alpha);
-  if (s->over_color) free(s->over_color);
+  s->plain.clear();
+  s->squeezed.clear();
   if (s->name) free(s->name);
+  if (s->badge) free(s->badge);
   if (s->under) free(s->under);
   picture_engine::drop(s->ppa);
   if (s->room >= 0) glass::give_back(s->room);
@@ -242,43 +254,58 @@ static esp_err_t copy(Stream &s, const void *in, int in_w, int rows, int bx, int
   return static_cast<esp_err_t>(picture_engine::blit(s.ppa, block));
 }
 
-// A tile's overlay (live_view.h) for pictures that lie turned `lies`: made once, on the stream's task, at its first
-// picture; again only if its pictures came to lie otherwise. False without the memory for it.
-static bool overlay_for(Stream &s, int lies) {
-  if (s.lies == lies) return true;
+// One overlay of a tile (live_view.h) for pictures that lie turned `lies`, with the squeezed mark or without: made on
+// the stream's task, once. False without the memory for it.
+static bool make_overlay(Stream &s, MadeOverlay &made, int lies, bool badge) {
   const int64_t from = esp_timer_get_time();
   const int w = s.area.w, h = s.area.h;
-  for (void *old : {static_cast<void *>(s.over_shade), static_cast<void *>(s.over_segments),
-                    static_cast<void *>(s.over_alpha), static_cast<void *>(s.over_color)})
-    if (old) free(old);
-  s.over_shade = s.over_alpha = nullptr, s.over_segments = nullptr, s.over_color = nullptr, s.lies = -1;
+  made.clear();
   Overlay o{turned_w(w, h, lies), turned_h(w, h, lies)};
-  s.over_shade = static_cast<uint8_t *>(heap_caps_malloc(std::max(w, h), MALLOC_CAP_SPIRAM));
-  if (!s.over_shade) return false;
-  o.shade_count = overlay_shade(s.look, w, h, lies, s.over_shade, o.shade_by_column, o.shade_from);
+  made.shade = static_cast<uint8_t *>(heap_caps_malloc(std::max(w, h), MALLOC_CAP_SPIRAM));
+  if (!made.shade) return false;
+  o.shade_count = overlay_shade(s.look, w, h, lies, made.shade, o.shade_by_column, o.shade_from);
   size_t pixels = 0;
-  o.count = overlay_marks(s.look, w, h, lies, nullptr, pixels);
-  s.over_segments = static_cast<OverlaySegment *>(
+  o.count = overlay_marks(s.look, w, h, lies, nullptr, pixels, nullptr, nullptr, badge);
+  made.segments = static_cast<OverlaySegment *>(
       heap_caps_malloc(sizeof(OverlaySegment) * std::max(o.count, 1), MALLOC_CAP_SPIRAM));
-  s.over_alpha = static_cast<uint8_t *>(heap_caps_malloc(std::max<size_t>(pixels, 1), MALLOC_CAP_SPIRAM));
-  s.over_color = static_cast<uint16_t *>(heap_caps_malloc(std::max<size_t>(pixels, 1) * 2, MALLOC_CAP_SPIRAM));
-  if (!s.over_segments || !s.over_alpha || !s.over_color) return false;
-  overlay_marks(s.look, w, h, lies, s.over_segments, pixels, s.over_alpha, s.over_color);
-  o.shade = s.over_shade, o.segments = s.over_segments, o.alpha = s.over_alpha, o.color = s.over_color;
-  s.over = o;
-  s.lies = lies;
-  ESP_LOGI(TAG, "its card's overlay for pictures turned %d: a shade of %d %s, %d marks of %u pixels, made in %u ms", lies,
-           o.shade_count, o.shade_by_column ? "columns" : "rows", o.count, (unsigned) pixels,
-           (unsigned) ((esp_timer_get_time() - from) / 1000));
+  made.alpha = static_cast<uint8_t *>(heap_caps_malloc(std::max<size_t>(pixels, 1), MALLOC_CAP_SPIRAM));
+  made.color = static_cast<uint16_t *>(heap_caps_malloc(std::max<size_t>(pixels, 1) * 2, MALLOC_CAP_SPIRAM));
+  if (!made.segments || !made.alpha || !made.color) {
+    made.clear();
+    return false;
+  }
+  overlay_marks(s.look, w, h, lies, made.segments, pixels, made.alpha, made.color, badge);
+  o.shade = made.shade, o.segments = made.segments, o.alpha = made.alpha, o.color = made.color;
+  made.over = o;
+  made.lies = lies;
+  ESP_LOGI(TAG, "its card's overlay%s for pictures turned %d: a shade of %d %s, %d marks of %u pixels, made in %u ms",
+           badge ? " with the squeezed mark" : "", lies, o.shade_count, o.shade_by_column ? "columns" : "rows", o.count,
+           (unsigned) pixels, (unsigned) ((esp_timer_get_time() - from) / 1000));
   return true;
 }
+// A tile's overlay for pictures that lie turned `lies`: made at its first picture, again only if its pictures came to
+// lie otherwise. False without the memory for it.
+static bool overlay_for(Stream &s, int lies) {
+  return s.plain.lies == lies || make_overlay(s, s.plain, lies, false);
+}
+// What a picture gets laid over it now: with the squeezed mark while the governor squeezes the live tiles (pressure.h),
+// made the first time it does; the plain one at rest, for a card without the mark, or when its memory is not there
+// (the mark then stays off for this stream).
+static const Overlay &overlay_now(Stream &s) {
+  if (!s.look.badge || pressure::level_of(pressure::LIVE_TILES) == 0) return s.plain.over;
+  if (s.squeezed.lies != s.plain.lies && !make_overlay(s, s.squeezed, s.plain.lies, true)) {
+    s.look.badge = nullptr;
+    return s.plain.over;
+  }
+  return s.squeezed.over;
+}
 
-// A tile's loader square: where it lies in the card's canvas, as the pictures lie (s.lies), and on the glass.
+// A tile's loader square: where it lies in the card's canvas, as the pictures lie (s.plain.lies), and on the glass.
 static bool loader_square(const Stream &s, Rect &in_canvas, Rect &on_glass) {
   int lx = 0, ly = 0;
-  if (s.lies < 0 || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return false;
+  if (s.plain.lies < 0 || !loader_spot(s.look, s.area.w, s.area.h, lx, ly)) return false;
   const int size = s.look.loader;
-  in_canvas = in_turned(Rect{lx, ly, size, size}, s.lies, s.area.w, s.area.h);
+  in_canvas = in_turned(Rect{lx, ly, size, size}, s.plain.lies, s.area.w, s.area.h);
   const glass::Panel panel = glass::panel();
   on_glass = on_panel(Rect{s.area.x + lx, s.area.y + ly, size, size}, s.turn, panel.w, panel.h);
   return true;
@@ -289,7 +316,7 @@ static bool loader_square(const Stream &s, Rect &in_canvas, Rect &on_glass) {
 static bool lay_loader(Stream &s) {
   Rect at, unused;
   if (!s.under || !loader_square(s, at, unused)) return false;
-  const int cw = s.over.w, size = s.look.loader;
+  const int cw = s.plain.over.w, size = s.look.loader;
   for (int j = 0; j < size; ++j)
     memcpy(s.under + static_cast<size_t>(j) * size, s.canvas + static_cast<size_t>(at.y + j) * cw + at.x,
            static_cast<size_t>(size) * 2);
@@ -318,7 +345,7 @@ static void turn_loader(Stream &s) {
   Rect at, target;
   if (!s.warming || now - s.turned_at < LOADER_STEP_MS || !loader_square(s, at, target)) return;
   s.turned_at = now;
-  const int cw = s.over.w, ch = s.over.h, size = s.look.loader;
+  const int cw = s.plain.over.w, ch = s.plain.over.h, size = s.look.loader;
   for (int j = 0; j < size; ++j)
     memcpy(s.canvas + static_cast<size_t>(at.y + j) * cw + at.x, s.under + static_cast<size_t>(j) * size,
            static_cast<size_t>(size) * 2);
@@ -329,7 +356,7 @@ static void turn_loader(Stream &s) {
   if (!s.stopping && glass::armed(s.room))
     err = copy(s, s.canvas, cw, ch, at.x, at.y, size, size, glass::frame_buffer(),
                static_cast<size_t>(panel.w) * panel.h * 2, panel.w, panel.h, target.x, target.y, picture_engine::AS_IS,
-               turn_between(s.lies, s.turn));
+               turn_between(s.plain.lies, s.turn));
   give_glass();
   if (err != ESP_OK) s.warming = false;  // the loader stops where it stands; the pictures go on
 }
@@ -424,7 +451,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still, int 
       into.in_w == cw && into.in_h == ch) {
     int64_t from = esp_timer_get_time();
     uint16_t *card = reinterpret_cast<uint16_t *>(s.picture) + static_cast<size_t>(into.in_y) * stride_w + into.in_x;
-    lay_overlay(card, stride_w, s.over);
+    lay_overlay(card, stride_w, overlay_now(s));
     const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
     s.compose_us += static_cast<uint32_t>(esp_timer_get_time() - from);
     hold_timed(s);
@@ -460,7 +487,7 @@ static void show(Stream &s, const uint8_t *data, size_t length, bool still, int 
     int64_t to = esp_timer_get_time();
     s.into_us += static_cast<uint32_t>(to - from);
     if (err == ESP_OK) {
-      lay_overlay(s.canvas, cw, s.over);
+      lay_overlay(s.canvas, cw, overlay_now(s));
       loading = still && lay_loader(s);
       from = esp_timer_get_time();
       s.compose_us += static_cast<uint32_t>(from - to);
@@ -722,7 +749,7 @@ static bool take_frames(Stream &s) {
   while (!s.stopping) {
     if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(WAIT_MS)) || !s.own_full.load(std::memory_order_acquire)) continue;
     const int64_t t0 = esp_timer_get_time();
-    lay_overlay(s.canvas, cw, s.over);
+    lay_overlay(s.canvas, cw, overlay_now(s));
     const int64_t t1 = esp_timer_get_time();
     s.compose_us += static_cast<uint32_t>(t1 - t0);
     const Rect target = on_panel(s.area, s.turn, panel.w, panel.h);
@@ -935,6 +962,20 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
                static_cast<size_t>(look.name_w) * 4);
       s->look.name = s->name;
       s->look.name_stride = look.name_w;
+    }
+  }
+  // The squeezed mark the same way; without the memory for it the tile simply goes without.
+  s->look.badge = nullptr;
+  if (ok && look.tile && look.badge && look.badge_w > 0 && look.badge_h > 0) {
+    s->badge = static_cast<uint32_t *>(
+        heap_caps_malloc(static_cast<size_t>(look.badge_w) * look.badge_h * 4, MALLOC_CAP_SPIRAM));
+    if (s->badge) {
+      const int stride = look.badge_stride ? look.badge_stride : look.badge_w;
+      for (int y = 0; y < look.badge_h; ++y)
+        memcpy(s->badge + static_cast<size_t>(y) * look.badge_w, look.badge + static_cast<size_t>(y) * stride,
+               static_cast<size_t>(look.badge_w) * 4);
+      s->look.badge = s->badge;
+      s->look.badge_stride = look.badge_w;
     }
   }
   if (!ok) {
