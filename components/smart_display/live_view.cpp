@@ -910,6 +910,14 @@ static void task_main(void *arg) {
 
 bool full_view() { return available() && picture_engine::limits().picture_bytes > 0; }
 
+// The live tiles on the glass now, for the governor's heard rule (pressure::live_tiles): the tile streams, not a view.
+static void count_tiles() {
+  uint8_t n = 0;
+  for (auto *s : streams)
+    if (s && !s->stopping && s->look.tile) ++n;
+  pressure::live_tiles.store(n, std::memory_order_relaxed);
+}
+
 Handle open(const std::string &url, const Rect &area, const Look &look, bool sound, audio_owner::Role role) {
   if (!available() || area.empty() || (!look.tile && !full_view())) return -1;
   int slot = -1;
@@ -1004,6 +1012,7 @@ Handle open(const std::string &url, const Rect &area, const Look &look, bool sou
     free_stream(s);
     return -1;
   }
+  count_tiles();
   if (own) own_add(s);
   if (look.tile) tiles_open.fetch_add(1, std::memory_order_relaxed);
   if (s->sound || role == audio_owner::Role::DOORBELL) {
@@ -1237,6 +1246,7 @@ void tick(const std::function<void(Handle, Event)> &tell) {
       const bool turned = s->turn != turn, ended = s->stopping && !s->failed;
       glass::disarm(s->room, false);  // its task has ended: nothing of it copies, and LVGL draws the room again
       streams[slot] = nullptr;
+      count_tiles();
       // A full view's stream gone for good: LVGL draws the whole glass once more, now that its task decodes and copies
       // nothing. Now and then the view's top bar, the back key and the name, stayed over the page after the camera
       // closed while the picture's room below it was drawn again, until something else drew there (2026-10-15, a P4

@@ -107,6 +107,10 @@ static void test_finger() {
 static void test_heard() {
   Governor g;
   g.heard(true);
+  // One live tile crowds nothing: the heard rule needs two or more.
+  live_tiles.store(1);
+  assert(g.level(LIVE_TILES) == 0 && g.level(OWN_CAMERA) == 0);
+  live_tiles.store(2);
   assert(g.level(LIVE_TILES) == 2 && g.level(OWN_CAMERA) == 0 && g.level(SENSING) == 0 && g.level(BACKGROUND) == 0);
   for (Work w : {GLASS, VOICE, DOORBELL}) assert(g.level(w) == 0);
   g.signal(SLOW_LOOP, 1000);

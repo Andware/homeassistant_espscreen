@@ -33,6 +33,8 @@ enum Work : uint8_t { GLASS, VOICE, DOORBELL, LIVE_TILES, OWN_CAMERA, SENSING, B
 enum Sign : uint8_t { GLASS_MISS, SLOW_LOOP, WAKE_WORD_RESET, SIGNS };
 
 constexpr uint8_t MOST = 3;  // steps of pressure
+// How many live tiles run on the glass now (live_view counts its tile streams): the heard rule needs two or more.
+inline std::atomic<uint8_t> live_tiles{0};
 // Each step's levels, by Work. The order of the table is the order of what gives up.
 constexpr uint8_t STEPS[MOST + 1][WORKS] = {
     // GLASS VOICE DOORBELL LIVE_TILES OWN_CAMERA SENSING BACKGROUND
@@ -109,7 +111,9 @@ class Governor {
     // and a Guition 10.1 watching a reTerminal D1001 full screen: each tap and each slow loop halved his picture there).
     if (w == OWN_CAMERA && heard_) return 0;
     const uint8_t stepped = STEPS[step_][w];
-    const uint8_t least = w == LIVE_TILES && heard_ ? MOST - 1 : 0;
+    // The live tiles give way while someone hears the microphone only when there are two or more of them: one tile
+    // crowds nothing, and Max saw it squeezed for no reason (a reTerminal D1001 with one live tile, 2026-10-29).
+    const uint8_t least = w == LIVE_TILES && heard_ && live_tiles.load(std::memory_order_relaxed) >= 2 ? MOST - 1 : 0;
     const uint8_t level = stepped > touch ? stepped : touch;
     return level > least ? level : least;
   }
