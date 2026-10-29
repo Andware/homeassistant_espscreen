@@ -26,10 +26,11 @@ class P4Build(unittest.TestCase):
         self.assertRegex(source, r'if _esp32_p4\(\):\n\s+_p4\(config\)')
         self.assertIn('return get_esp32_variant() == VARIANT_ESP32P4', source)
         # The engine on every ESP32 build, from the table (engine_build.py); its wraps the panel as ESP-IDF makes it and
-        # every PPA burst shorter (glass_dsi.cpp), a turned copy in pieces (ppa_guard.cpp).
+        # the panel watch's frame callback and every PPA burst shorter (glass_dsi.cpp), a turned copy in pieces (ppa_guard.cpp).
         self.assertRegex(source, r'if CORE\.is_esp32:\n\s+await _engine\(config\)')
         engines = (COMPONENT / 'engine_build.py').read_text()
-        for wrap in ('esp_lcd_new_panel_dpi', 'ppa_register_client', 'ppa_do_scale_rotate_mirror'):
+        for wrap in ('esp_lcd_new_panel_dpi', 'esp_lcd_dpi_panel_register_event_callbacks', 'ppa_register_client',
+                     'ppa_do_scale_rotate_mirror'):
             self.assertIn(f'"{wrap}"', engines)
         self.assertIn('cg.add_build_flag(f"-Wl,--wrap={wrap}")', source)
         self.assertIn('add_idf_component(name=name, ref=ref)', source)

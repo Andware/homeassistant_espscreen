@@ -24,6 +24,7 @@
 //
 // What a PC can check is pure: a rectangle of the screen on a turned panel (on_panel, tests/test_live_view.cpp).
 #include <cstdint>
+#include <string>
 // GLASS_DSI and GLASS_RGB come with ESPHome's defines (engine_build.py); a PC test has neither and builds without them.
 #if __has_include("esphome/core/defines.h")
 #include "esphome/core/defines.h"
@@ -113,9 +114,25 @@ void give_back(Room room);
 // LVGL draws the whole glass again (a full view's stream gone for good, its room drawn again while its task may still
 // have been busy with its last picture).
 void redraw_all();
-// The underrun flag read and counted (every 50 ms, from the streams' tick), and how often the panel ran dry since boot.
+// How often the panel ran dry since boot: the frames of blue (the panel watch below counts them), every 50 ms from the
+// streams' tick.
 void tick();
 uint32_t misses();
+// The panel watch (docs/CAMERA.md "The panel's share of the memory bus"): at the end of every frame the panel's own
+// callback reads whether the DSI bridge ran dry in it, so the screen sees each frame of blue itself, with no eye on the
+// glass. A flash is a run of such frames; each is noted with who held the glass as it began and whether LVGL was
+// flushing, the finger and the log's lines in the second before, beside the DSI host's own error flags (a blue that is
+// no underrun). Once a minute watch_said() becomes that minute in one line (the "Panel watch" sensor, and the log when
+// the panel ran dry), "quiet" when it never did. The runtime notes what the glass cannot see: every line of the log and
+// the finger.
+std::string watch_said();
+void note_log_line();
+void note_finger(bool down);
+// For a panel kind's file, from an interrupt too: who holds the glass now (LVGL's refresh, a stream, another writer: a
+// still's decode, a page's picture ahead) and whether LVGL flushes.
+enum Holder : uint8_t { NOBODY, LVGL, STREAM, OTHER, HOLDERS };
+Holder holder_now();
+bool flushing_now();
 // Who keeps a stream waiting for the glass (live_view's 10 s report, PLATFORM_PLAN 4.10): LVGL's refreshes, how many
 // and how long it held the glass, in all and the longest; how much of that went to flushing what it drew (the turn on
 // the PPA of a turned glass, then the panel's copy and its wait for the copy's end) and how much of the flushing to the
@@ -153,6 +170,9 @@ inline void give_back(Room) {}
 inline void redraw_all() {}
 inline void tick() {}
 inline uint32_t misses() { return 0; }
+inline std::string watch_said() { return {}; }
+inline void note_log_line() {}
+inline void note_finger(bool) {}
 struct Held {
   uint32_t refreshes = 0, flushes = 0, refresh_us = 0, refresh_most_us = 0, flush_us = 0, flush_most_us = 0,
            turn_us = 0, turn_most_us = 0;

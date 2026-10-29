@@ -412,9 +412,15 @@ every 16 ms. When another DMA holds the bus too long (the PPA scaling and turnin
 DMA2D that copies what LVGL drew), the bridge runs dry and the panel shows a frame of blue, its colour for no data;
 ESP-IDF only logs that from its interrupt, on the UART. A tester with a Guition 10.1-inch P4 (pixel clock 70 MHz) saw
 such flashes while a camera streamed. So the firmware does two things on a P4 (`glass.h`, "The panel's share of
-the memory bus"). It counts: the bridge's underrun flag is read every 50 ms and the count stands in every stream report
-(`the panel ran dry N times since boot`) and in Home Assistant as the diagnostic sensor "Panel misses", so a log or a
-graph says whether a change helped. The flag comes with a mask the firmware takes off: the bridge only raises it for an
+the memory bus"). It watches: at the end of every frame the panel's own callback (ESP-IDF's `on_vsync`, which
+ESPHome's display leaves free) reads and clears the bridge's underrun flag, so each frame of blue is counted where it
+happened, with no eye on the glass. The count of blue frames stands in every stream report (`the panel ran dry N times
+since boot`) and in Home Assistant as the diagnostic sensor "Panel misses", and once a minute the sensor "Panel watch"
+says the minute in one line: "quiet" with the frames it saw, or how many flashes (runs of blue frames) out of how many
+frames, for each flash who held the glass as it began (LVGL drawing or flushing, a stream, another writer), whether a finger was on the glass
+and how many log lines came in the second before, and the DSI host's own error flags beside them (a blue that is no
+underrun). The log gets the same line, once a minute and only after a flash. Home Assistant's history of the sensor is
+the record a change is judged by. The flag comes with a mask the firmware takes off: the bridge only raises it for an
 underrun past a line of the frame, and ESP-IDF sets that line to the panel's width, 800 of the 1280 lines of a 10.1-inch
 panel, so an underrun early in the frame, which blues most of the glass, raised no flag while one late in the frame,
 which blues the bottom, did. Until 2026-10-29 the count saw the second kind only, and the whole-glass flash a slider

@@ -40,6 +40,9 @@ void *frame_buffer() {
 }
 void tick() {}
 uint32_t misses() { return 0; }
+std::string watch_said() { return {}; }  // no panel watch either: nothing tells a frame that slipped
+void note_log_line() {}
+void note_finger(bool) {}
 
 }  // namespace glass
 

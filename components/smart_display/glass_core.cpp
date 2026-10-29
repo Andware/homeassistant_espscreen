@@ -11,6 +11,7 @@
 #include "lvgl.h"
 #include "lvgl_private.h"  // lv_inv_area, lv_area_intersect and the display's list, which LVGL 9 keeps out of lvgl.h
 
+#include <esp_attr.h>
 #include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
@@ -35,7 +36,6 @@ int turn() { return lvgl ? static_cast<int>(lvgl->get_rotation()) : 0; }
 // ---- One writer at a time ----
 // Who holds it, for the count of who keeps a stream waiting (Held below): LVGL's refresh, a stream, or another writer
 // (a still's decode, a page's picture ahead). Set and cleared by the holder only, at its outermost hold.
-enum Holder : uint8_t { NOBODY, LVGL, STREAM, OTHER };
 static std::atomic<uint8_t> holder{NOBODY};
 static int depth = 0;  // the holder's own nesting; only the task that holds the lock touches it
 void hold() {
@@ -93,6 +93,8 @@ static void flush_finish(lv_event_t *) {
   flushing.store(false, std::memory_order_relaxed);
   flushes.add(static_cast<uint32_t>(esp_timer_get_time() - flush_from));
 }
+IRAM_ATTR Holder holder_now() { return static_cast<Holder>(holder.load(std::memory_order_relaxed)); }
+IRAM_ATTR bool flushing_now() { return flushing.load(std::memory_order_relaxed); }
 static bool holding = false;  // LVGL holds the glass while it refreshes, from the first stream or still on and for good
 bool watch() {
   if (!lv_display_get_default() || !lock) return false;

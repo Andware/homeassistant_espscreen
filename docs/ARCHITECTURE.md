@@ -68,7 +68,10 @@ The lock means two things at once, and both matter:
   2D-DMA, and two of them from different tasks is what hangs the chip (espressif/esp-idf #18999, #19108, #19096).
 
 On DSI the glass counts the panel running dry (`glass::misses`, the "Panel misses" sensor), with the chip's mask on
-that flag taken off (ESP-IDF masks underruns in the first lines of a frame, the ones that blue the whole glass); an RGB
+that flag taken off (ESP-IDF masks underruns in the first lines of a frame, the ones that blue the whole glass), in the
+panel's own callback at each frame's end: the panel watch, which notes for each flash who held the glass and says each
+minute in the "Panel watch" sensor (`glass::watch_said`), so a flash needs no eye on the glass. The runtime only tells
+it what the glass cannot see (log lines, the finger: `glass::note_log_line`, `note_finger`); an RGB
 panel's driver keeps no such count, so on an S3 a frame that shifts sideways is seen by eye only. Detail: docs/PICTURE_ARCHITECTURE.md 3.1, docs/CAMERA.md "Live on
 the P4 boards" and "Live on an ESP32-S3"; tests: `tests/test_live_view.cpp` (a rectangle on a turned panel).
 

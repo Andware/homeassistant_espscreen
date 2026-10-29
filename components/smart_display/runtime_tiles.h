@@ -12536,6 +12536,7 @@ inline std::string pressure_said;
 // One line of the log, on any task: micro_wake_word's "Not enough free bytes in ring buffer ... Resetting" (its
 // inference fell behind) and ESPHome's "<component> took a long time for an operation" (the main loop held up).
 inline void pressure_log(void *, uint8_t level, const char *tag, const char *line, size_t length) {
+  glass::note_log_line();  // every line written, for the panel watch (glass.h)
   if (level > ESPHOME_LOG_LEVEL_WARN || tag == nullptr || line == nullptr) return;
   const std::string_view text(line, length);
   if (strcmp(tag, "micro_wake_word") == 0 && text.find("ring buffer") != std::string_view::npos)
@@ -12591,6 +12592,7 @@ inline void pressure_tick(uint32_t now) {
   // A slider held is a drag, whichever finger holds it (the touch panel's, or the bench's own pointer).
   if (captured_slider) governor.touching(true, true, now);
   governor.tick(now);
+  glass::note_finger(governor.touched());
   for (int w = 0; w < pressure::WORKS; ++w)
     pressure::shared[w].store(governor.level(static_cast<pressure::Work>(w)), std::memory_order_relaxed);
   const std::string text = pressure_text();
