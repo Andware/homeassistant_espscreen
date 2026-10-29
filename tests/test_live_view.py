@@ -182,5 +182,27 @@ class LiveTileName(unittest.TestCase):
         self.assertIn('lv_obj_set_pos(w.title,0,height-name_h);', camera)
 
 
+class OneConnectionAtATime(unittest.TestCase):
+    """A camera opened full screen streams after the page's live tiles have ended, never beside them: an S3 has internal
+    RAM for one stream's network buffers (docs/CAMERA.md, "Live on an ESP32-S3"). The full view is always the stream;
+    stills only when it cannot open, and the log says so."""
+
+    def test_the_full_view_waits_for_the_tiles_streams_to_end(self):
+        tiles = (COMPONENT / 'runtime_tiles.h').read_text()
+        begin = tiles[tiles.index('inline void live_begin(const std::string &url) {'):]
+        begin = begin[:begin.index('\n}\n')]
+        steps = ['live_tiles_halt();', 'if (live_view::ending()) {', 'live_link_waiting = url;',
+                 'camera.stream.opened(live_view::open(url,']
+        self.assertEqual([begin.index(step) for step in steps], sorted(begin.index(step) for step in steps))
+        self.assertIn('the full view could not stream', begin)
+        self.assertIn('constexpr uint32_t LIVE_LINK_WAIT_MS = 2000;', tiles)
+        tick = tiles[tiles.index('inline void live_tick() {'):]
+        self.assertIn('live_begin(live_link_waiting);', tick[:tick.index('live_view::tick(')])
+        # A closed stream counts until the tick frees it, its connection and its memory with it.
+        live = (COMPONENT / 'live_view.cpp').read_text()
+        ending = live[live.index('bool ending() {'):live.index('static void report(')]
+        self.assertIn('s->stopping.load(', ending)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -11671,6 +11671,26 @@ inline bool live_wanted() {
   return !drawn_over(camera_root, area.x, area.y, area.w, area.h);
 }
 inline uint32_t camera_opened_at = 0;  // when the view opened, for the log of a live camera's first picture
+inline bool camera_ram_watched = false;  // the lowest internal RAM is watched from the view's opening (camera_ram_low)
+// The lowest internal RAM since the view opened, in KB, and the watch ends; -1 when none ran.
+inline bool camera_ram_watch() {
+#ifdef USE_ESP32
+  return heap_caps_monitor_local_minimum_free_size_start() == ESP_OK;
+#else
+  return false;
+#endif
+}
+inline int camera_ram_low() {
+  if (!camera_ram_watched) return -1;
+  camera_ram_watched = false;
+#ifdef USE_ESP32
+  const size_t low = heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL);
+  heap_caps_monitor_local_minimum_free_size_stop();
+  return static_cast<int>(low / 1024);
+#else
+  return -1;
+#endif
+}
 // The camera's sound: on, until someone mutes it; muted stays muted for every camera until the screen starts again.
 inline bool camera_muted = false;
 inline lv_obj_t *camera_sound_key = nullptr;
@@ -11726,13 +11746,32 @@ inline void camera_warm(bool on) {
   lv_obj_remove_flag(camera_warm_spinner, LV_OBJ_FLAG_HIDDEN);
 }
 inline void live_tiles_halt();
+// The full view's link while the streams of the page under it end (live_view::ending), and since when; live_tick opens
+// it once they are gone.
+inline std::string live_link_waiting;
+inline uint32_t live_link_waiting_at = 0;
+constexpr uint32_t LIVE_LINK_WAIT_MS = 2000;  // a stream that will not end by then: the view opens beside it
 inline void live_begin(const std::string &url) {
-  ESP_LOGI("camera", "live link %u ms after the camera opened", (unsigned) (esphome::millis() - camera_opened_at));
+  const uint32_t now = esphome::millis();
+  if (live_link_waiting.empty()) ESP_LOGI("camera", "live link %u ms after the camera opened", (unsigned) (now - camera_opened_at));
   // The live tiles and places of the page under the view stop before the view's stream exists, not at the next
   // drawing (live_stop_covered): a tile's task could still copy its picture into the frame buffer after LVGL had drawn
   // the view over the page, and a band of it stayed under the view's top bar until the view's first picture (2026-10-24,
   // the reTerminal D1001, two live tiles). A page under a full view never streams anyway.
   live_tiles_halt();
+  // And the view's stream opens once theirs are gone, never beside them: one connection at a time (live_view::ending).
+  if (live_view::ending()) {
+    if (live_link_waiting.empty()) live_link_waiting_at = now;
+    if (now - live_link_waiting_at < LIVE_LINK_WAIT_MS) {
+      live_link_waiting = url;
+      return;
+    }
+    ESP_LOGW("camera", "the page's streams did not end in %u ms: the full view opens beside them", (unsigned) LIVE_LINK_WAIT_MS);
+  }
+  if (!live_link_waiting.empty()) {
+    ESP_LOGI("camera", "live link opened %u ms later, after the page's streams ended", (unsigned) (now - live_link_waiting_at));
+    live_link_waiting.clear();
+  }
   // The view a ring opened (module doorbell) holds the speaker as the ring, which nothing takes it from; any other
   // full view as a camera's sound, which the voice assistant may borrow and a ring takes (audio_owner.h).
   audio_owner::Role role = audio_owner::Role::CAMERA_SOUND;
@@ -11745,6 +11784,7 @@ inline void live_begin(const std::string &url) {
     return;
   }
   // No room for another stream, or no memory: the view takes the stills of every board (ViewStream::opened).
+  ESP_LOGW("camera", "the full view could not stream (no room for another stream, or no memory): it shows stills");
   pictures_round();
 }
 
@@ -12107,10 +12147,16 @@ inline void live_tick() {
     lv_display_add_event_cb(lv_display_get_default(), [](lv_event_t *) { live_stop_covered(); }, LV_EVENT_REFR_START, nullptr);
   }
   live_stop_covered();
+  if (!live_link_waiting.empty() &&
+      (!live_view::ending() || esphome::millis() - live_link_waiting_at >= LIVE_LINK_WAIT_MS)) {
+    if (camera_root && live_wanted() && !camera.stream.live) live_begin(live_link_waiting);
+    else live_link_waiting.clear();  // the view closed meanwhile
+  }
   live_view::tick([](live_view::Handle handle, live_view::Event event) {
     if (camera_root && camera.stream.is(handle)) {
       if (event == live_view::Event::FIRST) {
-        ESP_LOGI("camera", "live: first picture %u ms after the camera opened", (unsigned) (esphome::millis() - camera_opened_at));
+        ESP_LOGI("camera", "live: first picture %u ms after the camera opened, internal RAM at least %d KB meanwhile",
+                 (unsigned) (esphome::millis() - camera_opened_at), camera_ram_low());
         camera.shown = true;
         camera_note_text("");  // the spinner goes; LVGL no longer draws there while the camera streams
         camera_warm(true);     // in the top bar until the camera is live (LIVE, at once for a picture that is)
@@ -12239,6 +12285,8 @@ inline void camera_close() {
 #endif
   // A live picture stops first: nothing of it writes the glass once LVGL draws the page there again.
   live_view::close(camera.stream.handle);
+  live_link_waiting.clear();
+  camera_ram_low();  // a view that never streamed ends its watch too
   lv_obj_delete(camera_root);
   camera_root = camera_picture = camera_note = camera_back = camera_title = camera_spinner = map_card_obj = nullptr;
   camera_sound_key = camera_warm_spinner = nullptr;  // they went with the view
@@ -12451,6 +12499,8 @@ inline void camera_open(const std::string &entity, const std::string &name, int 
   map_pinned = !focus.empty();
   camera.open(entity);
   camera_opened_at = esphome::millis();
+  // The lowest internal RAM from here to its first picture (said with it): the page's streams end and the view's starts.
+  camera_ram_watched = live_view::available() && camera_ram_watch();
   const int width = lv_display_get_horizontal_resolution(lv_display_get_default());
   const bool large = ui::large();
   // On the top layer: above the tiles, every card and an alert, which is there again after Back.

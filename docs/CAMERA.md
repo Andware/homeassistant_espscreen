@@ -517,6 +517,10 @@ LVGL's core 1. The screen runs:
 - **Six pictures a second on that tile** at most, as on a P4; while a finger drags, the governor halves it.
 - **A full view of at most eight pictures a second.** The tile under it stops while the view is open and comes back
   when it closes.
+- **One connection at a time.** The view's stream opens once the tile's has ended and its task let go of its
+  connection and memory (`live_view::ending`), never beside it; a tile that has not ended after 2 s gets a log line and
+  the view opens anyway. The view is always the stream: only when it cannot open does it show stills, and the log says
+  so ("the full view could not stream").
 
 **Measured** on a Guition 4848S040 (dev, 2026-10-28, a WebRTC camera, a tile of 448 x 118, each setting for 150 s):
 
@@ -530,7 +534,20 @@ LVGL's core 1. The screen runs:
 The lows of one tile come from six boots with the tile and the full view in turn; the core does not change them. So
 one tile, decoding on core 0. With a finger dragging over the tile for 90 s LVGL refreshed 435 times in 10 s with
 the decoding on core 0 and 410 on core 1, and no loop was slow either way. A full view of 480 x 404 showed 5.3 pictures
-a second, 37 ms decoding each (on core 1). A second tile would need the Wi-Fi's and lwIP's buffers in PSRAM, which is not measured
+a second, 37 ms decoding each (on core 1).
+
+Opening the camera full screen, measured on a Guition 4848S040 (dev, 2026-10-29, a WebRTC camera, three times each;
+the first picture from the moment it opened, internal RAM at its lowest from then until that picture, both in the
+log's "live: first picture" line):
+
+| | First picture | Internal RAM at its lowest |
+|---|---|---|
+| From the page with its live tile streaming | 370, 558 and 1264 ms | 46 to 48 KB |
+| From a page without one (cold) | 289 to 306 ms | 50 to 52 KB |
+
+The tile's stream ended about 100 ms after the view opened, before the view's link came, so the view took the same
+place (stream 0) and never ran beside it. The 1264 ms came while the app answered slowly (the tile waited 360 to
+540 ms a picture for it then). A second tile would need the Wi-Fi's and lwIP's buffers in PSRAM, which is not measured
 yet (docs/PLATFORM_PLAN.md 4.1).
 
 **What only an eye sees.** An RGB panel reads its picture out of PSRAM while it draws, and when a refill of its buffers

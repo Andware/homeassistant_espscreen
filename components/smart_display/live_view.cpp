@@ -1110,6 +1110,12 @@ void close(Handle handle) {
   glass::disarm(s.room, true);
 }
 
+bool ending() {
+  for (Stream *s : streams)
+    if (s && s->stopping.load(std::memory_order_relaxed)) return true;
+  return false;
+}
+
 static void report(int slot, Stream &s, uint32_t now, bool last) {
   const uint32_t span = now - s.reported_at;
   if (span == 0) return;

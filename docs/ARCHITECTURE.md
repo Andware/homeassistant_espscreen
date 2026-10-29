@@ -112,7 +112,8 @@ only while it holds the glass.
 
 `live_spots.h` is the machine that decides, every round, which tile or plugin place may stream (its card on the glass,
 the page clear, nothing over it), asks the app in turn, opens, stops when covered, gives up after its tries. The full
-view's stream is not a spot: it is the loader's answer. Detail: docs/CAMERA.md "Live on the P4 boards", "A live
+view's stream is not a spot: it is the loader's answer, and it opens once the page's streams have ended
+(`live_view::ending`), never beside them: one connection at a time, as an S3 has internal RAM for one. Detail: docs/CAMERA.md "Live on the P4 boards", "A live
 picture on a camera tile", docs/PICTURE_ARCHITECTURE.md 3.4 and 3.5; tests: `tests/test_live_view.cpp`,
 `tests/test_live_spots.cpp`.
 

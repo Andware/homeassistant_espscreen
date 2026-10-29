@@ -493,6 +493,11 @@ void mute(Handle handle, bool muted);
 // Ends a stream. Returns once nothing of it writes the glass any more, so LVGL may draw there again at once; its ENDED
 // comes with the next tick.
 void close(Handle handle);
+// Whether a stream that was closed is still there: its task may still hold its connection and its memory until it ends
+// and the next tick frees it (about one picture's time). A full view opens after it, never beside it: one connection at
+// a time, as an S3 has internal RAM for one stream's network buffers and not for two (docs/CAMERA.md, "Live on an
+// ESP32-S3").
+bool ending();
 // The main loop, every 50 ms: frees what finished tasks left and tells each stream's owner what happened.
 void tick(const std::function<void(Handle, Event)> &tell);
 // How often the panel ran dry since boot (a frame of blue: glass.h, "The panel's share of the memory bus").
@@ -522,6 +527,7 @@ inline Handle open(const std::string &, const Rect &, const Look & = Look{}, boo
 inline bool has_speaker() { return false; }
 inline void mute(Handle, bool) {}
 inline void close(Handle) {}
+inline bool ending() { return false; }
 inline void tick(const std::function<void(Handle, Event)> &) {}
 inline uint32_t misses() { return 0; }
 inline void own_offer() {}
