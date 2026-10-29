@@ -155,16 +155,22 @@ The release a user gets, from end to end, on a screen of its own (not one a hous
 ## 6. The upgrade
 
 What a user goes through when a release comes out: the app they run updates, and then each screen, from the release
-before. Every release runs it, on the commit that will be published (docs/RELEASING.md, "The release", step 5), with a
-test Home Assistant whose app is installed locally (a copy of `screen_manager/` in its local add-ons folder, rebuilt in
-place, so it keeps its data from one version to the next the way an installed app does) and screens of its own.
+before. Every release runs it, on the commit that will be published (docs/RELEASING.md, "The release", step 5). Since
+2026-10-29 the test Home Assistant is Max's own home Home Assistant (the bench VM is gone): its screens are his real
+ones plus the bench boards on the Mac mini's USB, every build runs on the Mac mini as its build server, and the
+`deploy-home` skill (`.claude/skills/deploy-home/deploy_home.py`, local to that Mac) does the steps below in one
+command, `release-test --candidate <commit> [--other-order <node>]`: the candidate's app is installed locally (a copy
+of `screen_manager/` in the local add-ons folder, with the GitHub app's data copied in, so it keeps the data the way an
+installed app does), and the report it writes names every step with its time. Before anything, it keeps a backup of
+the tiles in Home Assistant; everything it makes there carries `tessera:test` in its name, so it can all be cleaned
+up one day. After the release, `deploy_home.py main` puts the house back on the GitHub app (which is then the release).
 
 1. **Start from main.** The app as main has it, and every test screen on main's firmware: `ref: main` under
    `packages: display:` in its YAML, built by the app (Firmware & USB, Install over Wi-Fi). The screens keep the
    layouts they normally have, heavy ones included. Note what the app holds: its screens, their documents and settings.
 2. **The app of the release.** Put the release's `screen_manager/` in place of main's and rebuild. The data is the same
-   after the update (the documents byte for byte), and every screen still gets its tiles while it runs the old
-   firmware. Look at each screen.
+   after the update (the documents byte for byte: `release-test` compares the data of a backup before and after, and
+   names what differs), and every screen still gets its tiles while it runs the old firmware. Look at each screen.
 3. **Each screen's own Update.** `tools/release.py candidate`, `ref: release-candidate` in the test screens' YAML, and
    **Update** on each screen in the app: the app builds the release with its own ESPHome, fetching every component and
    font from GitHub, and sends it over Wi-Fi, as it will for every user. The screen comes back on the new firmware with

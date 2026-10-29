@@ -110,7 +110,6 @@ MAX_PICTURES = 8
 # the photos) or a step of its own. `when` says when a step of its own has something to show.
 MAX_SAVERS = 4
 SAVER_STEPS = ('clock', 'media', 'photos', 'own')
-SAVER_WHEN = ('always', 'data', 'state')
 SAVER_API = (0, 14)
 # An option of kind entity (0.15): a tile's own choice of a Home Assistant entity, which the app follows and sends under
 # x.entities (Plugins.tile_message). Only a tile's: a screensaver's options have no entities sent with them.
@@ -199,10 +198,6 @@ def parse_path(path, root=True):
             steps.append(('all',))
         at = match.end()
     return steps
-
-
-def _where(where):
-    return f'{where}.' if where else ''
 
 
 def _object(value, where, allowed, required=()):

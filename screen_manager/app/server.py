@@ -1813,10 +1813,6 @@ class Manager:
             screen = self.screen(inbox) or {}
         return screen_firmware(screen)
 
-    def supports_twenty(self, inbox):
-        version=self.firmware_version(inbox)
-        return bool(version) and version >= (0,2,7)
-
     def supports_header(self, inbox, screen=None):
         return (self.firmware_version(inbox, screen) or (0, 0, 0)) >= HEADER_MIN_FIRMWARE
 

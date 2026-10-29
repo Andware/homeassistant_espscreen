@@ -2090,15 +2090,6 @@ inline lv_obj_t *detail_text(lv_obj_t *parent,const std::string &text,int x,int 
 inline lv_obj_t *detail_text(lv_obj_t *parent,const std::string &text,int x,int y,int width,const lv_font_t *font,lv_text_align_t align,theme::Role role){
   return detail_text(parent,text,x,y,width,font,align,theme::hex(role));
 }
-// "30%", "30% · 1.7 mm" or "1.7 mm": whatever the provider reports; empty when dry.
-inline std::string rain_text(float chance,float mm,bool with_mm){
-  if(std::isfinite(chance) && chance>=0){
-    if(with_mm && std::isfinite(mm) && mm>=0.05f)return screen_text::percent((int)std::lround(chance))+" · "+screen_text::with_unit(screen_text::decimal(mm,1),"mm");
-    return screen_text::percent((int)std::lround(chance));
-  }
-  if(std::isfinite(mm) && mm>=0.05f)return screen_text::decimal(mm,mm<10?1:0)+" mm";
-  return "";
-}
 inline std::string degrees(float value){ if(!std::isfinite(value))return "--"; char b[16];snprintf(b,sizeof(b),"%.0f°",value);return b; }
 inline lv_obj_t *detail_card(int x,int y,int w,int h){
   auto *card=lv_obj_create(detail_root);lv_obj_remove_style_all(card);lv_obj_remove_flag(card,LV_OBJ_FLAG_SCROLLABLE);lv_obj_remove_flag(card,LV_OBJ_FLAG_CLICKABLE);
@@ -3456,13 +3447,6 @@ inline void climate_paint_ends(const Tile &t){
     lv_obj_set_style_bg_color(climate_ends[i],chosen?lv_color_hex(range_tint(end)):theme::color(theme::CARD),0);
   }
   if(climate_now_mark&&std::isfinite(t.current))lv_obj_set_x(climate_now_mark,range_x(t,t.current)-ui::px(2)/2);
-}
-inline void climate_end_event(lv_event_t *e){
-  if(detail_index>=model.count)return;
-  auto &t=model.tiles[detail_index];
-  t.range_end=(uint8_t)(uintptr_t)lv_event_get_user_data(e);
-  climate_paint_ends(t);
-  refresh_tile(detail_index);   // the tile's chip says the same end
 }
 // One step of a range's chosen end, never past the other end: the number follows the finger at once, tick() sends both
 // ends after a short pause.
@@ -10920,12 +10904,6 @@ inline void restyle() {
   if (room_label) { mark_all(); render(room_label); }
   if (detail_root && !lv_obj_has_flag(detail_root, LV_OBJ_FLAG_HIDDEN) && detail_tile()) show_detail(detail_index);
   media_library::restyle();
-}
-inline std::string vacuum_option(unsigned index) {
-  if (active_index < 0 || static_cast<size_t>(active_index) >= model.count) return {};
-  auto &tile = model.tiles[active_index];
-  const auto &speeds = tile.extra().fan_speeds;
-  return index < speeds.size() ? speeds[index] : "";
 }
 }
 
