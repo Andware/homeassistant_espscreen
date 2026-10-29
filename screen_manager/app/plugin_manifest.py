@@ -16,9 +16,10 @@ from urllib.parse import urlsplit
 # equal). A plugin names the API it was written for; it builds on every core with the same major and at least its minor.
 # Something new raises the minor; a plugin builds on the same major from its own minor up. Only a break raises the major.
 PLUGIN_API = (0, 24)
-# Major 0 is the time before that promise: a minor may still change a name or a signature. The minors that did are
-# listed here (and in __init__.py's PLUGIN_API_BREAKS; a test keeps them equal), so a plugin written before one is told
-# so in one sentence instead of failing in the compiler. 0.4: Plugin::on_tick became on_interval.
+# Major 0 is the time before that promise: a minor may still change a name or a signature, or take a form away (a plugin
+# that uses it then fails in the compiler, 0.24). A minor after which an older plugin would still build but work wrongly
+# is listed here (and in __init__.py's PLUGIN_API_BREAKS; a test keeps them equal), so such a plugin is told so in one
+# sentence. 0.4: Plugin::on_tick changed its meaning; the old one became on_interval.
 PLUGIN_API_BREAKS = {0: (4,)}
 
 ID = re.compile(r'^[a-z][a-z0-9_]{0,31}$')

@@ -32,10 +32,11 @@ namespace tessera {
 // of a compiler error. A plugin builds on every core with the same major and at least its minor.
 // From 1.0 on that is a promise: a minor only adds, and only a break raises the major. Major 0 is the time before
 // the API is promised to anyone: a minor may still change a name or a signature while the API settles, and Tessera's
-// own plugins move with it in the same release. A minor that changes what many plugins use is listed in
-// PLUGIN_API_BREAKS (__init__.py, plugin_manifest.py): a plugin written before it is refused in one sentence. One that
-// takes away a second form of something nearly nobody used is not, so the rest keep building (0.24). What each minor
-// brought and took away: the plugins repository's docs/FIRMWARE_API.md, "Versions".
+// own plugins move with it in the same release. A minor may take a form away: a plugin that still uses it fails its
+// build with the compiler's error at that call (0.24). PLUGIN_API_BREAKS (__init__.py, plugin_manifest.py) is for a
+// minor after which an older plugin would still build but work wrongly (0.4, where on_tick changed its meaning): such a
+// plugin is refused in one sentence. What each minor brought and took away: the plugins repository's
+// docs/FIRMWARE_API.md, "Versions".
 constexpr uint8_t PLUGIN_API_MAJOR = 0, PLUGIN_API_MINOR = 24;
 
 // The screen's fixed fonts, largest first. A tile takes the largest that fits; a plugin brings no font of its own.
