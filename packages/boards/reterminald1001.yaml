@@ -402,13 +402,3 @@ display:
     model: SEEED-RETERMINAL-D1001
     update_interval: never
     auto_clear_enabled: false
-    # A line of the DSI host in whole lane byte clocks, so host and bridge agree on the line (ESP-IDF 5.5.5
-    # mipi_dsi_hal.c, host_dpi_set_horizontal_timing: a line is scaled by lane rate / pixel clock / 8 and rounded).
-    # The preset's 880 pixels a line (800 + 20 + 20 + 40) at 1.5 Gbps and 80 MHz make 2062.5 clocks, rounded to 2063: the
-    # host's line a half clock longer than the bridge's, every line, which the bridge does not compensate (only a
-    # pixel clock it could not make exact is, and 240 MHz / 3 = 80 is exact). A Guition 10.1 (1 Gbps, 60 MHz) rounds
-    # the other way, a third of a clock short, and shows no blue; this board showed a whole frame of blue now and then
-    # on a page of live tiles with the panel's underrun flag silent and 0 dry frames counted (2026-10-29). With 896
-    # pixels a line (front porch 56) the line is 2100 clocks exactly, and the panel refreshes at 67.3 Hz instead of
-    # 68.6; the vertical timing stays the preset's.
-    hsync_front_porch: 56
