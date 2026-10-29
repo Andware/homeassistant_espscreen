@@ -265,6 +265,38 @@ class WaitForWebRTC(unittest.TestCase):
         self.assertGreater(len(fetched), 10)
         self.assertIsNotNone(source.frame.video)
 
+    def test_the_sounds_own_session_ends_when_the_pictures_bring_the_sound(self):
+        """A tile first (pictures without sound), then the full view with sound: the listener's own sound session goes,
+        so the sound comes once, not twice shifted (2026-10-29); it comes back when the pictures' session ends."""
+        async def main():
+            source = camera_source.Source(live_stream.LiveFeed(lambda e: None, None, lambda e: True), 'camera.door', True)
+            source.viewers = 1
+            sessions = []
+
+            async def rtc(kinds, take, keep, quiet=False):
+                sessions.append(kinds)
+                if 'video' in kinds:
+                    await take('video', object())
+                    await asyncio.sleep(0.2)
+                    return True
+                await asyncio.sleep(10)  # the sound's own session, until it is cancelled
+                return True
+            source.rtc = rtc
+            source.listen(asyncio.Queue(maxsize=4))
+            await asyncio.sleep(0.05)
+            self.assertEqual(sessions, [('audio',)])
+            own = source.sound
+            source.wants_sound = True
+            self.assertTrue(await source.webrtc())
+            self.assertTrue(own.cancelled() or own.done())
+            self.assertEqual(sessions[1], ('video', 'audio'))
+            await asyncio.sleep(0.05)
+            # The pictures' session ended with a listener still there: the sound's own session again.
+            self.assertEqual(sessions[2], ('audio',))
+            source.sound.cancel()
+
+        asyncio.run(main())
+
     @unittest.skipUnless(importlib.util.find_spec('aiortc'), 'needs aiortc (the app has it)')
     def test_a_refused_offer_gives_way_at_once(self):
         class Message:

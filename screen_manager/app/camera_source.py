@@ -391,12 +391,20 @@ class Source:
             self.stills = 0
             # The sound along in the same session when a screen with a speaker watches: the full view has it at once.
             self.sound_along = self.wants_sound
+            # A session of the sound's own (hear, started by a listener while the pictures went without sound: a tile,
+            # then the full view) ends now: with both, every listener got the sound twice, shifted, and heard small
+            # snippets out of joint (a Guition 10.1 showing a reTerminal D1001 full screen, 2026-10-29).
+            if self.sound_along and self.sound is not None and not self.sound.done():
+                self.sound.cancel()
             # A try again after the first says nothing of its failure: the log said it once, and says it works again.
             return await self.rtc(('video', 'audio') if self.sound_along else ('video',), take, self.watched,
                                   quiet=self.webrtc_tries > 0)
         finally:
             self.sound_along = False
             still.cancel()
+            # The sound went along with this session: listeners that stay get a session of the sound's own again.
+            if self.listeners and self.streams and (self.sound is None or self.sound.done()):
+                self.sound = asyncio.create_task(self.hear())
 
     async def rtc(self, kinds, take, keep, quiet=False):
         """One WebRTC session of Home Assistant's for the camera's `kinds` ('video', 'audio'): `take(kind, frame)` for
