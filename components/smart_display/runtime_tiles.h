@@ -114,9 +114,10 @@ inline esphome::ESPPreferenceObject home_preference;
 inline esphome::ESPPreferenceObject dark_preference;
 inline esphome::ESPPreferenceObject debug_preference;
 // Debug mode (settings_screen.h): the logger at the level the firmware is built with while it is on, warnings and
-// errors alone while it is off. At boot and after every change of a setting.
+// errors alone while it is off. At boot and after every change of a setting. The host build (tools/render) keeps its
+// level: it has no glass to flash and its driver reads the INFO lines.
 inline void apply_debug_mode() {
-#if defined(USE_LOGGER) && !defined(ESP_SCREEN_HOST)
+#if defined(USE_LOGGER) && !defined(ESP_SCREEN_HOST) && !defined(USE_HOST)
   if (esphome::logger::global_logger != nullptr)
     esphome::logger::global_logger->set_log_level(settings_screen::debug_mode ? ESPHOME_LOG_LEVEL : ESPHOME_LOG_LEVEL_WARN);
 #endif
