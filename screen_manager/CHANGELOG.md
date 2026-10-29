@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **The reTerminal D1001 no longer shows a frame of blue now and then.** A whole frame of light blue flashed on a page of live camera tiles, while the screen's own count of the panel running dry stayed at 0. The DSI host's line was rounded a half clock longer than the panel's line, every line (880 pixels a line at 1.5 Gbps and 80 MHz make 2062.5 clocks). The line is now 896 pixels, 2100 clocks exactly, and the panel refreshes at 67 Hz instead of 69. To be confirmed by testers who saw the flash.
+
 - **A screen whose camera is watched with sound slows its own live tiles.** While someone hears a screen's microphone (its video open with sound on another screen, in Home Assistant, or a call later on), its live camera tiles run at a quarter of their pictures a second. Four live tiles on the same screen crowded its Wi-Fi so much that its sound reached the viewer in bursts a second late and the viewing screen cut most of it away: words gone, bits doubled. Needs Screen camera 0.6.12.
 
 - **A live camera tile shows its name the way its card does.** Over the live picture the name stands at the bottom of the card in light letters, also when the tile had no still picture before its stream began; it stood dark and halfway up before.
