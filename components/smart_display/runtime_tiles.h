@@ -11832,7 +11832,7 @@ inline lv_draw_buf_t *live_badge(live_view::Look &look, int card_w, int card_h) 
   lv_obj_t *icon = lv_label_create(chip);
   lv_obj_set_style_text_font(icon, header_status_font, 0);
   lv_obj_set_style_text_color(icon, lv_color_white(), 0);
-  lv_label_set_text(icon, "\U000F0F86");
+  lv_label_set_text(icon, tile_icon::utf8(SQUEEZED_GLYPH).c_str());
   lv_obj_center(icon);
   lv_obj_update_layout(off);
   lv_draw_buf_t *drawn = lv_snapshot_take(chip, LV_COLOR_FORMAT_ARGB8888);
