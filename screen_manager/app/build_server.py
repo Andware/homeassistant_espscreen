@@ -609,11 +609,15 @@ class BuildServer:
                 self.changed()
 
     # ---- building ----
-    async def compile(self, profile, root, data, env, log, phase):
+    async def compile(self, profile, root, data, env, log, phase, fresh=False):
         """Build `profile` (a screen's YAML in the ESPHome folder `root`) on the server. Returns the images it made,
         staged in data/build/<profile>/server: {'factory', 'ota', 'table'}. Raises Fallback (build here) or Failed.
 
-        `log` takes one line of the build's log, `phase` each step for the page: bundle, send, queued, build, fetch."""
+        `log` takes one line of the build's log, `phase` each step for the page: bundle, send, queued, build, fetch.
+        `fresh`: the server empties its build folder for this screen first (`esphome clean` there, a job of target
+        "clean" on the same bundle), as Firmware.clean_build does here: a plugin part changed, and a component the
+        earlier build left behind (screen camera's empty esp_h264 for a build without video) would shadow the real one
+        and fail the build. Seen on a reTerminal D1001 going from Screen camera 0.2.0 to 0.6.13 with Video, 2026-10-29."""
         server = self.server
         if not self.wanted():
             raise Fallback('off')
@@ -636,7 +640,7 @@ class BuildServer:
             bundle = await make_bundle(profile, root, env, log)
             # What is in it, not the gzip around it, whose header carries the time it was packed.
             digest = hashlib.sha256(gzip.decompress(bundle)).hexdigest()
-            done = self.built.get(profile.name)
+            done = None if fresh else self.built.get(profile.name)
             if done and done[0] == digest and done[2] == server['pin'] and all(p is None or p.is_file() for p in done[1].values()) \
                     and (time.time() - done[3] < REUSE_MOVING_SECONDS or not follows_branch(profile)):
                 log(f'Build server: the YAML is the same as in the build {name} just made; using that firmware.')
@@ -645,26 +649,17 @@ class BuildServer:
                     if path is not None:
                         os.utime(path, (now, now))   # the newest again, over a build made here meanwhile
                 return done[1]
+            stem = profile.name.removesuffix('.yaml')
+            if fresh:
+                log(f'A plugin part changed: {name} empties its build folder for this screen first.')
+                phase('send')
+                self._phase('send')
+                job = await self._submit(link, secrets.token_hex(12), profile, bundle, stem, 'clean')
+                await self._follow(job, log, lambda step: None, name)
             log(f'Build server: sending the YAML to {name} ({max(1, round(len(bundle) / 1024))} KB).')
             phase('send')
             self._phase('send')
-            job = link.jobs[number] = Job(number)
-            stem = profile.name.removesuffix('.yaml')
-            header = {'type': 'submit_job', 'job_id': number, 'configuration_filename': profile.name, 'target': 'compile',
-                      'total_bundle_bytes': len(bundle), 'num_chunks': (len(bundle) + CHUNK - 1) // CHUNK,
-                      'bundle_sha256': hashlib.sha256(bundle).hexdigest(), 'device_name': stem,
-                      'device_friendly_name': stem, 'target_esphome_version': self.esphome, 'skip_bootloader': False}
-            try:
-                await link.send(header)
-                for index in range(header['num_chunks']):
-                    part = bundle[index * CHUNK:(index + 1) * CHUNK]
-                    await link.send({'type': 'submit_job_chunk', 'job_id': number, 'chunk_index': index,
-                                     'data_b64': base64.b64encode(part).decode(), 'is_last': index == header['num_chunks'] - 1})
-                ack = await asyncio.wait_for(job.ack, ACK_SECONDS)
-            except (asyncio.TimeoutError, ConnectionError, aiohttp.ClientError, OSError, RuntimeError) as error:
-                raise Fallback('lost', str(error)) from None
-            if not ack.get('accepted'):
-                raise Fallback('refused_job', _text(ack.get('reason'), 80))
+            job = await self._submit(link, number, profile, bundle, stem, 'compile')
             phase('queued')
             self._phase('queued')
             log(f'Build server: {name} took the build. ESPHome {self.esphome or "(its own)"}'
@@ -712,6 +707,26 @@ class BuildServer:
         if self.building:
             self.building['phase'] = step
             self.changed()
+
+    async def _submit(self, link, number, profile, bundle, stem, target):
+        """One job to the server: its header, the bundle in chunks, and its ack. `target` is "compile" or "clean"."""
+        job = link.jobs[number] = Job(number)
+        header = {'type': 'submit_job', 'job_id': number, 'configuration_filename': profile.name, 'target': target,
+                  'total_bundle_bytes': len(bundle), 'num_chunks': (len(bundle) + CHUNK - 1) // CHUNK,
+                  'bundle_sha256': hashlib.sha256(bundle).hexdigest(), 'device_name': stem,
+                  'device_friendly_name': stem, 'target_esphome_version': self.esphome, 'skip_bootloader': False}
+        try:
+            await link.send(header)
+            for index in range(header['num_chunks']):
+                part = bundle[index * CHUNK:(index + 1) * CHUNK]
+                await link.send({'type': 'submit_job_chunk', 'job_id': number, 'chunk_index': index,
+                                 'data_b64': base64.b64encode(part).decode(), 'is_last': index == header['num_chunks'] - 1})
+            ack = await asyncio.wait_for(job.ack, ACK_SECONDS)
+        except (asyncio.TimeoutError, ConnectionError, aiohttp.ClientError, OSError, RuntimeError) as error:
+            raise Fallback('lost', str(error)) from None
+        if not ack.get('accepted'):
+            raise Fallback('refused_job', _text(ack.get('reason'), 80))
+        return job
 
     async def _follow(self, job, log, phase, name):
         """The build on the server until it ended: its log lines here, its steps for the page."""
