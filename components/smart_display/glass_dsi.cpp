@@ -39,14 +39,26 @@ void *frame_buffer() {
 // ---- The panel's share of the memory bus ----
 // ESP-IDF only logs an underrun from its interrupt, on the UART and for every frame. Here the bridge's underrun flag is
 // read every tick instead (its interrupt is turned off, so the flag stays up until it is read) and counted, so a
-// tester's log says whether a change helped (the Guition 10.1 P4, pixel clock 70 MHz, saw the flashes; the D1001 at
-// 80 MHz counts none).
+// tester's log says whether a change helped.
+//
+// The flag has a mask the count must take off. The bridge raises its underrun flag only when the panel runs dry past a
+// line of the frame (dpi_misc_config.fifo_underrun_discard_vcnt: "the underrun interrupt mask, when underrun occurs
+// and line cnt is less than this field"), and ESP-IDF sets that line to the panel's width (esp_lcd_panel_dpi.c,
+// mipi_dsi_brg_ll_set_underrun_discard_count(h_size)): 800 of the 1280 lines of a Guition 10.1 or a reTerminal D1001.
+// An underrun in the first 800 lines, which blues most of the glass (the bridge discards the rest of the frame and the
+// panel shows its colour for no data), raised no flag; one in the last 480 lines, which blues the bottom, did. So
+// until 2026-10-29 the count saw the blue over the lower tiles (39 to 53 a minute on a D1001 with the encoder's strip
+// in PSRAM, docs/PLATFORM_PLAN.md 4.4a) and never the whole-glass flash a slider drag or a log line brought on the
+// same board, and read "the D1001 counts none" (espressif/esp-idf #19188 and jtenniswood/espcontrol #2118 saw the
+// same flash with the flag silent). With the mask at 0 every underrun counts; what the panel shows does not change.
 static uint32_t panel_misses = 0;
 #ifdef GLASS_COUNTS_MISSES
 static bool counting_misses = false;
 static void count_misses() {
   if (!counting_misses) {
     MIPI_DSI_BRIDGE.int_ena.underrun_int_ena = 0;
+    MIPI_DSI_BRIDGE.dpi_misc_config.fifo_underrun_discard_vcnt = 0;
+    MIPI_DSI_BRIDGE.dpi_config_update.dpi_config_update = 1;
     MIPI_DSI_BRIDGE.int_clr.underrun_int_clr = 1;
     counting_misses = true;
     return;

@@ -1,5 +1,7 @@
 ## Unreleased
 
+- **An ESP32-P4 screen now counts every blue flash.** When the panel of a P4 screen cannot fetch its next pixels in time it shows a frame of blue, over the whole glass or its lower part. The screen counted only the second kind: the chip's flag for it is masked for the first 800 lines of a frame, so the whole-glass flash some testers see while dragging a slider or while a camera plays was never counted and read as "none". The mask is now off, and the count stands in Home Assistant as the diagnostic sensor "Panel misses" on every P4 screen, so a flash you see and the number you read agree, and a graph of it beside what the screen was doing says what brings them on.
+
 - **A live camera tile shows when it slows down.** When a screen is busy (a finger on the glass, the wake word falling behind) it shows its live camera tiles at half or a quarter of their pictures a second. Each such tile now shows a small slow-speed icon in its top right corner while that lasts, so a slower picture is no mystery.
 
 - **A doorbell's picture comes sooner.** When someone rings, the app now prepares the camera's live picture for each screen at once and sends it along with the ring, so the screen no longer has to ask for it first: the picture is on the glass in about half a second.

@@ -64,3 +64,21 @@ text_sensor:
     entity_category: diagnostic
     lambda: 'return {wifi_chip::firmware()};'
     update_interval: 60s
+
+# How often the panel ran dry since boot (glass_dsi.cpp, "The panel's share of the memory bus"): each time the DSI
+# bridge could not fetch the next pixels from PSRAM in time and the panel showed a frame of blue, over the whole glass
+# or its lower part. A tester who sees a flash reads here whether the screen counted it, and a graph of this number
+# beside the screen's activity says what brings them on. Every ten seconds, so a flash and its count are near in time.
+sensor:
+  - platform: template
+    name: "Panel misses"
+    icon: "mdi:monitor-off"
+    entity_category: diagnostic
+    state_class: total_increasing
+    accuracy_decimals: 0
+    lambda: 'return glass::misses();'
+    update_interval: 10s
+
+esphome:
+  includes:
+    - <esphome/components/smart_display/glass.h>

@@ -413,11 +413,16 @@ DMA2D that copies what LVGL drew), the bridge runs dry and the panel shows a fra
 ESP-IDF only logs that from its interrupt, on the UART. A tester with a Guition 10.1-inch P4 (pixel clock 70 MHz) saw
 such flashes while a camera streamed. So the firmware does two things on a P4 (`glass.h`, "The panel's share of
 the memory bus"). It counts: the bridge's underrun flag is read every 50 ms and the count stands in every stream report
-(`the panel ran dry N times since boot`), so a log says whether a change helped. And it shortens every PPA burst on the
+(`the panel ran dry N times since boot`) and in Home Assistant as the diagnostic sensor "Panel misses", so a log or a
+graph says whether a change helped. The flag comes with a mask the firmware takes off: the bridge only raises it for an
+underrun past a line of the frame, and ESP-IDF sets that line to the panel's width, 800 of the 1280 lines of a 10.1-inch
+panel, so an underrun early in the frame, which blues most of the glass, raised no flag while one late in the frame,
+which blues the bottom, did. Until 2026-10-29 the count saw the second kind only, and the whole-glass flash a slider
+drag or a log line brings read as "the D1001 counts none". And it shortens every PPA burst on the
 screen from ESP-IDF's 128 bytes to 64, the streams' own clients and ESPHome's LVGL (which turns every flush of a turned
 glass with the PPA) alike, through a linker wrap of `ppa_register_client`: between shorter bursts the bus turns to the
 bridge. LVGL took the same way for the same underrun under its own PPA draw unit (lvgl/lvgl #9590). A copy takes a
-little longer for it. The reTerminal D1001 (pixel clock 80 MHz) counts none, with or without the change.
+little longer for it.
 
 **A turned copy the 2D-DMA never finishes.** The P4's picture engine (the PPA) cuts a copy into units of 64 pixels
 by 16 rows, and when the last unit holds fewer bits than the DMA's FIFO the DMA never counts it as received: the DONE
