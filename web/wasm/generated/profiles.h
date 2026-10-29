@@ -46,6 +46,9 @@ namespace standard_254 {
 namespace standard_255 {
 #include "standard_255/ui.h"
 }
+namespace compact_286 {
+#include "compact_286/ui.h"
+}
 namespace standard_294 {
 #include "standard_294/ui.h"
 }
@@ -80,6 +83,8 @@ if (dpi == 254) { using namespace standard_254; setup_firmware_ui(root);
 return {lbl_room, lbl_time, page_prev, page_next, page_number, bind_firmware_ui, setup_firmware_cells, "standard"}; }
 if (dpi == 255) { using namespace standard_255; setup_firmware_ui(root);
 return {lbl_room, lbl_time, page_prev, page_next, page_number, bind_firmware_ui, setup_firmware_cells, "standard"}; }
+if (dpi == 286) { using namespace compact_286; setup_firmware_ui(root);
+return {lbl_room, lbl_time, page_prev, page_next, page_number, bind_firmware_ui, setup_firmware_cells, "compact"}; }
 if (dpi == 294) { using namespace standard_294; setup_firmware_ui(root);
 return {lbl_room, lbl_time, page_prev, page_next, page_number, bind_firmware_ui, setup_firmware_cells, "standard"}; }
 return {};
