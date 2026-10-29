@@ -185,6 +185,10 @@ struct Stream {
   std::atomic<uint32_t> full_parts{0};  // parts left out because the buffer had no room for all of it
   uint32_t odd_taken = 0;
   uint32_t caught_up = 0, caught_up_bytes = 0;  // the times the main loop left the oldest out (SOUND_HIGH), and how much
+  // The buffer ran dry while speaking: the speaker gets nothing until SOUND_LOW waits again, as at the start, instead of
+  // each part as it trickles in (which played as snippets out of joint, 2026-10-29). Counted for the stream's line.
+  bool dry = false;
+  uint32_t ran_dry = 0;
   std::atomic<bool> muted{false}, heard{false};
   // The speaker is someone else's for now (audio_owner.h: a voice session or a doorbell took it): the sound is held back
   // as when muted, and plays again once the owner gives the speaker back. Set on the main loop, read by the task.

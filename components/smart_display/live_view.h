@@ -51,16 +51,17 @@ constexpr uint8_t TRIES = 3;
 // loop leaves out the oldest of it.
 constexpr uint32_t SOUND_RATE = 16000;
 constexpr size_t SOUND_PART = 4096;
-constexpr size_t SOUND_BUFFER = 32768;
+constexpr size_t SOUND_BUFFER = 49152;  // 1.5 s at 16 kHz mono
 // The sound keeps up with the picture: with more than SOUND_HIGH held (a burst after a hiccup in the stream) the oldest
 // goes, down to SOUND_LOW, which is also what the speaker waits for before it starts; the app's own queue drops its
 // oldest the same way. Without it the sound would stay up to the buffer's second behind the picture.
-// 250 and 800 ms (150 and 400 until 2026-10-29): the app's push stream puts a part of sound behind each picture, and on
+// 400 and 1200 ms (150 and 400 until 2026-10-29): the app's push stream puts a part of sound behind each picture, and on
 // the way through Home Assistant (go2rtc, aiortc, the pictures made) a part waited up to 635 ms by the viewer's own
 // count where the window was 400, so it was cut and the buffer ran dry in turns: small snippets out of joint, the same
-// from a screen's camera and from an EZVIZ (Max, both screens). Latency for a camera's sound is less than these buy.
-constexpr size_t SOUND_LOW = SOUND_RATE * 2 * 250 / 1000;   // 250 ms
-constexpr size_t SOUND_HIGH = SOUND_RATE * 2 * 800 / 1000;  // 800 ms
+// from a screen's camera and from an EZVIZ (Max, both screens). A quarter of a second more latency, which Max takes for
+// sound that stays whole ("200 ms extra is fine, 3 s is not").
+constexpr size_t SOUND_LOW = SOUND_RATE * 2 * 400 / 1000;    // 400 ms
+constexpr size_t SOUND_HIGH = SOUND_RATE * 2 * 1200 / 1000;  // 1200 ms
 static_assert(SOUND_PART % 2 == 0 && SOUND_BUFFER % 2 == 0 && SOUND_LOW % 2 == 0 && SOUND_HIGH % 2 == 0,
               "the sound moves in whole samples, two bytes each");
 static_assert(SOUND_LOW < SOUND_HIGH && SOUND_HIGH < SOUND_BUFFER, "the sound catches up before its buffer runs full");
