@@ -859,6 +859,31 @@ depend on which one wins:
 Done when (later): a tester holds the key on a D1001 and is heard at a Reolink doorbell, with the doorbell's sound on
 the glass before and after, silent while the key is held.
 
+### 5.1 Calling: screen to screen, later SIP (direction only, 2026-10-29)
+
+Not built, and nothing here is code yet. A call is the doorbell's talk-back between two screens: one screen's camera
+and microphone to another screen's glass and speaker, both ways. It reuses what the ring has, so nothing new is needed
+on the screen beyond a key and a view:
+
+- **The audio owner** (3.4): a call claims the speaker and the microphone as a ring does, the wake word steps back, and
+  a ring at the door takes over from a call (the door goes first).
+- **The uplink** the talk-back prepares (section 5): the microphone's 16 kHz PCM up to the add-on. The picture goes up
+  as the screen's own camera already does (4.11, the video server); the other screen gets both as it gets any camera.
+- **The add-on as the bridge.** A screen never speaks to another screen. The add-on joins the two uplinks to the two
+  screens' links, so a call works across rooms and networks the app reaches, and later bridges a call to a SIP or VoIP
+  endpoint in Home Assistant the same way it bridges a doorbell.
+- **Half duplex first**: one side speaks while the other listens, as the doorbell's push to talk. Full duplex only on a
+  screen whose hardware reports echo cancellation (`echo_cancel` in its caps, 3.1); without it the speaker comes back in
+  the microphone.
+- **What gives way** (a governor rule for later, 4.10): a doorbell's view and a call fill the screen, so while one is
+  open it ranks above the live tiles, on the receiving screen and on the sending one: a screen whose camera with its
+  sound someone watches squeezes its own live tiles, so its video and its voice keep their share of the bus and the
+  link. Seen on a reTerminal D1001 with four live tiles on its page (2026-10-29): the sound it sent another screen broke up
+  (words twice, words lost), and better on a page without tiles.
+
+Done when (later): two screens call each other half duplex through the add-on, a ring interrupts the call, and the
+sender with four live tiles on its page keeps clean sound.
+
 ## 6. What stays out
 
 - Replacing ESPHome. Its board files, build server, override YAML, OTA and Home Assistant integration are why boards
