@@ -94,7 +94,10 @@ int main() {{
                 card = alert_layout.layout(side['width'], side['height'], title, sub, True,
                                            round(float(values['DISPLAY_DPI'])), values['LOOK'])
                 self.assertEqual(side['camera']['full'], [side['width'], side['height']], f'{board} {way}')
-                self.assertEqual(side['camera'].get('thumb'), [card.image_w, card.image_h], f'{board} {way}')
+                # Glass too low for a picture leaves the still out (generate_board_shapes.py), as the firmware does: the
+                # Waveshare 2.8B lying down.
+                thumb = [card.image_w, card.image_h] if card.image_w > 0 and card.image_h > 0 else None
+                self.assertEqual(side['camera'].get('thumb'), thumb, f'{board} {way}')
                 # The picture fits the card it lands on, and the card the glass.
                 self.assertLessEqual(card.image_x + card.image_w, card.card_w, f'{board} {way}')
                 self.assertLessEqual(card.card_h, side['height'], f'{board} {way}')
@@ -135,6 +138,8 @@ int main() {{
             if board != shape.get('board') or 'camera' not in shape:
                 continue
             for way, side in shape['orientations'].items():
+                if 'thumb' not in side['camera']:
+                    continue  # glass too low for a picture in an alert (the test above ties that to the layout)
                 for aw, ah in ((16, 9), (1, 1), (3, 4)):
                     card = alert_layout.layout(side['width'], side['height'], shape['alert']['title_line'],
                                                shape['alert']['line'], True, shape['dpi'], shape['look'], aw, ah)

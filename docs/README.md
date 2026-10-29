@@ -37,6 +37,7 @@
 - [WAVESHARE35.md](WAVESHARE35.md): the Waveshare ESP32-S3-Touch-LCD-3.5.
 - [WT32SC01PLUS.md](WT32SC01PLUS.md): the Wireless-Tag WT32-SC01 Plus, 3.5 inch.
 - [WAVESHARE4B.md](WAVESHARE4B.md): the Waveshare ESP32-S3-Touch-LCD-4B.
+- [WAVESHARE28B.md](WAVESHARE28B.md): the Waveshare ESP32-S3-Touch-LCD-2.8B, with its own copy of ESPHome's RGB driver.
 - [WAVESHARE4V4.md](WAVESHARE4V4.md): the Waveshare ESP32-S3-Touch-LCD-4, revision 4.0 (without the "B").
 - [WAVESHARE43C.md](WAVESHARE43C.md): the Waveshare ESP32-S3-Touch-LCD-4.3C, the 4.3-inch glass with the 7B's expander.
 - [WAVESHARE5.md](WAVESHARE5.md): the Waveshare ESP32-S3-Touch-LCD-5, the 4.3-inch's board with 5-inch glass.

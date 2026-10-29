@@ -105,8 +105,9 @@ class CameraBoxes(unittest.TestCase):
                     self.assertNotIn('camera', entry['orientations'][way], f'{board} {way}')
                 self.assertNotIn(board, picture_question.BOXES, board)
                 continue
-            stated = {'full': [int(values['CAMERA_FULL_W']), int(values['CAMERA_FULL_H'])],
-                      'thumb': entry['orientations']['landscape']['camera']['thumb']}
+            stated = {'full': [int(values['CAMERA_FULL_W']), int(values['CAMERA_FULL_H'])]}
+            if 'thumb' in entry['orientations']['landscape']['camera']:  # none on glass too low for one (the 2.8B)
+                stated['thumb'] = entry['orientations']['landscape']['camera']['thumb']
             self.assertEqual(entry['camera'], stated, board)
             self.assertEqual(entry['orientations']['landscape']['camera'], stated, board)
             self.assertEqual(picture_question.BOXES[board], {view: tuple(box) for view, box in stated.items()}, board)
@@ -130,6 +131,8 @@ class CameraBoxes(unittest.TestCase):
                 continue
             for way in core.ORIENTATIONS:
                 side = entry['orientations'][way]
+                if 'thumb' not in side['camera']:
+                    continue  # glass too low for a picture: the alert shows without one (tests/test_alert_layout.py)
                 thumb_w, thumb_h = side['camera']['thumb']
                 self.assertGreater(thumb_w, 0, f'{board} {way}')
                 self.assertLessEqual(thumb_w, side['width'] - 2 * 14, f'{board} {way}: the still is wider than its card')

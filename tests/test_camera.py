@@ -76,6 +76,10 @@ class Rules(unittest.TestCase):
             for way in ('landscape', 'portrait'):
                 screen = {'board': board, 'orientation': way, 'firmware_known': '0.2.103'}
                 full = pq.box(screen, 'full')
+                if pq.box(screen, 'thumb') is None:
+                    # Glass too low for a picture in an alert: none is sent (the Waveshare 2.8B lying down).
+                    self.assertIsNone(pq.alert_box(screen, (1920, 1080)), (board, way))
+                    continue
                 for picture in ((1920, 1080), (720, 720), (1080, 1440), (2560, 1080), (1080, 1920)):
                     w, h = pq.alert_box(screen, picture)
                     self.assertLessEqual(w * h, full[0] * full[1], (board, way, picture))
@@ -93,7 +97,10 @@ class Rules(unittest.TestCase):
                 continue
             for way in ('landscape', 'portrait'):
                 for view in ('full', 'thumb'):
-                    w, h = pq.box({'board': board, 'orientation': way}, view)
+                    found = pq.box({'board': board, 'orientation': way}, view)
+                    if found is None and view == 'thumb':
+                        continue  # no picture in an alert on that glass
+                    w, h = found
                     self.assertLessEqual(max(w, h), pq.MAX_SIDE, (board, way, view))
                     self.assertLessEqual(w * h * 2, pq.MAX_BYTES, (board, way, view))
         # The 10-inch's full screen keeps its proportions; up to the 1024x600 glass every board keeps its own pixels.
