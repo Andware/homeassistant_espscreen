@@ -161,5 +161,26 @@ class GlassTurns(unittest.TestCase):
         self.assertIn('waiting for the glass, %u ms holding it)', fetch)
 
 
+class LiveTileName(unittest.TestCase):
+    """A live tile's name lies over its pictures as the picture card lays it (render_camera_card): the tile's font, left,
+    at the bottom of the card's content, in the picture's ink. A copy of the card's own label lay dark and halfway up
+    over every picture of a card that had no still yet and stood in its plain layout (a wallbox, 2026-10-28)."""
+
+    def test_the_name_is_drawn_as_the_picture_card_lays_it(self):
+        tiles = (COMPONENT / 'runtime_tiles.h').read_text()
+        opened = tiles[tiles.index('inline live_view::Handle live_spot_open('):]
+        opened = opened[:opened.index('\n  Widgets *card = nullptr;')]
+        self.assertIn('live_name(look, *card, spot.room)', opened)
+        self.assertNotIn('lv_snapshot_take(card->title', opened)
+        name = tiles[tiles.index('inline lv_draw_buf_t *live_name('):tiles.index('// A tile\'s spot: its card\'s room')]
+        for step in ('theme::color(theme::CAMERA_INK)', 'LV_TEXT_ALIGN_LEFT', 'lv_obj_get_content_coords(card.tile, &content)',
+                     'look.name_y = content.y2 + 1 - h - ext - room.y;', 'lv_obj_delete(off);'):
+            self.assertIn(step, name)
+        # The picture card lays its name the same way.
+        camera = tiles[tiles.index('inline bool render_camera_card('):]
+        self.assertIn('set_text_align(w.title,LV_TEXT_ALIGN_LEFT);', camera)
+        self.assertIn('lv_obj_set_pos(w.title,0,height-name_h);', camera)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -11849,6 +11849,44 @@ inline lv_draw_buf_t *live_badge(live_view::Look &look, int card_w, int card_h) 
   return nullptr;
 #endif
 }
+// A live tile's name as the card lays it over its picture (render_camera_card): the tile's font, left, at the bottom of
+// the card's content, in the picture's ink. Drawn once by LVGL off the glass and copied by the stream (Look::name), not
+// taken from the card's own label: a card that had no still yet stands in its plain layout, its name in the page's ink
+// halfway up, and that copy lay dark over every live picture (2026-10-28, a wallbox). Nullptr without a name or
+// snapshots; the caller destroys it after live_view::open.
+inline lv_draw_buf_t *live_name(live_view::Look &look, const Widgets &card, const live_view::Rect &room) {
+#if LV_USE_SNAPSHOT
+  if (!card.title || !card.title_font) return nullptr;
+  const char *text = lv_label_get_text(card.title);
+  if (!text || !*text) return nullptr;
+  lv_area_t content;
+  lv_obj_get_content_coords(card.tile, &content);
+  const int32_t w = lv_area_get_width(&content), h = lv_font_get_line_height(card.title_font);
+  lv_obj_t *off = lv_obj_create(nullptr);  // a screen never shown: the name is drawn for the snapshot alone
+  lv_obj_t *label = lv_label_create(off);
+  lv_obj_set_style_text_font(label, card.title_font, 0);
+  lv_obj_set_style_text_color(label, theme::color(theme::CAMERA_INK), 0);
+  lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+  lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
+  lv_obj_set_size(label, w, h);
+  lv_label_set_text(label, text);
+  lv_obj_update_layout(off);
+  lv_draw_buf_t *drawn = lv_snapshot_take(label, LV_COLOR_FORMAT_ARGB8888);
+  lv_obj_delete(off);
+  if (!drawn) return nullptr;
+  // A snapshot holds what the label draws beyond its box too, as much on every side.
+  const int32_t ext = std::max<int32_t>(0, (static_cast<int32_t>(drawn->header.w) - w) / 2);
+  look.name = reinterpret_cast<const uint32_t *>(drawn->data);
+  look.name_w = drawn->header.w;
+  look.name_h = drawn->header.h;
+  look.name_stride = drawn->header.stride / 4;
+  look.name_x = content.x1 - ext - room.x;
+  look.name_y = content.y2 + 1 - h - ext - room.y;
+  return drawn;
+#else
+  return nullptr;
+#endif
+}
 // A tile's spot: its card's room on the glass. A place's: the place's room, its camera and its fit.
 inline live_spots::Spot tile_spot(const Widgets &w, const Tile &t) {
   live_spots::Spot spot;
@@ -11929,26 +11967,12 @@ inline live_view::Handle live_spot_open(const live_spots::Spot &spot, const std:
     look.ground = live_view::rgb565(theme::hex(theme::PAGE));
     look.fade = t.overlay;
     live_loader(look);
-    // The name as LVGL draws it on the card (style_tall's ink, the tile's font), copied by the stream.
-    lv_draw_buf_t *name = nullptr;
-#if LV_USE_SNAPSHOT
-    if (t.overlay && card->title && !lv_obj_has_flag(card->title, LV_OBJ_FLAG_HIDDEN))
-      name = lv_snapshot_take(card->title, LV_COLOR_FORMAT_ARGB8888);
-    if (name) {
-      lv_area_t at;
-      lv_obj_get_coords(card->title, &at);
-      // A snapshot holds what the label draws beyond its box too, as much on every side.
-      const int32_t ext = std::max<int32_t>(0, (static_cast<int32_t>(name->header.w) - lv_area_get_width(&at)) / 2);
-      look.name = reinterpret_cast<const uint32_t *>(name->data);
-      look.name_w = name->header.w;
-      look.name_h = name->header.h;
-      look.name_stride = name->header.stride / 4;
-      look.name_x = at.x1 - ext - spot.room.x;
-      look.name_y = at.y1 - ext - spot.room.y;
-    }
-#endif
+    lv_draw_buf_t *name = t.overlay ? live_name(look, *card, spot.room) : nullptr;
+    if (name)
+      ESP_LOGI("camera", "live tile %u: its name %dx%d at %d,%d of the card's %dx%d", (unsigned) spot.index, (int) look.name_w,
+               (int) look.name_h, (int) look.name_x, (int) look.name_y, spot.room.w, spot.room.h);
     lv_draw_buf_t *badge = live_badge(look, spot.room.w, spot.room.h);
-  const live_view::Handle handle = live_view::open(url, spot.room, look);
+    const live_view::Handle handle = live_view::open(url, spot.room, look);
 #if LV_USE_SNAPSHOT
     if (name) lv_draw_buf_destroy(name);
     if (badge) lv_draw_buf_destroy(badge);
