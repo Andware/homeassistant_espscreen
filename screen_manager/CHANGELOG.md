@@ -1,4 +1,4 @@
-## Unreleased
+## 0.4.91 (firmware 0.58.0)
 
 - **A camera opened full screen after its tile no longer plays its sound twice.** When a live tile of a camera was on the page and the camera was then opened full screen with sound, the app kept a session for the sound beside the new one that carried pictures and sound together, and every listener got the sound twice, shifted: small snippets out of joint, words doubled or in slow motion (a Guition 10.1 showing a reTerminal D1001, 2026-10-29). The extra session ends when the pictures bring the sound along, and comes back when they stop.
 
